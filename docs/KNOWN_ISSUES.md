@@ -30,10 +30,10 @@
 - Resendはoptionalで、完全無料の継続やquotaを本システムが保証しない。
 - close/update_open pipelineは実装済みだが、実Yahoo publication lagとNeon上の連続営業日E2Eは未検証。
 - `update_open.py`のOpenはYahooで最初に観測したregular-session 1分bar由来で、取引所公式auction値を保証しない。Actual OpenをPENDING outcomeへ保存するだけで、朝の前日終値referenceやpredicted closeを上書きしない。`config/trading.yaml`の`recompute_after_actual_open`を反映する表示更新は未実装。
-- 実Neon PostgreSQLでのmigration、concurrency、長期運用はUser Action後に検証が必要。
+- CIのPostgreSQL 16ではfresh migrationを検証済み。実Neonでの接続、concurrency、長期運用はUser Action後に検証が必要。
 - Streamlit Community Cloudのsleep、resource、private repository policyはサービス側変更の影響を受ける。
 - DashboardのSystem StatusはDBの最後の監査情報で、live Provider pingではない。
 
 ## Packaging / validation
 
-Python 3.12以上が必要。開発PCに3.11の既存venvがある場合、新しい3.12環境かGitHub CIで検証する。追加された全packageがeditable/install環境からimportできることをCIで確認する必要がある。
+Python 3.12以上が必要。開発PCに3.11の既存venvがある場合、新しい3.12環境を作る。全packageのeditable install、127 pytest、Ruff、strict mypy、SQLite/PostgreSQL migrationはPython 3.12 GitHub CIで検証済みである。

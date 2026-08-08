@@ -29,9 +29,11 @@
 
 ## 検証
 
-基盤をGitHubへ初回pushした時点のCI（Python 3.12）は77 pytest、Ruff、mypy、Alembicが成功した。その後追加されたmodel/dashboard/email/pipeline testを含む最終件数と結果は、統合commitのGitHub Actions runを正とする。未実行のtestを成功済みとは記載しない。
+統合commit `f8507ec` のGitHub Actions（Python 3.12）で、127 pytest、Ruff、全72 source fileのstrict mypy、SQLite Alembic `upgrade head` / `check` が成功した。別jobのPostgreSQL 16 serviceでもfresh databaseへの`upgrade head` / `alembic check`が成功した。
 
-ローカルの既存`.venv`がPython 3.11の場合、3.12構文を含むmoduleはfull testできない。Python 3.12のCIを通すまでdeployment-readyと判断しない。
+確認run: <https://github.com/ken-yokota/japan-stock-predictor/actions/runs/31251766101>
+
+ローカルの分離venv（Python 3.11、production基準ではない）でも127 pytestを完走した。本番基準は上記Python 3.12 CIを正とする。
 
 ## User Action
 
