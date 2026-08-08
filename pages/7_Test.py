@@ -295,6 +295,83 @@ def _render_price_predictions(report: dict[str, Any]) -> None:
         st.line_chart(chart, use_container_width=True)
 
 
+def _render_company_coefficients(report: dict[str, Any]) -> None:
+    """Show one company's coefficient per indicator, per day, across the window."""
+
+    records = report.get("company_coefficients", [])
+    st.subheader("銘柄別: 各指標の係数の推移")
+    if not records:
+        st.warning(
+            "PENDING: 銘柄別の係数がこの検証結果に含まれていません。"
+            "`python -m cli week-test` を実行し直すと生成されます。"
+        )
+        return
+
+    st.caption(
+        "選んだ銘柄の予測を作るために、どの指標がどの係数で効いていたかを"
+        "営業日ごとに並べたものです。標準化後の係数なので、"
+        "同じ銘柄・同じモデル内でのみ大小を比較できます。"
+    )
+
+    frame = pd.DataFrame(records)
+    tickers = sorted({str(value) for value in frame["ticker"]})
+    selectors = st.columns(2)
+    ticker = selectors[0].selectbox(
+        "銘柄", tickers, format_func=stock_label, key="test_coef_ticker"
+    )
+    view = frame.loc[frame["ticker"].astype(str) == ticker].copy()
+
+    influence = (
+        view.groupby("feature")["coefficient"]
+        .apply(lambda values: values.abs().mean())
+        .sort_values(ascending=False)
+    )
+    features = [str(name) for name in influence.index]
+    chosen = selectors[1].multiselect(
+        "表示する指標", features, default=features[:6], key="test_coef_features"
+    )
+
+    if chosen:
+        pivot = view.loc[view["feature"].isin(chosen)].pivot_table(
+            index="date", columns="feature", values="coefficient", aggfunc="mean"
+        )
+        st.line_chart(pivot, use_container_width=True)
+
+    wide = view.pivot_table(
+        index="date", columns="feature", values="coefficient", aggfunc="mean"
+    ).sort_index()
+    ordered = [name for name in features if name in wide.columns]
+    st.caption(
+        f"{stock_label(ticker)} の全 {len(ordered)} 指標 x {len(wide)} 営業日。"
+        "影響の大きい指標から左に並べています。"
+    )
+    display_rows(
+        [
+            {
+                "日付": str(index),
+                **{name: format_number(row[name], digits=5) for name in ordered},
+            }
+            for index, row in wide.iterrows()
+        ],
+        height=460,
+    )
+
+    appeared = view.loc[view["first_seen"]]
+    appeared = appeared.loc[appeared["date"] > view["date"].min()]
+    if not appeared.empty:
+        st.caption("この期間に新しく使われ始めた指標")
+        display_rows(
+            [
+                {
+                    "初めて使われた日": row["date"],
+                    "指標": row["feature"],
+                    "その日の係数": format_number(row["coefficient"], digits=5),
+                }
+                for row in appeared.sort_values("date").to_dict("records")
+            ]
+        )
+
+
 def _render_coefficients(report: dict[str, Any]) -> None:
     changes = report.get("coefficient_changes", [])
     if not changes:
@@ -362,6 +439,8 @@ def _render_window_tab(report: dict[str, Any]) -> None:
     _render_daily(report)
     st.divider()
     _render_price_predictions(report)
+    st.divider()
+    _render_company_coefficients(report)
     st.divider()
     _render_coefficients(report)
 

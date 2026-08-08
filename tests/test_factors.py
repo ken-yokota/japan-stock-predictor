@@ -9,7 +9,9 @@ from dashboard.factors import (
     buy_rule_mismatches,
     coefficient_matrix,
     coefficient_summary_rows,
+    coefficient_timeline,
     load_configured_buy_rule,
+    newly_active_features,
     summarize_coefficients,
 )
 
@@ -182,3 +184,80 @@ def test_summary_rows_respect_the_top_limit() -> None:
     report, _ = summarize_coefficients(_coefficient_rows())
 
     assert len(coefficient_summary_rows(report, top=1)) == 1
+
+
+def _timeline_rows() -> list[dict[str, object]]:
+    """Three fits: one steady feature, one that only becomes active on day 2."""
+
+    rows: list[dict[str, object]] = []
+    late = {"2026-08-03": 0.0, "2026-08-04": 0.0, "2026-08-05": -0.04}
+    for index, day in enumerate(["2026-08-03", "2026-08-04", "2026-08-05"]):
+        rows.append(
+            {
+                "model_run_id": f"run-{index}",
+                "training_end": day,
+                "feature_name": "usdjpy_return_1d",
+                "coefficient": 0.10 + index * 0.01,
+            }
+        )
+        rows.append(
+            {
+                "model_run_id": f"run-{index}",
+                "training_end": day,
+                "feature_name": "late_starter",
+                "coefficient": late[day],
+            }
+        )
+    return rows
+
+
+def test_timeline_is_one_row_per_fit_oldest_first() -> None:
+    timeline = coefficient_timeline(_timeline_rows())
+
+    assert list(timeline.index) == ["2026-08-03", "2026-08-04", "2026-08-05"]
+    assert timeline["usdjpy_return_1d"].tolist() == pytest.approx([0.10, 0.11, 0.12])
+
+
+def test_timeline_of_empty_rows_is_empty() -> None:
+    assert coefficient_timeline([]).empty
+
+
+def test_feature_that_leaves_zero_is_reported_as_newly_active() -> None:
+    appeared = newly_active_features(_timeline_rows())
+
+    assert [row["feature"] for row in appeared] == ["late_starter"]
+    assert appeared[0]["first_active_on"] == "2026-08-05"
+    assert appeared[0]["coefficient"] == pytest.approx(-0.04)
+
+
+def test_feature_active_from_the_first_fit_is_not_called_new() -> None:
+    appeared = newly_active_features(_timeline_rows())
+
+    assert "usdjpy_return_1d" not in {row["feature"] for row in appeared}
+
+
+def test_feature_that_never_activates_is_not_reported() -> None:
+    rows = [
+        {
+            "model_run_id": f"run-{index}",
+            "training_end": day,
+            "feature_name": "never_used",
+            "coefficient": 0.0,
+        }
+        for index, day in enumerate(["2026-08-03", "2026-08-04"])
+    ]
+
+    assert newly_active_features(rows) == []
+
+
+def test_a_single_fit_cannot_show_an_appearance() -> None:
+    rows = [
+        {
+            "model_run_id": "run-0",
+            "training_end": "2026-08-03",
+            "feature_name": "usdjpy_return_1d",
+            "coefficient": 0.1,
+        }
+    ]
+
+    assert newly_active_features(rows) == []

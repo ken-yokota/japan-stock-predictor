@@ -38,7 +38,8 @@ cd /Users/yokotaken/Desktop/japan-stock-predictor
 | Sector Analysis | [pages/4_Sector_Analysis.py](../pages/4_Sector_Analysis.py) | 海運・エネルギー・自動車・金融・商社の業種別比較 |
 | Backtest | [pages/5_Backtest.py](../pages/5_Backtest.py) | 保存済みOOS成績と、**閾値・投資額・コストを変えた再計算** |
 | System Status | [pages/6_System_Status.py](../pages/6_System_Status.py) | run履歴、Provider採用状況、鮮度、DB状態 |
-| テスト | [pages/7_Test.py](../pages/7_Test.py) | 直近期間の検証結果。日別勝率、金額ベース勝率、寄り付き/大引けの予測と実績、係数の日々の変化 |
+| テスト | [pages/7_Test.py](../pages/7_Test.py) | 直近期間の検証結果。日別勝率、金額ベース勝率、寄り付き/大引けの予測と実績、銘柄別の係数推移 |
+| Company Analysis | [pages/8_Company_Analysis.py](../pages/8_Company_Analysis.py) | 企業別の予測値の推移と、どの指標がどの係数で効いたか。新しく使われ始めた指標も表示 |
 
 画面の中身を組み立てている共通部品は次の4つです。表示を直したいときはページ本体ではなく
 こちらを見ます。
@@ -109,6 +110,21 @@ Open基準の予測終値として見せることはしません。
 
 比較の基準として `python -m cli buy-all` があります。BUY判定を無視して全銘柄を毎日買った
 場合の結果です。モデルの絞り込みがこれを上回っていなければ、絞り込みは価値を生んでいません。
+
+### Company Analysis
+
+企業を1社選ぶと、その企業の予測がどう動いたかと、**どの指標がどの係数で効いていたか**を
+営業日ごとに追えます。
+
+「新しく現れた指標」は、設定ファイルの指標リストではなく**実際の係数**で判定しています。
+Ridgeは効かない指標の係数をちょうど0に潰すため、0を抜けた日がモデルがその指標を使い
+始めた日になります。毎回リストにあっても係数が0のままの指標は「未使用」と表示します。
+
+係数は標準化後の値です。同じ銘柄・同じモデルの中でのみ大小を比較できます。
+**係数が大きいことは「その指標を見れば儲かる」という意味ではありません。**
+
+Factor Analysis にも同じ推移表があります。違いは読んでいるデータで、Company Analysis は
+検証結果ファイル、Factor Analysis は**本番DBに保存された学習結果**を見ています。
 
 ### System Status
 

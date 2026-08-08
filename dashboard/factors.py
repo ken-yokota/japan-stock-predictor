@@ -208,3 +208,54 @@ def coefficient_summary_rows(
         }
         for entry in ordered[:top]
     ]
+
+
+def coefficient_timeline(rows: Sequence[Mapping[str, Any]]) -> pd.DataFrame:
+    """Return one row per fit date and one column per feature, oldest first.
+
+    This is the production counterpart to the research artifact's per-company
+    coefficient history: it reads what the pipeline actually persisted for a
+    ticker, so the displayed weights are the ones that produced the stored
+    predictions rather than a re-derivation.
+    """
+
+    matrix = coefficient_matrix(rows)
+    if matrix.empty:
+        return pd.DataFrame()
+    flattened = matrix.reset_index()
+    if "model_run_id" in flattened.columns:
+        flattened = flattened.drop(columns="model_run_id")
+    return flattened.set_index("training_end").sort_index()
+
+
+def newly_active_features(
+    rows: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    """List features whose coefficient first became non-zero mid-window.
+
+    Regularized fits hold unused features at exactly zero, so leaving zero is
+    the model starting to use that indicator. A feature already active on the
+    earliest fit is not reported: it was in use before the window began, so
+    calling it new would be an artifact of where the window starts.
+    """
+
+    timeline = coefficient_timeline(rows)
+    if timeline.empty or len(timeline) < 2:
+        return []
+    appeared: list[dict[str, Any]] = []
+    for feature in timeline.columns:
+        series = timeline[feature]
+        active = series.abs() > 0.0
+        if bool(active.iloc[0]) or not bool(active.any()):
+            continue
+        first_date = active.idxmax()
+        appeared.append(
+            {
+                "feature": str(feature),
+                "first_active_on": first_date,
+                "coefficient": float(series.loc[first_date]),
+            }
+        )
+    return sorted(
+        appeared, key=lambda item: (str(item["first_active_on"]), item["feature"])
+    )

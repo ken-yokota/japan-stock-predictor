@@ -9,7 +9,9 @@ from dashboard.catalog import stock_label
 from dashboard.factors import (
     buy_rule_mismatches,
     coefficient_summary_rows,
+    coefficient_timeline,
     load_configured_buy_rule,
+    newly_active_features,
     summarize_coefficients,
 )
 from dashboard.presenters import as_number, format_jst, format_number, format_yen
@@ -145,6 +147,8 @@ def _render_rolling_coefficients(service: DashboardQueryService) -> None:
         "係数は標準化後の値なので、同じモデル内でのみ大小を比較できます。"
     )
 
+    _render_coefficient_timeline(history.rows)
+
     summary = coefficient_summary_rows(report)
     top = summary[:15]
     if top:
@@ -182,6 +186,63 @@ def _render_rolling_coefficients(service: DashboardQueryService) -> None:
         info[1].metric("Model Version", str(model_row.get("model_version") or "—"))
         info[2].metric("最新Training End", str(model_row.get("training_end") or "—"))
         info[3].metric("Finished", format_jst(model_row.get("finished_at")))
+
+
+def _render_coefficient_timeline(rows: object) -> None:
+    """Show the persisted coefficient of every indicator, fit by fit."""
+
+    st.subheader("各指標の係数の推移 (保存済みの学習ごと)")
+    timeline = coefficient_timeline(list(rows))
+    if timeline.empty:
+        st.info("PENDING: 推移を出せるだけの学習履歴がまだありません。")
+        return
+
+    influence = timeline.abs().mean().sort_values(ascending=False)
+    features = [str(name) for name in influence.index]
+    chosen = st.multiselect(
+        "グラフに出す指標", features, default=features[:6], key="prod_timeline"
+    )
+    if chosen:
+        st.line_chart(timeline.loc[:, chosen], use_container_width=True)
+
+    st.caption(
+        f"全 {len(features)} 指標 x {len(timeline)} 回の学習。"
+        "影響の大きい指標から左に並べています。"
+    )
+    display_rows(
+        [
+            {
+                "学習終了日": str(index),
+                **{name: format_number(row[name], digits=5) for name in features},
+            }
+            for index, row in timeline.iterrows()
+        ],
+        height=460,
+    )
+
+    appeared = newly_active_features(list(rows))
+    st.caption("この期間に新しく使われ始めた指標")
+    if not appeared:
+        st.info(
+            "期間中に新しく使われ始めた指標はありません。"
+            "最初から同じ指標群で予測していたことを意味します。"
+        )
+        return
+    display_rows(
+        [
+            {
+                "初めて使われた学習": str(row["first_active_on"]),
+                "指標": row["feature"],
+                "その時の係数": format_number(row["coefficient"], digits=5),
+            }
+            for row in appeared
+        ]
+    )
+    st.caption(
+        "係数がちょうど0から0以外へ変わった時点を「使い始めた時点」としています。"
+        "Ridgeは効かない指標の係数を0へ潰すため、0を抜けることがモデルが"
+        "その指標を使い始めた合図になります。"
+    )
 
 
 def _render_latest_fit(service: DashboardQueryService) -> None:

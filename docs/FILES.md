@@ -105,8 +105,9 @@
 | `pages/4_Sector_Analysis.py` | 最新予測sector集約 | `main` | predictions/metrics | chart/table | dashboard/pandas | Streamlit | dashboard tests | DB only | 単純平均 |
 | `pages/5_Backtest.py` | 保存済みOOS結果 + 条件変更後の再計算 | `main`, `_render_persisted`, `_render_scenario` | metrics/trades/OOS予測 | chart/table/再計算結果 | dashboard/backtest.scenario/pandas | Streamlit | dashboard tests, `test_scenario.py` | DB only | UI上でmodelを再学習しない。閾値/資金/コスト/Top Nのみ変更可 |
 | `pages/6_System_Status.py` | run/provider/raw health | `main` | persisted audit | alert/table | dashboard | Streamlit | dashboard tests | DB only | live pingではない |
+| `pages/8_Company_Analysis.py` | 企業別の予測推移と係数推移 | `main` | `artifacts/week_test/latest.json` | 銘柄別の予測・係数・新規指標 | dashboard/pandas | Streamlit | artifact経由 | なし | 新規指標は係数が0を抜けた時点で判定 |
 | `pages/7_Test.py` | 直近期間の検証結果表示 | `main` | `artifacts/week_test/latest.json` | 日別勝率/金額比/予測対実績/係数推移 | dashboard/pandas | Streamlit | artifact経由 | なし | artifactを読むだけで再計算しない。DBも使わない |
-| `dashboard/factors.py` | BUY条件の表示と係数集計 | `load_configured_buy_rule`, `buy_rule_mismatches`, `summarize_coefficients` | `config/trading.yaml`、係数行 | `BuyRule`、安定性レポート | PyYAML/pandas/`scoring.stability` | `pages/3_Factor_Analysis.py` | `test_factors.py` | — | 表示専用read。strict検証は`data.config`が担当。設定と保存済み判定の食い違いを警告 |
+| `dashboard/factors.py` | BUY条件の表示と係数集計・推移 | `load_configured_buy_rule`, `buy_rule_mismatches`, `summarize_coefficients`, `coefficient_timeline`, `newly_active_features` | `config/trading.yaml`、係数行 | `BuyRule`、安定性レポート | PyYAML/pandas/`scoring.stability` | `pages/3_Factor_Analysis.py` | `test_factors.py` | — | 表示専用read。strict検証は`data.config`が担当。設定と保存済み判定の食い違いを警告 |
 
 ## Scripts / automation
 
