@@ -2,8 +2,18 @@ name: Morning prediction
 
 on:
   schedule:
-    # 08:20 JST Monday-Friday (JST has no daylight-saving time).
-    - cron: "20 23 * * 0-4"
+    # 07:00 JST Monday-Friday (JST has no daylight-saving time).
+    #
+    # The fetch walks 59 series one at a time to respect free-provider rate
+    # limits and has taken over 34 minutes when Yahoo throttles. Starting at
+    # 08:20 left under 25 minutes before the 08:45 email, so a throttled
+    # morning would mail before the prediction existed. 07:00 leaves 105
+    # minutes.
+    #
+    # Starting earlier costs no information: the prediction cutoff stays fixed
+    # at 08:30 JST, and the US session that feeds it closes around 05:00 JST,
+    # so nothing the model uses arrives between 07:00 and 08:30.
+    - cron: "0 22 * * 0-4"
   workflow_dispatch:
     inputs:
       prediction_date:
