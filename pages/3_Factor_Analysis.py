@@ -12,6 +12,7 @@ from dashboard.factors import (
     coefficient_timeline,
     load_configured_buy_rule,
     newly_active_features,
+    newly_influential_features,
     summarize_coefficients,
 )
 from dashboard.presenters import as_number, format_jst, format_number, format_yen
@@ -220,14 +221,31 @@ def _render_coefficient_timeline(rows: object) -> None:
         height=460,
     )
 
-    appeared = newly_active_features(list(rows))
-    st.caption("この期間に新しく使われ始めた指標")
-    if not appeared:
-        st.info(
-            "期間中に新しく使われ始めた指標はありません。"
-            "最初から同じ指標群で予測していたことを意味します。"
+    influential = newly_influential_features(list(rows), top=5)
+    st.caption("影響上位5に新しく入った指標")
+    if influential:
+        display_rows(
+            [
+                {
+                    "初めて上位に入った学習": str(row["first_top_on"]),
+                    "指標": row["feature"],
+                    "その時の係数": format_number(row["coefficient"], digits=5),
+                    "順位": row["rank"],
+                }
+                for row in influential
+            ]
         )
+    else:
+        st.info("上位の顔ぶれは期間を通じて変わりませんでした。")
+    st.caption(
+        "本番モデルのRidgeは係数を0に潰さないため、"
+        "「使われ始めた」ではなく「強く効き始めた」で判定しています。"
+    )
+
+    appeared = newly_active_features(list(rows))
+    if not appeared:
         return
+    st.caption("係数が0から動いた指標 (Lasso/ElasticNet使用時のみ発生)")
     display_rows(
         [
             {

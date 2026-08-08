@@ -259,3 +259,44 @@ def newly_active_features(
     return sorted(
         appeared, key=lambda item: (str(item["first_active_on"]), item["feature"])
     )
+
+
+def newly_influential_features(
+    rows: Sequence[Mapping[str, Any]], *, top: int = 5
+) -> list[dict[str, Any]]:
+    """List features that first broke into the top ``top`` by absolute weight.
+
+    ``newly_active_features`` looks for a coefficient leaving exactly zero, which
+    only happens under a sparse fit such as Lasso. Production uses Ridge, whose
+    L2 penalty shrinks coefficients but never zeroes them, so under Ridge that
+    check can never fire and every feature looks "always used".
+
+    This is the question that stays meaningful under Ridge: not whether an
+    indicator is present, but when it first became one of the strongest
+    influences. A feature ranked in the top ``top`` on the earliest fit is not
+    reported, since being there from the start is not an appearance.
+    """
+
+    timeline = coefficient_timeline(rows)
+    if timeline.empty or len(timeline) < 2 or top < 1:
+        return []
+
+    ranks = timeline.abs().rank(axis=1, ascending=False, method="min")
+    inside = ranks <= top
+    appeared: list[dict[str, Any]] = []
+    for feature in timeline.columns:
+        series = inside[feature]
+        if bool(series.iloc[0]) or not bool(series.any()):
+            continue
+        first_date = series.idxmax()
+        appeared.append(
+            {
+                "feature": str(feature),
+                "first_top_on": first_date,
+                "coefficient": float(timeline.loc[first_date, feature]),
+                "rank": int(ranks.loc[first_date, feature]),
+            }
+        )
+    return sorted(
+        appeared, key=lambda item: (str(item["first_top_on"]), item["feature"])
+    )

@@ -25,6 +25,7 @@ import pandas as pd  # type: ignore[import-untyped]
 import streamlit as st
 
 from dashboard.catalog import sector_label, stock_label
+from dashboard.factors import newly_influential_features
 from dashboard.presenters import format_number, format_percent, format_yen
 from dashboard.ui import configure_page, display_rows, render_header
 
@@ -178,6 +179,42 @@ def _render_coefficients(report: dict[str, Any], ticker: str) -> None:
     _render_new_indicators(frame)
 
 
+def _render_newly_influential(frame: pd.DataFrame, *, top: int = 5) -> None:
+    """Show features that first broke into the strongest weights.
+
+    Ridge never drives a coefficient to exactly zero, so "started being used"
+    cannot be detected by a zero crossing. What can be detected is when an
+    indicator first became one of the strongest influences.
+    """
+
+    rows = frame.rename(
+        columns={"feature": "feature_name", "date": "training_end"}
+    ).copy()
+    rows["model_run_id"] = rows["training_end"]
+    appeared = newly_influential_features(rows.to_dict("records"), top=top)
+
+    st.caption(f"影響上位{top}に新しく入った指標")
+    if not appeared:
+        st.info("上位の顔ぶれは期間を通じて変わりませんでした。")
+        return
+    display_rows(
+        [
+            {
+                "初めて上位に入った日": str(row["first_top_on"]),
+                "指標": row["feature"],
+                "その日の係数": format_number(row["coefficient"], digits=5),
+                "順位": row["rank"],
+            }
+            for row in appeared
+        ]
+    )
+    st.caption(
+        "順位は係数の絶対値の大きさです。"
+        "Ridgeは効かない指標も0にはしないため、「使われ始めた」ではなく"
+        "「強く効き始めた」で判定しています。"
+    )
+
+
 def _render_new_indicators(frame: pd.DataFrame) -> None:
     """List indicators the model only began using partway through the window."""
 
@@ -190,9 +227,11 @@ def _render_new_indicators(frame: pd.DataFrame) -> None:
 
     if appeared.empty:
         st.info(
-            "この期間中に新しく使われ始めた指標はありません。"
-            "最初から同じ指標群で予測していたことを意味します。"
+            "係数がちょうど0から動いた指標はありません。"
+            "本番モデルのRidgeは係数を0に潰さないため、この条件は通常成立しません。"
+            "代わりに、下の「影響上位に新しく入った指標」を見てください。"
         )
+        _render_newly_influential(frame)
         return
 
     display_rows(
@@ -206,6 +245,7 @@ def _render_new_indicators(frame: pd.DataFrame) -> None:
             for row in appeared.sort_values(["date", "feature"]).to_dict("records")
         ]
     )
+    _render_newly_influential(frame)
     st.caption(
         "係数がちょうど0から0以外に変わった日を「初めて使われた日」としています。"
         "Ridgeのような正則化モデルは効かない指標の係数を0に潰すため、"

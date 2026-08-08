@@ -12,6 +12,7 @@ from dashboard.factors import (
     coefficient_timeline,
     load_configured_buy_rule,
     newly_active_features,
+    newly_influential_features,
     summarize_coefficients,
 )
 
@@ -261,3 +262,79 @@ def test_a_single_fit_cannot_show_an_appearance() -> None:
     ]
 
     assert newly_active_features(rows) == []
+
+
+def _ranked_rows() -> list[dict[str, object]]:
+    """Ridge-like fits: nothing is ever exactly zero, but ranks move."""
+
+    series = {
+        "steady_top": [0.90, 0.90, 0.90],
+        "climber": [0.01, 0.01, 0.80],
+        "filler_a": [0.50, 0.50, 0.50],
+        "filler_b": [0.40, 0.40, 0.40],
+        "filler_c": [0.30, 0.30, 0.30],
+        "filler_d": [0.20, 0.20, 0.20],
+    }
+    rows: list[dict[str, object]] = []
+    for index, day in enumerate(["2026-08-03", "2026-08-04", "2026-08-05"]):
+        for feature, values in series.items():
+            rows.append(
+                {
+                    "model_run_id": f"run-{index}",
+                    "training_end": day,
+                    "feature_name": feature,
+                    "coefficient": values[index],
+                }
+            )
+    return rows
+
+
+def test_zero_crossing_never_fires_for_ridge_like_coefficients() -> None:
+    # Ridge shrinks but never zeroes, so the sparse-fit check finds nothing.
+    assert newly_active_features(_ranked_rows()) == []
+
+
+def test_feature_entering_the_top_ranks_is_reported() -> None:
+    appeared = newly_influential_features(_ranked_rows(), top=5)
+
+    assert [row["feature"] for row in appeared] == ["climber"]
+    assert appeared[0]["first_top_on"] == "2026-08-05"
+    assert appeared[0]["rank"] <= 5
+
+
+def test_feature_in_the_top_from_the_start_is_not_reported() -> None:
+    appeared = newly_influential_features(_ranked_rows(), top=5)
+
+    assert "steady_top" not in {row["feature"] for row in appeared}
+
+
+def test_a_narrower_top_reports_fewer_features() -> None:
+    wide = newly_influential_features(_ranked_rows(), top=5)
+    narrow = newly_influential_features(_ranked_rows(), top=1)
+
+    assert len(narrow) <= len(wide)
+
+
+def test_ranking_uses_absolute_weight_so_sign_does_not_matter() -> None:
+    rows = _ranked_rows()
+    for row in rows:
+        if row["feature_name"] == "climber":
+            row["coefficient"] = -float(row["coefficient"])
+
+    appeared = newly_influential_features(rows, top=5)
+
+    assert [row["feature"] for row in appeared] == ["climber"]
+    assert float(appeared[0]["coefficient"]) < 0.0
+
+
+def test_single_fit_cannot_show_a_new_top_entry() -> None:
+    rows = [
+        {
+            "model_run_id": "run-0",
+            "training_end": "2026-08-03",
+            "feature_name": "only",
+            "coefficient": 0.5,
+        }
+    ]
+
+    assert newly_influential_features(rows) == []
