@@ -1,0 +1,64 @@
+version: 1
+
+application:
+  name: japan-stock-predictor
+  timezone: Asia/Tokyo
+
+# All times are wall-clock times in application.timezone.
+schedule:
+  morning_fetch: "08:20"
+  prediction_cutoff: "08:30"
+  email_send: "08:45"
+  market_open: "09:00"
+  market_close: "15:30"
+  close_update: "15:45"
+
+provider:
+  primary: yahoo_finance
+  treasury: us_treasury
+  fallback:
+    - eodhd_free
+  # The optional EODHD Free fallback is capped per run to protect its quota.
+  eodhd_free_max_calls_per_run: 5
+  snapshot_freshness_minutes: 15
+  request_timeout_seconds: 30.0
+  max_retries: 3
+  backoff_initial_seconds: 1.0
+
+model:
+  primary: ridge
+  training_window_jpx_sessions: 120
+  scaler: standard_scaler
+  cross_validation: time_series_split
+
+signal:
+  predicted_intraday_return_threshold: 0.003
+  probability_up_threshold: 0.60
+
+# The specification does not choose this cutoff.  Keep it unresolved so the
+# live pipeline fails closed instead of silently inventing a BUY threshold.
+data_quality:
+  max_feature_missing_ratio: null
+  threshold_status: pending_confirmation
+  insufficient_data_prediction_status: INSUFFICIENT_DATA
+
+# Fees and slippage likewise need user confirmation before financial results
+# are presented.  Null is intentionally different from an accepted zero cost.
+backtest:
+  capital_per_stock_jpy: 1000000
+  commission_bps_per_side: null
+  slippage_bps_per_side: null
+  cost_assumptions_status: pending_confirmation
+  quantity_method: floor_capital_div_open
+  carry_overnight: false
+
+environment:
+  required:
+    - DATABASE_URL
+    - RESEND_API_KEY
+    - EMAIL_FROM
+    - EMAIL_TO
+    - APP_URL
+    - TIMEZONE
+  optional:
+    - EODHD_API_KEY

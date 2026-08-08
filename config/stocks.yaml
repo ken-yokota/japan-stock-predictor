@@ -1,0 +1,247 @@
+version: 1
+
+# Yahoo Finance symbols were verified against the requested `.T` convention.
+# EODHD does not currently provide these Japanese equity prices, so its slots
+# intentionally remain null rather than carrying guessed identifiers.
+stocks:
+  - ticker: "9101"
+    name: "日本郵船"
+    sector: shipping
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 9101.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "9104"
+    name: "商船三井"
+    sector: shipping
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 9104.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "9107"
+    name: "川崎汽船"
+    sector: shipping
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 9107.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "1605"
+    name: "INPEX"
+    sector: oil_energy
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 1605.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "5020"
+    name: "ENEOSホールディングス"
+    sector: oil_energy
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 5020.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "5019"
+    name: "出光興産"
+    sector: oil_energy
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 5019.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "5021"
+    name: "コスモエネルギーホールディングス"
+    sector: oil_energy
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 5021.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "7203"
+    name: "トヨタ自動車"
+    sector: automotive
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 7203.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "7267"
+    name: "本田技研工業"
+    sector: automotive
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 7267.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "7201"
+    name: "日産自動車"
+    sector: automotive
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 7201.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "7269"
+    name: "スズキ"
+    sector: automotive
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 7269.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "7270"
+    name: "SUBARU"
+    sector: automotive
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 7270.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "8306"
+    name: "三菱UFJフィナンシャル・グループ"
+    sector: financial
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 8306.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "8316"
+    name: "三井住友フィナンシャルグループ"
+    sector: financial
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 8316.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "8411"
+    name: "みずほフィナンシャルグループ"
+    sector: financial
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 8411.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "8604"
+    name: "野村ホールディングス"
+    sector: financial
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 8604.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "8766"
+    name: "東京海上ホールディングス"
+    sector: financial
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 8766.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "8001"
+    name: "伊藤忠商事"
+    sector: trading_company
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 8001.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "8002"
+    name: "丸紅"
+    sector: trading_company
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 8002.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "8031"
+    name: "三井物産"
+    sector: trading_company
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 8031.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "8053"
+    name: "住友商事"
+    sector: trading_company
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 8053.T
+      eodhd: null
+    enabled: true
+
+  - ticker: "8058"
+    name: "三菱商事"
+    sector: trading_company
+    country_iso: JP
+    exchange_mic: XTKS
+    market_timezone: Asia/Tokyo
+    provider_symbols:
+      yahoo_finance: 8058.T
+      eodhd: null
+    enabled: true

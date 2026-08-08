@@ -1,0 +1,1242 @@
+version: 1
+provider_symbol_policy: official_verification_required
+
+# Yahoo Finance is the primary free market-data route.  The official Treasury
+# XML feed is primary for yields.  Verified EODHD symbols are optional fallback
+# candidates only; all unconfirmed direct routes remain null and pending.
+indicators:
+  - id: sp500
+    name: "S&P 500"
+    category: equity_index
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance S&P 500 index"
+        provider_symbol: "^GSPC"
+        endpoint: yfinance.Ticker.history
+        market: US_INDEX
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: false
+        status: verified
+        availability_at_0830: available
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "S&P 500 index"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "SPY"
+        provider_symbol: SPY.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: nasdaq100
+    name: "NASDAQ 100"
+    category: equity_index
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance NASDAQ 100 index"
+        provider_symbol: "^NDX"
+        endpoint: yfinance.Ticker.history
+        market: US_INDEX
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: false
+        status: verified
+        availability_at_0830: available
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "NASDAQ 100 index"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "QQQ"
+        provider_symbol: QQQ.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: dow
+    name: "Dow Jones Industrial Average"
+    category: equity_index
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance Dow Jones index"
+        provider_symbol: "^DJI"
+        endpoint: yfinance.Ticker.history
+        market: US_INDEX
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: false
+        status: verified
+        availability_at_0830: available
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "Dow Jones Industrial Average"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "DIA"
+        provider_symbol: DIA.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: vix
+    name: "CBOE Volatility Index"
+    category: volatility_index
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance VIX index"
+        provider_symbol: "^VIX"
+        endpoint: yfinance.Ticker.history
+        market: US_INDEX
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: false
+        status: verified
+        availability_at_0830: available
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "VIX"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+
+  - id: usdjpy
+    name: "USD/JPY"
+    category: fx
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance USD/JPY"
+        provider_symbol: "JPY=X"
+        endpoint: yfinance.Ticker.history
+        market: FOREX
+        market_timezone: UTC
+        data_mode: real_time
+        session_policy: latest_at_or_before_cutoff
+        is_proxy: false
+        snapshot_enabled: true
+        max_age_minutes: 10
+        status: verified
+        availability_at_0830: conditional
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "USDJPY"
+        provider_symbol: null
+        endpoint: null
+        status: pending
+        availability_at_0830: pending
+        notes: "EODHD Free live entitlement is not confirmed."
+
+  - id: eurjpy
+    name: "EUR/JPY"
+    category: fx
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance EUR/JPY"
+        provider_symbol: "EURJPY=X"
+        endpoint: yfinance.Ticker.history
+        market: FOREX
+        market_timezone: UTC
+        data_mode: real_time
+        session_policy: latest_at_or_before_cutoff
+        is_proxy: false
+        snapshot_enabled: true
+        max_age_minutes: 10
+        status: verified
+        availability_at_0830: conditional
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "EURJPY"
+        provider_symbol: null
+        endpoint: null
+        status: pending
+        availability_at_0830: pending
+        notes: "EODHD Free live entitlement is not confirmed."
+
+  - id: dollar_index
+    name: "US Dollar Index"
+    category: fx_index
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance US Dollar Index"
+        provider_symbol: DX-Y.NYB
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: UTC
+        data_mode: real_time
+        session_policy: latest_at_or_before_cutoff
+        is_proxy: false
+        snapshot_enabled: true
+        max_age_minutes: 20
+        status: verified
+        availability_at_0830: conditional
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "US Dollar Index"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "UUP"
+        provider_symbol: UUP.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: nikkei225_futures
+    name: "Nikkei 225 Futures"
+    category: futures
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance Nikkei 225 Futures"
+        provider_symbol: NIY=F
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: UTC
+        data_mode: real_time
+        session_policy: latest_at_or_before_cutoff
+        is_proxy: false
+        snapshot_enabled: true
+        max_age_minutes: 20
+        status: verified
+        availability_at_0830: conditional
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "Nikkei 225 Futures"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+
+  - id: sp500_futures
+    name: "S&P 500 Futures"
+    category: futures
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance S&P 500 Futures"
+        provider_symbol: ES=F
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: UTC
+        data_mode: real_time
+        session_policy: latest_at_or_before_cutoff
+        is_proxy: false
+        snapshot_enabled: true
+        max_age_minutes: 20
+        status: verified
+        availability_at_0830: conditional
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "S&P 500 Futures"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+
+  - id: nasdaq100_futures
+    name: "NASDAQ 100 Futures"
+    category: futures
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance NASDAQ 100 Futures"
+        provider_symbol: NQ=F
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: UTC
+        data_mode: real_time
+        session_policy: latest_at_or_before_cutoff
+        is_proxy: false
+        snapshot_enabled: true
+        max_age_minutes: 20
+        status: verified
+        availability_at_0830: conditional
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "NASDAQ 100 Futures"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+
+  - id: gold
+    name: "Gold"
+    category: commodity
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance Gold Futures"
+        provider_symbol: GC=F
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: UTC
+        data_mode: real_time
+        session_policy: latest_at_or_before_cutoff
+        is_proxy: false
+        snapshot_enabled: true
+        max_age_minutes: 40
+        status: verified
+        availability_at_0830: conditional
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "Gold"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "GLD"
+        provider_symbol: GLD.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: us_2y_yield
+    name: "US 2-Year Treasury Yield"
+    category: interest_rate
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "US 2Y Yield"
+        provider_symbol: null
+        endpoint: null
+        status: pending
+        availability_at_0830: pending
+        notes: "EODHD Free Treasury entitlement is not confirmed."
+      - kind: direct
+        provider: us_treasury
+        instrument_hint: "Official Daily Treasury Par Yield Curve 2Y"
+        endpoint: "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}"
+        market: US_TREASURY
+        market_timezone: America/New_York
+        data_mode: yield_curve
+        session_policy: provider_published_at_or_before_cutoff
+        is_proxy: false
+        status: verified
+        availability_at_0830: conditional
+
+  - id: us_10y_yield
+    name: "US 10-Year Treasury Yield"
+    category: interest_rate
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "US 10Y Yield"
+        provider_symbol: null
+        endpoint: null
+        status: pending
+        availability_at_0830: pending
+        notes: "EODHD Free Treasury entitlement is not confirmed."
+      - kind: direct
+        provider: us_treasury
+        instrument_hint: "Official Daily Treasury Par Yield Curve 10Y"
+        endpoint: "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}"
+        market: US_TREASURY
+        market_timezone: America/New_York
+        data_mode: yield_curve
+        session_policy: provider_published_at_or_before_cutoff
+        is_proxy: false
+        status: verified
+        availability_at_0830: conditional
+
+  - id: us_30y_yield
+    name: "US 30-Year Treasury Yield"
+    category: interest_rate
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "US 30Y Yield"
+        provider_symbol: null
+        endpoint: null
+        status: pending
+        availability_at_0830: pending
+        notes: "EODHD Free Treasury entitlement is not confirmed."
+      - kind: direct
+        provider: us_treasury
+        instrument_hint: "Official Daily Treasury Par Yield Curve 30Y"
+        endpoint: "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}"
+        market: US_TREASURY
+        market_timezone: America/New_York
+        data_mode: yield_curve
+        session_policy: provider_published_at_or_before_cutoff
+        is_proxy: false
+        status: verified
+        availability_at_0830: conditional
+
+  - id: us_10y_minus_2y_spread
+    name: "US 10Y - 2Y Yield Spread"
+    category: derived_interest_rate
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: derived
+        provider: internal
+        instrument_hint: "US 10Y yield minus US 2Y yield"
+        data_mode: derived
+        session_policy: derived_from_inputs
+        is_proxy: false
+        status: verified
+        availability_at_0830: conditional
+        inputs:
+          - us_10y_yield
+          - us_2y_yield
+        notes: "Available only when both point-in-time-safe inputs are available."
+
+  - id: baltic_dry_index
+    name: "Baltic Dry Index"
+    category: shipping_index
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: proxy
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance dry-bulk futures ETF proxy"
+        provider_symbol: BDRY
+        endpoint: yfinance.Ticker.history
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "Baltic Dry Index"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "BDRY"
+        provider_symbol: BDRY.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+      - kind: alternative
+        provider: null
+        instrument_hint: "Alternative licensed BDI source"
+        status: pending
+        availability_at_0830: pending
+        notes: "Provider selection and redistribution rights require confirmation."
+
+  - id: baltic_capesize_index
+    name: "Baltic Capesize Index"
+    category: shipping_index
+    required: false
+    optional_reason: "Use only when a licensed point-in-time source is available."
+    resolution_status: pending
+    sources:
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "Baltic Capesize Index"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+      - kind: alternative
+        provider: null
+        instrument_hint: "Alternative licensed Capesize index source"
+        status: pending
+        availability_at_0830: pending
+
+  - id: baltic_panamax_index
+    name: "Baltic Panamax Index"
+    category: shipping_index
+    required: false
+    optional_reason: "Use only when a licensed point-in-time source is available."
+    resolution_status: pending
+    sources:
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "Baltic Panamax Index"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+      - kind: alternative
+        provider: null
+        instrument_hint: "Alternative licensed Panamax index source"
+        status: pending
+        availability_at_0830: pending
+
+  - id: fxi
+    name: "China Large-Cap ETF"
+    category: equity_proxy
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: proxy
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance FXI"
+        provider_symbol: FXI
+        endpoint: yfinance.Ticker.history
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "FXI"
+        provider_symbol: FXI.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: mchi
+    name: "MSCI China ETF"
+    category: equity_proxy
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: proxy
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance MCHI"
+        provider_symbol: MCHI
+        endpoint: yfinance.Ticker.history
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "MCHI"
+        provider_symbol: MCHI.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: copper
+    name: "Copper"
+    category: commodity
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance Copper Futures"
+        provider_symbol: HG=F
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: UTC
+        data_mode: real_time
+        session_policy: latest_at_or_before_cutoff
+        is_proxy: false
+        snapshot_enabled: true
+        max_age_minutes: 40
+        status: verified
+        availability_at_0830: conditional
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "Copper"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "CPER"
+        provider_symbol: CPER.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: iron_ore
+    name: "Iron Ore"
+    category: commodity
+    required: true
+    resolution_status: pending
+    sources:
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "Iron Ore"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+      - kind: alternative
+        provider: null
+        instrument_hint: "Alternative licensed iron ore source"
+        status: pending
+        availability_at_0830: pending
+
+  - id: wti
+    name: "WTI Crude Oil"
+    category: commodity
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance WTI Crude Oil Futures"
+        provider_symbol: CL=F
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: UTC
+        data_mode: real_time
+        session_policy: latest_at_or_before_cutoff
+        is_proxy: false
+        snapshot_enabled: true
+        max_age_minutes: 40
+        status: verified
+        availability_at_0830: conditional
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "WTI"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "USO"
+        provider_symbol: USO.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: brent
+    name: "Brent Crude Oil"
+    category: commodity
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance Brent Crude Oil Futures"
+        provider_symbol: BZ=F
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: UTC
+        data_mode: real_time
+        session_policy: latest_at_or_before_cutoff
+        is_proxy: false
+        snapshot_enabled: true
+        max_age_minutes: 40
+        status: verified
+        availability_at_0830: conditional
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "Brent"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "BNO"
+        provider_symbol: BNO.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: audjpy
+    name: "AUD/JPY"
+    category: fx
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance AUD/JPY"
+        provider_symbol: "AUDJPY=X"
+        endpoint: yfinance.Ticker.history
+        market: FOREX
+        market_timezone: UTC
+        data_mode: real_time
+        session_policy: latest_at_or_before_cutoff
+        is_proxy: false
+        snapshot_enabled: true
+        max_age_minutes: 10
+        status: verified
+        availability_at_0830: conditional
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "AUDJPY"
+        provider_symbol: null
+        endpoint: null
+        status: pending
+        availability_at_0830: pending
+        notes: "EODHD Free live entitlement is not confirmed."
+
+  - id: us_shipping_equity_proxy
+    name: "US Shipping Equity or ETF Proxy"
+    category: equity_proxy
+    required: false
+    optional_reason: "The specification allows this factor only if a suitable proxy exists."
+    resolution_status: pending
+    sources:
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "US shipping stock or ETF to be selected"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+
+  - id: xle
+    name: "US Energy Sector ETF"
+    category: equity_proxy
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: proxy
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance XLE"
+        provider_symbol: XLE
+        endpoint: yfinance.Ticker.history
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "XLE"
+        provider_symbol: XLE.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: oih
+    name: "US Oil Services ETF"
+    category: equity_proxy
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: proxy
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance OIH"
+        provider_symbol: OIH
+        endpoint: yfinance.Ticker.history
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "OIH"
+        provider_symbol: OIH.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: natural_gas
+    name: "Natural Gas"
+    category: commodity
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance Natural Gas Futures"
+        provider_symbol: NG=F
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: UTC
+        data_mode: real_time
+        session_policy: latest_at_or_before_cutoff
+        is_proxy: false
+        snapshot_enabled: true
+        max_age_minutes: 40
+        status: verified
+        availability_at_0830: conditional
+      - kind: direct
+        provider: eodhd_free
+        instrument_hint: "Natural Gas"
+        provider_symbol: null
+        status: pending
+        availability_at_0830: pending
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "UNG"
+        provider_symbol: UNG.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: xli
+    name: "US Industrial Sector ETF"
+    category: equity_proxy
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: proxy
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance XLI"
+        provider_symbol: XLI
+        endpoint: yfinance.Ticker.history
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "XLI"
+        provider_symbol: XLI.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: ewy
+    name: "South Korea Equity ETF"
+    category: equity_proxy
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: proxy
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance EWY"
+        provider_symbol: EWY
+        endpoint: yfinance.Ticker.history
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "EWY"
+        provider_symbol: EWY.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: toyota_adr
+    name: "Toyota ADR"
+    category: adr
+    required: true
+    resolution_status: resolved
+    applies_to_tickers:
+      - "7203"
+    sources:
+      - kind: proxy
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance Toyota ADR"
+        provider_symbol: TM
+        endpoint: yfinance.Ticker.history
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "TM ADR"
+        provider_symbol: TM.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: honda_adr
+    name: "Honda ADR"
+    category: adr
+    required: true
+    resolution_status: resolved
+    applies_to_tickers:
+      - "7267"
+    sources:
+      - kind: proxy
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance Honda ADR"
+        provider_symbol: HMC
+        endpoint: yfinance.Ticker.history
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "HMC ADR"
+        provider_symbol: HMC.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: xlf
+    name: "US Financial Sector ETF"
+    category: equity_proxy
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: proxy
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance XLF"
+        provider_symbol: XLF
+        endpoint: yfinance.Ticker.history
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "XLF"
+        provider_symbol: XLF.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: kre
+    name: "US Regional Banks ETF"
+    category: equity_proxy
+    required: true
+    resolution_status: resolved
+    sources:
+      - kind: proxy
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance KRE"
+        provider_symbol: KRE
+        endpoint: yfinance.Ticker.history
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "KRE"
+        provider_symbol: KRE.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: mufg_adr
+    name: "Mitsubishi UFJ ADR"
+    category: adr
+    required: true
+    resolution_status: resolved
+    applies_to_tickers:
+      - "8306"
+    sources:
+      - kind: proxy
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance Mitsubishi UFJ ADR"
+        provider_symbol: MUFG
+        endpoint: yfinance.Ticker.history
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "MUFG ADR"
+        provider_symbol: MUFG.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+  - id: smfg_adr
+    name: "Sumitomo Mitsui Financial Group ADR"
+    category: adr
+    required: true
+    resolution_status: resolved
+    applies_to_tickers:
+      - "8316"
+    sources:
+      - kind: proxy
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance Sumitomo Mitsui FG ADR"
+        provider_symbol: SMFG
+        endpoint: yfinance.Ticker.history
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+      - kind: proxy
+        provider: eodhd_free
+        instrument_hint: "SMFG ADR"
+        provider_symbol: SMFG.US
+        endpoint: "/eod/{ticker}"
+        market: US
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "16:00"
+        is_proxy: true
+        status: verified
+        availability_at_0830: available
+
+common:
+  - sp500
+  - nasdaq100
+  - dow
+  - vix
+  - usdjpy
+  - eurjpy
+  - dollar_index
+  - nikkei225_futures
+  - sp500_futures
+  - nasdaq100_futures
+  - gold
+  - us_2y_yield
+  - us_10y_yield
+  - us_30y_yield
+  - us_10y_minus_2y_spread
+
+# Sector lists are additions to `common`; repeated common factors are omitted.
+sectors:
+  shipping:
+    indicators:
+      - baltic_dry_index
+      - baltic_capesize_index
+      - baltic_panamax_index
+      - fxi
+      - mchi
+      - copper
+      - iron_ore
+      - wti
+      - brent
+      - audjpy
+      - us_shipping_equity_proxy
+    notes: "USDJPY, SPY/S&P 500, and VIX are inherited from common."
+
+  oil_energy:
+    indicators:
+      - wti
+      - brent
+      - xle
+      - oih
+      - natural_gas
+      - fxi
+      - mchi
+    notes: "USDJPY, SPY/S&P 500, VIX, and Gold are inherited from common."
+
+  automotive:
+    indicators:
+      - xli
+      - fxi
+      - mchi
+      - ewy
+      - copper
+      - wti
+      - toyota_adr
+      - honda_adr
+    notes: "USDJPY, SPY/S&P 500, NASDAQ 100, and VIX are inherited from common."
+
+  financial:
+    indicators:
+      - xlf
+      - kre
+      - mufg_adr
+      - smfg_adr
+    notes: "US yields, yield spread, USDJPY, SPY/S&P 500, VIX, and Nikkei futures are inherited from common."
+
+  trading_company:
+    indicators: []
+    notes: "No trading-company-specific factors were supplied; use common factors until confirmed."
