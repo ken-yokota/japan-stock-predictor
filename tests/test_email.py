@@ -1,0 +1,145 @@
+from __future__ import annotations
+
+from datetime import UTC, date, datetime
+from email.message import EmailMessage
+from types import TracebackType
+from typing import Any, ClassVar
+
+import httpx
+
+from notifications.contracts import EmailCandidate, MorningEmailPayload
+from notifications.senders import DryRunSender, GmailSmtpSender, ResendSender
+from notifications.service import EmailDispatcher, InMemoryEmailLogStore
+from notifications.templates import render_morning_email
+
+
+def _payload(*candidates: EmailCandidate) -> MorningEmailPayload:
+    return MorningEmailPayload(
+        prediction_date=date(2026, 8, 10),
+        generated_at=datetime(2026, 8, 9, 23, 35, tzinfo=UTC),
+        cutoff_at=datetime(2026, 8, 9, 23, 30, tzinfo=UTC),
+        candidates=tuple(candidates),
+        dashboard_url="https://example.test/dashboard?x=1&y=2",
+        provider_status="PARTIAL",
+        model_version="ridge-v1",
+        warnings=("USDJPY is stale",),
+    )
+
+
+def test_template_renders_buy_candidate_and_escapes_html() -> None:
+    candidate = EmailCandidate(
+        ticker="1605",
+        company="INPEX <test>",
+        predicted_return=0.012,
+        probability_up=0.74,
+        signal="BUY",
+        readability_score=89,
+        profit_factor=2.21,
+        expectancy_jpy=8400,
+        positive_factors=("WTI",),
+        negative_factors=("VIX",),
+    )
+    message = render_morning_email(
+        _payload(candidate), sender="sender@example.com", recipient="me@example.com"
+    )
+    assert "INPEX <test>" in message.text
+    assert "INPEX &lt;test&gt;" in message.html
+    assert "+1.20%" in message.text
+    assert "investment" not in message.text.lower()
+    assert message.idempotency_key.startswith("morning/2026-08-10/")
+
+
+def test_template_explicitly_reports_no_buy_candidates() -> None:
+    candidate = EmailCandidate(
+        ticker="7203",
+        company="Toyota",
+        predicted_return=0.001,
+        probability_up=0.55,
+        signal="NO_BUY",
+    )
+    message = render_morning_email(
+        _payload(candidate), sender="sender@example.com", recipient="me@example.com"
+    )
+    assert "本日は条件を満たすBUY候補なし" in message.text
+    assert "USDJPY is stale" in message.text
+
+
+def test_dispatcher_prevents_duplicate_delivery() -> None:
+    store = InMemoryEmailLogStore()
+    dispatcher = EmailDispatcher(DryRunSender(), store)
+    payload = _payload()
+    first = dispatcher.dispatch(
+        payload, sender_address="sender@example.com", recipient="me@example.com"
+    )
+    second = dispatcher.dispatch(
+        payload, sender_address="sender@example.com", recipient="me@example.com"
+    )
+    assert first is not None
+    assert second is None
+    assert len(store.sent) == 1
+
+
+class _FakeSmtp:
+    messages: ClassVar[list[EmailMessage]] = []
+    credentials: ClassVar[tuple[str, str] | None] = None
+    tls_started: ClassVar[bool] = False
+
+    def __init__(self, host: str, port: int, *, timeout: float) -> None:
+        assert host == "smtp.gmail.com"
+        assert port == 587
+        assert timeout == 20.0
+
+    def __enter__(self) -> _FakeSmtp:
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        return None
+
+    def ehlo(self) -> None:
+        return None
+
+    def starttls(self, *, context: Any) -> None:
+        assert context is not None
+        self.__class__.tls_started = True
+
+    def login(self, username: str, password: str) -> None:
+        self.__class__.credentials = (username, password)
+
+    def send_message(self, message: EmailMessage) -> None:
+        self.__class__.messages.append(message)
+
+
+def test_gmail_sender_uses_starttls_and_app_password(monkeypatch: Any) -> None:
+    monkeypatch.setattr("notifications.senders.smtplib.SMTP", _FakeSmtp)
+    sender = GmailSmtpSender(username="sender@gmail.com", app_password="app-secret")
+    message = render_morning_email(
+        _payload(), sender="sender@gmail.com", recipient="me@example.com"
+    )
+    result = sender.send(message)
+    assert result.provider == "gmail_smtp"
+    assert _FakeSmtp.tls_started
+    assert _FakeSmtp.credentials == ("sender@gmail.com", "app-secret")
+    assert _FakeSmtp.messages[-1]["X-Idempotency-Key"] == message.idempotency_key
+
+
+def test_resend_sender_sets_idempotency_header() -> None:
+    seen_headers: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen_headers.update(dict(request.headers))
+        return httpx.Response(200, json={"id": "email_123"})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    sender = ResendSender("api-secret", client=client)
+    message = render_morning_email(
+        _payload(), sender="sender@example.com", recipient="me@example.com"
+    )
+    result = sender.send(message)
+    assert result.message_id == "email_123"
+    assert seen_headers["idempotency-key"] == message.idempotency_key
+    client.close()

@@ -42,11 +42,55 @@ jobs:
         run: python -m ruff check .
 
       - name: Run mypy
-        run: python -m mypy data database
+        run: >-
+          python -m mypy
+          data database features models backtest trading metrics scoring
+          notifications services pipeline dashboard scripts
 
       - name: Verify migrations
         env:
           DATABASE_URL: sqlite+pysqlite:///${{ runner.temp }}/migration.sqlite3
+        run: |
+          python -m alembic upgrade head
+          python -m alembic check
+
+  postgres-migrations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: japan_stock_predictor
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d japan_stock_predictor"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install application
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+
+      - name: Verify PostgreSQL migrations
+        env:
+          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/japan_stock_predictor
         run: |
           python -m alembic upgrade head
           python -m alembic check

@@ -200,9 +200,7 @@ class ProviderRouter:
                 self._role(index),
                 tuple(attempts),
             )
-        return SeriesSelection(
-            (), None, None, SelectionRole.NONE, tuple(attempts)
-        )
+        return SeriesSelection((), None, None, SelectionRole.NONE, tuple(attempts))
 
     def fetch_snapshot(
         self,

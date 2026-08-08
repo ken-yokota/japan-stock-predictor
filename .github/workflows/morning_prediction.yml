@@ -1,0 +1,58 @@
+name: Morning prediction
+
+on:
+  schedule:
+    # 08:20 JST Monday-Friday (JST has no daylight-saving time).
+    - cron: "20 23 * * 0-4"
+  workflow_dispatch:
+    inputs:
+      prediction_date:
+        description: "JPX prediction date (YYYY-MM-DD); blank uses today in JST"
+        required: false
+        type: string
+      dry_run:
+        description: "Build and validate without publishing predictions"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: morning-prediction-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  predict:
+    if: github.event_name == 'workflow_dispatch' || vars.AUTOMATION_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
+      TIMEZONE: Asia/Tokyo
+      PREDICTION_DATE: ${{ inputs.prediction_date }}
+      DRY_RUN: ${{ inputs.dry_run || false }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install application
+        run: python -m pip install -e .
+      - name: Apply database migrations
+        run: python -m alembic upgrade head
+      - name: Build morning predictions
+        shell: bash
+        run: |
+          args=()
+          if [[ -n "$PREDICTION_DATE" ]]; then
+            args+=(--prediction-date "$PREDICTION_DATE")
+          fi
+          if [[ "$DRY_RUN" == "true" ]]; then
+            args+=(--dry-run)
+          fi
+          python -m scripts.run_morning_prediction "${args[@]}"

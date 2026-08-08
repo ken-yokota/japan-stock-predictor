@@ -540,9 +540,7 @@ class EODHDFreeProvider(EodhdProvider):
 
     def _before_request_attempt(self) -> None:
         if self._calls_used >= self._max_calls_per_run:
-            raise ProviderEntitlementError(
-                "EODHD Free per-run call budget exhausted"
-            )
+            raise ProviderEntitlementError("EODHD Free per-run call budget exhausted")
         self._calls_used += 1
 
     def fetch_eod(self, request: FetchRequest) -> list[MarketBar]:

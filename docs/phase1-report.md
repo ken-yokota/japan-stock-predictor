@@ -1,5 +1,8 @@
 # Phase 1 完了報告
 
+> 履歴資料: これはProvider基盤だけだったPhase 1時点の記録です。現在の実装状況は
+> `IMPLEMENTATION_REPORT.md`、運用確認は`verification-and-dashboard-guide.md`を参照してください。
+
 更新日: 2026-08-08
 
 ## 実装内容

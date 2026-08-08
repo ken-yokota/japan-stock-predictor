@@ -7,7 +7,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol, runtime_checkable
 
-from data.schemas import FetchRequest, MarketBar, ProviderHealth, SnapshotRequest
+from data.schemas import (
+    FetchRequest,
+    MarketBar,
+    ProviderHealth,
+    SessionOpenRequest,
+    SnapshotRequest,
+)
 
 
 class ProviderError(RuntimeError):
@@ -71,6 +77,16 @@ class SnapshotMarketDataProvider(Protocol):
 
     def fetch_snapshot(self, request: SnapshotRequest) -> MarketBar:
         """Fetch the newest provider observation without backdating availability."""
+
+
+@runtime_checkable
+class SessionOpenMarketDataProvider(Protocol):
+    """Optional capability for the first bar/open of a completed minute."""
+
+    name: str
+
+    def fetch_session_open(self, request: SessionOpenRequest) -> MarketBar:
+        """Fetch one session's first bar with first-observed PIT evidence."""
 
 
 @runtime_checkable

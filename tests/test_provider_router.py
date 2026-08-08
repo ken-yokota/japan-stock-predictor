@@ -87,9 +87,7 @@ def test_primary_complete_series_prevents_fallback_call(make_bar) -> None:
             provider_symbol="^GSPC",
             market_date=day,
             timestamp=datetime.combine(day, datetime.min.time(), tzinfo=UTC),
-            available_timestamp=datetime.combine(
-                day, datetime.min.time(), tzinfo=UTC
-            ),
+            available_timestamp=datetime.combine(day, datetime.min.time(), tzinfo=UTC),
             raw_hash=character * 64,
         )
         for day, character in ((date(2026, 8, 6), "a"), (date(2026, 8, 7), "b"))
@@ -130,9 +128,7 @@ def test_incomplete_primary_uses_complete_fallback_without_patching(make_bar) ->
             provider_symbol="SPY.US",
             market_date=day,
             timestamp=datetime.combine(day, datetime.min.time(), tzinfo=UTC),
-            available_timestamp=datetime.combine(
-                day, datetime.min.time(), tzinfo=UTC
-            ),
+            available_timestamp=datetime.combine(day, datetime.min.time(), tzinfo=UTC),
             raw_hash=character * 64,
             data_quality=DataQuality.EOD_CONFIRMED,
         )
@@ -191,9 +187,7 @@ def test_snapshot_after_cutoff_and_stale_are_rejected(make_bar) -> None:
         data_quality=DataQuality.DELAYED,
         is_delayed=True,
     )
-    assessment = assess_snapshot(
-        late, cutoff_at=CUTOFF, max_age=timedelta(minutes=20)
-    )
+    assessment = assess_snapshot(late, cutoff_at=CUTOFF, max_age=timedelta(minutes=20))
     assert assessment.status is FreshnessStatus.AFTER_CUTOFF
 
     stale = make_bar(

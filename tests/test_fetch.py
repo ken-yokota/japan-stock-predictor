@@ -58,7 +58,9 @@ def test_default_plan_is_yahoo_first_and_free_only() -> None:
     assert len(plan.eod) == 17
     assert len(plan.snapshots) == 12
     assert len(plan.treasury_symbols) == 3
-    assert plan.unresolved_required == ("iron_ore",)
+    # Direct iron-ore data is unavailable in the free stack, so the indicator
+    # is explicitly optional instead of making every operational run PARTIAL.
+    assert plan.unresolved_required == ()
     assert all(target.primary.provider == "yahoo_finance" for target in plan.eod)
     assert all(
         target.fallback is None or target.fallback.provider == "eodhd_free"
@@ -135,9 +137,7 @@ def test_snapshots_are_explicitly_excluded_when_not_requested() -> None:
 
 def test_free_comparison_uses_only_equivalent_listed_instruments(make_bar) -> None:
     plan = build_fetch_plan(load_app_config())
-    proxy_target = next(
-        item for item in plan.eod if item.canonical_symbol == "sp500"
-    )
+    proxy_target = next(item for item in plan.eod if item.canonical_symbol == "sp500")
     target = next(item for item in plan.eod if item.canonical_symbol == "xle")
     yahoo_row = make_bar(
         canonical_symbol="xle",
@@ -162,9 +162,7 @@ def test_free_comparison_uses_only_equivalent_listed_instruments(make_bar) -> No
             "yahoo_finance": RequestAwareProvider(
                 "yahoo_finance", {"XLE": [yahoo_row]}
             ),  # type: ignore[dict-item]
-            "eodhd_free": RequestAwareProvider(
-                "eodhd", {"XLE.US": [eodhd_row]}
-            ),  # type: ignore[dict-item]
+            "eodhd_free": RequestAwareProvider("eodhd", {"XLE.US": [eodhd_row]}),  # type: ignore[dict-item]
         },
         start_date=date(2026, 8, 7),
         end_date=date(2026, 8, 7),

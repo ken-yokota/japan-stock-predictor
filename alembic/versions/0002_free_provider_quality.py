@@ -137,9 +137,7 @@ def _downgrade_price_table(name: str) -> None:
 
 
 def downgrade() -> None:
-    op.drop_index(
-        "ix_provider_selection_run_symbol", table_name="provider_selections"
-    )
+    op.drop_index("ix_provider_selection_run_symbol", table_name="provider_selections")
     op.drop_table("provider_selections")
     op.drop_index("ix_provider_attempt_run_symbol", table_name="provider_attempts")
     op.drop_table("provider_attempts")

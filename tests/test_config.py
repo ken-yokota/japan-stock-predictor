@@ -14,12 +14,16 @@ from data.config import (
     AppConfig,
     ConfigError,
     IndicatorsConfig,
+    ModelConfig,
     SettingsConfig,
     StocksConfig,
+    TradingConfig,
     load_app_config,
     load_indicators_config,
+    load_model_config,
     load_settings_config,
     load_stocks_config,
+    load_trading_config,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -387,7 +391,7 @@ def test_enabled_snapshot_requires_source_specific_max_age() -> None:
 
 
 def test_settings_match_specified_phase_one_defaults() -> None:
-    """Operational defaults retain unresolved financial assumptions as null."""
+    """Operational defaults retain the confirmed conservative assumptions."""
 
     config = load_settings_config()
 
@@ -402,18 +406,45 @@ def test_settings_match_specified_phase_one_defaults() -> None:
     assert config.model.training_window_jpx_sessions == 120
     assert config.signal.predicted_intraday_return_threshold == pytest.approx(0.003)
     assert config.signal.probability_up_threshold == pytest.approx(0.60)
-    assert config.data_quality.max_feature_missing_ratio is None
-    assert config.backtest.commission_bps_per_side is None
-    assert config.backtest.slippage_bps_per_side is None
+    assert config.data_quality.max_feature_missing_ratio == pytest.approx(0.20)
+    assert config.data_quality.threshold_status == "confirmed"
+    assert config.backtest.commission_bps_per_side == pytest.approx(5.0)
+    assert config.backtest.slippage_bps_per_side == pytest.approx(5.0)
+    assert config.backtest.cost_assumptions_status == "confirmed"
+
+
+def test_model_and_trading_configs_make_safe_defaults_explicit() -> None:
+    """Feature rejection, board lots, and simulated costs are confirmed inputs."""
+
+    model = load_model_config()
+    trading = load_trading_config()
+
+    assert isinstance(model, ModelConfig)
+    assert model.training.window_jpx_sessions == 120
+    assert model.training.feature_warmup_jpx_sessions == 20
+    assert model.features.return_windows == [1, 2, 3, 5, 20]
+    assert model.features.max_missing_ratio == pytest.approx(0.20)
+    assert model.features.missing_policy_status == "confirmed"
+    assert model.cross_validation.strategy == "time_series_split"
+    assert model.reproducibility.random_seed == 42
+
+    assert isinstance(trading, TradingConfig)
+    assert trading.position.lot_size == 100
+    assert trading.position.lot_size_status == "confirmed"
+    assert trading.costs.commission_bps_per_side == pytest.approx(5.0)
+    assert trading.costs.slippage_bps_per_side == pytest.approx(5.0)
+    assert trading.costs.assumptions_status == "confirmed"
 
 
 def test_load_app_config_cross_validates_default_files() -> None:
-    """The three shipped YAML files validate as one application config."""
+    """The five shipped YAML files validate as one application config."""
 
     config = load_app_config()
 
     assert isinstance(config, AppConfig)
     assert config.settings.provider.primary == "yahoo_finance"
+    assert config.model.features.max_missing_ratio == pytest.approx(0.20)
+    assert config.trading.position.lot_size == 100
 
 
 def test_duplicate_stock_ticker_is_rejected() -> None:
@@ -527,12 +558,23 @@ def test_eodhd_key_is_optional_and_free_fallback_is_rate_limited() -> None:
 
     config = load_settings_config()
     assert "EODHD_API_KEY" not in config.environment.required
-    assert config.environment.optional == ["EODHD_API_KEY"]
+    assert config.environment.optional == ["EODHD_API_KEY", "RESEND_API_KEY"]
 
     raw = _yaml_mapping("settings.yaml")
     raw["provider"]["eodhd_free_max_calls_per_run"] = 6
     with pytest.raises(ValidationError, match="less than or equal to 5"):
         SettingsConfig.model_validate(raw)
+
+
+def test_gmail_is_required_and_resend_is_an_optional_email_provider() -> None:
+    """The free default needs Gmail credentials but not a Resend subscription."""
+
+    config = load_settings_config()
+
+    assert "SMTP_USERNAME" in config.environment.required
+    assert "SMTP_PASSWORD" in config.environment.required
+    assert "RESEND_API_KEY" not in config.environment.required
+    assert "RESEND_API_KEY" in config.environment.optional
 
 
 def test_snapshot_freshness_must_be_positive() -> None:

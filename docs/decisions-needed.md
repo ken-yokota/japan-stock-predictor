@@ -1,5 +1,9 @@
 # 実装継続前の確認事項
 
+> 履歴資料: missing threshold、lot、commission、slippage、無料Provider方針はその後
+> `config/model.yaml`、`config/trading.yaml`、`ASSUMPTIONS.md`で確定しました。現在の未解決事項は
+> `KNOWN_ISSUES.md`を正としてください。
+
 Phase 1はYahoo primary、U.S. Treasury official、EODHD Free optional fallbackで構成し、
 利用できない値は`MISSING`としてfail closedにしています。以下はPhase 2以降へ進む前、
 または外部公開前に必要な決定です。

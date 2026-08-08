@@ -161,6 +161,32 @@ class SnapshotRequest:
 
 
 @dataclass(frozen=True, slots=True)
+class SessionOpenRequest:
+    """Request the first intraday bar of one verified market session."""
+
+    canonical_symbol: str
+    provider_symbol: str
+    market: str
+    market_timezone: str
+    session_date: date
+    session_open: str
+    currency: str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.canonical_symbol.strip() or not self.provider_symbol.strip():
+            raise ValueError("symbols must not be blank")
+        parts = self.session_open.split(":")
+        if len(parts) != 2:
+            raise ValueError("session_open must use HH:MM")
+        try:
+            hour, minute = (int(part) for part in parts)
+        except ValueError as exc:
+            raise ValueError("session_open must use HH:MM") from exc
+        if not 0 <= hour <= 23 or not 0 <= minute <= 59:
+            raise ValueError("session_open must be a valid wall-clock time")
+
+
+@dataclass(frozen=True, slots=True)
 class ProviderHealth:
     """Sanitized provider health result."""
 

@@ -35,30 +35,32 @@ signal:
   predicted_intraday_return_threshold: 0.003
   probability_up_threshold: 0.60
 
-# The specification does not choose this cutoff.  Keep it unresolved so the
-# live pipeline fails closed instead of silently inventing a BUY threshold.
+# Confirmed safety default: reject rows above 20% missingness. Imputers must be
+# fit on training data only; this value never authorizes look-ahead filling.
 data_quality:
-  max_feature_missing_ratio: null
-  threshold_status: pending_confirmation
+  max_feature_missing_ratio: 0.20
+  threshold_status: confirmed
   insufficient_data_prediction_status: INSUFFICIENT_DATA
 
-# Fees and slippage likewise need user confirmation before financial results
-# are presented.  Null is intentionally different from an accepted zero cost.
+# Conservative provider-neutral paper-trading defaults, expressed per side.
+# These simulation assumptions are not broker quotes.
 backtest:
   capital_per_stock_jpy: 1000000
-  commission_bps_per_side: null
-  slippage_bps_per_side: null
-  cost_assumptions_status: pending_confirmation
+  commission_bps_per_side: 5.0
+  slippage_bps_per_side: 5.0
+  cost_assumptions_status: confirmed
   quantity_method: floor_capital_div_open
   carry_overnight: false
 
 environment:
   required:
     - DATABASE_URL
-    - RESEND_API_KEY
+    - SMTP_USERNAME
+    - SMTP_PASSWORD
     - EMAIL_FROM
     - EMAIL_TO
     - APP_URL
     - TIMEZONE
   optional:
     - EODHD_API_KEY
+    - RESEND_API_KEY

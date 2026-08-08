@@ -10,8 +10,10 @@ from data.providers.base import ProviderFetchError, ProviderResponseError
 from data.providers.yahoo import YahooFinanceProvider
 from data.schemas import (
     AvailabilityMethod,
+    DataInterval,
     DataQuality,
     FetchRequest,
+    SessionOpenRequest,
     SnapshotRequest,
 )
 
@@ -127,9 +129,52 @@ def test_snapshot_rejects_future_provider_timestamp() -> None:
         backend=FakeBackend(frame), clock=lambda: NOW, sleeper=lambda _: None
     )
     with pytest.raises(ProviderResponseError):
-        provider.fetch_snapshot(
-            SnapshotRequest("usdjpy", "JPY=X", "FOREX", "UTC")
+        provider.fetch_snapshot(SnapshotRequest("usdjpy", "JPY=X", "FOREX", "UTC"))
+
+
+def test_session_open_uses_first_regular_minute_with_observed_availability() -> None:
+    observed = datetime(2026, 8, 11, 0, 2, tzinfo=UTC)
+    frame = pd.DataFrame(
+        {
+            "Open": [3000.0, 3010.0],
+            "High": [3012.0, 3015.0],
+            "Low": [2995.0, 3005.0],
+            "Close": [3010.0, 3012.0],
+            "Volume": [50_000, 20_000],
+        },
+        index=pd.DatetimeIndex(
+            [
+                datetime(2026, 8, 11, 9, 0),
+                datetime(2026, 8, 11, 9, 1),
+            ],
+            tz="Asia/Tokyo",
+        ),
+    )
+    backend = FakeBackend(frame)
+    row = YahooFinanceProvider(
+        backend=backend,
+        clock=lambda: observed,
+        sleeper=lambda _: None,
+    ).fetch_session_open(
+        SessionOpenRequest(
+            canonical_symbol="7203",
+            provider_symbol="7203.T",
+            market="JP",
+            market_timezone="Asia/Tokyo",
+            session_date=date(2026, 8, 11),
+            session_open="09:00",
+            currency="JPY",
         )
+    )
+
+    assert row.interval is DataInterval.ONE_MINUTE
+    assert row.open == 3000
+    assert row.market_timestamp == datetime(2026, 8, 11, 0, 0, tzinfo=UTC)
+    assert row.available_timestamp == observed
+    assert row.first_observed_at == observed
+    _, kwargs = backend.calls[0]
+    assert kwargs["interval"] == "1m"
+    assert kwargs["prepost"] is False
 
 
 def test_history_retries_and_returns_sanitized_typed_error() -> None:
@@ -168,8 +213,6 @@ def test_resolve_symbol_uses_search_metadata_without_suffix_inference() -> None:
     )
     result = YahooFinanceProvider(
         backend=backend, clock=lambda: NOW, sleeper=lambda _: None
-    ).resolve_symbol(
-        canonical_symbol="7203", country_iso="JP", exchange_mic="XTKS"
-    )
+    ).resolve_symbol(canonical_symbol="7203", country_iso="JP", exchange_mic="XTKS")
     assert result is not None
     assert result.provider_symbol == "7203.T"

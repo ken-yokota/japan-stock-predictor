@@ -59,10 +59,11 @@ _REQUIRED_ENVIRONMENT_VARIABLES = {
     "DATABASE_URL",
     "EMAIL_FROM",
     "EMAIL_TO",
-    "RESEND_API_KEY",
+    "SMTP_PASSWORD",
+    "SMTP_USERNAME",
     "TIMEZONE",
 }
-_OPTIONAL_ENVIRONMENT_VARIABLES = {"EODHD_API_KEY"}
+_OPTIONAL_ENVIRONMENT_VARIABLES = {"EODHD_API_KEY", "RESEND_API_KEY"}
 _REQUIRED_SECTORS = {
     "shipping",
     "oil_energy",
@@ -693,6 +694,211 @@ class BacktestSettings(_StrictModel):
         return self
 
 
+class TrainingConfig(_StrictModel):
+    """Rolling-window training contract shared by live and OOS runs."""
+
+    window_jpx_sessions: Annotated[int, Field(ge=20)]
+    minimum_complete_rows: Annotated[int, Field(ge=20)]
+    feature_warmup_jpx_sessions: Annotated[int, Field(ge=1)]
+    target: Literal["intraday_return"]
+
+    @model_validator(mode="after")
+    def validate_training_lengths(self) -> Self:
+        if self.minimum_complete_rows > self.window_jpx_sessions:
+            raise ValueError("minimum_complete_rows cannot exceed training window")
+        return self
+
+
+class FeatureEngineeringConfig(_StrictModel):
+    """Versioned feature windows and explicit missing-data policy."""
+
+    return_windows: Annotated[list[Annotated[int, Field(gt=0)]], Field(min_length=1)]
+    volatility_windows: Annotated[
+        list[Annotated[int, Field(gt=1)]], Field(min_length=1)
+    ]
+    moving_average_window: Annotated[int, Field(gt=1)]
+    treasury_change_lags: Annotated[
+        list[Annotated[int, Field(gt=0)]], Field(min_length=1)
+    ]
+    include_log_return: bool
+    include_open_close_return: bool
+    include_high_low_range: bool
+    max_missing_ratio: Annotated[float, Field(ge=0.0, le=1.0)] | None
+    missing_policy_status: Literal["pending_confirmation", "confirmed"]
+
+    @field_validator("return_windows", "volatility_windows", "treasury_change_lags")
+    @classmethod
+    def validate_ordered_windows(cls, value: list[int]) -> list[int]:
+        if value != sorted(set(value)):
+            raise ValueError("feature windows must be unique and ascending")
+        return value
+
+    @model_validator(mode="after")
+    def validate_missing_policy(self) -> Self:
+        if (
+            self.missing_policy_status == "pending_confirmation"
+            and self.max_missing_ratio is not None
+        ):
+            raise ValueError("pending feature missing policy must remain null")
+        if self.missing_policy_status == "confirmed" and self.max_missing_ratio is None:
+            raise ValueError("confirmed feature missing policy needs a ratio")
+        return self
+
+
+RegressionModel = Literal["ridge", "elastic_net", "ols", "lasso"]
+ClassificationModel = Literal["logistic_regression"]
+
+
+class ModelFamilyConfig(_StrictModel):
+    """Permitted initial algorithms without implying they are all implemented."""
+
+    regression_primary: Literal["ridge"]
+    regression_candidates: Annotated[list[RegressionModel], Field(min_length=1)]
+    classification_primary: Literal["logistic_regression"]
+    classification_candidates: Annotated[list[ClassificationModel], Field(min_length=1)]
+    scaler: Literal["standard_scaler"]
+
+    @model_validator(mode="after")
+    def validate_primary_candidates(self) -> Self:
+        if len(set(self.regression_candidates)) != len(self.regression_candidates):
+            raise ValueError("duplicate regression model candidates")
+        if len(set(self.classification_candidates)) != len(
+            self.classification_candidates
+        ):
+            raise ValueError("duplicate classification model candidates")
+        if self.regression_primary not in self.regression_candidates:
+            raise ValueError("primary regression model must be a candidate")
+        if self.classification_primary not in self.classification_candidates:
+            raise ValueError("primary classification model must be a candidate")
+        return self
+
+
+class CrossValidationConfig(_StrictModel):
+    """Forward-only model-selection settings."""
+
+    strategy: Literal["time_series_split"]
+    n_splits: Annotated[int, Field(ge=2, le=20)]
+    gap: Annotated[int, Field(ge=0)]
+
+
+class HyperparameterConfig(_StrictModel):
+    """Small deterministic search grids for the initial linear models."""
+
+    ridge_alpha: Annotated[list[Annotated[float, Field(gt=0.0)]], Field(min_length=1)]
+    elastic_net_alpha: Annotated[
+        list[Annotated[float, Field(gt=0.0)]], Field(min_length=1)
+    ]
+    elastic_net_l1_ratio: Annotated[
+        list[Annotated[float, Field(gt=0.0, le=1.0)]], Field(min_length=1)
+    ]
+    logistic_c: Annotated[list[Annotated[float, Field(gt=0.0)]], Field(min_length=1)]
+
+    @field_validator(
+        "ridge_alpha", "elastic_net_alpha", "elastic_net_l1_ratio", "logistic_c"
+    )
+    @classmethod
+    def validate_unique_grid(cls, value: list[float]) -> list[float]:
+        if len(set(value)) != len(value):
+            raise ValueError("hyperparameter grid values must be unique")
+        return value
+
+
+class ReproducibilityConfig(_StrictModel):
+    """Inputs required to reproduce a daily model run."""
+
+    random_seed: Annotated[int, Field(ge=0)]
+    deterministic: Literal[True]
+
+
+class ModelConfig(_StrictModel):
+    """Top-level ``model.yaml`` contract."""
+
+    version: Literal[1]
+    training: TrainingConfig
+    features: FeatureEngineeringConfig
+    models: ModelFamilyConfig
+    cross_validation: CrossValidationConfig
+    hyperparameters: HyperparameterConfig
+    reproducibility: ReproducibilityConfig
+
+    @model_validator(mode="after")
+    def validate_feature_warmup(self) -> Self:
+        longest_window = max(
+            *self.features.return_windows,
+            *self.features.volatility_windows,
+            self.features.moving_average_window,
+        )
+        if self.training.feature_warmup_jpx_sessions < longest_window:
+            raise ValueError("feature warm-up must cover the longest feature window")
+        return self
+
+
+class TradingSignalConfig(_StrictModel):
+    """BUY thresholds and their exact boundary semantics."""
+
+    predicted_intraday_return_threshold: Annotated[float, Field(gt=-1.0, lt=1.0)]
+    probability_up_threshold: Annotated[float, Field(ge=0.0, le=1.0)]
+    return_comparison: Literal["strict_greater_than"]
+    probability_comparison: Literal["greater_than_or_equal"]
+    insufficient_data_status: Literal["INSUFFICIENT_DATA"]
+
+
+class PositionConfig(_StrictModel):
+    """Intraday-only simulated position sizing."""
+
+    capital_per_stock_jpy: Annotated[int, Field(gt=0)]
+    quantity_method: Literal["floor_capital_div_open"]
+    lot_size: Annotated[int, Field(gt=0)] | None
+    lot_size_status: Literal["pending_confirmation", "confirmed"]
+    carry_overnight: Literal[False]
+
+    @model_validator(mode="after")
+    def validate_lot_size(self) -> Self:
+        if self.lot_size_status == "pending_confirmation" and self.lot_size is not None:
+            raise ValueError("pending lot size must remain null")
+        if self.lot_size_status == "confirmed" and self.lot_size is None:
+            raise ValueError("confirmed lot size needs a value")
+        return self
+
+
+class TradingCostConfig(_StrictModel):
+    """Explicitly confirmed or pending commission and slippage assumptions."""
+
+    commission_bps_per_side: Annotated[float, Field(ge=0.0)] | None
+    slippage_bps_per_side: Annotated[float, Field(ge=0.0)] | None
+    assumptions_status: Literal["pending_confirmation", "confirmed"]
+
+    @model_validator(mode="after")
+    def validate_assumptions(self) -> Self:
+        costs = (self.commission_bps_per_side, self.slippage_bps_per_side)
+        if self.assumptions_status == "pending_confirmation" and any(
+            value is not None for value in costs
+        ):
+            raise ValueError("pending trading costs must remain null")
+        if self.assumptions_status == "confirmed" and any(
+            value is None for value in costs
+        ):
+            raise ValueError("confirmed trading costs require both values")
+        return self
+
+
+class PredictionPriceConfig(_StrictModel):
+    """Reference used before the actual market open is known."""
+
+    morning_reference: Literal["previous_close"]
+    recompute_after_actual_open: bool
+
+
+class TradingConfig(_StrictModel):
+    """Top-level ``trading.yaml`` contract."""
+
+    version: Literal[1]
+    signal: TradingSignalConfig
+    position: PositionConfig
+    costs: TradingCostConfig
+    prediction_price: PredictionPriceConfig
+
+
 class EnvironmentSettings(_StrictModel):
     """Names of secrets and deployment settings expected from the environment."""
 
@@ -719,7 +925,7 @@ class EnvironmentSettings(_StrictModel):
     @field_validator("optional")
     @classmethod
     def validate_optional_names(cls, value: list[str]) -> list[str]:
-        """Keep the optional EODHD credential explicit and non-duplicated."""
+        """Keep optional provider credentials explicit and non-duplicated."""
 
         duplicates = _duplicates(value)
         if duplicates:
@@ -761,11 +967,13 @@ class SettingsConfig(_StrictModel):
 
 
 class AppConfig(_StrictModel):
-    """Validated bundle of all three configuration files."""
+    """Validated bundle of all five application configuration files."""
 
     stocks: StocksConfig
     indicators: IndicatorsConfig
     settings: SettingsConfig
+    model: ModelConfig
+    trading: TradingConfig
 
     @model_validator(mode="after")
     def validate_cross_file_references(self) -> Self:
@@ -773,6 +981,44 @@ class AppConfig(_StrictModel):
 
         tickers = {stock.ticker for stock in self.stocks.stocks}
         primary_provider = self.settings.provider.primary
+
+        legacy_model = self.settings.model
+        if (
+            self.model.training.window_jpx_sessions
+            != legacy_model.training_window_jpx_sessions
+            or self.model.models.regression_primary != legacy_model.primary
+            or self.model.models.scaler != legacy_model.scaler
+            or self.model.cross_validation.strategy != legacy_model.cross_validation
+        ):
+            raise ValueError("model.yaml disagrees with legacy settings model values")
+
+        legacy_signal = self.settings.signal
+        legacy_backtest = self.settings.backtest
+        if (
+            self.trading.signal.predicted_intraday_return_threshold
+            != legacy_signal.predicted_intraday_return_threshold
+            or self.trading.signal.probability_up_threshold
+            != legacy_signal.probability_up_threshold
+            or self.trading.position.capital_per_stock_jpy
+            != legacy_backtest.capital_per_stock_jpy
+            or self.trading.position.quantity_method != legacy_backtest.quantity_method
+            or self.trading.position.carry_overnight != legacy_backtest.carry_overnight
+            or self.trading.costs.commission_bps_per_side
+            != legacy_backtest.commission_bps_per_side
+            or self.trading.costs.slippage_bps_per_side
+            != legacy_backtest.slippage_bps_per_side
+            or self.trading.costs.assumptions_status
+            != legacy_backtest.cost_assumptions_status
+        ):
+            raise ValueError("trading.yaml disagrees with legacy settings values")
+
+        if (
+            self.model.features.max_missing_ratio
+            != self.settings.data_quality.max_feature_missing_ratio
+            or self.model.features.missing_policy_status
+            != self.settings.data_quality.threshold_status
+        ):
+            raise ValueError("model.yaml disagrees with legacy missing-data policy")
 
         missing_provider = sorted(
             stock.ticker
@@ -905,6 +1151,24 @@ def load_settings_config(path: str | Path | None = None) -> SettingsConfig:
     return cast(SettingsConfig, _validate_file(SettingsConfig, resolved_path))
 
 
+def load_model_config(path: str | Path | None = None) -> ModelConfig:
+    """Load ``model.yaml`` from ``path`` or the project config directory."""
+
+    resolved_path = (
+        Path(path) if path is not None else DEFAULT_CONFIG_DIR / "model.yaml"
+    )
+    return cast(ModelConfig, _validate_file(ModelConfig, resolved_path))
+
+
+def load_trading_config(path: str | Path | None = None) -> TradingConfig:
+    """Load ``trading.yaml`` from ``path`` or the project config directory."""
+
+    resolved_path = (
+        Path(path) if path is not None else DEFAULT_CONFIG_DIR / "trading.yaml"
+    )
+    return cast(TradingConfig, _validate_file(TradingConfig, resolved_path))
+
+
 def load_app_config(config_dir: str | Path | None = None) -> AppConfig:
     """Load and cross-validate every application configuration file."""
 
@@ -914,6 +1178,8 @@ def load_app_config(config_dir: str | Path | None = None) -> AppConfig:
             stocks=load_stocks_config(directory / "stocks.yaml"),
             indicators=load_indicators_config(directory / "indicators.yaml"),
             settings=load_settings_config(directory / "settings.yaml"),
+            model=load_model_config(directory / "model.yaml"),
+            trading=load_trading_config(directory / "trading.yaml"),
         )
     except ValidationError as exc:
         raise ConfigError(

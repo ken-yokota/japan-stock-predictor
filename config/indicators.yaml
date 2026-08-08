@@ -656,7 +656,10 @@ indicators:
   - id: iron_ore
     name: "Iron Ore"
     category: commodity
-    required: true
+    # No direct free symbol has passed validation. Keep this optional and
+    # absent rather than filling it with a proxy or future observation.
+    required: false
+    optional_reason: "No validated free direct series is available; exclude fail-closed."
     resolution_status: pending
     sources:
       - kind: direct

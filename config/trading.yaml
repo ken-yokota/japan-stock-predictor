@@ -1,0 +1,26 @@
+version: 1
+
+signal:
+  predicted_intraday_return_threshold: 0.003
+  probability_up_threshold: 0.60
+  return_comparison: strict_greater_than
+  probability_comparison: greater_than_or_equal
+  insufficient_data_status: INSUFFICIENT_DATA
+
+position:
+  capital_per_stock_jpy: 1000000
+  quantity_method: floor_capital_div_open
+  # Tokyo cash equities normally trade in board lots of 100 shares.
+  lot_size: 100
+  lot_size_status: confirmed
+  carry_overnight: false
+
+costs:
+  # Conservative paper-trading defaults; each value is per side.
+  commission_bps_per_side: 5.0
+  slippage_bps_per_side: 5.0
+  assumptions_status: confirmed
+
+prediction_price:
+  morning_reference: previous_close
+  recompute_after_actual_open: true

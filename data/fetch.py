@@ -243,9 +243,7 @@ def _source_request(
         market=source.market,
         market_timezone=source.market_timezone,
         market_close=source.market_close,
-        availability_lag_minutes=lag_map.get(
-            source.market, DEFAULT_EOD_LAG_MINUTES
-        ),
+        availability_lag_minutes=lag_map.get(source.market, DEFAULT_EOD_LAG_MINUTES),
         start_date=start_date,
         end_date=end_date,
     )
@@ -288,9 +286,7 @@ def _record_selection(
             else FreshnessStatus.FRESH
         ),
         cutoff_at=cutoff_at,
-        coverage=(
-            selection.attempts[-1].coverage if selection.attempts else None
-        ),
+        coverage=(selection.attempts[-1].coverage if selection.attempts else None),
         details=details,
     )
 
@@ -365,9 +361,7 @@ def execute_fetch_plan(
                 },
             )
             if not selection.rows or selection.selected_provider is None:
-                reasons = "; ".join(
-                    attempt.reason for attempt in selection.attempts
-                )
+                reasons = "; ".join(attempt.reason for attempt in selection.attempts)
                 raise ValueError(reasons or "no provider passed stock EOD gates")
             _store(
                 repository,
@@ -388,9 +382,7 @@ def execute_fetch_plan(
             )
             if target.primary.provider is None:
                 raise ValueError("primary source has no provider registry key")
-            candidates = [
-                EodRouteCandidate(target.primary.provider, primary_request)
-            ]
+            candidates = [EodRouteCandidate(target.primary.provider, primary_request)]
             fallback = target.fallback
             if (
                 fallback is not None
@@ -532,9 +524,7 @@ def execute_fetch_plan(
             cutoff_at=cutoff_at,
             selection=snapshot_selection,
             actual_session=(
-                snapshot_selection.row.market_date
-                if snapshot_selection.row
-                else None
+                snapshot_selection.row.market_date if snapshot_selection.row else None
             ),
             details={
                 "provider_symbol": source.provider_symbol,
@@ -676,9 +666,7 @@ def compare_free_eod(
             primary_close = primary_by_date[latest_date].close
             fallback_close = fallback_by_date[latest_date].close
             relative_difference = (
-                None
-                if primary_close == 0
-                else (fallback_close / primary_close) - 1
+                None if primary_close == 0 else (fallback_close / primary_close) - 1
             )
         except (ProviderError, ValueError) as exc:
             results[target.canonical_symbol] = {

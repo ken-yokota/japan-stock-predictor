@@ -90,9 +90,4 @@ def test_operational_alignment_rejects_late_first_observation(make_bar) -> None:
         retrieved_at=cutoff.replace(microsecond=1),
     )
     assert latest_available([backdated], cutoff)
-    assert (
-        latest_available(
-            [backdated], cutoff, require_observed_by_cutoff=True
-        )
-        == {}
-    )
+    assert latest_available([backdated], cutoff, require_observed_by_cutoff=True) == {}

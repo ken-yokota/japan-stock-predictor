@@ -29,6 +29,7 @@ from data.schemas import (
     FetchRequest,
     MarketBar,
     ProviderHealth,
+    SessionOpenRequest,
     SnapshotRequest,
 )
 
@@ -320,6 +321,92 @@ class YahooFinanceProvider(MarketDataProvider):
                 "Yahoo returned invalid snapshot OHLCV semantics"
             ) from exc
 
+    def fetch_session_open(self, request: SessionOpenRequest) -> MarketBar:
+        """Return the first regular-session minute bar, observed prospectively."""
+
+        symbol = self._safe_symbol(request.provider_symbol)
+        frame = self._history(
+            symbol,
+            start=request.session_date.isoformat(),
+            end=(request.session_date + timedelta(days=1)).isoformat(),
+            interval="1m",
+            auto_adjust=False,
+            actions=False,
+            repair=False,
+            prepost=False,
+        ).dropna(how="all")
+        if frame.empty:
+            raise ProviderResponseError("Yahoo returned no intraday session data")
+        try:
+            opening_hour, opening_minute = (
+                int(part) for part in request.session_open.split(":")
+            )
+        except (TypeError, ValueError) as exc:
+            raise ProviderResponseError("invalid configured session open") from exc
+        selected_index: Any | None = None
+        selected_row: pd.Series | None = None
+        for index_value, row in frame.sort_index().iterrows():
+            source_at = self._source_time(index_value, request.market_timezone)
+            local = source_at.astimezone(ZoneInfo(request.market_timezone))
+            if local.date() != request.session_date:
+                continue
+            if (local.hour, local.minute) < (opening_hour, opening_minute):
+                continue
+            selected_index = index_value
+            selected_row = row
+            break
+        if selected_index is None or selected_row is None:
+            raise ProviderResponseError("Yahoo returned no regular-session open bar")
+        observed_at = self._now()
+        source_at = self._source_time(selected_index, request.market_timezone)
+        if source_at > observed_at:
+            raise ProviderResponseError("Yahoo open-bar timestamp is in the future")
+        available_at, method = live_availability(observed_at)
+        payload = {
+            "symbol": symbol,
+            "source_timestamp": source_at.isoformat(),
+            "open": _column(selected_row, "Open"),
+            "high": _column(selected_row, "High"),
+            "low": _column(selected_row, "Low"),
+            "close": _column(selected_row, "Close"),
+            "volume": _column(selected_row, "Volume"),
+        }
+        try:
+            return MarketBar(
+                canonical_symbol=request.canonical_symbol,
+                provider_symbol=symbol,
+                provider=self.name,
+                market=request.market,
+                market_timezone=request.market_timezone,
+                market_date=request.session_date,
+                timestamp=source_at,
+                source_timestamp=source_at,
+                available_timestamp=available_at,
+                first_observed_at=observed_at,
+                retrieved_at=observed_at,
+                interval=DataInterval.ONE_MINUTE,
+                availability_method=method,
+                close=_decimal(payload["close"], "close", required=True),  # type: ignore[arg-type]
+                data_quality=DataQuality.DELAYED,
+                is_realtime=False,
+                is_delayed=True,
+                open=_decimal(payload["open"], "open", required=True),
+                high=_decimal(payload["high"], "high"),
+                low=_decimal(payload["low"], "low"),
+                volume=_volume(payload["volume"]),
+                currency=request.currency,
+                raw_hash=_raw_hash(payload),
+                quality_flags=(
+                    "yahoo_unofficial",
+                    "session_open_from_first_minute_bar",
+                    "delay_not_guaranteed",
+                ),
+            )
+        except ValueError as exc:
+            raise ProviderResponseError(
+                "Yahoo returned invalid open-bar OHLCV semantics"
+            ) from exc
+
     def validate_provider_symbol(self, provider_symbol: str) -> bool:
         symbol = self._safe_symbol(provider_symbol)
         try:
@@ -347,8 +434,7 @@ class YahooFinanceProvider(MarketDataProvider):
         candidates = [
             item
             for item in self._backend.search(canonical_symbol, max_results=10)
-            if str(item.get("symbol", "")).split(".", maxsplit=1)[0]
-            == canonical_symbol
+            if str(item.get("symbol", "")).split(".", maxsplit=1)[0] == canonical_symbol
         ]
         if len(candidates) != 1:
             return None

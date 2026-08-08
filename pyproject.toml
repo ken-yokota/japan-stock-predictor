@@ -38,8 +38,24 @@ dev = [
   "types-PyYAML>=6,<7",
 ]
 
-[tool.setuptools]
-packages = ["data", "data.providers", "database"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+  "backtest*",
+  "dashboard*",
+  "data*",
+  "database*",
+  "features*",
+  "metrics*",
+  "models*",
+  "notifications*",
+  "pipeline*",
+  "scoring*",
+  "scripts*",
+  "services*",
+  "trading*",
+]
+exclude = ["tests*"]
 
 [tool.pytest.ini_options]
 addopts = "-ra --strict-config --strict-markers"
