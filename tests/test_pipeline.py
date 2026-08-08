@@ -54,8 +54,8 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 
-PREDICTION_DATE = date(2026, 8, 11)
-HOLIDAY = date(2026, 8, 10)  # Mountain Day
+PREDICTION_DATE = date(2026, 8, 12)
+HOLIDAY = date(2026, 8, 11)  # Mountain Day
 DIGEST = "a" * 64
 
 
@@ -365,8 +365,8 @@ class _FakeYahooOpenProvider:
         pass
 
     def fetch_session_open(self, request: SessionOpenRequest) -> MarketBar:
-        source_at = datetime(2026, 8, 11, 0, 0, tzinfo=UTC)
-        observed_at = datetime(2026, 8, 11, 0, 5, tzinfo=UTC)
+        source_at = datetime(2026, 8, 12, 0, 0, tzinfo=UTC)
+        observed_at = datetime(2026, 8, 12, 0, 5, tzinfo=UTC)
         return MarketBar(
             canonical_symbol=request.canonical_symbol,
             provider_symbol=request.provider_symbol,
@@ -408,7 +408,7 @@ def test_open_pipeline_uses_first_observed_one_minute_bar(
 
     result = OpenPipeline(sqlite_factory, app_config, _environment()).run(
         PREDICTION_DATE,
-        observed_at=datetime(2026, 8, 11, 0, 5, tzinfo=UTC),
+        observed_at=datetime(2026, 8, 12, 0, 5, tzinfo=UTC),
     )
 
     assert result.status == "SUCCESS"
@@ -429,8 +429,8 @@ def test_close_retry_finalizes_costed_board_lot_and_is_revision_idempotent(
     sqlite_factory: sessionmaker[Session], app_config: AppConfig
 ) -> None:
     _seed_prediction_set(sqlite_factory, app_config, with_buy=True)
-    at_1545 = datetime(2026, 8, 11, 6, 45, tzinfo=UTC)
-    at_1555 = datetime(2026, 8, 11, 6, 55, tzinfo=UTC)
+    at_1545 = datetime(2026, 8, 12, 6, 45, tzinfo=UTC)
+    at_1555 = datetime(2026, 8, 12, 6, 55, tzinfo=UTC)
     with sqlite_factory() as session:
         session.add(
             _stock_revision(close="6060", raw_hash="1" * 64, first_observed_at=at_1545)
@@ -465,7 +465,7 @@ def test_close_retry_finalizes_costed_board_lot_and_is_revision_idempotent(
         assert float(trade.slippage_cost_jpy or 0) == pytest.approx(603.0)
         assert float(trade.net_profit_jpy or 0) == pytest.approx(4_794.0015)
 
-    at_1610 = datetime(2026, 8, 11, 7, 10, tzinfo=UTC)
+    at_1610 = datetime(2026, 8, 12, 7, 10, tzinfo=UTC)
     with sqlite_factory() as session:
         session.add(
             _stock_revision(close="6120", raw_hash="2" * 64, first_observed_at=at_1610)
