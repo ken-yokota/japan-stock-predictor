@@ -419,6 +419,8 @@ def _build_report(
                     }
                 )
 
+    per_company = _per_company_coefficients(coefficient_frame)
+
     return {
         "generated_for": {
             "from": arguments.from_date.isoformat(),
@@ -456,6 +458,7 @@ def _build_report(
         "daily": daily,
         "predictions": predictions,
         "coefficient_changes": coefficient_changes,
+        "company_coefficients": per_company,
         "failures": failures,
         "caveats": [
             "Yahooの非公式データを使用し、Provider品質ゲートと"
@@ -465,6 +468,44 @@ def _build_report(
             "紙上シミュレーションであり、実際の約定、板、税金を再現しません。",
         ],
     }
+
+
+def _per_company_coefficients(frame: pd.DataFrame) -> list[dict[str, Any]]:
+    """Return each company's own coefficient per date, with its day-over-day move.
+
+    ``first_seen`` marks the first date a feature carried a non-zero
+    coefficient for that company. Regularized fits drive irrelevant features to
+    exactly zero, so a feature becoming non-zero is the model starting to use
+    it -- which is what "a newly appeared indicator" means here.
+    """
+
+    if frame.empty:
+        return []
+    records: list[dict[str, Any]] = []
+    for (ticker, feature), group in frame.groupby(["ticker", "feature"], sort=True):
+        ordered = group.sort_values("date")
+        previous: float | None = None
+        seen_active = False
+        for row in ordered.to_dict("records"):
+            value = float(row["coefficient"])
+            active = abs(value) > 0.0
+            first_seen = active and not seen_active
+            seen_active = seen_active or active
+            records.append(
+                {
+                    "date": str(row["date"]),
+                    "ticker": str(ticker),
+                    "feature": str(feature),
+                    "coefficient": value,
+                    "change_from_previous_day": (
+                        None if previous is None else value - previous
+                    ),
+                    "first_seen": first_seen,
+                    "active": active,
+                }
+            )
+            previous = value
+    return records
 
 
 def _print_summary(report: dict[str, Any], output: Path) -> None:

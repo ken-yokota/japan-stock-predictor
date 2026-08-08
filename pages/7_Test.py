@@ -117,19 +117,19 @@ def _render_buy_list(report: dict[str, Any]) -> None:
         [
             {
                 "日付": row["date"],
-                "銘柄": stock_label(str(row["ticker"])),
+                "社名": stock_label(str(row["ticker"])),
+                "結果": "勝ち" if float(row["net_profit_jpy"]) > 0 else "負け",
                 "予測リターン": format_percent(row["predicted_return"]),
+                "上昇確率": format_percent(row["probability_up"]),
+                "実績リターン": format_percent(row["actual_return"]),
                 "予測 終値-寄付(1株)": format_yen(
                     row.get("predicted_price_difference")
                 ),
-                "実績リターン": format_percent(row["actual_return"]),
                 "実績 終値-寄付(1株)": format_yen(row.get("actual_price_difference")),
-                "上昇確率": format_percent(row["probability_up"]),
                 "買値(寄付)": format_number(row.get("actual_open"), digits=1),
                 "売値(大引)": format_number(row.get("actual_close"), digits=1),
                 "株数": int(row["shares"]),
                 "損益(合計)": format_yen(row["net_profit_jpy"]),
-                "結果": "勝ち" if float(row["net_profit_jpy"]) > 0 else "負け",
             }
             for row in sorted(bought, key=lambda item: (item["date"], item["ticker"]))
         ]
