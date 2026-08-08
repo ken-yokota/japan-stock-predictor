@@ -5,10 +5,8 @@ from __future__ import annotations
 import os
 from logging.config import fileConfig
 
-from sqlalchemy import create_engine, pool
-
 from alembic import context
-from database.connection import normalize_database_url
+from database.connection import create_database_engine, normalize_database_url
 from database.models import Base
 
 config = context.config
@@ -38,7 +36,10 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    engine = create_engine(_database_url(), poolclass=pool.NullPool)
+    # Share the application's engine builder so migrations inherit the same
+    # search_path handling; a hosted role with an empty search_path would
+    # otherwise fail DDL with "no schema has been selected to create in".
+    engine = create_database_engine(_database_url(), allow_sqlite=True)
     with engine.connect() as connection:
         context.configure(
             connection=connection,

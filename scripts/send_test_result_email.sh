@@ -118,11 +118,21 @@ for row in sorted(bought, key=lambda item: (item["date"], item["ticker"])):
         f"  {row['shares']}株  {row['net_profit_jpy']:+,.0f}円"
     )
 
+lan_url = os.environ.get("LAN_URL", "http://192.168.3.11:8501").strip()
+repo_url = os.environ.get("REPO_URL", "").strip()
 lines += [
     "",
-    f"■ ダッシュボード: {app_url}",
-    "   「テスト」ページに日別の内訳、寄り付き/大引けの予測と実績、",
-    "   各指標の係数の推移が入っています。",
+    "■ リンク",
+    f"  ダッシュボード（どこからでも）: {app_url}",
+    "     ↑ 普段はこれ。スマホの共有ボタンからホーム画面に追加できます。",
+    "     「テスト」ページに日別の内訳、寄り付き/大引けの予測と実績、",
+    "     各指標の係数の推移が入っています。",
+    f"  自宅Wi-Fi内のスマホから: {lan_url}",
+    "  このMacから: http://localhost:8501",
+]
+if repo_url:
+    lines.append(f"  ソースコード: {repo_url}")
+lines += [
     "",
     "■ 注意",
 ]
@@ -159,7 +169,12 @@ if not username or not password:
 message = EmailMessage()
 message["Subject"] = subject
 message["From"] = sender
-message["To"] = os.environ["RECIPIENT"]
+recipients = [
+    address.strip()
+    for address in os.environ["RECIPIENT"].split(",")
+    if address.strip()
+]
+message["To"] = ", ".join(recipients)
 message.set_content(body)
 
 host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
@@ -179,6 +194,6 @@ except ImportError:
 with smtplib.SMTP(host, port, timeout=30) as server:
     server.starttls(context=context)
     server.login(username, password)
-    server.send_message(message)
-print(f"送信しました: {os.environ['RECIPIENT']}")
+    server.send_message(message, to_addrs=recipients)
+print(f"送信しました: {', '.join(recipients)}")
 PY
