@@ -29,7 +29,7 @@ jobs:
   close:
     if: github.event_name == 'workflow_dispatch' || vars.AUTOMATION_ENABLED == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       TIMEZONE: Asia/Tokyo
