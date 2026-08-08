@@ -39,6 +39,8 @@ class PerformanceMetrics:
     pearson_correlation: float
     spearman_correlation: float
     direction_accuracy: float
+    mean_absolute_error: float
+    root_mean_squared_error: float
 
     def as_dict(self) -> dict[str, Any]:
         """Return a serialization-friendly field mapping."""
@@ -184,6 +186,29 @@ def direction_accuracy(predicted: object, actual: object) -> float:
     return float(np.mean((prediction > 0.0) == (outcome > 0.0)))
 
 
+def mean_absolute_error(predicted: object, actual: object) -> float:
+    """Return mean absolute prediction error in the input's own units.
+
+    Inputs are intraday returns, so ``0.004`` means the prediction was off by
+    0.4 percentage points on average. Empty pairings return zero rather than
+    ``NaN`` so callers can persist the value without branching.
+    """
+
+    prediction, outcome = _paired_finite(predicted, actual)
+    if len(prediction) == 0:
+        return 0.0
+    return float(np.mean(np.abs(prediction - outcome)))
+
+
+def root_mean_squared_error(predicted: object, actual: object) -> float:
+    """Return root mean squared prediction error, penalizing large misses."""
+
+    prediction, outcome = _paired_finite(predicted, actual)
+    if len(prediction) == 0:
+        return 0.0
+    return float(np.sqrt(np.mean(np.square(prediction - outcome))))
+
+
 def calculate_performance_metrics(
     net_profits: object,
     *,
@@ -214,6 +239,8 @@ def calculate_performance_metrics(
     pearson = 0.0
     spearman = 0.0
     accuracy = 0.0
+    absolute_error = 0.0
+    squared_error = 0.0
     if (predicted_returns is None) != (actual_returns is None):
         raise ValueError(
             "predicted_returns and actual_returns must be supplied together"
@@ -222,6 +249,8 @@ def calculate_performance_metrics(
         pearson = pearson_correlation(predicted_returns, actual_returns)
         spearman = spearman_correlation(predicted_returns, actual_returns)
         accuracy = direction_accuracy(predicted_returns, actual_returns)
+        absolute_error = mean_absolute_error(predicted_returns, actual_returns)
+        squared_error = root_mean_squared_error(predicted_returns, actual_returns)
 
     return PerformanceMetrics(
         number_of_trades=trade_count,
@@ -244,6 +273,8 @@ def calculate_performance_metrics(
         pearson_correlation=pearson,
         spearman_correlation=spearman,
         direction_accuracy=accuracy,
+        mean_absolute_error=absolute_error,
+        root_mean_squared_error=squared_error,
     )
 
 

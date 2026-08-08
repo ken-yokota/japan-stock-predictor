@@ -80,6 +80,23 @@ def cached_trades(_service: DashboardQueryService) -> QueryResult:
 
 
 @st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+def cached_oos_scenario_rows(_service: DashboardQueryService) -> QueryResult:
+    return _service.oos_scenario_rows()
+
+
+@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+def cached_coefficient_history(
+    _service: DashboardQueryService, ticker: str, task: str
+) -> QueryResult:
+    return _service.coefficient_history(ticker=ticker, task=task)
+
+
+@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+def cached_applied_buy_thresholds(_service: DashboardQueryService) -> QueryResult:
+    return _service.applied_buy_thresholds()
+
+
+@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_selections(_service: DashboardQueryService) -> QueryResult:
     return _service.provider_selections()
 

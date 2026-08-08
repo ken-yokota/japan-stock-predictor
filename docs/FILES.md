@@ -57,12 +57,16 @@
 | `features/builder.py` | pure OHLC feature/target計算 | `build_price_features`, `add_intraday_targets` | pandas OHLC | feature DataFrame | pandas/numpy | tests/integrations | `test_features.py` | — | ticker分離、0除算はNaN |
 | `models/base.py` | model contracts/config | `ModelTrainingConfig`, `TickerPrediction`, `InsufficientTrainingData` | typed settings | contracts | pandas | training/backtest | `test_models.py` | — | deterministic defaults |
 | `models/ridge.py`, `models/classifier.py` | sklearn Pipeline構築 | `build_ridge_pipeline`, `build_logistic_pipeline` | alpha/C | imputer+scaler+model | scikit-learn | training/optimization | `test_models.py` | — | preprocessはfold内fit |
-| `models/optimization.py` | chronological hyperparameter選択 | `select_ridge_alpha`, `select_logistic_c` | train data/grid/splits | best alpha/C | TimeSeriesSplit | training | `test_models.py` | — | future foldでtrainしない |
+| `models/linear.py` | ElasticNet/Lasso/OLSのpipeline | `build_elastic_net_pipeline`, `build_lasso_pipeline`, `build_ols_pipeline` | alpha/l1_ratio/seed | imputer+scaler+model | scikit-learn | comparison | `test_model_comparison.py` | — | Ridgeと同じpreprocess契約。OLSは診断用baselineでproduction昇格しない |
+| `models/comparison.py` | 回帰候補の時系列CV比較 | `compare_regression_candidates`, `RegressionComparison`, `CandidateScore` | training window/候補/grid | 候補別MSE/RMSE/MAEの順位 | models/linear/optimization | 診断・報告 | `test_model_comparison.py` | — | training window内だけで計算。比較結果を投資成績として表示しない。分割不能なsampleは`NOT_EVALUATED` |
+| `models/optimization.py` | chronological hyperparameter選択 | `chronological_splitter`, `select_ridge_alpha`, `select_logistic_c` | train data/grid/splits | best alpha/C | TimeSeriesSplit | training/comparison | `test_models.py` | — | future foldでtrainしない |
 | `models/training.py` | 銘柄別model fit/predict/係数 | `TickerModelBundle`, `train_ticker_model`, `train_models_by_ticker` | features/target/config | fitted bundle | sklearn/models | prediction/backtest | `test_models.py` | — | 単一classは定数probability |
 | `models/prediction.py` | trained modelのthin prediction API | `predict_ticker` | bundle/one row | `TickerPrediction` | models | integrations | `test_models.py` | — | fitはしない |
 | `backtest/walk_forward.py` | strict one-step OOS | `walk_forward_validate`, `assert_walk_forward_oos` | long DataFrame/features | OOS DataFrame | models/pandas | walk-forward script | `test_walk_forward.py` | — | `[t-120,t)`で`t`を予測 |
+| `backtest/scenario.py` | 保存済みOOS予測へ売買条件を再適用 | `ScenarioConfig`, `evaluate_scenario`, `prepare_scenario_frame` | OOS予測+実績Open/Close、閾値/資金/コスト/Top N | portfolio・銘柄別metric・trade明細 | metrics/trading/pandas | `pages/5_Backtest.py` | `test_scenario.py` | — | modelを再学習しない。model/学習期間の変更は`walk-forward`再実行が必要。試行回数を数えselection biasを警告 |
 | `trading/strategy.py` | BUY、100株lot、両側cost paper simulation | `is_buy_signal`, `simulate_intraday_trade`, `simulate_prediction_frame` | prediction/Open/Close/config | `TradeResult`/DataFrame | pandas | close/backtest | `test_trading.py` | — | `held_overnight=False`; broker APIなし |
-| `metrics/performance.py` | PF/Expectancy/risk/correlation | `calculate_performance_metrics`ほか | OOS P/L/return/predicted/actual | `PerformanceMetrics` | numpy | close/backtest | `test_metrics.py` | — | undefinedは0/inf規則を確認 |
+| `trading/post_open.py` | Actual Open基準のPredicted Close導出 | `project_predicted_close`, `PostOpenProjection` | actual_open、predicted_return | `PostOpenProjection`または`None` | stdlib/Decimal | `dashboard/presenters.py` | `test_post_open.py` | — | 朝の保存値を上書きしない。Openが無ければ`None`を返し、代替値を捏造しない |
+| `metrics/performance.py` | PF/Expectancy/risk/correlation/誤差 | `calculate_performance_metrics`, `mean_absolute_error`, `root_mean_squared_error`ほか | OOS P/L/return/predicted/actual | `PerformanceMetrics` | numpy | close/backtest/scenario | `test_metrics.py` | — | undefinedは0/inf規則を確認。MAE/RMSEはreturn単位 |
 | `scoring/readability.py` | OOS Readability 0..100 | `score_readability` | metric/stability/trades | components + score | stdlib | close/dashboard/email | `test_scoring.py` | — | 20 trade未満penalty |
 | `scoring/confidence.py` | 表示用confidence | `calculate_confidence_score` | prediction/readability/coverage | 0..100 | stdlib | prediction | `test_scoring.py` | — | 勝率ではない |
 | `scoring/stability.py` | 直近係数の符号/変動安定性 | `calculate_coefficient_stability`, `aggregate_*` | coefficient history | feature/aggregate score | pandas/numpy | close | `test_scoring.py` | — | default lookback 20 |
@@ -99,13 +103,20 @@
 | `pages/2_Stock_Detail.py` | 銘柄別prediction/actual/metric/P&L | `main` | DB history | page/chart/table | dashboard/pandas | Streamlit | dashboard tests | DB only | 少数sampleを警告 |
 | `pages/3_Factor_Analysis.py` | 最新係数 | `main` | model coefficients | chart/table | dashboard/pandas | Streamlit | dashboard tests | DB only | 因果ではない |
 | `pages/4_Sector_Analysis.py` | 最新予測sector集約 | `main` | predictions/metrics | chart/table | dashboard/pandas | Streamlit | dashboard tests | DB only | 単純平均 |
-| `pages/5_Backtest.py` | 保存済みOOS metric/paper trades | `main` | metrics/trades | chart/table | dashboard/pandas | Streamlit | dashboard tests | DB only | UI上では再学習しない |
+| `pages/5_Backtest.py` | 保存済みOOS結果 + 条件変更後の再計算 | `main`, `_render_persisted`, `_render_scenario` | metrics/trades/OOS予測 | chart/table/再計算結果 | dashboard/backtest.scenario/pandas | Streamlit | dashboard tests, `test_scenario.py` | DB only | UI上でmodelを再学習しない。閾値/資金/コスト/Top Nのみ変更可 |
 | `pages/6_System_Status.py` | run/provider/raw health | `main` | persisted audit | alert/table | dashboard | Streamlit | dashboard tests | DB only | live pingではない |
+| `pages/7_Test.py` | 直近期間の検証結果表示 | `main` | `artifacts/week_test/latest.json` | 日別勝率/金額比/予測対実績/係数推移 | dashboard/pandas | Streamlit | artifact経由 | なし | artifactを読むだけで再計算しない。DBも使わない |
+| `dashboard/factors.py` | BUY条件の表示と係数集計 | `load_configured_buy_rule`, `buy_rule_mismatches`, `summarize_coefficients` | `config/trading.yaml`、係数行 | `BuyRule`、安定性レポート | PyYAML/pandas/`scoring.stability` | `pages/3_Factor_Analysis.py` | `test_factors.py` | — | 表示専用read。strict検証は`data.config`が担当。設定と保存済み判定の食い違いを警告 |
 
 ## Scripts / automation
 
 | Path | Purpose | API | Input | Output | Dependencies | Called by | Tests | Secrets | Notes |
 |---|---|---|---|---|---|---|---|---|---|
+| `cli.py` | 全運用コマンドの単一入口 | `main`, subcommand dispatch | subcommand + そのscriptの引数 | delegateのexit code | 各`scripts/`モジュール | 人手/GitHub Actions | delegate側のtests | delegateと同一 | 業務ロジックを持たない薄いdispatch。`python -m cli <cmd> -- --help`でdelegateのhelpへ |
+| `scripts/run_buy_all_reference.py` | 全銘柄購入の対照結果 | `main` | 期間/コスト | 集計とJSON | yfinance/`backtest.scenario` | `cli buy-all` | `test_scenario.py`(engine) | なし | モデル非使用。BUY判定の価値を測る基準。コスト未設定なら停止 |
+| `scripts/run_week_test.py` | DBなしのwalk-forward検証 | `main` | 期間/学習窓 | `artifacts/week_test/latest.json` | yfinance/features/models/trading | `cli week-test` | 構成要素のtests | なし | **自銘柄特徴量と海外指標を1営業日ラグ**させリークを防ぐ。Provider品質ゲートとPIT lineageは通らない |
+| `scripts/start_dashboard.sh` | Dashboardのローカル起動 | shell script | `--lan`任意 | Streamlit process | venv/.env/streamlit | 人手/LaunchAgent | manual | `DATABASE_URL` | `--lan`は同一ネットワークへ無認証公開。信頼できる回線のみ |
+| `scripts/com.jpstock.dashboard.plist` | ログイン時のDashboard常駐 | launchd job | — | 常駐process + log | launchd/start_dashboard.sh | 利用者が手動install | manual | — | localhostのみ。Mac起動中だけ有効。外出先からはStreamlit Cloudを使う |
 | `scripts/runtime.py` | config/env/engine/factory共通構築 | `load_runtime` | config dir/env | runtime tuple | config/env/database | operational scripts | indirect | `DATABASE_URL` + optional vars | engineをfinallyでdispose |
 | `scripts/phase0_data_feasibility.py` | 無料coverage report | `build_report`, `main` | config/`--network` | JSON | data.fetch/Yahoo | user | config/provider tests | none; network Yahoo only | defaultはnetworkなし |
 | `scripts/bootstrap_history.py` | 最大3年の初期raw取得 | `main` | from/to/config | fetch report/DB rows | `data.fetch` | user | fetch tests | `DATABASE_URL`, optional `EODHD_API_KEY` | current日を含めると未完了sessionに注意 |
@@ -139,3 +150,6 @@
 - メール文面変更: `notifications/templates.py`。template versionとemail testsも変更。
 - Dashboard変更: 対応する`pages/`、`dashboard/query_service.py`、`test_dashboard.py`。
 - schedule変更: `.github/workflows/`と`config/settings.yaml`の双方。
+- Backtest画面の可変条件追加: `backtest/scenario.py`の`ScenarioConfig`、`pages/5_Backtest.py`の入力、`test_scenario.py`。
+- 回帰候補追加: `models/linear.py`にpipeline、`models/base.py`の`REGRESSION_CANDIDATES`とgrid、`models/comparison.py`の`_candidate_grid`/`_build_candidate`、`test_model_comparison.py`。
+- Dashboardの見方の説明: `docs/DASHBOARD_GUIDE.md`。

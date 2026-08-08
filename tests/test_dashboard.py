@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import ast
+import subprocess
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -278,25 +280,41 @@ def test_stock_and_sector_presenters_cover_configured_universe() -> None:
     ]
 
 
-def test_ui_import_graph_cannot_reach_fetch_training_or_delivery_code() -> None:
+def _dashboard_source_files() -> list[Path]:
     files = [Path("app.py"), *sorted(Path("dashboard").glob("*.py"))]
     files.extend(sorted(Path("pages").glob("*.py")))
+    return files
+
+
+def test_ui_import_graph_cannot_reach_fetch_training_or_delivery_code() -> None:
+    """The dashboard may compute, but it must not fetch, train, or deliver.
+
+    ``backtest.scenario``, ``trading``, and ``metrics`` are pure arithmetic over
+    rows the dashboard already read, and the Backtest page needs them to
+    re-simulate stored predictions under user-chosen thresholds. Reimplementing
+    that arithmetic inside ``dashboard/`` would let the displayed numbers drift
+    away from the production strategy, which is worse than the dependency.
+
+    Everything that performs I/O or fits a model stays forbidden: provider and
+    HTTP clients, the training stack, scoring, and the notification/service
+    layers. ``test_dashboard_never_imports_the_training_stack`` additionally
+    proves the ban holds transitively at runtime, not just in these files.
+    """
+
     forbidden_roots = {
-        "backtest",
         "data",
         "features",
         "httpx",
         "models",
         "notifications",
-        "scoring",
         "services",
         "sklearn",
-        "trading",
+        "smtplib",
         "yfinance",
     }
 
     imported: list[tuple[Path, str]] = []
-    for path in files:
+    for path in _dashboard_source_files():
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
@@ -311,6 +329,51 @@ def test_ui_import_graph_cannot_reach_fetch_training_or_delivery_code() -> None:
     ]
     assert violations == []
     assert not any(module == "database.models" for _, module in imported)
+
+    # Pure packages are allowed only through the specific modules the UI needs,
+    # so a later import cannot quietly widen the boundary.
+    allowed_submodules = {
+        "backtest": {"backtest.scenario"},
+        "scoring": {"scoring.stability"},
+    }
+    for package, allowed in allowed_submodules.items():
+        used = {
+            module
+            for _, module in imported
+            if module.split(".", maxsplit=1)[0] == package
+        }
+        assert used <= allowed, f"{package}: {sorted(used - allowed)}"
+
+
+def test_dashboard_never_imports_the_training_stack() -> None:
+    """Prove transitively that importing the UI cannot load scikit-learn.
+
+    A pure-arithmetic dependency can still drag the training stack in through a
+    package ``__init__``. This runs in a fresh interpreter so the assertion is
+    about the real import graph rather than modules a previous test cached.
+    """
+
+    program = (
+        "import sys\n"
+        "import dashboard.presenters, dashboard.query_service, dashboard.ui\n"
+        "import backtest.scenario\n"
+        "leaked = sorted(\n"
+        "    name\n"
+        "    for name in sys.modules\n"
+        "    if name.split('.', 1)[0]\n"
+        "    in {'sklearn', 'yfinance', 'httpx', 'smtplib', 'services'}\n"
+        ")\n"
+        "print(','.join(leaked))\n"
+    )
+    completed = subprocess.run(
+        [sys.executable, "-c", program],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=Path.cwd(),
+    )
+
+    assert completed.stdout.strip() == ""
 
 
 def test_dashboard_reads_only_database_url_from_environment() -> None:

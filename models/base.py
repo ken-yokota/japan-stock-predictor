@@ -3,11 +3,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Literal, Protocol, TypeAlias
 
 import pandas as pd
 
 DEFAULT_RANDOM_STATE = 42
+
+RegressionCandidate: TypeAlias = Literal[  # noqa: UP040
+    "ridge", "elastic_net", "ols", "lasso"
+]
+
+REGRESSION_CANDIDATES: tuple[RegressionCandidate, ...] = (
+    "ridge",
+    "elastic_net",
+    "ols",
+    "lasso",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -19,6 +30,9 @@ class ModelTrainingConfig:
     time_series_splits: int = 5
     ridge_alphas: tuple[float, ...] = (0.01, 0.1, 1.0, 10.0, 100.0)
     logistic_cs: tuple[float, ...] = (0.01, 0.1, 1.0, 10.0, 100.0)
+    elastic_net_alphas: tuple[float, ...] = (0.001, 0.01, 0.1, 1.0)
+    elastic_net_l1_ratios: tuple[float, ...] = (0.1, 0.5, 0.9)
+    lasso_alphas: tuple[float, ...] = (0.001, 0.01, 0.1, 1.0)
     random_state: int = DEFAULT_RANDOM_STATE
 
     def __post_init__(self) -> None:
@@ -34,6 +48,16 @@ class ModelTrainingConfig:
             raise ValueError("ridge_alphas must contain only positive values")
         if not self.logistic_cs or any(value <= 0 for value in self.logistic_cs):
             raise ValueError("logistic_cs must contain only positive values")
+        if not self.elastic_net_alphas or any(
+            value <= 0 for value in self.elastic_net_alphas
+        ):
+            raise ValueError("elastic_net_alphas must contain only positive values")
+        if not self.elastic_net_l1_ratios or any(
+            not 0.0 <= value <= 1.0 for value in self.elastic_net_l1_ratios
+        ):
+            raise ValueError("elastic_net_l1_ratios must be between 0 and 1")
+        if not self.lasso_alphas or any(value <= 0 for value in self.lasso_alphas):
+            raise ValueError("lasso_alphas must contain only positive values")
 
 
 @dataclass(frozen=True, slots=True)

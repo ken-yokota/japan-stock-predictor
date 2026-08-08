@@ -75,6 +75,20 @@ TIMEZONE=Asia/Tokyo
 
 ## Data / Pipeline CLI
 
+全操作は `python -m cli <command>` からも呼べます。GitHub Actionsと手元で同じ
+コードパスを使うための薄いdispatchで、業務ロジックは各scriptのままです。
+
+```bash
+python -m cli                    # コマンド一覧
+python -m cli config-check       # 秘密情報なしで構成検証
+python -m cli morning --prediction-date 2026-08-10
+python -m cli send-email --prediction-date 2026-08-10 --dry-run
+python -m cli close --prediction-date 2026-08-10
+python -m cli dashboard          # Streamlitを起動
+```
+
+個別scriptを直接呼ぶ従来の形も変わらず使えます。
+
 ```bash
 # 無料経路の構成と任意network検査
 python -m scripts.phase0_data_feasibility
@@ -110,18 +124,27 @@ walk-forward artifactは既定で`artifacts/backtest/`へ出力され、DBのliv
 
 ## Dashboard
 
+入口は `app.py` だけです。残り6画面は `pages/` から自動で読み込まれます。
+
 ```bash
-streamlit run app.py
+./scripts/start_dashboard.sh          # http://localhost:8501
+./scripts/start_dashboard.sh --lan    # 同一Wi-Fiのスマホからも見る
 ```
 
-- Today: 今日の予測・BUY順位・warning
+- Today: 今日の予測・BUY順位・warning・実績Open・Open基準の予測終値
 - Stock Detail: 銘柄別prediction/actual/P&L/metric
 - Factor Analysis: 標準化係数
 - Sector Analysis: セクター単純集約
-- Backtest: 保存済みOOS metricとpaper trade
+- Backtest: 保存済みOOS metricとpaper trade、および閾値・投資額・コスト・Top Nを
+  変更した再計算
 - System Status: DBに保存されたrun、Provider、鮮度、欠損
 
 画面はDBだけを読み、表示中にYahoo等へ接続したりモデルを再学習したりしません。
+Backtestの再計算も、保存済みのwalk-forward予測へ売買条件を再適用するだけで、
+モデルの再学習は行いません。
+
+画面の読み方、常時公開、スマホ/メールでの確認方法は
+[docs/DASHBOARD_GUIDE.md](docs/DASHBOARD_GUIDE.md) にまとめています。
 
 ## GitHub Actions / Deployment
 

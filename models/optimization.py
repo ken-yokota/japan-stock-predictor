@@ -12,13 +12,23 @@ from models.classifier import build_logistic_pipeline
 from models.ridge import build_ridge_pipeline
 
 
-def _splitter(sample_count: int, requested_splits: int) -> TimeSeriesSplit | None:
-    # At least two samples are required in the earliest training fold.  This
-    # also avoids fragile one-row median/scaler fits for tiny unit-test inputs.
+def chronological_splitter(
+    sample_count: int, requested_splits: int
+) -> TimeSeriesSplit | None:
+    """Return a ``TimeSeriesSplit`` sized for the sample, or ``None`` if too small.
+
+    At least two samples are required in the earliest training fold.  This also
+    avoids fragile one-row median/scaler fits for tiny unit-test inputs.
+    """
+
     maximum = sample_count - 2
     if maximum < 2:
         return None
     return TimeSeriesSplit(n_splits=min(requested_splits, maximum))
+
+
+# Retained internal alias for existing call sites.
+_splitter = chronological_splitter
 
 
 def select_ridge_alpha(

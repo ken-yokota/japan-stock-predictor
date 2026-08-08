@@ -184,6 +184,9 @@ class DashboardQueryService:
                         "created_at",
                     }
                 ),
+                "actual_results": frozenset(
+                    {"prediction_id", "result_version", "actual_open"}
+                ),
             },
             statement="""
                 SELECT
@@ -199,7 +202,15 @@ class DashboardQueryService:
                     ps.prediction_set_id, ps.run_id, ps.prediction_date,
                     ps.cutoff_at, ps.status AS prediction_set_status,
                     ps.generated_at, ps.published_at,
-                    ps.warnings AS prediction_set_warnings
+                    ps.warnings AS prediction_set_warnings,
+                    (
+                        SELECT ar.actual_open
+                        FROM actual_results AS ar
+                        WHERE ar.prediction_id = p.prediction_id
+                          AND ar.actual_open IS NOT NULL
+                        ORDER BY ar.result_version DESC
+                        LIMIT 1
+                    ) AS actual_open
                 FROM predictions AS p
                 JOIN prediction_sets AS ps
                   ON ps.prediction_set_id = p.prediction_set_id
@@ -297,6 +308,71 @@ class DashboardQueryService:
             parameters={"limit": max(1, min(limit, 5000))},
         )
 
+    def oos_scenario_rows(self, *, limit: int = 5000) -> QueryResult:
+        """Return finalized prediction/outcome pairs for scenario recomputation.
+
+        Only the newest ``result_version`` of each prediction is returned, and
+        only once the outcome reached ``FINAL`` or ``CORRECTED``.  ``PENDING``
+        rows are excluded so an unconfirmed session cannot be traded in a
+        recomputed scenario.
+        """
+
+        return self._read(
+            required={
+                "prediction_sets": frozenset(
+                    {"prediction_set_id", "prediction_date", "cutoff_at"}
+                ),
+                "predictions": frozenset(
+                    {
+                        "prediction_id",
+                        "prediction_set_id",
+                        "ticker",
+                        "status",
+                        "predicted_intraday_return",
+                        "probability_up",
+                    }
+                ),
+                "actual_results": frozenset(
+                    {
+                        "prediction_id",
+                        "result_version",
+                        "status",
+                        "actual_open",
+                        "actual_close",
+                    }
+                ),
+            },
+            statement="""
+                SELECT
+                    p.ticker,
+                    ps.prediction_date,
+                    p.predicted_intraday_return AS predicted_return,
+                    p.probability_up,
+                    ar.actual_open,
+                    ar.actual_close,
+                    ar.status AS outcome_status,
+                    ar.result_version
+                FROM predictions AS p
+                JOIN prediction_sets AS ps
+                  ON ps.prediction_set_id = p.prediction_set_id
+                JOIN actual_results AS ar
+                  ON ar.prediction_id = p.prediction_id
+                WHERE p.status = 'SUCCESS'
+                  AND ar.status IN ('FINAL', 'CORRECTED')
+                  AND ar.actual_open IS NOT NULL
+                  AND ar.actual_close IS NOT NULL
+                  AND ar.result_version = (
+                      SELECT MAX(inner_ar.result_version)
+                      FROM actual_results AS inner_ar
+                      WHERE inner_ar.prediction_id = p.prediction_id
+                        AND inner_ar.status IN ('FINAL', 'CORRECTED')
+                  )
+                ORDER BY ps.prediction_date, p.ticker
+                LIMIT :limit
+            """,
+            parameters={"limit": max(1, min(limit, 20000))},
+        )
+
     def latest_metrics(self, *, limit: int = 500) -> QueryResult:
         return self._read(
             required={
@@ -385,6 +461,98 @@ class DashboardQueryService:
                 LIMIT :limit
             """,
             parameters={"limit": max(1, min(limit, 10000))},
+        )
+
+    def coefficient_history(
+        self, *, ticker: str, task: str, limit: int = 6000
+    ) -> QueryResult:
+        """Return one ticker/task's rolling coefficients, newest fit first.
+
+        ``model_coefficients`` returns only the newest fits across all tickers,
+        which covers barely a day once 22 tickers are trained. Summarizing how a
+        feature behaved over roughly six months needs one ticker's own history,
+        so this narrows by ticker/task and lets the caller ask for far more rows.
+        """
+
+        return self._read(
+            required={
+                "model_runs": frozenset(
+                    {
+                        "model_run_id",
+                        "ticker",
+                        "task",
+                        "algorithm",
+                        "training_start",
+                        "training_end",
+                        "model_version",
+                        "status",
+                        "finished_at",
+                    }
+                ),
+                "model_coefficients": frozenset(
+                    {"model_run_id", "feature_name", "coefficient"}
+                ),
+            },
+            statement="""
+                SELECT
+                    mr.model_run_id, mr.training_start, mr.training_end,
+                    mr.finished_at, mr.algorithm, mr.model_version,
+                    mc.feature_name, mc.coefficient
+                FROM model_coefficients AS mc
+                JOIN model_runs AS mr
+                  ON mr.model_run_id = mc.model_run_id
+                WHERE mr.status = 'SUCCESS'
+                  AND mr.ticker = :ticker
+                  AND mr.task = :task
+                ORDER BY mr.training_end DESC, mr.finished_at DESC, mc.feature_name
+                LIMIT :limit
+            """,
+            parameters={
+                "ticker": ticker,
+                "task": task,
+                "limit": max(1, min(limit, 60000)),
+            },
+        )
+
+    def applied_buy_thresholds(self, *, limit: int = 2000) -> QueryResult:
+        """Return the BUY thresholds actually stored on recent predictions.
+
+        The rule shown to a user must be the one that produced the saved
+        signals, not whatever ``config/trading.yaml`` happens to say today. A
+        config edit that has not been through a morning run would otherwise be
+        displayed as if it were already in force.
+        """
+
+        return self._read(
+            required={
+                "prediction_sets": frozenset({"prediction_set_id", "prediction_date"}),
+                "predictions": frozenset(
+                    {
+                        "prediction_set_id",
+                        "return_threshold",
+                        "probability_threshold",
+                        "signal",
+                    }
+                ),
+            },
+            statement="""
+                SELECT
+                    p.return_threshold,
+                    p.probability_threshold,
+                    COUNT(*) AS prediction_count,
+                    SUM(CASE WHEN p.signal = 'BUY' THEN 1 ELSE 0 END) AS buy_count,
+                    MIN(ps.prediction_date) AS first_date,
+                    MAX(ps.prediction_date) AS last_date
+                FROM predictions AS p
+                JOIN prediction_sets AS ps
+                  ON ps.prediction_set_id = p.prediction_set_id
+                WHERE p.return_threshold IS NOT NULL
+                  AND p.probability_threshold IS NOT NULL
+                GROUP BY p.return_threshold, p.probability_threshold
+                ORDER BY MAX(ps.prediction_date) DESC
+                LIMIT :limit
+            """,
+            parameters={"limit": max(1, min(limit, 5000))},
         )
 
     def simulated_trades(self, *, limit: int = 500) -> QueryResult:

@@ -14,6 +14,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from dashboard.catalog import sector_label, stock_label
+from trading.post_open import project_predicted_close
 
 JST = ZoneInfo("Asia/Tokyo")
 _SENSITIVE = re.compile(
@@ -282,6 +283,23 @@ def derive_operational_alerts(
     return tuple(deduplicated.values())
 
 
+def _post_open_close(prediction: Mapping[str, Any]) -> str:
+    """Show the Open-based predicted close only once a real Open exists.
+
+    Before 09:00 there is no Open, so this stays ``PENDING`` rather than reusing
+    the morning previous-close projection, which would read as if the day's Open
+    were already known.
+    """
+
+    projection = project_predicted_close(
+        prediction.get("actual_open"),
+        prediction.get("predicted_intraday_return"),
+    )
+    if projection is None:
+        return "PENDING"
+    return f"{projection.predicted_close:,.1f}"
+
+
 def today_table_rows(
     predictions: Iterable[Mapping[str, Any]],
     metrics: Iterable[Mapping[str, Any]],
@@ -306,6 +324,8 @@ def today_table_rows(
                 ),
                 "上昇確率": format_probability(prediction.get("probability_up")),
                 "判定": safe_text(prediction.get("signal", "—")),
+                "実績Open": format_number(prediction.get("actual_open")),
+                "予測終値(Open基準)": _post_open_close(prediction),
                 "Confidence": format_number(
                     prediction.get("confidence_score"), digits=1
                 ),

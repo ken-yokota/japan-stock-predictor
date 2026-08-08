@@ -45,7 +45,7 @@ jobs:
         run: >-
           python -m mypy
           data database features models backtest trading metrics scoring
-          notifications services pipeline dashboard scripts
+          notifications services pipeline dashboard scripts cli.py
 
       - name: Verify migrations
         env:

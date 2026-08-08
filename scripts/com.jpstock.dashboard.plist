@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Keep the read-only dashboard running on this Mac after login.
+
+  Install:
+    cp scripts/com.jpstock.dashboard.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.jpstock.dashboard.plist
+
+  Remove:
+    launchctl unload ~/Library/LaunchAgents/com.jpstock.dashboard.plist
+
+  This only serves localhost, and only while the Mac is awake and logged in.
+  For access from a phone or from outside the house, deploy to Streamlit
+  Community Cloud instead -- see docs/DASHBOARD_GUIDE.md section 4.
+
+  Edit ProgramArguments if the repository lives somewhere other than
+  ~/Desktop/japan-stock-predictor.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.jpstock.dashboard</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>exec "$HOME/Desktop/japan-stock-predictor/scripts/start_dashboard.sh"</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/yokotaken/Desktop/japan-stock-predictor</string>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
+
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
+
+  <key>StandardOutPath</key>
+  <string>/Users/yokotaken/Library/Logs/jpstock-dashboard.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/yokotaken/Library/Logs/jpstock-dashboard.log</string>
+</dict>
+</plist>

@@ -9,8 +9,10 @@ from metrics.performance import (
     direction_accuracy,
     expectancy,
     maximum_drawdown,
+    mean_absolute_error,
     pearson_correlation,
     profit_factor,
+    root_mean_squared_error,
     spearman_correlation,
 )
 
@@ -23,7 +25,9 @@ __all__ = [
     "direction_accuracy",
     "expectancy",
     "maximum_drawdown",
+    "mean_absolute_error",
     "pearson_correlation",
     "profit_factor",
+    "root_mean_squared_error",
     "spearman_correlation",
 ]
