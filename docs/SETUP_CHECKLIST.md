@@ -185,6 +185,28 @@ private リポジトリからデプロイした場合でも、**発行されたU
 履歴データが無い状態では全銘柄 `INSUFFICIENT_DATA` になります。これは異常では
 ありません。手順6の bootstrap が先に必要です。
 
+### 手動実行の日付は「これから来る営業日」を指定する
+
+**過去の日付を指定すると必ず失敗します。**
+
+```text
+ValueError: raw input was not observed by the prediction cutoff
+```
+
+これは不具合ではなく、Look-Ahead防止機能が正しく働いた結果です。朝のpipelineは
+「その日の08:30より前に実際に観測したデータ」しか特徴量に使いません。過去日を後から
+指定すると、データを取得したのはその締切より後なので、システムが使用を拒否します。
+
+| 指定する日付 | 結果 |
+|---|---|
+| 過去の営業日 | ❌ `raw input was not observed by the prediction cutoff` |
+| 当日（営業日） | ✅ 正常。本番と同じ動き |
+| 当日（休場） | ⏭ `SKIPPED`。これも正常 |
+| これから来る営業日 | ✅ 正常。テストに使える |
+
+過去期間の成績を見たい場合は朝のpipelineではなく、推定PITを使う
+`python -m cli walk-forward` または `python -m cli week-test` を使ってください。
+
 ---
 
 ## 6. 履歴の投入と有効性の判断
