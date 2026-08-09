@@ -40,6 +40,7 @@ _HELP_TEXT = """使い方: python -m cli <command> [options]
   buy-all            全銘柄を毎日買った場合の対照結果を出す: モデル判定なし
   week-test          直近期間をDBなしでwalk-forward検証する: 研究用
   compare-features   予測要素の組を同一条件で比較し、採否を符号検定で判定する
+  daily-summary      その日の実行状況と判定をメールで送る (17:00 JST)
   config-check       秘密情報なしでYAML/symbol構成を検証する (data.fetch)
   dashboard          Streamlit dashboardをローカル起動する
 
@@ -111,6 +112,12 @@ def _buy_all(argv: Sequence[str]) -> int:
     return _run_script("scripts.run_buy_all_reference", "python -m cli buy-all", argv)
 
 
+def _daily_summary(argv: Sequence[str]) -> int:
+    return _run_script(
+        "scripts.send_daily_summary", "python -m cli daily-summary", argv
+    )
+
+
 def _config_check(argv: Sequence[str]) -> int:
     from data.fetch import main
 
@@ -144,6 +151,7 @@ _COMMANDS: dict[str, _Delegate] = {
     "buy-all": _buy_all,
     "week-test": _week_test,
     "compare-features": _compare_features,
+    "daily-summary": _daily_summary,
     "config-check": _config_check,
     "dashboard": _dashboard,
 }
