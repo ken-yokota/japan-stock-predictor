@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import json
+import random
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -29,6 +30,12 @@ from dashboard.presenters import (
 )
 from dashboard.query_service import DashboardQueryService
 from dashboard.research_artifacts import labelled_runs
+from dashboard.significance import (
+    benjamini_hochberg,
+    evaluate_overall,
+    evaluate_tickers,
+    fisher_exact_greater,
+)
 from dashboard.types import QueryResult, QueryState
 from database.models import Base
 
@@ -591,3 +598,94 @@ def test_history_is_empty_without_predictions_rather_than_raising() -> None:
     assert report["totals"]["predictions"] == 0
     assert report["totals"]["direction_accuracy"] is None
     assert report["predictions"] == []
+
+
+def _session(day: str, ticker: str, signal: str, rose: bool) -> dict:
+    return {
+        "date": day,
+        "ticker": ticker,
+        "signal": signal,
+        "actual_return": 0.01 if rose else -0.01,
+    }
+
+
+def test_fisher_matches_the_hypergeometric_tail_by_hand() -> None:
+    # 3 of 3 signal sessions rose against 0 of 3 others: the only arrangement
+    # at least this extreme is the observed one, p = 1 / C(6,3) = 0.05.
+    assert fisher_exact_greater(3, 0, 0, 3) == pytest.approx(1 / 20)
+    # No separation at all cannot be evidence of anything.
+    assert fisher_exact_greater(2, 2, 2, 2) > 0.5
+    # An empty margin has nothing to compare.
+    assert fisher_exact_greater(0, 0, 4, 4) == 1.0
+
+
+def test_q_values_are_never_below_their_p_values() -> None:
+    p_values = [0.001, 0.02, 0.04, 0.3, 0.8]
+    q_values = benjamini_hochberg(p_values)
+    assert all(q >= p for p, q in zip(p_values, q_values, strict=True))
+    assert all(q <= 1.0 for q in q_values)
+    # Monotone in the p-value ordering, which is what makes a cutoff meaningful.
+    ordered = [q for _, q in sorted(zip(p_values, q_values, strict=True))]
+    assert ordered == sorted(ordered)
+
+
+def test_a_ticker_with_few_signals_is_called_undecidable_not_significant() -> None:
+    """Three perfect signals look impressive and prove nothing."""
+
+    rows = [_session(f"2026-08-{d:02d}", "7203", "BUY", True) for d in range(1, 4)]
+    rows += [
+        _session(f"2026-08-{d:02d}", "7203", "NO_BUY", False) for d in range(4, 20)
+    ]
+    evidence = {item.ticker: item for item in evaluate_tickers(rows)}["7203"]
+    assert evidence.signals == 3
+    assert not evidence.has_enough_signals
+    assert "判定不能" in evidence.verdict
+
+
+def test_unsettled_sessions_are_excluded_from_the_evidence() -> None:
+    rows = [_session("2026-08-10", "7203", "BUY", True)]
+    rows.append(
+        {
+            "date": "2026-08-11",
+            "ticker": "7203",
+            "signal": "BUY",
+            "actual_return": None,
+        }
+    )
+    evidence = {item.ticker: item for item in evaluate_tickers(rows)}["7203"]
+    assert evidence.sessions == 1
+
+
+def test_pooled_test_counts_a_day_once_not_once_per_ticker() -> None:
+    """Twenty-two stocks on one day are one observation, not twenty-two.
+
+    Signals cluster on rising days here and no stock has an edge of its own.
+    Assuming independence produces an absurdly small p; resampling whole days
+    produces an honest one.
+    """
+
+    generator = random.Random(3)
+    rows = []
+    for day in range(30):
+        rose = generator.random() < 0.5
+        for index in range(22):
+            fires = generator.random() < (0.45 if rose else 0.15)
+            rows.append(
+                _session(
+                    f"2026-08-{day + 1:02d}",
+                    str(1000 + index),
+                    "BUY" if fires else "NO_BUY",
+                    rose,
+                )
+            )
+    overall = evaluate_overall(rows, iterations=400, seed=1)
+    assert overall.trading_days == 30
+    assert overall.block_bootstrap_p_value is not None
+    assert overall.block_bootstrap_p_value > overall.naive_p_value * 1000
+
+
+def test_pooled_test_declines_to_bootstrap_a_handful_of_days() -> None:
+    rows = [_session(f"2026-08-{d:02d}", "7203", "BUY", True) for d in range(1, 4)]
+    overall = evaluate_overall(rows)
+    assert overall.block_bootstrap_p_value is None
+    assert "判定不能" in overall.verdict
