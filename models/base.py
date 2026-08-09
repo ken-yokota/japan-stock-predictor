@@ -33,6 +33,10 @@ class ModelTrainingConfig:
     elastic_net_alphas: tuple[float, ...] = (0.001, 0.01, 0.1, 1.0)
     elastic_net_l1_ratios: tuple[float, ...] = (0.1, 0.5, 0.9)
     lasso_alphas: tuple[float, ...] = (0.001, 0.01, 0.1, 1.0)
+    # Sessions after which a training row counts half as much. ``None``
+    # weights every session in the window equally, which is what the
+    # production pipeline has always done.
+    recency_half_life_sessions: int | None = None
     random_state: int = DEFAULT_RANDOM_STATE
 
     def __post_init__(self) -> None:
@@ -58,6 +62,11 @@ class ModelTrainingConfig:
             raise ValueError("elastic_net_l1_ratios must be between 0 and 1")
         if not self.lasso_alphas or any(value <= 0 for value in self.lasso_alphas):
             raise ValueError("lasso_alphas must contain only positive values")
+        if (
+            self.recency_half_life_sessions is not None
+            and self.recency_half_life_sessions <= 0
+        ):
+            raise ValueError("recency_half_life_sessions must be positive")
 
 
 @dataclass(frozen=True, slots=True)

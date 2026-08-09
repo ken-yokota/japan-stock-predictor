@@ -39,6 +39,7 @@ _HELP_TEXT = """使い方: python -m cli <command> [options]
   close              大引け後の実績・損益を更新する (scripts.run_close_update)
   buy-all            全銘柄を毎日買った場合の対照結果を出す: モデル判定なし
   week-test          直近期間をDBなしでwalk-forward検証する: 研究用
+  compare-features   予測要素の組を同一条件で比較し、採否を符号検定で判定する
   config-check       秘密情報なしでYAML/symbol構成を検証する (data.fetch)
   dashboard          Streamlit dashboardをローカル起動する
 
@@ -100,6 +101,12 @@ def _week_test(argv: Sequence[str]) -> int:
     return _run_script("scripts.run_week_test", "python -m cli week-test", argv)
 
 
+def _compare_features(argv: Sequence[str]) -> int:
+    return _run_script(
+        "scripts.run_feature_comparison", "python -m cli compare-features", argv
+    )
+
+
 def _buy_all(argv: Sequence[str]) -> int:
     return _run_script("scripts.run_buy_all_reference", "python -m cli buy-all", argv)
 
@@ -136,6 +143,7 @@ _COMMANDS: dict[str, _Delegate] = {
     "close": _close,
     "buy-all": _buy_all,
     "week-test": _week_test,
+    "compare-features": _compare_features,
     "config-check": _config_check,
     "dashboard": _dashboard,
 }

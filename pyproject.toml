@@ -50,6 +50,7 @@ include = [
   "models*",
   "notifications*",
   "pipeline*",
+  "research*",
   "scoring*",
   "scripts*",
   "services*",

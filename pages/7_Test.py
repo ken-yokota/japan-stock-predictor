@@ -1,11 +1,16 @@
-"""Research test results for a fixed recent window.
+"""Research test results, one tab per tested window.
 
-This page reads an artifact produced by ``python -m cli week-test``. It does not
-recompute anything: the numbers shown are exactly what that run wrote, so the
-page and the artifact cannot disagree.
+This page reads artifacts produced by ``python -m cli week-test``. It does not
+recompute anything: the numbers shown are exactly what those runs wrote, so the
+page and the artifacts cannot disagree.
 
-The window tested here is a research estimate, not a live track record. It runs
-outside the database pipeline, so it skips the provider quality gates and
+Every ``*.json`` under ``artifacts/week_test/`` becomes a tab, ordered by start
+date, so generating a new window is enough to make it appear here. Each tab is
+a separate run over a separate window; a longer window is a larger sample, not a
+superset of the shorter ones' numbers.
+
+The windows tested here are research estimates, not a live track record. They
+run outside the database pipeline, so they skip the provider quality gates and
 point-in-time lineage that the production path enforces.
 """
 
@@ -22,7 +27,8 @@ from dashboard.catalog import stock_label
 from dashboard.presenters import format_number, format_percent, format_yen
 from dashboard.ui import configure_page, display_rows, render_header
 
-ARTIFACT_PATH = Path("artifacts/week_test/latest.json")
+ARTIFACT_DIRECTORY = Path("artifacts/week_test")
+COMPARISON_DIRECTORY = Path("artifacts/feature_comparison")
 
 
 def _load_artifact(path: Path) -> dict[str, Any] | None:
@@ -30,6 +36,32 @@ def _load_artifact(path: Path) -> dict[str, Any] | None:
         return dict(json.loads(path.read_text(encoding="utf-8")))
     except (OSError, json.JSONDecodeError, TypeError, ValueError):
         return None
+
+
+def _window_key(report: dict[str, Any]) -> tuple[str, str]:
+    window = report.get("generated_for", {})
+    return str(window.get("from", "")), str(window.get("to", ""))
+
+
+def _load_windows(directory: Path) -> list[tuple[str, dict[str, Any]]]:
+    """Return one labelled report per distinct window, earliest start first.
+
+    A window written both under its own name and as ``latest.json`` is one
+    window, not two: the named file wins so the tab list matches the runs that
+    were actually requested.
+    """
+
+    reports: dict[tuple[str, str], dict[str, Any]] = {}
+    for path in sorted(
+        directory.glob("*.json"), key=lambda item: item.name == "latest.json"
+    ):
+        report = _load_artifact(path)
+        if report is None:
+            continue
+        reports.setdefault(_window_key(report), report)
+    return [
+        (f"{key[0]} 〜 {key[1]}", report) for key, report in sorted(reports.items())
+    ]
 
 
 def _render_headline(report: dict[str, Any]) -> None:
@@ -43,6 +75,12 @@ def _render_headline(report: dict[str, Any]) -> None:
         f"{float(rule.get('return_threshold', 0)) * 100:.2f}% かつ 上昇確率 >= "
         f"{float(rule.get('probability_threshold', 0)) * 100:.0f}%"
     )
+    chosen = report.get("feature_set")
+    if chosen:
+        st.caption(
+            f"予測要素: {chosen.get('name', '—')} "
+            f"({chosen.get('feature_count', '—')}個) — {chosen.get('label', '')}"
+        )
 
     first = st.columns(4)
     first[0].metric("予測件数", str(totals.get("predictions", 0)))
@@ -223,7 +261,7 @@ def _render_daily(report: dict[str, Any]) -> None:
         )
 
 
-def _render_price_predictions(report: dict[str, Any]) -> None:
+def _render_price_predictions(report: dict[str, Any], key_prefix: str) -> None:
     predictions = report.get("predictions", [])
     if not predictions:
         return
@@ -238,8 +276,12 @@ def _render_price_predictions(report: dict[str, Any]) -> None:
     frame = pd.DataFrame(predictions)
     dates = sorted({str(value) for value in frame["date"]})
     selectors = st.columns(2)
-    chosen_date = selectors[0].selectbox("日付", dates, index=len(dates) - 1)
-    only_buy = selectors[1].checkbox("BUYシグナルだけ表示", value=False)
+    chosen_date = selectors[0].selectbox(
+        "日付", dates, index=len(dates) - 1, key=f"{key_prefix}_prediction_date"
+    )
+    only_buy = selectors[1].checkbox(
+        "BUYシグナルだけ表示", value=False, key=f"{key_prefix}_only_buy"
+    )
 
     view = frame.loc[frame["date"].astype(str) == chosen_date]
     if only_buy:
@@ -281,7 +323,12 @@ def _render_price_predictions(report: dict[str, Any]) -> None:
 
     st.caption("銘柄別の予測終値(寄り付き基準)と実際の終値の推移")
     tickers = sorted({str(value) for value in frame["ticker"]})
-    chosen_ticker = st.selectbox("銘柄を選ぶ", tickers, format_func=stock_label)
+    chosen_ticker = st.selectbox(
+        "銘柄を選ぶ",
+        tickers,
+        format_func=stock_label,
+        key=f"{key_prefix}_chart_ticker",
+    )
     series = frame.loc[frame["ticker"].astype(str) == chosen_ticker].sort_values("date")
     if not series.empty:
         chart = pd.DataFrame(
@@ -295,7 +342,7 @@ def _render_price_predictions(report: dict[str, Any]) -> None:
         st.line_chart(chart, use_container_width=True)
 
 
-def _render_company_coefficients(report: dict[str, Any]) -> None:
+def _render_company_coefficients(report: dict[str, Any], key_prefix: str) -> None:
     """Show one company's coefficient per indicator, per day, across the window."""
 
     records = report.get("company_coefficients", [])
@@ -317,7 +364,7 @@ def _render_company_coefficients(report: dict[str, Any]) -> None:
     tickers = sorted({str(value) for value in frame["ticker"]})
     selectors = st.columns(2)
     ticker = selectors[0].selectbox(
-        "銘柄", tickers, format_func=stock_label, key="test_coef_ticker"
+        "銘柄", tickers, format_func=stock_label, key=f"{key_prefix}_coef_ticker"
     )
     view = frame.loc[frame["ticker"].astype(str) == ticker].copy()
 
@@ -328,7 +375,10 @@ def _render_company_coefficients(report: dict[str, Any]) -> None:
     )
     features = [str(name) for name in influence.index]
     chosen = selectors[1].multiselect(
-        "表示する指標", features, default=features[:6], key="test_coef_features"
+        "表示する指標",
+        features,
+        default=features[:6],
+        key=f"{key_prefix}_coef_features",
     )
 
     if chosen:
@@ -372,7 +422,7 @@ def _render_company_coefficients(report: dict[str, Any]) -> None:
         )
 
 
-def _render_coefficients(report: dict[str, Any]) -> None:
+def _render_coefficients(report: dict[str, Any], key_prefix: str) -> None:
     changes = report.get("coefficient_changes", [])
     if not changes:
         st.info("PENDING: 係数の記録がありません。")
@@ -393,7 +443,12 @@ def _render_coefficients(report: dict[str, Any]) -> None:
         .sort_values(ascending=False)
     )
     default = [str(name) for name in magnitude.head(6).index]
-    chosen = st.multiselect("表示する指標", features, default=default)
+    chosen = st.multiselect(
+        "表示する指標",
+        features,
+        default=default,
+        key=f"{key_prefix}_mean_coef_features",
+    )
     if chosen:
         pivot = frame.loc[frame["feature"].isin(chosen)].pivot_table(
             index="date", columns="feature", values="mean_coefficient", aggfunc="mean"
@@ -402,7 +457,10 @@ def _render_coefficients(report: dict[str, Any]) -> None:
 
     dates = sorted({str(value) for value in frame["date"]})
     chosen_date = st.selectbox(
-        "係数を確認する日付", dates, index=len(dates) - 1, key="coefficient_date"
+        "係数を確認する日付",
+        dates,
+        index=len(dates) - 1,
+        key=f"{key_prefix}_mean_coef_date",
     )
     view = frame.loc[frame["date"].astype(str) == chosen_date].copy()
     view["abs_change"] = view["change_from_previous_day"].abs()
@@ -431,18 +489,18 @@ def _render_coefficients(report: dict[str, Any]) -> None:
     )
 
 
-def _render_window_tab(report: dict[str, Any]) -> None:
+def _render_window_tab(report: dict[str, Any], key_prefix: str) -> None:
     _render_headline(report)
     st.divider()
     _render_buy_list(report)
     st.divider()
     _render_daily(report)
     st.divider()
-    _render_price_predictions(report)
+    _render_price_predictions(report, key_prefix)
     st.divider()
-    _render_company_coefficients(report)
+    _render_company_coefficients(report, key_prefix)
     st.divider()
-    _render_coefficients(report)
+    _render_coefficients(report, key_prefix)
 
     failures = report.get("failures") or {}
     if failures:
@@ -457,6 +515,101 @@ def _render_window_tab(report: dict[str, Any]) -> None:
         st.caption(f"注意: {caveat}")
 
 
+def _render_comparison(report: dict[str, Any], key_prefix: str) -> None:
+    """Show one comparison run: what was tried, and whether it was adopted."""
+
+    window = report.get("generated_for", {})
+    half_lives = window.get("recency_half_lives") or ["none"]
+    st.caption(
+        f"学習: 各予測日の直前 {window.get('training_window_sessions', '—')} 営業日 / "
+        f"共通の予測件数 {window.get('paired_predictions', '—')} / "
+        f"履歴の重み付け {', '.join(str(value) for value in half_lives)}"
+    )
+
+    display_rows(
+        [
+            {
+                "候補": name,
+                "予測要素": summary.get("feature_count", "—"),
+                "履歴の重み": (
+                    "全期間を等しく"
+                    if summary.get("recency_half_life_sessions") is None
+                    else f"直近重視 (半減期{summary['recency_half_life_sessions']}日)"
+                ),
+                "方向的中率": format_percent(summary.get("direction_accuracy")),
+                "予測誤差(MAE)": format_number(
+                    summary.get("mean_absolute_error"), digits=5
+                ),
+                "BUY": summary.get("buy_signals", 0),
+                "勝率": (
+                    format_percent(summary["win_rate"])
+                    if summary.get("win_rate") is not None
+                    else "—"
+                ),
+                "純損益": format_yen(summary.get("net_profit_jpy")),
+            }
+            for name, summary in report.get("sets", {}).items()
+            if summary.get("predictions")
+        ]
+    )
+    st.caption(
+        "**判定に使うのは方向的中率と予測誤差だけです。** 勝率と純損益は"
+        "BUY件数が少なく、良い方法と運の良い月を区別できないので載せているだけです。"
+        "予測要素を増やすと予測値のばらつきが広がり、閾値を跨ぐ回数が増えます。"
+        "そのぶん取引数と損益は動きますが、当たるようになったことを意味しません。"
+    )
+
+    for comparison in report.get("comparisons", []):
+        verdict = str(comparison.get("verdict", ""))
+        renderer = st.success if verdict.startswith("採用候補") else st.info
+        renderer(
+            f"**{comparison['candidate']}** vs {comparison['baseline']} — {verdict}"
+        )
+        st.caption(
+            f"片方だけ正解した予測: 候補 {comparison['candidate_only_correct']}件 / "
+            f"基準 {comparison['baseline_only_correct']}件 "
+            f"(判定に使えた {comparison['discordant_pairs']}件) / "
+            f"符号検定 p = {comparison['p_value']:.4f}"
+        )
+    with st.expander("なぜ符号検定なのか", expanded=False):
+        st.markdown(
+            "全体の的中率どうしを引き算すると、1ポイント程度の差は簡単に偶然で出ます。\n\n"
+            "そこで**同じ日・同じ銘柄の予測を1件ずつ突き合わせ**、どちらか一方だけが"
+            "当てた予測を数えます。両方当てた日と両方外した日は、どちらが優れているかの"
+            "情報を持たないので除外します。残った件数の偏りが偶然で説明できないとき"
+            "(p < 0.05) だけ、採用候補になります。"
+        )
+
+
+def _render_comparison_section() -> None:
+    """Render every feature/weighting comparison that has been run."""
+
+    reports: list[tuple[str, dict[str, Any]]] = []
+    for path in sorted(COMPARISON_DIRECTORY.glob("*.json")):
+        report = _load_artifact(path)
+        if report is None or not report.get("sets"):
+            continue
+        window = report.get("generated_for", {})
+        reports.append(
+            (f"学習窓 {window.get('training_window_sessions', '?')}営業日", report)
+        )
+    if not reports:
+        return
+
+    st.subheader("予測要素と重み付けの比較")
+    st.caption(
+        "「指標を増やす」「直近を重く見る」といった変更を、現行と同じ期間・同じ銘柄・"
+        "同じモデルで走らせて突き合わせた結果です。有意に勝った候補が無ければ、"
+        "現行のまま何も変えません。"
+    )
+    for tab, (label, report) in zip(
+        st.tabs([label for label, _ in reports]), reports, strict=True
+    ):
+        with tab:
+            _render_comparison(report, label.replace(" ", ""))
+    st.divider()
+
+
 def main() -> None:
     configure_page("テスト", "🧪")
     render_header(
@@ -464,19 +617,28 @@ def main() -> None:
         "過去の教師データで学習したモデルを、直近の期間で検証した結果です。",
     )
 
-    report = _load_artifact(ARTIFACT_PATH)
-    if report is None:
+    _render_comparison_section()
+
+    windows = _load_windows(ARTIFACT_DIRECTORY)
+    if not windows:
         st.warning(
-            f"PENDING: 検証結果 `{ARTIFACT_PATH}` がありません。先に "
+            f"PENDING: 検証結果が `{ARTIFACT_DIRECTORY}` にありません。先に "
             "`python -m cli week-test` を実行してください。"
         )
         return
 
-    window = report.get("generated_for", {})
-    label = f"{window.get('from', '?')} 〜 {window.get('to', '?')}"
-    (window_tab,) = st.tabs([label])
-    with window_tab:
-        _render_window_tab(report)
+    st.caption(
+        "タブごとに検証期間が違います。期間が長いほど予測件数が多く、"
+        "方向的中率の数字は信頼できます。逆にBUY件数は期間を延ばしても"
+        "そこまで増えないので、勝率と損益はどのタブでも証拠になりません。"
+    )
+    for tab, (label, report) in zip(
+        st.tabs([label for label, _ in windows]), windows, strict=True
+    ):
+        with tab:
+            # Every window renders the same widgets, so each tab needs its own
+            # key namespace or Streamlit rejects the second tab as a duplicate.
+            _render_window_tab(report, label.replace(" ", ""))
 
 
 if __name__ == "__main__":

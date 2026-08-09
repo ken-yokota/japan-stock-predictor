@@ -16,7 +16,11 @@ from models.base import (
     TickerPrediction,
 )
 from models.classifier import build_logistic_pipeline
-from models.optimization import select_logistic_c, select_ridge_alpha
+from models.optimization import (
+    fit_with_weights,
+    select_logistic_c,
+    select_ridge_alpha,
+)
 from models.ridge import build_ridge_pipeline
 
 CoefficientMap: TypeAlias = dict[str, float]  # noqa: UP040
@@ -40,6 +44,28 @@ def _numeric_feature_frame(
         raise ValueError(f"missing feature columns: {missing}")
     numeric = frame.loc[:, feature_names].apply(pd.to_numeric, errors="coerce")
     return numeric.replace([np.inf, -np.inf], np.nan)
+
+
+def recency_weights(count: int, half_life: int | None) -> NDArray[np.float64] | None:
+    """Return per-session weights that halve every ``half_life`` sessions.
+
+    Rows arrive oldest-first, so the last row is today and carries weight 1.
+    ``None`` returns ``None`` rather than a vector of ones, which keeps the
+    unweighted path calling plain ``fit`` and byte-identical to before.
+
+    The weights are rescaled to sum to ``count``. Ridge's alpha and Logistic's
+    C are defined against the total weight, so without that rescaling a shorter
+    half-life would silently increase the effective regularization and the
+    comparison would confound two changes.
+    """
+
+    if half_life is None:
+        return None
+    if count <= 0:
+        raise ValueError("count must be positive")
+    ages = np.arange(count - 1, -1, -1, dtype=float)
+    weights = np.power(0.5, ages / float(half_life))
+    return cast("NDArray[np.float64]", weights * (count / weights.sum()))
 
 
 def _feature_map(
@@ -202,17 +228,19 @@ def train_ticker_model(
             f"requires {settings.minimum_training_sessions}"
         )
 
+    weights = recency_weights(len(targets), settings.recency_half_life_sessions)
     ridge_alpha = select_ridge_alpha(
         numeric,
         targets,
         candidates=settings.ridge_alphas,
         n_splits=settings.time_series_splits,
+        sample_weight=weights,
     )
     regressor = build_ridge_pipeline(ridge_alpha)
-    regressor.fit(numeric, targets)
+    fit_with_weights(regressor, numeric, targets, weights)
 
     direction_targets = (targets > 0.0).astype(np.int64)
-    constant_probability = float(np.mean(direction_targets))
+    constant_probability = float(np.average(direction_targets, weights=weights))
     classifier: Pipeline | None = None
     logistic_c: float | None = None
     if len(np.unique(direction_targets)) >= 2:
@@ -222,11 +250,12 @@ def train_ticker_model(
             candidates=settings.logistic_cs,
             n_splits=settings.time_series_splits,
             random_state=settings.random_state,
+            sample_weight=weights,
         )
         classifier = build_logistic_pipeline(
             logistic_c, random_state=settings.random_state
         )
-        classifier.fit(numeric, direction_targets)
+        fit_with_weights(classifier, numeric, direction_targets, weights)
 
     return TickerModelBundle(
         ticker=ticker,

@@ -1,0 +1,82 @@
+{
+  "generated_for": {
+    "from": "2026-06-01",
+    "to": "2026-08-07",
+    "training_window_sessions": 120,
+    "paired_predictions": 1078
+  },
+  "baseline": "baseline",
+  "sets": {
+    "baseline": {
+      "predictions": 1078,
+      "direction_accuracy": 0.5538033395176253,
+      "mean_absolute_error": 0.01231290576640302,
+      "root_mean_squared_error": 0.015903207879052056,
+      "buy_signals": 20,
+      "win_rate": 0.7,
+      "net_profit_jpy": 78482.22785000148,
+      "trade_stats_are_evidence": true,
+      "label": "現行 (海外7指標 + 自銘柄の価格特徴量11)",
+      "feature_count": 25,
+      "excluded_tickers": 0,
+      "missing_symbols": []
+    },
+    "focused": {
+      "predictions": 1078,
+      "direction_accuracy": 0.5612244897959183,
+      "mean_absolute_error": 0.012437693256516403,
+      "root_mean_squared_error": 0.01599735195532101,
+      "buy_signals": 43,
+      "win_rate": 0.5581395348837209,
+      "net_profit_jpy": 19945.535503022107,
+      "trade_stats_are_evidence": true,
+      "label": "現行 + 日経先物/日本ETF/ユーロ円/半導体/米10年金利 + 出来高・ギャップ・ATR・RSI",
+      "feature_count": 44,
+      "excluded_tickers": 0,
+      "missing_symbols": []
+    },
+    "extended": {
+      "predictions": 1078,
+      "direction_accuracy": 0.562152133580705,
+      "mean_absolute_error": 0.01271978269010116,
+      "root_mean_squared_error": 0.016308950696049755,
+      "buy_signals": 87,
+      "win_rate": 0.632183908045977,
+      "net_profit_jpy": 297854.70771219203,
+      "trade_stats_are_evidence": true,
+      "label": "全部入り (先物・為替・商品・米セクター・金利・アジア・ADR・テクニカル)",
+      "feature_count": 78,
+      "excluded_tickers": 0,
+      "missing_symbols": []
+    }
+  },
+  "comparisons": [
+    {
+      "candidate": "focused",
+      "baseline": "baseline",
+      "direction_accuracy_delta": 0.007421150278293043,
+      "mean_absolute_error_delta": 0.00012478749011338337,
+      "candidate_only_correct": 94,
+      "baseline_only_correct": 86,
+      "discordant_pairs": 180,
+      "p_value": 0.6019687530156482,
+      "verdict": "不採用: 方向的中率の差 +0.74pp は 符号検定 p=0.602 で、偶然と区別できません。"
+    },
+    {
+      "candidate": "extended",
+      "baseline": "baseline",
+      "direction_accuracy_delta": 0.008348794063079756,
+      "mean_absolute_error_delta": 0.00040687692369813927,
+      "candidate_only_correct": 149,
+      "baseline_only_correct": 140,
+      "discordant_pairs": 289,
+      "p_value": 0.6380107582930509,
+      "verdict": "不採用: 方向的中率の差 +0.83pp は 符号検定 p=0.638 で、偶然と区別できません。"
+    }
+  ],
+  "caveats": [
+    "採否は方向的中率と符号検定で判断しています。勝率・損益はBUY件数が少なく、証拠になりません。",
+    "1期間で勝っただけでは採用理由になりません。別の期間でも同じ向きに出るかを必ず確認してください。",
+    "Yahooの非公式データを使用し、Provider品質ゲートとPIT lineageを通していません。"
+  ]
+}

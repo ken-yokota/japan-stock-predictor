@@ -548,10 +548,16 @@ def test_email_payload_and_database_claim_allow_exactly_one_send(
 
 def test_scheduled_workflows_use_jst_equivalent_utc_crons_and_safety_gate() -> None:
     workflow_dir = Path(__file__).parents[1] / ".github" / "workflows"
+    # UTC, with the JST time each one lands at. The prediction starts 07:00 so
+    # a 34-minute fetch still finishes before the 08:45 email that reads it.
     expected = {
-        "morning_prediction.yml": ["20 23 * * 0-4"],
-        "morning_email.yml": ["45,50,55 23 * * 0-4"],
-        "close_update.yml": ["45 6 * * 1-5", "55 6 * * 1-5", "10 7 * * 1-5"],
+        "morning_prediction.yml": ["0 22 * * 0-4"],  # 07:00 JST
+        "morning_email.yml": ["45,50,55 23 * * 0-4"],  # 08:45/50/55 JST
+        "close_update.yml": [
+            "45 6 * * 1-5",  # 15:45 JST
+            "55 6 * * 1-5",  # 15:55 JST
+            "10 7 * * 1-5",  # 16:10 JST
+        ],
     }
     for name, crons in expected.items():
         text = (workflow_dir / name).read_text(encoding="utf-8")

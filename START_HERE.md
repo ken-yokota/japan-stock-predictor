@@ -155,6 +155,15 @@ pkill -f streamlit
 # 検証をやり直す（日付は変えてよい）
 .venv/bin/python -m cli week-test --from-date 2026-08-01 --to-date 2026-08-07
 
+# テストページのタブを作り直す（3期間ぶん。ファイル名がタブの並び順になる）
+for w in 2026-06-01 2026-07-01 2026-08-01; do
+  .venv/bin/python -m cli week-test --from-date "$w" --to-date 2026-08-07 \
+    --output "artifacts/week_test/${w}_2026-08-07.json"
+done
+
+# 予測要素を増やすと当たるようになるのかを実測する
+.venv/bin/python -m cli compare-features --from-date 2026-06-01 --to-date 2026-08-07
+
 # 全部買った場合と比べる
 .venv/bin/python -m cli buy-all --from-date 2026-08-01 --to-date 2026-08-07
 

@@ -7,9 +7,29 @@ from collections.abc import Sequence
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit  # type: ignore[import-untyped]
+from sklearn.pipeline import Pipeline  # type: ignore[import-untyped]
 
 from models.classifier import build_logistic_pipeline
 from models.ridge import build_ridge_pipeline
+
+
+def fit_with_weights(
+    pipeline: Pipeline,
+    features: pd.DataFrame,
+    targets: np.ndarray,
+    weights: np.ndarray | None,
+) -> None:
+    """Fit a pipeline, weighting only the final estimator.
+
+    The imputer's median and the scaler's mean/scale stay unweighted on
+    purpose: they describe what the feature *is*, and reweighting them would
+    make the standardization depend on how recent the rows are.
+    """
+
+    if weights is None:
+        pipeline.fit(features, targets)
+    else:
+        pipeline.fit(features, targets, model__sample_weight=weights)
 
 
 def chronological_splitter(
@@ -37,8 +57,15 @@ def select_ridge_alpha(
     *,
     candidates: Sequence[float],
     n_splits: int,
+    sample_weight: np.ndarray | None = None,
 ) -> float:
-    """Choose alpha by mean chronological validation squared error."""
+    """Choose alpha by mean chronological validation squared error.
+
+    ``sample_weight`` is applied to the training half of each fold only. The
+    validation error stays unweighted, because the question being asked is
+    "which alpha predicts unseen sessions best", not "which alpha fits the
+    weighted history best".
+    """
 
     if not candidates:
         raise ValueError("candidates must not be empty")
@@ -52,7 +79,12 @@ def select_ridge_alpha(
         fold_losses: list[float] = []
         for train_positions, validation_positions in splitter.split(features):
             pipeline = build_ridge_pipeline(float(candidate))
-            pipeline.fit(features.iloc[train_positions], targets[train_positions])
+            fit_with_weights(
+                pipeline,
+                features.iloc[train_positions],
+                targets[train_positions],
+                None if sample_weight is None else sample_weight[train_positions],
+            )
             prediction = np.asarray(
                 pipeline.predict(features.iloc[validation_positions]), dtype=float
             )
@@ -72,6 +104,7 @@ def select_logistic_c(
     candidates: Sequence[float],
     n_splits: int,
     random_state: int,
+    sample_weight: np.ndarray | None = None,
 ) -> float:
     """Choose C by chronological validation Brier loss.
 
@@ -97,7 +130,12 @@ def select_logistic_c(
             pipeline = build_logistic_pipeline(
                 float(candidate), random_state=random_state
             )
-            pipeline.fit(features.iloc[train_positions], training_targets)
+            fit_with_weights(
+                pipeline,
+                features.iloc[train_positions],
+                training_targets,
+                None if sample_weight is None else sample_weight[train_positions],
+            )
             probabilities = np.asarray(
                 pipeline.predict_proba(features.iloc[validation_positions]),
                 dtype=float,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import json
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -397,3 +398,58 @@ def test_dashboard_reads_only_database_url_from_environment() -> None:
             environment_keys.append(node.args[0].value)
 
     assert environment_keys == ["DATABASE_URL"]
+
+
+def _load_test_page():
+    """Import pages/7_Test.py under a valid module name.
+
+    The filename starts with a digit so it cannot be imported normally, but the
+    window-discovery logic is worth testing directly: it decides which tabs a
+    reader sees, and a silent duplicate or a wrong order is invisible in a
+    screenshot.
+    """
+
+    import importlib.util
+
+    path = Path("pages/7_Test.py")
+    spec = importlib.util.spec_from_file_location("research_test_page", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _write_window(directory: Path, name: str, start: str, end: str) -> None:
+    directory.joinpath(name).write_text(
+        json.dumps({"generated_for": {"from": start, "to": end}}), encoding="utf-8"
+    )
+
+
+def test_each_tested_window_becomes_one_tab_ordered_by_start_date(tmp_path) -> None:
+    page = _load_test_page()
+    _write_window(tmp_path, "2026-08-01_2026-08-07.json", "2026-08-01", "2026-08-07")
+    _write_window(tmp_path, "2026-06-01_2026-08-07.json", "2026-06-01", "2026-08-07")
+    _write_window(tmp_path, "2026-07-01_2026-08-07.json", "2026-07-01", "2026-08-07")
+
+    labels = [label for label, _ in page._load_windows(tmp_path)]
+    assert labels == [
+        "2026-06-01 〜 2026-08-07",
+        "2026-07-01 〜 2026-08-07",
+        "2026-08-01 〜 2026-08-07",
+    ]
+
+
+def test_a_window_also_written_as_latest_is_one_tab_not_two(tmp_path) -> None:
+    page = _load_test_page()
+    _write_window(tmp_path, "2026-06-01_2026-08-07.json", "2026-06-01", "2026-08-07")
+    _write_window(tmp_path, "latest.json", "2026-06-01", "2026-08-07")
+    assert len(page._load_windows(tmp_path)) == 1
+
+
+def test_an_unreadable_artifact_is_skipped_rather_than_breaking_the_page(
+    tmp_path,
+) -> None:
+    page = _load_test_page()
+    tmp_path.joinpath("broken.json").write_text("{not json", encoding="utf-8")
+    _write_window(tmp_path, "2026-06-01_2026-08-07.json", "2026-06-01", "2026-08-07")
+    assert len(page._load_windows(tmp_path)) == 1
