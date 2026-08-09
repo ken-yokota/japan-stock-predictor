@@ -14,6 +14,16 @@ they mean opposite things:
   so the model never saw it.
 * ``FREE_UNVERIFIED`` — a data-quality label on a value that *was* used.
 
+Each prediction also carries its own arithmetic. A Ridge prediction on
+standardized inputs is exactly ``intercept + sum(coefficient * z)``, so every
+predictor's yen-and-percent share of today's number can be read off directly
+rather than inferred from the coefficient alone. A large coefficient on a
+feature sitting at its average contributes nothing; the product is what moves
+the prediction, and the product is what gets reported.
+
+The decomposition is checked against the model's own output and the residual is
+recorded, so a mismatch surfaces instead of being presented as an explanation.
+
 Nothing is written to the database.
 
     python -m cli preview --prediction-date 2026-08-10
@@ -30,6 +40,7 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
+import pandas as pd
 from sqlalchemy.orm import Session
 
 from data.config import load_app_config
@@ -79,6 +90,56 @@ def _classify(warnings: set[str]) -> dict[str, Any]:
     }
 
 
+def _contributions(computed: Any, limit: int = 6) -> dict[str, Any]:
+    """Decompose one prediction into per-feature contributions.
+
+    Ridge predicts ``intercept + sum(coefficient * z)`` where ``z`` is the
+    standardized feature. Multiplying the fitted coefficient by this session's
+    standardized value gives each predictor's signed share of the number, in
+    the same units as the prediction itself.
+    """
+
+    model = computed.model
+    dataset = computed.dataset
+    if model is None or dataset.current_frame.empty:
+        return {}
+    statistics = model.scaler_statistics("regression")
+    if statistics is None:
+        return {}
+
+    coefficients = model.regression_coefficients()
+    row = dataset.current_frame.iloc[0]
+    parts: list[dict[str, Any]] = []
+    for name in model.feature_names:
+        raw = pd.to_numeric(pd.Series([row.get(name)]), errors="coerce").iloc[0]
+        scale = statistics.scales.get(name, 1.0) or 1.0
+        # A missing value was median-imputed before scaling, so it standardizes
+        # to roughly zero and contributes roughly nothing. Recording it as zero
+        # is honest; inventing a contribution for it would not be.
+        standardized = (
+            0.0 if pd.isna(raw) else (raw - statistics.means.get(name, 0.0)) / scale
+        )
+        parts.append(
+            {
+                "feature": name,
+                "coefficient": coefficients.get(name, 0.0),
+                "standardized_value": float(standardized),
+                "contribution": float(coefficients.get(name, 0.0) * standardized),
+            }
+        )
+
+    intercept = model.regression_intercept()
+    rebuilt = intercept + sum(part["contribution"] for part in parts)
+    predicted = computed.result.predicted_return
+    parts.sort(key=lambda part: abs(part["contribution"]), reverse=True)
+    return {
+        "intercept": float(intercept),
+        "reconstructed_return": float(rebuilt),
+        "residual": (None if predicted is None else float(rebuilt - predicted)),
+        "top": parts[:limit],
+    }
+
+
 def main() -> int:
     arguments = _parse_arguments()
     environment = EnvironmentSettings()
@@ -102,6 +163,7 @@ def main() -> int:
                 continue
             result = computed.result
             warnings.update(str(item) for item in (result.warnings or ()))
+            explanation = _contributions(computed)
             predictions.append(
                 {
                     "ticker": stock.ticker,
@@ -112,6 +174,7 @@ def main() -> int:
                     "probability_up": result.probability_up,
                     "reference_close": getattr(result, "reference_close", None),
                     "predicted_close": getattr(result, "predicted_close", None),
+                    "explanation": explanation,
                 }
             )
     finally:

@@ -63,8 +63,33 @@ INDICATOR_LABELS: dict[str, str] = {
 }
 
 
+PRICE_FEATURE_LABELS: dict[str, str] = {
+    "return_1d": "1日リターン",
+    "return_2d": "2日リターン",
+    "return_3d": "3日リターン",
+    "return_5d": "5日リターン",
+    "return_20d": "20日リターン",
+    "log_return_1d": "対数1日リターン",
+    "volatility_5d": "5日ボラティリティ",
+    "volatility_20d": "20日ボラティリティ",
+    "open_close_return": "日中リターン",
+    "high_low_range": "日中値幅",
+    "ma20_deviation": "20日移動平均乖離",
+}
+
+
 def _label(indicator: str) -> str:
-    return INDICATOR_LABELS.get(indicator, indicator)
+    """Render a feature id readably, keeping the indicator and the transform.
+
+    Ids arrive as ``indicator__transform`` (and ``stock__…`` for the company's
+    own price history), which is precise but unreadable in a table.
+    """
+
+    source, separator, transform = indicator.partition("__")
+    if not separator:
+        return INDICATOR_LABELS.get(indicator, indicator)
+    head = "自銘柄" if source == "stock" else INDICATOR_LABELS.get(source, source)
+    return f"{head} / {PRICE_FEATURE_LABELS.get(transform, transform)}"
 
 
 def _render_predictions(report: dict[str, Any]) -> None:
@@ -100,6 +125,65 @@ def _render_predictions(report: dict[str, Any]) -> None:
 
     st.subheader("全銘柄 (予測リターン順)")
     display_rows([as_row(row) for row in rows], height=560)
+
+
+def _render_reasons(report: dict[str, Any]) -> None:
+    """Show why each BUY qualified, in the prediction's own units.
+
+    Ridge predicts ``intercept + sum(coefficient * z)`` exactly, so listing the
+    largest products explains the number rather than describing the model. A
+    coefficient alone would not: a heavily weighted feature sitting at its
+    training average moves today's prediction by nothing.
+    """
+
+    buys = [row for row in report.get("predictions", []) if row.get("signal") == "BUY"]
+    explained = [row for row in buys if row.get("explanation", {}).get("top")]
+    if not explained:
+        return
+
+    st.subheader("なぜこの銘柄が買いなのか")
+    st.caption(
+        "予測リターンを指標ごとの寄与に分解したものです。寄与は"
+        "「その指標の係数 かける 今日の標準化した値」で、すべて足して切片を加えると"
+        "予測リターンそのものに戻ります。検算できる内訳です。"
+    )
+
+    for row in explained:
+        explanation = row["explanation"]
+        residual = explanation.get("residual")
+        with st.expander(
+            f"{stock_label(str(row['ticker']))} — 予測 "
+            f"{format_percent(row['predicted_return'])} / 上昇確率 "
+            f"{format_percent(row['probability_up'])}",
+            expanded=True,
+        ):
+            display_rows(
+                [
+                    {
+                        "指標": _label(part["feature"]),
+                        "寄与": format_percent(part["contribution"]),
+                        "向き": "押し上げ" if part["contribution"] > 0 else "押し下げ",
+                        "係数": format_number(part["coefficient"], digits=5),
+                        "今日の値(標準化)": format_number(
+                            part["standardized_value"], digits=2
+                        ),
+                    }
+                    for part in explanation["top"]
+                ]
+            )
+            base = format_percent(explanation.get("intercept"))
+            st.caption(
+                f"上位{len(explanation['top'])}指標のみ表示。ベース(切片) {base}。"
+                + (
+                    "分解は予測値と一致しています。"
+                    if residual is not None and abs(residual) < 1e-9
+                    else f"分解と予測値の差 {residual}。"
+                )
+            )
+    st.caption(
+        "「今日の値(標準化)」は、学習期間の平均から標準偏差いくつ分離れているかです。"
+        "0に近い指標は、係数が大きくても今日の予測をほとんど動かしていません。"
+    )
 
 
 def _render_indicators(report: dict[str, Any]) -> None:
@@ -178,6 +262,8 @@ def main() -> None:
     )
 
     _render_predictions(report)
+    st.divider()
+    _render_reasons(report)
     st.divider()
     _render_indicators(report)
 

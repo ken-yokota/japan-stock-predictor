@@ -55,6 +55,70 @@ class PredictionComputation:
     result: PredictionResult
 
 
+def _drivers(
+    model: TickerModelBundle,
+    dataset: ModelDataset,
+    coefficients: dict[str, float],
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Name the predictors that actually moved today's number, and by how much.
+
+    Ranking by coefficient alone answers "what does this model weigh in
+    general", which is not the question a reader of one morning's prediction is
+    asking. A large coefficient on a feature sitting at its training average
+    contributes nothing today. The product of the coefficient and the
+    standardized value is the contribution, and Ridge's prediction is exactly
+    the intercept plus the sum of those contributions, so the parts add up to
+    the whole and can be quoted in the same units.
+
+    Falls back to the coefficient ordering if the scaler statistics are
+    unavailable for any reason: a morning email with a weaker explanation is
+    better than a morning pipeline that fails while building one.
+    """
+
+    def by_coefficient() -> tuple[tuple[str, ...], tuple[str, ...]]:
+        ordered = sorted(coefficients.items(), key=lambda item: item[1], reverse=True)
+        return (
+            tuple(name for name, value in ordered if value > 0.0)[:3],
+            tuple(name for name, value in reversed(ordered) if value < 0.0)[:3],
+        )
+
+    try:
+        statistics = model.scaler_statistics("regression")
+        if statistics is None or dataset.current_frame.empty:
+            return by_coefficient()
+        row = dataset.current_frame.iloc[0]
+        contributions: list[tuple[str, float]] = []
+        for name in model.feature_names:
+            raw = row.get(name)
+            value = float(raw) if isinstance(raw, int | float) else float("nan")
+            if not math.isfinite(value):
+                # Imputed to the training median, so it standardizes to about
+                # zero and contributes about nothing. Reporting it as a driver
+                # would be inventing an explanation for a missing input.
+                continue
+            scale = statistics.scales.get(name) or 1.0
+            standardized = (value - statistics.means.get(name, 0.0)) / scale
+            contributions.append((name, coefficients.get(name, 0.0) * standardized))
+    except Exception:
+        return by_coefficient()
+
+    if not contributions:
+        return by_coefficient()
+    contributions.sort(key=lambda item: item[1], reverse=True)
+    return (
+        tuple(
+            f"{name} ({value * 100:+.2f}%)"
+            for name, value in contributions
+            if value > 0.0
+        )[:3],
+        tuple(
+            f"{name} ({value * 100:+.2f}%)"
+            for name, value in reversed(contributions)
+            if value < 0.0
+        )[:3],
+    )
+
+
 class PredictionService:
     """Build a PIT dataset, fit linear models, and make one morning prediction."""
 
@@ -175,18 +239,7 @@ class PredictionService:
             ),
         )
         coefficients = model.regression_coefficients()
-        positive = tuple(
-            name
-            for name, value in sorted(
-                coefficients.items(), key=lambda item: item[1], reverse=True
-            )
-            if value > 0.0
-        )[:3]
-        negative = tuple(
-            name
-            for name, value in sorted(coefficients.items(), key=lambda item: item[1])
-            if value < 0.0
-        )[:3]
+        positive, negative = _drivers(model, dataset, coefficients)
         reference = dataset.current_sample.reference_price
         difference = (
             reference * predicted.predicted_return if reference is not None else None
