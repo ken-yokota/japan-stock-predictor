@@ -68,6 +68,13 @@ def main() -> None:
         ("pages/4_Sector_Analysis.py", "Sector Analysis", "業種別の横断比較"),
         ("pages/5_Backtest.py", "Backtest", "OOS評価とpaper trade"),
         ("pages/6_System_Status.py", "System Status", "run、Provider、鮮度、DB状態"),
+        ("pages/7_Test.py", "テスト", "検証期間ごとの結果と、予測要素の採否判定"),
+        ("pages/8_Company_Analysis.py", "Company Analysis", "企業別の係数と予測推移"),
+        (
+            "pages/9_Preview.py",
+            "予測プレビュー",
+            "次営業日の予測と、使われた指標の一覧",
+        ),
     )
     for path, label, help_text in pages:
         st.page_link(path, label=label, help=help_text, icon="➡️")
