@@ -2,7 +2,15 @@
 """Send one persisted prediction email through free Gmail SMTP by default.
 
 If no prediction set exists, the operator is told so by mail rather than by an
-exception. The morning job can fail for reasons that have nothing to do with
+exception, and exactly once.
+
+Deduplicating that notice cannot use the database: ``email_logs.prediction_set_id``
+is NOT NULL with a foreign key, and by definition there is no set to point at.
+The schedule fires this job three times so that a transient SMTP failure still
+gets the prediction out, which would otherwise mean three identical "no
+prediction" mails. So the notice is gated on the clock instead — only the last
+firing of the window sends it. An explicitly requested run always sends,
+because someone asked. The morning job can fail for reasons that have nothing to do with
 this script -- a throttled provider, a database outage, a cancelled run -- and
 the reader is usually away from the machine. An unsent mail and a crashed
 process look identical from a phone, and "no prediction today" is exactly the
@@ -13,7 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import date, datetime
+from datetime import date, datetime, time
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -26,6 +34,21 @@ from services.email import (
     load_morning_email_payload,
     send_persisted_morning_email,
 )
+
+# The schedule fires at 08:45, 08:50, and 08:55 JST from a single cron
+# expression, so the three firings are indistinguishable to the process. Gating
+# on the clock is what keeps one missing-prediction notice from becoming three.
+# Change this if that cron changes.
+_NOTICE_AFTER = time(8, 53)
+
+
+def _should_notify(explicit_date: date | None, now: datetime | None = None) -> bool:
+    """Send the notice on the last scheduled firing, or whenever asked directly."""
+
+    if explicit_date is not None:
+        return True
+    current = (now or datetime.now(ZoneInfo("Asia/Tokyo"))).timetz()
+    return current.replace(tzinfo=None) >= _NOTICE_AFTER
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -72,7 +95,6 @@ def _notify_missing(environment: EnvironmentSettings, target: date | None) -> No
                 ),
                 sender=sender_address,
                 recipient=recipient,
-                # The job runs three times by design; one notice per date.
                 idempotency_key=f"missing-prediction/{label}",
             )
         )
@@ -128,7 +150,17 @@ def main() -> int:
         except ValueError:
             # Raised only when no terminal prediction set exists. Every other
             # failure still propagates, so a genuine bug stays loud.
-            _notify_missing(environment, args.prediction_date)
+            if _should_notify(args.prediction_date):
+                _notify_missing(environment, args.prediction_date)
+            else:
+                # An earlier firing: stay quiet and let a later one report, in
+                # case the prediction lands in between.
+                print(
+                    json.dumps(
+                        {"status": "NO_PREDICTION", "notice": "deferred"},
+                        ensure_ascii=False,
+                    )
+                )
             return 0
         result_payload = {
             "status": "ALREADY_SENT" if delivery is None else "SENT",

@@ -172,8 +172,6 @@ def test_a_missing_prediction_is_mailed_rather_than_raised(monkeypatch) -> None:
 
     assert len(sent) == 1
     assert "2026-08-10" in sent[0].subject
-    # The job fires three times by design; one notice per date, not three.
-    assert sent[0].idempotency_key == "missing-prediction/2026-08-10"
 
 
 def test_the_missing_prediction_notice_never_raises(monkeypatch) -> None:
@@ -190,3 +188,37 @@ def test_the_missing_prediction_notice_never_raises(monkeypatch) -> None:
             raise RuntimeError("credentials missing")
 
     script._notify_missing(_Environment(), None)
+
+
+def test_only_the_last_scheduled_firing_reports_a_missing_prediction() -> None:
+    """Three firings must not become three identical mails.
+
+    The schedule fires 08:45, 08:50, and 08:55 from one cron expression, so the
+    process cannot tell them apart, and the database cannot deduplicate this
+    notice: email_logs.prediction_set_id is NOT NULL and there is no set to
+    point at. The clock is what is left.
+    """
+
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from scripts.send_morning_email import _should_notify
+
+    jst = ZoneInfo("Asia/Tokyo")
+    fired = [
+        _should_notify(None, datetime(2026, 8, 10, 8, minute, tzinfo=jst))
+        for minute in (45, 50, 55)
+    ]
+    assert fired == [False, False, True]
+
+
+def test_an_explicitly_requested_date_always_reports() -> None:
+    """Someone ran it on purpose; silence would look like a hang."""
+
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from scripts.send_morning_email import _should_notify
+
+    early = datetime(2026, 8, 10, 8, 45, tzinfo=ZoneInfo("Asia/Tokyo"))
+    assert _should_notify(date(2026, 8, 10), early) is True
