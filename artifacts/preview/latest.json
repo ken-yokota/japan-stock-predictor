@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-09T20:34:44.542438+09:00",
+  "generated_at": "2026-08-09T20:53:54.362999+09:00",
   "prediction_date": "2026-08-10",
   "published_to_database": false,
   "rule": {
@@ -15,7 +15,50 @@
       "predicted_return": 0.01771488373084948,
       "probability_up": 0.8026688766851796,
       "reference_close": null,
-      "predicted_close": 346.83721995222794
+      "predicted_close": 346.83721995222794,
+      "explanation": {
+        "intercept": -0.0014009125386248652,
+        "reconstructed_return": 0.017714883730849475,
+        "residual": -3.469446951953614e-18,
+        "top": [
+          {
+            "feature": "us_10y_minus_2y_spread__return_20d",
+            "coefficient": 0.0009560604111969315,
+            "standardized_value": 2.188773060082225,
+            "contribution": 0.002092599271838978
+          },
+          {
+            "feature": "us_10y_minus_2y_spread__ma20_deviation",
+            "coefficient": 0.0009746777477782909,
+            "standardized_value": 1.645103582523793,
+            "contribution": 0.001603445854676288
+          },
+          {
+            "feature": "stock__return_20d",
+            "coefficient": -0.0011193301166445354,
+            "standardized_value": 1.3609055814766085,
+            "contribution": -0.0015233026032564114
+          },
+          {
+            "feature": "us_10y_yield__return_5d",
+            "coefficient": -0.0011959619211041786,
+            "standardized_value": -1.2192476826470278,
+            "contribution": 0.0014581738008403572
+          },
+          {
+            "feature": "us_2y_yield__return_5d",
+            "coefficient": -0.0011091134947147654,
+            "standardized_value": -1.250714423032886,
+            "contribution": 0.0013871842446201656
+          },
+          {
+            "feature": "ewy__return_20d",
+            "coefficient": -0.0012747490276547617,
+            "standardized_value": -0.973406849455406,
+            "contribution": 0.0012408494348557638
+          }
+        ]
+      }
     },
     {
       "ticker": "8002",
@@ -25,7 +68,50 @@
       "predicted_return": 0.012883430122917339,
       "probability_up": 0.6007094552969195,
       "reference_close": null,
-      "predicted_close": 5088.726352937537
+      "predicted_close": 5088.726352937537,
+      "explanation": {
+        "intercept": -0.0012302794953775369,
+        "reconstructed_return": 0.012883430122917339,
+        "residual": 0.0,
+        "top": [
+          {
+            "feature": "us_10y_minus_2y_spread__return_20d",
+            "coefficient": 0.0011324882167224363,
+            "standardized_value": 2.188773060082225,
+            "contribution": 0.0024787596996226286
+          },
+          {
+            "feature": "stock__high_low_range",
+            "coefficient": -0.0021391950890896605,
+            "standardized_value": -0.654702964703431,
+            "contribution": 0.001400537366906021
+          },
+          {
+            "feature": "nasdaq100__return_5d",
+            "coefficient": 0.0009515393255008294,
+            "standardized_value": 1.4511162575995313,
+            "contribution": 0.0013807941849795459
+          },
+          {
+            "feature": "stock__return_5d",
+            "coefficient": -0.002349955183949169,
+            "standardized_value": -0.5595688983631059,
+            "contribution": 0.0013149618334851064
+          },
+          {
+            "feature": "us_2y_yield__return_5d",
+            "coefficient": -0.0010212316147556056,
+            "standardized_value": -1.250714423032886,
+            "contribution": 0.0012772691098319998
+          },
+          {
+            "feature": "us_10y_minus_2y_spread__ma20_deviation",
+            "coefficient": 0.000719964317651607,
+            "standardized_value": 1.645103582523793,
+            "contribution": 0.0011844158782579567
+          }
+        ]
+      }
     },
     {
       "ticker": "8604",
@@ -35,7 +121,50 @@
       "predicted_return": 0.010722547252099573,
       "probability_up": 0.6604607404635972,
       "reference_close": null,
-      "predicted_close": 1578.7486188077796
+      "predicted_close": 1578.7486188077796,
+      "explanation": {
+        "intercept": 4.900170193758109e-05,
+        "reconstructed_return": 0.010722547252099571,
+        "residual": -1.734723475976807e-18,
+        "top": [
+          {
+            "feature": "mufg_adr__volatility_20d",
+            "coefficient": -0.0009593065637461113,
+            "standardized_value": 1.5222559977149703,
+            "contribution": -0.0014603101703098563
+          },
+          {
+            "feature": "xlf__volatility_20d",
+            "coefficient": -0.0008128084149692603,
+            "standardized_value": -1.2875039473709298,
+            "contribution": 0.0010464940427292314
+          },
+          {
+            "feature": "kre__return_2d",
+            "coefficient": -0.0011009130015008956,
+            "standardized_value": -0.8833551383157431,
+            "contribution": 0.0009724971567144235
+          },
+          {
+            "feature": "us_10y_minus_2y_spread__return_20d",
+            "coefficient": 0.00040098696115733036,
+            "standardized_value": 2.188773060082225,
+            "contribution": 0.0008776694580254022
+          },
+          {
+            "feature": "stock__volatility_20d",
+            "coefficient": -0.0009538624360711468,
+            "standardized_value": 0.9167096685176661,
+            "contribution": -0.0008744149175822345
+          },
+          {
+            "feature": "nasdaq100__return_5d",
+            "coefficient": 0.0005911798890536076,
+            "standardized_value": 1.4511162575995313,
+            "contribution": 0.0008578707481715772
+          }
+        ]
+      }
     },
     {
       "ticker": "7270",
@@ -45,7 +174,50 @@
       "predicted_return": 0.009095669007927165,
       "probability_up": 0.5836730095548661,
       "reference_close": null,
-      "predicted_close": 2590.853130177853
+      "predicted_close": 2590.853130177853,
+      "explanation": {
+        "intercept": -0.0002888828983319535,
+        "reconstructed_return": 0.009095669007927163,
+        "residual": -1.734723475976807e-18,
+        "top": [
+          {
+            "feature": "stock__return_2d",
+            "coefficient": 0.00141697765441672,
+            "standardized_value": 1.3937315439725309,
+            "contribution": 0.0019748864540647905
+          },
+          {
+            "feature": "honda_adr__return_3d",
+            "coefficient": 0.0007301985831236177,
+            "standardized_value": 1.6350954388475762,
+            "contribution": 0.00119394437271839
+          },
+          {
+            "feature": "sp500__return_5d",
+            "coefficient": 0.0006548175568766916,
+            "standardized_value": 1.5679179923852422,
+            "contribution": 0.0010267002291567114
+          },
+          {
+            "feature": "toyota_adr__volatility_20d",
+            "coefficient": -0.0007148573438617309,
+            "standardized_value": -1.1885738140063513,
+            "contribution": 0.0008496607196641873
+          },
+          {
+            "feature": "nasdaq100__return_5d",
+            "coefficient": 0.0005553178973899053,
+            "standardized_value": 1.4511162575995313,
+            "contribution": 0.0008058308290384799
+          },
+          {
+            "feature": "toyota_adr__return_20d",
+            "coefficient": -0.000524986577598004,
+            "standardized_value": 1.5286285239965254,
+            "contribution": -0.0008025094572316242
+          }
+        ]
+      }
     },
     {
       "ticker": "7269",
@@ -55,7 +227,50 @@
       "predicted_return": 0.008212148254243797,
       "probability_up": 0.668058434744814,
       "reference_close": null,
-      "predicted_close": 1972.062961985301
+      "predicted_close": 1972.062961985301,
+      "explanation": {
+        "intercept": -0.0009298077349068653,
+        "reconstructed_return": 0.008212148254243795,
+        "residual": -1.734723475976807e-18,
+        "top": [
+          {
+            "feature": "fxi__high_low_range",
+            "coefficient": 0.001736333434200784,
+            "standardized_value": -1.2704263667818478,
+            "contribution": -0.0022058837763335505
+          },
+          {
+            "feature": "mchi__volatility_5d",
+            "coefficient": -0.0010340288961505472,
+            "standardized_value": -1.5398334328196521,
+            "contribution": 0.0015922322647942127
+          },
+          {
+            "feature": "mchi__high_low_range",
+            "coefficient": 0.001415894718945129,
+            "standardized_value": -1.09483757136081,
+            "contribution": -0.0015501747353924816
+          },
+          {
+            "feature": "ewy__open_close_return",
+            "coefficient": -0.0021610725672885395,
+            "standardized_value": -0.6983278221658358,
+            "contribution": 0.0015091370994569373
+          },
+          {
+            "feature": "stock__return_5d",
+            "coefficient": -0.0011060945187707615,
+            "standardized_value": -1.216989720808358,
+            "contribution": 0.0013461056595864842
+          },
+          {
+            "feature": "fxi__volatility_5d",
+            "coefficient": -0.0007937044764959097,
+            "standardized_value": -1.6285236696826895,
+            "contribution": 0.0012925665267066967
+          }
+        ]
+      }
     },
     {
       "ticker": "7203",
@@ -65,7 +280,50 @@
       "predicted_return": 0.007149933775258063,
       "probability_up": 0.5675575761066423,
       "reference_close": null,
-      "predicted_close": 3001.306802650269
+      "predicted_close": 3001.306802650269,
+      "explanation": {
+        "intercept": -0.0020264813302766998,
+        "reconstructed_return": 0.007149933775258065,
+        "residual": 1.734723475976807e-18,
+        "top": [
+          {
+            "feature": "honda_adr__return_5d",
+            "coefficient": 0.0008572749540506223,
+            "standardized_value": 1.397988498851308,
+            "contribution": 0.0011984605261160537
+          },
+          {
+            "feature": "dow__high_low_range",
+            "coefficient": -0.0008179679919737044,
+            "standardized_value": -1.4503057435231135,
+            "contribution": 0.0011863036767775315
+          },
+          {
+            "feature": "stock__volatility_20d",
+            "coefficient": -0.0013282981787118397,
+            "standardized_value": 0.831561747481722,
+            "contribution": -0.001104561954666406
+          },
+          {
+            "feature": "sp500__return_5d",
+            "coefficient": 0.0005925898963373551,
+            "standardized_value": 1.5679179923852422,
+            "contribution": 0.0009291323605730446
+          },
+          {
+            "feature": "honda_adr__return_1d",
+            "coefficient": 0.000478557482850504,
+            "standardized_value": 1.6973325209156431,
+            "contribution": 0.0008122711787696906
+          },
+          {
+            "feature": "honda_adr__log_return_1d",
+            "coefficient": 0.0004787104872335693,
+            "standardized_value": 1.6806778781112084,
+            "contribution": 0.0008045581259132979
+          }
+        ]
+      }
     },
     {
       "ticker": "7267",
@@ -75,7 +333,50 @@
       "predicted_return": 0.005985040402120534,
       "probability_up": 0.6253096781762489,
       "reference_close": null,
-      "predicted_close": 1693.0728229967688
+      "predicted_close": 1693.0728229967688,
+      "explanation": {
+        "intercept": 0.0010403940270442412,
+        "reconstructed_return": 0.005985040402120535,
+        "residual": 8.673617379884035e-19,
+        "top": [
+          {
+            "feature": "mchi__volatility_20d",
+            "coefficient": 0.000881879092608914,
+            "standardized_value": -1.7556031966382841,
+            "contribution": -0.0015482297540326789
+          },
+          {
+            "feature": "fxi__volatility_20d",
+            "coefficient": 0.0007931852882549829,
+            "standardized_value": -1.7661863993952804,
+            "contribution": -0.001400913068316376
+          },
+          {
+            "feature": "stock__return_3d",
+            "coefficient": -0.0007273637687057037,
+            "standardized_value": 1.8135045169842587,
+            "contribution": -0.0013190774800384871
+          },
+          {
+            "feature": "stock__high_low_range",
+            "coefficient": 0.0012055532901753142,
+            "standardized_value": 0.8443739067974443,
+            "contribution": 0.0010179377414778431
+          },
+          {
+            "feature": "dow__return_5d",
+            "coefficient": 0.0006305287501008718,
+            "standardized_value": 1.5375947898003721,
+            "contribution": 0.0009694977209744413
+          },
+          {
+            "feature": "sp500__return_5d",
+            "coefficient": 0.0006156186981665548,
+            "standardized_value": 1.5679179923852422,
+            "contribution": 0.000965239633304121
+          }
+        ]
+      }
     },
     {
       "ticker": "8053",
@@ -83,9 +384,52 @@
       "status": "READY",
       "signal": "NO_BUY",
       "predicted_return": 0.005666201691191515,
-      "probability_up": 0.5517348932505299,
+      "probability_up": 0.55173489325053,
       "reference_close": null,
-      "predicted_close": 1798.1311686238505
+      "predicted_close": 1798.1311686238505,
+      "explanation": {
+        "intercept": 0.00026776863889809793,
+        "reconstructed_return": 0.005666201691191515,
+        "residual": 0.0,
+        "top": [
+          {
+            "feature": "dow__high_low_range",
+            "coefficient": 0.002067138336901543,
+            "standardized_value": -1.4503057435231135,
+            "contribution": -0.002997982602665125
+          },
+          {
+            "feature": "stock__return_20d",
+            "coefficient": -0.00258907913920652,
+            "standardized_value": 1.1134358003226077,
+            "contribution": -0.00288277340346098
+          },
+          {
+            "feature": "stock__ma20_deviation",
+            "coefficient": -0.0016400094480798534,
+            "standardized_value": 1.4293732998892381,
+            "contribution": -0.0023441857166514282
+          },
+          {
+            "feature": "nasdaq100__return_5d",
+            "coefficient": 0.001446514711899259,
+            "standardized_value": 1.4511162575995313,
+            "contribution": 0.002099061015293917
+          },
+          {
+            "feature": "us_2y_yield__return_5d",
+            "coefficient": -0.0014654122357554982,
+            "standardized_value": -1.250714423032886,
+            "contribution": 0.0018328122189482693
+          },
+          {
+            "feature": "sp500__return_5d",
+            "coefficient": 0.0011508815043516983,
+            "standardized_value": 1.5679179923852422,
+            "contribution": 0.0018044878177764221
+          }
+        ]
+      }
     },
     {
       "ticker": "8306",
@@ -95,7 +439,50 @@
       "predicted_return": 0.003931104853027707,
       "probability_up": 0.5536657462454462,
       "reference_close": null,
-      "predicted_close": 3578.0104576961908
+      "predicted_close": 3578.0104576961908,
+      "explanation": {
+        "intercept": 0.0005646929200193481,
+        "reconstructed_return": 0.00393110485302771,
+        "residual": 2.6020852139652106e-18,
+        "top": [
+          {
+            "feature": "mufg_adr__high_low_range",
+            "coefficient": -0.0009481406898803672,
+            "standardized_value": -0.8615941872376846,
+            "contribution": 0.0008169125070844525
+          },
+          {
+            "feature": "kre__return_2d",
+            "coefficient": -0.0009050469027527192,
+            "standardized_value": -0.8833551383157431,
+            "contribution": 0.0007994778319633632
+          },
+          {
+            "feature": "vix__return_3d",
+            "coefficient": -0.0008512406960389407,
+            "standardized_value": -0.8498581466516878,
+            "contribution": 0.0007234338402901469
+          },
+          {
+            "feature": "kre__return_3d",
+            "coefficient": -0.0005892060627395799,
+            "standardized_value": -1.0762715194652217,
+            "contribution": 0.0006341457044228484
+          },
+          {
+            "feature": "xlf__volatility_5d",
+            "coefficient": 0.0007171551092066199,
+            "standardized_value": -0.8578102534333842,
+            "contribution": -0.000615183005979577
+          },
+          {
+            "feature": "dow__return_5d",
+            "coefficient": -0.00038033531770196097,
+            "standardized_value": 1.5375947898003721,
+            "contribution": -0.0005848016028756044
+          }
+        ]
+      }
     },
     {
       "ticker": "8031",
@@ -105,7 +492,50 @@
       "predicted_return": 0.0012846093191498493,
       "probability_up": 0.42738457733024515,
       "reference_close": null,
-      "predicted_close": 4939.336977771366
+      "predicted_close": 4939.336977771366,
+      "explanation": {
+        "intercept": -0.002178965052720931,
+        "reconstructed_return": 0.0012846093191498488,
+        "residual": -4.336808689942018e-19,
+        "top": [
+          {
+            "feature": "us_10y_minus_2y_spread__return_20d",
+            "coefficient": 0.0009227425922437159,
+            "standardized_value": 2.188773060082225,
+            "contribution": 0.0020196741272934826
+          },
+          {
+            "feature": "us_2y_yield__volatility_20d",
+            "coefficient": -0.0011568518543846125,
+            "standardized_value": -1.018593881149715,
+            "contribution": 0.0011783622202728675
+          },
+          {
+            "feature": "dow__ma20_deviation",
+            "coefficient": -0.001065292752425172,
+            "standardized_value": 0.9879334290455001,
+            "contribution": -0.0010524383218407192
+          },
+          {
+            "feature": "sp500__high_low_range",
+            "coefficient": -0.0008606811736251527,
+            "standardized_value": -1.071024616082175,
+            "contribution": 0.0009218107235510351
+          },
+          {
+            "feature": "vix__return_3d",
+            "coefficient": -0.0008617597953413642,
+            "standardized_value": -0.8498581466516878,
+            "contribution": 0.0007323735825277496
+          },
+          {
+            "feature": "us_10y_yield__level",
+            "coefficient": -0.0005277557018217659,
+            "standardized_value": 1.3656862592599526,
+            "contribution": -0.0007207487102240784
+          }
+        ]
+      }
     },
     {
       "ticker": "8766",
@@ -115,7 +545,50 @@
       "predicted_return": 0.0004719744104071966,
       "probability_up": 0.5128293069296264,
       "reference_close": null,
-      "predicted_close": 7942.747004844223
+      "predicted_close": 7942.747004844223,
+      "explanation": {
+        "intercept": -0.000622447989491118,
+        "reconstructed_return": 0.00047197441040719727,
+        "residual": 6.505213034913027e-19,
+        "top": [
+          {
+            "feature": "us_10y_minus_2y_spread__return_20d",
+            "coefficient": 0.0008134334172221308,
+            "standardized_value": 2.188773060082225,
+            "contribution": 0.0017804211497864243
+          },
+          {
+            "feature": "us_10y_minus_2y_spread__ma20_deviation",
+            "coefficient": -0.0005621269006604346,
+            "standardized_value": 1.645103582523793,
+            "contribution": -0.0009247569781094773
+          },
+          {
+            "feature": "us_2y_yield__volatility_20d",
+            "coefficient": -0.0008670848639247908,
+            "standardized_value": -1.018593881149715,
+            "contribution": 0.0008832073368313252
+          },
+          {
+            "feature": "mufg_adr__volatility_20d",
+            "coefficient": 0.000546166623342777,
+            "standardized_value": 1.5222559977149703,
+            "contribution": 0.0008314054181352753
+          },
+          {
+            "feature": "vix__return_3d",
+            "coefficient": 0.0009080393190215859,
+            "standardized_value": -0.8498581466516878,
+            "contribution": -0.0007717046127505456
+          },
+          {
+            "feature": "xlf__high_low_range",
+            "coefficient": 0.00069921254798039,
+            "standardized_value": -1.0811144153666647,
+            "contribution": -0.0007559287650268553
+          }
+        ]
+      }
     },
     {
       "ticker": "8316",
@@ -125,7 +598,50 @@
       "predicted_return": -0.0001377342276338891,
       "probability_up": 0.5037582770085332,
       "reference_close": null,
-      "predicted_close": 6781.065886468187
+      "predicted_close": 6781.065886468187,
+      "explanation": {
+        "intercept": -0.0007201548021649292,
+        "reconstructed_return": -0.00013773422763388866,
+        "residual": 4.336808689942018e-19,
+        "top": [
+          {
+            "feature": "kre__volatility_20d",
+            "coefficient": -0.0006077021006658497,
+            "standardized_value": -1.2995650202255253,
+            "contribution": 0.0007897483927429092
+          },
+          {
+            "feature": "xlf__volatility_5d",
+            "coefficient": 0.0007951634304422796,
+            "standardized_value": -0.8578102534333842,
+            "contribution": -0.000682099343788651
+          },
+          {
+            "feature": "mufg_adr__high_low_range",
+            "coefficient": -0.0007530589189730624,
+            "standardized_value": -0.8615941872376846,
+            "contribution": 0.000648831187234685
+          },
+          {
+            "feature": "xlf__volatility_20d",
+            "coefficient": -0.000494993015675251,
+            "standardized_value": -1.2875039473709298,
+            "contribution": 0.0006373054616029262
+          },
+          {
+            "feature": "kre__return_2d",
+            "coefficient": -0.0007172747486522456,
+            "standardized_value": -0.8833551383157431,
+            "contribution": 0.0006336083348060943
+          },
+          {
+            "feature": "stock__ma20_deviation",
+            "coefficient": -0.0007915577296533134,
+            "standardized_value": -0.7237824848191691,
+            "contribution": 0.0005729156204462953
+          }
+        ]
+      }
     },
     {
       "ticker": "8411",
@@ -135,17 +651,103 @@
       "predicted_return": -0.0006629690382631715,
       "probability_up": 0.4821268473159663,
       "reference_close": null,
-      "predicted_close": 8440.40056350283
+      "predicted_close": 8440.40056350283,
+      "explanation": {
+        "intercept": -0.0004455720310031842,
+        "reconstructed_return": -0.0006629690382631715,
+        "residual": 0.0,
+        "top": [
+          {
+            "feature": "stock__high_low_range",
+            "coefficient": 0.001619635004747011,
+            "standardized_value": -1.0677984917052643,
+            "contribution": -0.001729443815181907
+          },
+          {
+            "feature": "mufg_adr__volatility_20d",
+            "coefficient": -0.0008345237769975958,
+            "standardized_value": 1.5222559977149703,
+            "contribution": -0.0012703588247703406
+          },
+          {
+            "feature": "nasdaq100__return_5d",
+            "coefficient": 0.000704484870151627,
+            "standardized_value": 1.4511162575995313,
+            "contribution": 0.0010222894483099207
+          },
+          {
+            "feature": "smfg_adr__return_3d",
+            "coefficient": -0.0010567472070649583,
+            "standardized_value": 0.8904423613458516,
+            "contribution": -0.0009409724784045551
+          },
+          {
+            "feature": "stock__return_5d",
+            "coefficient": -0.0016773865363603855,
+            "standardized_value": 0.5419473545769352,
+            "contribution": -0.0009090551959834791
+          },
+          {
+            "feature": "us_10y_minus_2y_spread__return_20d",
+            "coefficient": -0.0003812618046575277,
+            "standardized_value": 2.188773060082225,
+            "contribution": -0.0008344955668727283
+          }
+        ]
+      }
     },
     {
       "ticker": "8058",
       "sector": "trading_company",
       "status": "READY",
       "signal": "NO_BUY",
-      "predicted_return": -0.0011267391930748325,
-      "probability_up": 0.4122239065473582,
+      "predicted_return": -0.001126739193074833,
+      "probability_up": 0.4122239065473583,
       "reference_close": null,
-      "predicted_close": 4862.5150336081115
+      "predicted_close": 4862.5150336081115,
+      "explanation": {
+        "intercept": -0.002053060314221791,
+        "reconstructed_return": -0.0011267391930748314,
+        "residual": 1.5178830414797062e-18,
+        "top": [
+          {
+            "feature": "us_10y_minus_2y_spread__return_20d",
+            "coefficient": 0.001011283348449095,
+            "standardized_value": 2.188773060082225,
+            "contribution": 0.002213469749195125
+          },
+          {
+            "feature": "us_2y_yield__volatility_20d",
+            "coefficient": -0.001763371232618943,
+            "standardized_value": -1.018593881149715,
+            "contribution": 0.0017961591477410862
+          },
+          {
+            "feature": "dow__ma20_deviation",
+            "coefficient": -0.0011974313187881349,
+            "standardized_value": 0.9879334290455001,
+            "contribution": -0.0011829824288168375
+          },
+          {
+            "feature": "us_2y_yield__return_5d",
+            "coefficient": -0.0008313859005521408,
+            "standardized_value": -1.250714423032886,
+            "contribution": 0.0010398263369267471
+          },
+          {
+            "feature": "dow__high_low_range",
+            "coefficient": 0.0006889161676444421,
+            "standardized_value": -1.4503057435231135,
+            "contribution": -0.0009991390747406664
+          },
+          {
+            "feature": "us_30y_yield__level",
+            "coefficient": -0.0005185872152876774,
+            "standardized_value": 1.7391749768628602,
+            "contribution": -0.0009019139081493213
+          }
+        ]
+      }
     },
     {
       "ticker": "5019",
@@ -155,7 +757,50 @@
       "predicted_return": -0.0015033572907755355,
       "probability_up": 0.5014224114093858,
       "reference_close": null,
-      "predicted_close": 1319.0140650188855
+      "predicted_close": 1319.0140650188855,
+      "explanation": {
+        "intercept": -0.0019598368833752015,
+        "reconstructed_return": -0.0015033572907755365,
+        "residual": -1.0842021724855044e-18,
+        "top": [
+          {
+            "feature": "us_10y_yield__return_5d",
+            "coefficient": -0.0013172202019693892,
+            "standardized_value": -1.2192476826470278,
+            "contribution": 0.0016060176787870276
+          },
+          {
+            "feature": "mchi__volatility_5d",
+            "coefficient": 0.000796489792085453,
+            "standardized_value": -1.5398334328196521,
+            "contribution": -0.0012264616107527542
+          },
+          {
+            "feature": "dow__ma20_deviation",
+            "coefficient": -0.0012286774714682952,
+            "standardized_value": 0.9879334290455001,
+            "contribution": -0.0012138515475786276
+          },
+          {
+            "feature": "fxi__volatility_20d",
+            "coefficient": -0.000614862874904282,
+            "standardized_value": -1.7661863993952804,
+            "contribution": 0.0010859624471490246
+          },
+          {
+            "feature": "us_10y_minus_2y_spread__return_20d",
+            "coefficient": 0.0004817149498563168,
+            "standardized_value": 2.188773060082225,
+            "contribution": 0.001054364704884366
+          },
+          {
+            "feature": "us_2y_yield__ma20_deviation",
+            "coefficient": 0.001011002549638329,
+            "standardized_value": -1.0425233531002485,
+            "contribution": -0.001053993768041851
+          }
+        ]
+      }
     },
     {
       "ticker": "5020",
@@ -165,7 +810,50 @@
       "predicted_return": -0.0021398095660771703,
       "probability_up": 0.5332420315575256,
       "reference_close": null,
-      "predicted_close": 1346.6123269905788
+      "predicted_close": 1346.6123269905788,
+      "explanation": {
+        "intercept": -0.002135067698576489,
+        "reconstructed_return": -0.0021398095660771703,
+        "residual": 0.0,
+        "top": [
+          {
+            "feature": "stock__return_2d",
+            "coefficient": -0.0009051496547847823,
+            "standardized_value": 1.6775878968646063,
+            "contribution": -0.0015184681057181274
+          },
+          {
+            "feature": "stock__return_3d",
+            "coefficient": -0.000938699865732242,
+            "standardized_value": 1.602752765088105,
+            "contribution": -0.0015045038053901837
+          },
+          {
+            "feature": "us_10y_yield__return_5d",
+            "coefficient": -0.001145536835537071,
+            "standardized_value": -1.2192476826470278,
+            "contribution": 0.0013966931321153832
+          },
+          {
+            "feature": "stock__open_close_return",
+            "coefficient": -0.0013666494359029968,
+            "standardized_value": 0.949719065265476,
+            "contribution": -0.001297933024811384
+          },
+          {
+            "feature": "fxi__volatility_20d",
+            "coefficient": -0.0006844829779983244,
+            "standardized_value": -1.7661863993952804,
+            "contribution": 0.0012089245263582195
+          },
+          {
+            "feature": "mchi__volatility_20d",
+            "coefficient": -0.0006876611723065385,
+            "standardized_value": -1.7556031966382841,
+            "contribution": 0.001207260152305389
+          }
+        ]
+      }
     },
     {
       "ticker": "8001",
@@ -175,7 +863,50 @@
       "predicted_return": -0.0022415286289483817,
       "probability_up": 0.3851880718236286,
       "reference_close": null,
-      "predicted_close": 2075.337620451787
+      "predicted_close": 2075.337620451787,
+      "explanation": {
+        "intercept": -0.0011629728301867247,
+        "reconstructed_return": -0.0022415286289483834,
+        "residual": -1.734723475976807e-18,
+        "top": [
+          {
+            "feature": "us_10y_minus_2y_spread__return_20d",
+            "coefficient": 0.0006996614728610691,
+            "standardized_value": 2.188773060082225,
+            "contribution": 0.0015314001829757587
+          },
+          {
+            "feature": "stock__return_20d",
+            "coefficient": -0.0008453316788563953,
+            "standardized_value": 1.7815516961237636,
+            "contribution": -0.0015060020862537598
+          },
+          {
+            "feature": "us_2y_yield__volatility_20d",
+            "coefficient": -0.001364445220219481,
+            "standardized_value": -1.018593881149715,
+            "contribution": 0.0013898155524795389
+          },
+          {
+            "feature": "stock__ma20_deviation",
+            "coefficient": -0.0007369250625905274,
+            "standardized_value": 1.6042548931326417,
+            "contribution": -0.0011822156375329317
+          },
+          {
+            "feature": "stock__return_3d",
+            "coefficient": -0.000562347502189606,
+            "standardized_value": 1.85370265968965,
+            "contribution": -0.001042425060478704
+          },
+          {
+            "feature": "us_10y_yield__return_5d",
+            "coefficient": -0.0008344184545265056,
+            "standardized_value": -1.2192476826470278,
+            "contribution": 0.0010173627670393562
+          }
+        ]
+      }
     },
     {
       "ticker": "9107",
@@ -185,7 +916,50 @@
       "predicted_return": -0.002839613602477106,
       "probability_up": 0.5364849172417947,
       "reference_close": null,
-      "predicted_close": 2846.8929031649277
+      "predicted_close": 2846.8929031649277,
+      "explanation": {
+        "intercept": 0.0009095040569177462,
+        "reconstructed_return": -0.0028396136024771063,
+        "residual": -4.336808689942018e-19,
+        "top": [
+          {
+            "feature": "baltic_dry_index__open_close_return",
+            "coefficient": 0.0015293366024175712,
+            "standardized_value": -1.8577668431770717,
+            "contribution": -0.00284115083202844
+          },
+          {
+            "feature": "mchi__volatility_5d",
+            "coefficient": 0.0008525068947610927,
+            "standardized_value": -1.5398334328196521,
+            "contribution": -0.0013127186182623953
+          },
+          {
+            "feature": "mchi__volatility_20d",
+            "coefficient": -0.0006732545266956308,
+            "standardized_value": -1.7556031966382841,
+            "contribution": 0.0011819677992180443
+          },
+          {
+            "feature": "nasdaq100__high_low_range",
+            "coefficient": -0.001211525222710281,
+            "standardized_value": -0.847466397377867,
+            "contribution": 0.0010267269158226997
+          },
+          {
+            "feature": "fxi__volatility_20d",
+            "coefficient": -0.0005808632440951844,
+            "standardized_value": -1.7661863993952804,
+            "contribution": 0.0010259127616295356
+          },
+          {
+            "feature": "us_10y_minus_2y_spread__return_20d",
+            "coefficient": 0.0004208386327141132,
+            "standardized_value": 2.188773060082225,
+            "contribution": 0.000921120261926489
+          }
+        ]
+      }
     },
     {
       "ticker": "5021",
@@ -195,7 +969,50 @@
       "predicted_return": -0.0029411362176536885,
       "probability_up": 0.41931811472014885,
       "reference_close": null,
-      "predicted_close": 4075.9766351422318
+      "predicted_close": 4075.9766351422318,
+      "explanation": {
+        "intercept": -0.0026641867499389497,
+        "reconstructed_return": -0.0029411362176536907,
+        "residual": -2.168404344971009e-18,
+        "top": [
+          {
+            "feature": "stock__ma20_deviation",
+            "coefficient": -0.0010518311061895901,
+            "standardized_value": 1.5939347533085966,
+            "contribution": -0.0016765501547666127
+          },
+          {
+            "feature": "stock__high_low_range",
+            "coefficient": 0.0007488017810592434,
+            "standardized_value": 1.7295927517492722,
+            "contribution": 0.0012951221330170129
+          },
+          {
+            "feature": "us_10y_yield__return_5d",
+            "coefficient": -0.0009367755115520182,
+            "standardized_value": -1.2192476826470278,
+            "contribution": 0.0011421613716202821
+          },
+          {
+            "feature": "stock__return_5d",
+            "coefficient": -0.0012016784307462929,
+            "standardized_value": 0.9435936063589837,
+            "contribution": -0.0011338960841516988
+          },
+          {
+            "feature": "fxi__high_low_range",
+            "coefficient": 0.0008306803844862402,
+            "standardized_value": -1.2704263667818478,
+            "contribution": -0.0010553182628198026
+          },
+          {
+            "feature": "fxi__volatility_5d",
+            "coefficient": 0.0005299556150692616,
+            "standardized_value": -1.6285236696826895,
+            "contribution": -0.0008630452630215407
+          }
+        ]
+      }
     },
     {
       "ticker": "9101",
@@ -205,7 +1022,50 @@
       "predicted_return": -0.0029688709690185535,
       "probability_up": 0.4947214364660201,
       "reference_close": null,
-      "predicted_close": 6096.845354024452
+      "predicted_close": 6096.845354024452,
+      "explanation": {
+        "intercept": 0.0010656986102845563,
+        "reconstructed_return": -0.0029688709690185553,
+        "residual": -1.734723475976807e-18,
+        "top": [
+          {
+            "feature": "baltic_dry_index__open_close_return",
+            "coefficient": 0.0007936624207504987,
+            "standardized_value": -1.8577668431770717,
+            "contribution": -0.0014744397299459268
+          },
+          {
+            "feature": "us_10y_minus_2y_spread__return_20d",
+            "coefficient": 0.0006217142516960574,
+            "standardized_value": 2.188773060082225,
+            "contribution": 0.0013607914051815102
+          },
+          {
+            "feature": "mchi__volatility_5d",
+            "coefficient": 0.0007785040110624543,
+            "standardized_value": -1.5398334328196521,
+            "contribution": -0.0011987665038181675
+          },
+          {
+            "feature": "sp500__high_low_range",
+            "coefficient": -0.0008355452960271164,
+            "standardized_value": -1.071024616082175,
+            "contribution": 0.0008948895798967096
+          },
+          {
+            "feature": "fxi__volatility_5d",
+            "coefficient": 0.0005159192059051403,
+            "standardized_value": -1.6285236696826895,
+            "contribution": -0.0008401866384604181
+          },
+          {
+            "feature": "vix__return_3d",
+            "coefficient": -0.0008665219143741568,
+            "standardized_value": -0.8498581466516878,
+            "contribution": 0.0007364207081830933
+          }
+        ]
+      }
     },
     {
       "ticker": "9104",
@@ -215,7 +1075,50 @@
       "predicted_return": -0.004561076550124621,
       "probability_up": 0.5287849051059964,
       "reference_close": null,
-      "predicted_close": 6157.785180460929
+      "predicted_close": 6157.785180460929,
+      "explanation": {
+        "intercept": 0.0006544245354308747,
+        "reconstructed_return": -0.004561076550124619,
+        "residual": 1.734723475976807e-18,
+        "top": [
+          {
+            "feature": "baltic_dry_index__open_close_return",
+            "coefficient": 0.0008364328958585577,
+            "standardized_value": -1.8577668431770717,
+            "contribution": -0.0015538973004686092
+          },
+          {
+            "feature": "stock__return_5d",
+            "coefficient": -0.0015170574191281326,
+            "standardized_value": 0.9170384776990381,
+            "contribution": -0.0013912000262192943
+          },
+          {
+            "feature": "mchi__volatility_20d",
+            "coefficient": -0.0007665657871565167,
+            "standardized_value": -1.7556031966382841,
+            "contribution": 0.0013457853463655232
+          },
+          {
+            "feature": "sp500__high_low_range",
+            "coefficient": -0.001209045919654548,
+            "standardized_value": -1.071024616082175,
+            "contribution": 0.0012949179419237324
+          },
+          {
+            "feature": "us_2y_yield__volatility_20d",
+            "coefficient": -0.001133671652990791,
+            "standardized_value": -1.018593881149715,
+            "contribution": 0.0011547510089693028
+          },
+          {
+            "feature": "us_30y_yield__return_5d",
+            "coefficient": 0.0010251234804006862,
+            "standardized_value": -1.1232406912030608,
+            "contribution": -0.0011514604066937542
+          }
+        ]
+      }
     },
     {
       "ticker": "1605",
@@ -225,7 +1128,50 @@
       "predicted_return": -0.012293670957468335,
       "probability_up": 0.3149772820141206,
       "reference_close": null,
-      "predicted_close": 3455.9844453198184
+      "predicted_close": 3455.9844453198184,
+      "explanation": {
+        "intercept": -0.0006137840582782481,
+        "reconstructed_return": -0.012293670957468333,
+        "residual": 1.734723475976807e-18,
+        "top": [
+          {
+            "feature": "stock__high_low_range",
+            "coefficient": 0.002164960352082392,
+            "standardized_value": -1.2146529236847556,
+            "contribution": -0.002629675421318455
+          },
+          {
+            "feature": "mchi__volatility_5d",
+            "coefficient": 0.0015811509757017298,
+            "standardized_value": -1.5398334328196521,
+            "contribution": -0.002434709134720937
+          },
+          {
+            "feature": "fxi__volatility_5d",
+            "coefficient": 0.0013966815571919296,
+            "standardized_value": -1.6285236696826895,
+            "contribution": -0.0022745289748963343
+          },
+          {
+            "feature": "vix__high_low_range",
+            "coefficient": 0.0012453660280106105,
+            "standardized_value": -1.0151988547306157,
+            "contribution": -0.0012642941653567875
+          },
+          {
+            "feature": "dow__return_5d",
+            "coefficient": 0.0008157919013059005,
+            "standardized_value": 1.5375947898003721,
+            "contribution": 0.001254357377009292
+          },
+          {
+            "feature": "mchi__volatility_20d",
+            "coefficient": -0.0006648141388732904,
+            "standardized_value": -1.7556031966382841,
+            "contribution": 0.0011671498273762768
+          }
+        ]
+      }
     }
   ],
   "indicators": {
