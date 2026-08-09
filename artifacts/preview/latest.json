@@ -1,0 +1,342 @@
+{
+  "generated_at": "2026-08-09T20:34:44.542438+09:00",
+  "prediction_date": "2026-08-10",
+  "published_to_database": false,
+  "rule": {
+    "return_threshold": 0.003,
+    "probability_threshold": 0.6
+  },
+  "predictions": [
+    {
+      "ticker": "7201",
+      "sector": "automotive",
+      "status": "READY",
+      "signal": "BUY",
+      "predicted_return": 0.01771488373084948,
+      "probability_up": 0.8026688766851796,
+      "reference_close": null,
+      "predicted_close": 346.83721995222794
+    },
+    {
+      "ticker": "8002",
+      "sector": "trading_company",
+      "status": "READY",
+      "signal": "BUY",
+      "predicted_return": 0.012883430122917339,
+      "probability_up": 0.6007094552969195,
+      "reference_close": null,
+      "predicted_close": 5088.726352937537
+    },
+    {
+      "ticker": "8604",
+      "sector": "financial",
+      "status": "READY",
+      "signal": "BUY",
+      "predicted_return": 0.010722547252099573,
+      "probability_up": 0.6604607404635972,
+      "reference_close": null,
+      "predicted_close": 1578.7486188077796
+    },
+    {
+      "ticker": "7270",
+      "sector": "automotive",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": 0.009095669007927165,
+      "probability_up": 0.5836730095548661,
+      "reference_close": null,
+      "predicted_close": 2590.853130177853
+    },
+    {
+      "ticker": "7269",
+      "sector": "automotive",
+      "status": "READY",
+      "signal": "BUY",
+      "predicted_return": 0.008212148254243797,
+      "probability_up": 0.668058434744814,
+      "reference_close": null,
+      "predicted_close": 1972.062961985301
+    },
+    {
+      "ticker": "7203",
+      "sector": "automotive",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": 0.007149933775258063,
+      "probability_up": 0.5675575761066423,
+      "reference_close": null,
+      "predicted_close": 3001.306802650269
+    },
+    {
+      "ticker": "7267",
+      "sector": "automotive",
+      "status": "READY",
+      "signal": "BUY",
+      "predicted_return": 0.005985040402120534,
+      "probability_up": 0.6253096781762489,
+      "reference_close": null,
+      "predicted_close": 1693.0728229967688
+    },
+    {
+      "ticker": "8053",
+      "sector": "trading_company",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": 0.005666201691191515,
+      "probability_up": 0.5517348932505299,
+      "reference_close": null,
+      "predicted_close": 1798.1311686238505
+    },
+    {
+      "ticker": "8306",
+      "sector": "financial",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": 0.003931104853027707,
+      "probability_up": 0.5536657462454462,
+      "reference_close": null,
+      "predicted_close": 3578.0104576961908
+    },
+    {
+      "ticker": "8031",
+      "sector": "trading_company",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": 0.0012846093191498493,
+      "probability_up": 0.42738457733024515,
+      "reference_close": null,
+      "predicted_close": 4939.336977771366
+    },
+    {
+      "ticker": "8766",
+      "sector": "financial",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": 0.0004719744104071966,
+      "probability_up": 0.5128293069296264,
+      "reference_close": null,
+      "predicted_close": 7942.747004844223
+    },
+    {
+      "ticker": "8316",
+      "sector": "financial",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": -0.0001377342276338891,
+      "probability_up": 0.5037582770085332,
+      "reference_close": null,
+      "predicted_close": 6781.065886468187
+    },
+    {
+      "ticker": "8411",
+      "sector": "financial",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": -0.0006629690382631715,
+      "probability_up": 0.4821268473159663,
+      "reference_close": null,
+      "predicted_close": 8440.40056350283
+    },
+    {
+      "ticker": "8058",
+      "sector": "trading_company",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": -0.0011267391930748325,
+      "probability_up": 0.4122239065473582,
+      "reference_close": null,
+      "predicted_close": 4862.5150336081115
+    },
+    {
+      "ticker": "5019",
+      "sector": "oil_energy",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": -0.0015033572907755355,
+      "probability_up": 0.5014224114093858,
+      "reference_close": null,
+      "predicted_close": 1319.0140650188855
+    },
+    {
+      "ticker": "5020",
+      "sector": "oil_energy",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": -0.0021398095660771703,
+      "probability_up": 0.5332420315575256,
+      "reference_close": null,
+      "predicted_close": 1346.6123269905788
+    },
+    {
+      "ticker": "8001",
+      "sector": "trading_company",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": -0.0022415286289483817,
+      "probability_up": 0.3851880718236286,
+      "reference_close": null,
+      "predicted_close": 2075.337620451787
+    },
+    {
+      "ticker": "9107",
+      "sector": "shipping",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": -0.002839613602477106,
+      "probability_up": 0.5364849172417947,
+      "reference_close": null,
+      "predicted_close": 2846.8929031649277
+    },
+    {
+      "ticker": "5021",
+      "sector": "oil_energy",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": -0.0029411362176536885,
+      "probability_up": 0.41931811472014885,
+      "reference_close": null,
+      "predicted_close": 4075.9766351422318
+    },
+    {
+      "ticker": "9101",
+      "sector": "shipping",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": -0.0029688709690185535,
+      "probability_up": 0.4947214364660201,
+      "reference_close": null,
+      "predicted_close": 6096.845354024452
+    },
+    {
+      "ticker": "9104",
+      "sector": "shipping",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": -0.004561076550124621,
+      "probability_up": 0.5287849051059964,
+      "reference_close": null,
+      "predicted_close": 6157.785180460929
+    },
+    {
+      "ticker": "1605",
+      "sector": "oil_energy",
+      "status": "READY",
+      "signal": "NO_BUY",
+      "predicted_return": -0.012293670957468335,
+      "probability_up": 0.3149772820141206,
+      "reference_close": null,
+      "predicted_close": 3455.9844453198184
+    }
+  ],
+  "indicators": {
+    "excluded": {
+      "audjpy": [
+        "fresh 08:30 snapshot unavailable",
+        "unavailable at cutoff"
+      ],
+      "brent": [
+        "fresh 08:30 snapshot unavailable",
+        "unavailable at cutoff"
+      ],
+      "copper": [
+        "fresh 08:30 snapshot unavailable",
+        "unavailable at cutoff"
+      ],
+      "dollar_index": [
+        "fresh 08:30 snapshot unavailable",
+        "unavailable at cutoff"
+      ],
+      "eurjpy": [
+        "fresh 08:30 snapshot unavailable",
+        "unavailable at cutoff"
+      ],
+      "gold": [
+        "fresh 08:30 snapshot unavailable",
+        "unavailable at cutoff"
+      ],
+      "nasdaq100_futures": [
+        "fresh 08:30 snapshot unavailable",
+        "unavailable at cutoff"
+      ],
+      "natural_gas": [
+        "fresh 08:30 snapshot unavailable",
+        "unavailable at cutoff"
+      ],
+      "nikkei225_futures": [
+        "fresh 08:30 snapshot unavailable",
+        "unavailable at cutoff"
+      ],
+      "sp500_futures": [
+        "fresh 08:30 snapshot unavailable",
+        "unavailable at cutoff"
+      ],
+      "usdjpy": [
+        "fresh 08:30 snapshot unavailable",
+        "unavailable at cutoff"
+      ],
+      "wti": [
+        "fresh 08:30 snapshot unavailable",
+        "unavailable at cutoff"
+      ]
+    },
+    "quality_labelled": {
+      "baltic_dry_index": [
+        "FREE_UNVERIFIED"
+      ],
+      "dow": [
+        "FREE_UNVERIFIED"
+      ],
+      "ewy": [
+        "FREE_UNVERIFIED"
+      ],
+      "fxi": [
+        "FREE_UNVERIFIED"
+      ],
+      "honda_adr": [
+        "FREE_UNVERIFIED"
+      ],
+      "kre": [
+        "FREE_UNVERIFIED"
+      ],
+      "mchi": [
+        "FREE_UNVERIFIED"
+      ],
+      "mufg_adr": [
+        "FREE_UNVERIFIED"
+      ],
+      "nasdaq100": [
+        "FREE_UNVERIFIED"
+      ],
+      "oih": [
+        "FREE_UNVERIFIED"
+      ],
+      "smfg_adr": [
+        "FREE_UNVERIFIED"
+      ],
+      "sp500": [
+        "FREE_UNVERIFIED"
+      ],
+      "toyota_adr": [
+        "FREE_UNVERIFIED"
+      ],
+      "vix": [
+        "FREE_UNVERIFIED"
+      ],
+      "xle": [
+        "FREE_UNVERIFIED"
+      ],
+      "xlf": [
+        "FREE_UNVERIFIED"
+      ],
+      "xli": [
+        "FREE_UNVERIFIED"
+      ]
+    }
+  },
+  "failures": {},
+  "caveats": [
+    "本番と同じコード・DB・設定で算出し、DBには保存していません。",
+    "除外された指標はモデルが一度も見ていません。品質ラベルだけの指標は使われています。",
+    "売買判断には使用しないでください。優位性はまだ確認されていません。"
+  ]
+}
