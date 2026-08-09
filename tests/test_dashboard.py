@@ -25,6 +25,7 @@ from dashboard.presenters import (
     today_table_rows,
 )
 from dashboard.query_service import DashboardQueryService
+from dashboard.research_artifacts import labelled_runs
 from dashboard.types import QueryResult, QueryState
 from database.models import Base
 
@@ -400,38 +401,29 @@ def test_dashboard_reads_only_database_url_from_environment() -> None:
     assert environment_keys == ["DATABASE_URL"]
 
 
-def _load_test_page():
-    """Import pages/7_Test.py under a valid module name.
-
-    The filename starts with a digit so it cannot be imported normally, but the
-    window-discovery logic is worth testing directly: it decides which tabs a
-    reader sees, and a silent duplicate or a wrong order is invisible in a
-    screenshot.
-    """
-
-    import importlib.util
-
-    path = Path("pages/7_Test.py")
-    spec = importlib.util.spec_from_file_location("research_test_page", path)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-def _write_window(directory: Path, name: str, start: str, end: str) -> None:
+def _write_window(
+    directory: Path, name: str, start: str, end: str, sessions: int = 120
+) -> None:
     directory.joinpath(name).write_text(
-        json.dumps({"generated_for": {"from": start, "to": end}}), encoding="utf-8"
+        json.dumps(
+            {
+                "generated_for": {
+                    "from": start,
+                    "to": end,
+                    "training_window_sessions": sessions,
+                }
+            }
+        ),
+        encoding="utf-8",
     )
 
 
-def test_each_tested_window_becomes_one_tab_ordered_by_start_date(tmp_path) -> None:
-    page = _load_test_page()
-    _write_window(tmp_path, "2026-08-01_2026-08-07.json", "2026-08-01", "2026-08-07")
-    _write_window(tmp_path, "2026-06-01_2026-08-07.json", "2026-06-01", "2026-08-07")
-    _write_window(tmp_path, "2026-07-01_2026-08-07.json", "2026-07-01", "2026-08-07")
+def test_each_tested_window_becomes_one_entry_ordered_by_start_date(tmp_path) -> None:
+    _write_window(tmp_path, "c.json", "2026-08-01", "2026-08-07")
+    _write_window(tmp_path, "a.json", "2026-06-01", "2026-08-07")
+    _write_window(tmp_path, "b.json", "2026-07-01", "2026-08-07")
 
-    labels = [label for label, _ in page._load_windows(tmp_path)]
+    labels = [label for label, _ in labelled_runs(tmp_path)]
     assert labels == [
         "2026-06-01 〜 2026-08-07",
         "2026-07-01 〜 2026-08-07",
@@ -439,17 +431,30 @@ def test_each_tested_window_becomes_one_tab_ordered_by_start_date(tmp_path) -> N
     ]
 
 
-def test_a_window_also_written_as_latest_is_one_tab_not_two(tmp_path) -> None:
-    page = _load_test_page()
+def test_a_window_also_written_as_latest_is_one_entry_not_two(tmp_path) -> None:
     _write_window(tmp_path, "2026-06-01_2026-08-07.json", "2026-06-01", "2026-08-07")
     _write_window(tmp_path, "latest.json", "2026-06-01", "2026-08-07")
-    assert len(page._load_windows(tmp_path)) == 1
+    assert len(labelled_runs(tmp_path)) == 1
+
+
+def test_the_same_dates_trained_differently_are_two_entries(tmp_path) -> None:
+    """A different training window is a different model, not a duplicate.
+
+    Keying on dates alone silently dropped one of the two, which is how a
+    250-session run could vanish from the page without any error.
+    """
+
+    _write_window(tmp_path, "w120.json", "2026-06-01", "2026-08-07", sessions=120)
+    _write_window(tmp_path, "w250.json", "2026-06-01", "2026-08-07", sessions=250)
+    labels = [label for label, _ in labelled_runs(tmp_path)]
+    assert len(labels) == 2
+    # The training setup is named only when more than one was run.
+    assert all("学習" in label for label in labels)
 
 
 def test_an_unreadable_artifact_is_skipped_rather_than_breaking_the_page(
     tmp_path,
 ) -> None:
-    page = _load_test_page()
     tmp_path.joinpath("broken.json").write_text("{not json", encoding="utf-8")
     _write_window(tmp_path, "2026-06-01_2026-08-07.json", "2026-06-01", "2026-08-07")
-    assert len(page._load_windows(tmp_path)) == 1
+    assert len(labelled_runs(tmp_path)) == 1

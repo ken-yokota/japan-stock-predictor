@@ -11,14 +11,15 @@ coefficient crossing from exactly zero to non-zero is the model beginning to use
 that indicator for that company. A feature present in every fit but always zero
 was never actually used.
 
-Everything shown is read from the artifact written by ``python -m cli
-week-test``; nothing is recomputed here.
+Everything shown is read from the artifacts written by ``python -m cli
+week-test``; nothing is recomputed here. Which run is on screen is chosen by
+the reader, because a coefficient only means something next to the window and
+the weighting that produced it: the same company fitted on 120 sessions and on
+250 sessions is two different models, not two views of one.
 """
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from typing import Any
 
 import pandas as pd  # type: ignore[import-untyped]
@@ -27,16 +28,8 @@ import streamlit as st
 from dashboard.catalog import sector_label, stock_label
 from dashboard.factors import newly_influential_features
 from dashboard.presenters import format_number, format_percent, format_yen
+from dashboard.research_artifacts import WEEK_TEST_DIRECTORY, labelled_runs
 from dashboard.ui import configure_page, display_rows, render_header
-
-ARTIFACT_PATH = Path("artifacts/week_test/latest.json")
-
-
-def _load_artifact(path: Path) -> dict[str, Any] | None:
-    try:
-        return dict(json.loads(path.read_text(encoding="utf-8")))
-    except (OSError, json.JSONDecodeError, TypeError, ValueError):
-        return None
 
 
 def _prediction_history(report: dict[str, Any], ticker: str) -> pd.DataFrame:
@@ -260,25 +253,53 @@ def main() -> None:
         "企業ごとに、どの指標がどの係数で予測を動かしたかと、予測値の推移を表示します。",
     )
 
-    report = _load_artifact(ARTIFACT_PATH)
-    if report is None:
+    runs = labelled_runs(WEEK_TEST_DIRECTORY)
+    if not runs:
         st.warning(
-            f"PENDING: 検証結果 `{ARTIFACT_PATH}` がありません。先に "
+            f"PENDING: 検証結果が `{WEEK_TEST_DIRECTORY}` にありません。先に "
             "`python -m cli week-test` を実行してください。"
         )
         return
 
+    selectors = st.columns(2)
+    # Longest window last in the list, so default to it: it holds the most
+    # predictions and therefore the most trustworthy per-company picture.
+    chosen_run = selectors[0].selectbox(
+        "検証期間と学習設定",
+        [label for label, _ in runs],
+        index=0,
+        key="company_run",
+    )
+    report = dict(runs)[chosen_run]
+
     window = report.get("generated_for", {})
+    training = report.get("training", {})
     tickers = sorted({str(row["ticker"]) for row in report.get("predictions", [])})
     if not tickers:
-        st.info("PENDING: 予測がありません。")
+        st.info("PENDING: この検証結果には予測が入っていません。")
         return
 
-    ticker = st.selectbox("企業を選ぶ", tickers, format_func=stock_label)
+    ticker = selectors[1].selectbox(
+        "企業を選ぶ", tickers, format_func=stock_label, key="company_ticker"
+    )
+    half_life = training.get("recency_half_life_sessions")
+    feature_set = report.get("feature_set", {})
     st.caption(
         f"{stock_label(ticker)} ({sector_label(ticker)}) /  "
         f"対象期間 {window.get('from', '?')} 〜 {window.get('to', '?')} /  "
-        f"学習 直前{window.get('training_window_sessions', '?')}営業日"
+        f"学習 直前{window.get('training_window_sessions', '?')}営業日 /  "
+        + (
+            "履歴の重み: 全期間を等しく"
+            if half_life is None
+            else f"履歴の重み: 直近重視 (半減期{half_life}営業日)"
+        )
+        + f" /  予測要素 {feature_set.get('feature_count', '—')}個"
+        + (f" ({feature_set.get('name')})" if feature_set.get("name") else "")
+    )
+    st.caption(
+        f"この期間に予測された銘柄は {len(tickers)} 社です。"
+        "係数は標準化後の値なので、同じ銘柄・同じ検証結果の中でだけ大小を比較できます。"
+        "学習設定が違う結果どうしの係数を並べても意味がありません。"
     )
 
     history = _prediction_history(report, ticker)

@@ -16,8 +16,6 @@ point-in-time lineage that the production path enforces.
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from typing import Any
 
 import pandas as pd  # type: ignore[import-untyped]
@@ -25,43 +23,13 @@ import streamlit as st
 
 from dashboard.catalog import stock_label
 from dashboard.presenters import format_number, format_percent, format_yen
+from dashboard.research_artifacts import (
+    COMPARISON_DIRECTORY,
+    WEEK_TEST_DIRECTORY,
+    labelled_runs,
+    load_artifact,
+)
 from dashboard.ui import configure_page, display_rows, render_header
-
-ARTIFACT_DIRECTORY = Path("artifacts/week_test")
-COMPARISON_DIRECTORY = Path("artifacts/feature_comparison")
-
-
-def _load_artifact(path: Path) -> dict[str, Any] | None:
-    try:
-        return dict(json.loads(path.read_text(encoding="utf-8")))
-    except (OSError, json.JSONDecodeError, TypeError, ValueError):
-        return None
-
-
-def _window_key(report: dict[str, Any]) -> tuple[str, str]:
-    window = report.get("generated_for", {})
-    return str(window.get("from", "")), str(window.get("to", ""))
-
-
-def _load_windows(directory: Path) -> list[tuple[str, dict[str, Any]]]:
-    """Return one labelled report per distinct window, earliest start first.
-
-    A window written both under its own name and as ``latest.json`` is one
-    window, not two: the named file wins so the tab list matches the runs that
-    were actually requested.
-    """
-
-    reports: dict[tuple[str, str], dict[str, Any]] = {}
-    for path in sorted(
-        directory.glob("*.json"), key=lambda item: item.name == "latest.json"
-    ):
-        report = _load_artifact(path)
-        if report is None:
-            continue
-        reports.setdefault(_window_key(report), report)
-    return [
-        (f"{key[0]} 〜 {key[1]}", report) for key, report in sorted(reports.items())
-    ]
 
 
 def _render_headline(report: dict[str, Any]) -> None:
@@ -586,7 +554,7 @@ def _render_comparison_section() -> None:
 
     reports: list[tuple[str, dict[str, Any]]] = []
     for path in sorted(COMPARISON_DIRECTORY.glob("*.json")):
-        report = _load_artifact(path)
+        report = load_artifact(path)
         if report is None or not report.get("sets"):
             continue
         window = report.get("generated_for", {})
@@ -619,10 +587,10 @@ def main() -> None:
 
     _render_comparison_section()
 
-    windows = _load_windows(ARTIFACT_DIRECTORY)
+    windows = labelled_runs(WEEK_TEST_DIRECTORY)
     if not windows:
         st.warning(
-            f"PENDING: 検証結果が `{ARTIFACT_DIRECTORY}` にありません。先に "
+            f"PENDING: 検証結果が `{WEEK_TEST_DIRECTORY}` にありません。先に "
             "`python -m cli week-test` を実行してください。"
         )
         return
