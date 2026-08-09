@@ -15,11 +15,19 @@ from __future__ import annotations
 from datetime import date, timedelta
 from typing import Any
 
+import pandas as pd
 import streamlit as st
 
 from dashboard.catalog import stock_label
 from dashboard.history import build_history_report
-from dashboard.presenters import format_number, format_percent
+from dashboard.presenters import format_number, format_percent, format_yen
+from dashboard.progress import (
+    DEFAULT_ROLLING_SESSIONS,
+    daily_points,
+    rolling_series,
+    version_changes,
+    version_summary,
+)
 from dashboard.report_view import render_report
 from dashboard.significance import (
     DISCOVERY_RATE,
@@ -43,6 +51,75 @@ WINDOWS: tuple[tuple[str, int | None], ...] = (
     ("直近1ヶ月", 31),
     ("全期間", None),
 )
+
+
+def _render_progress(report: dict[str, Any]) -> None:
+    """Is the model improving? Plotted against what doing nothing would score."""
+
+    points = daily_points(report["predictions"])
+    st.subheader("モデルは良くなっているか")
+    if not points:
+        st.info("PENDING: 実績が確定した営業日がまだありません。")
+        return
+
+    window = DEFAULT_ROLLING_SESSIONS
+    frame = pd.DataFrame(rolling_series(points, window)).set_index("date")
+    st.caption(
+        "**上の線が下の線を上回っていれば、モデルが「常に上昇」より当たっています。**"
+        "毎日の値は上下に振れるので、移動平均と累積の両方を見てください。"
+        f"移動平均は{window}営業日たまるまで表示されません。"
+    )
+
+    rolling_columns = [
+        f"方向的中率({window}日移動平均)",
+        f"常に上昇({window}日移動平均)",
+    ]
+    if frame[rolling_columns].notna().any().any():
+        st.caption(f"{window}営業日の移動平均")
+        st.line_chart(frame.loc[:, rolling_columns], use_container_width=True)
+
+    st.caption("累積 (初日からの通算。日数が増えるほど安定します)")
+    st.line_chart(
+        frame.loc[:, ["累積の方向的中率", "累積の常に上昇"]], use_container_width=True
+    )
+
+    st.caption("日々の方向的中率 (振れが大きいので、単独では判断できません)")
+    st.line_chart(
+        frame.loc[:, ["方向的中率", "常に上昇と予測した場合"]],
+        use_container_width=True,
+    )
+
+    if frame["累積損益"].abs().sum() > 0:
+        st.caption("累積損益 (BUYシグナルのみ。件数が少ないうちは証拠になりません)")
+        st.line_chart(frame.loc[:, ["累積損益"]], use_container_width=True)
+
+    changes = version_changes(points)
+    versions = version_summary(points)
+    if len(versions) > 1 or changes:
+        st.caption("モデル改良の履歴と、その版が担当した期間の成績")
+        display_rows(
+            [
+                {
+                    "model_version": row["model_version"],
+                    "期間": f"{row['from']} 〜 {row['to']}",
+                    "営業日": row["sessions"],
+                    "予測数": row["predictions"],
+                    "方向的中率": format_percent(row["direction_accuracy"]),
+                    "常に上昇": format_percent(row["baseline_up_rate"]),
+                    "差(pt)": (
+                        f"{row['edge'] * 100:+.1f}" if row["edge"] is not None else "—"
+                    ),
+                    "純損益": format_yen(row["net_profit_jpy"]),
+                }
+                for row in versions
+            ]
+        )
+        st.caption(
+            "版ごとの比較は参考値です。期間が違えば相場も違うので、"
+            "差がモデルの改良によるものか相場によるものかは、これだけでは分かりません。"
+            "「差(pt)」は同じ日の「常に上昇」と比べているぶん、その影響を抑えてあります。"
+        )
+    st.divider()
 
 
 def _render_significance(report: dict[str, Any]) -> None:
@@ -169,6 +246,7 @@ def main() -> None:
                 continue
             report = build_history_report([dict(row) for row in result.rows])
 
+            _render_progress(report)
             _render_significance(report)
             render_report(report, f"history_{label}")
 

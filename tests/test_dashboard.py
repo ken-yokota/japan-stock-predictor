@@ -28,6 +28,12 @@ from dashboard.presenters import (
     string_list,
     today_table_rows,
 )
+from dashboard.progress import (
+    daily_points,
+    rolling_series,
+    version_changes,
+    version_summary,
+)
 from dashboard.query_service import DashboardQueryService
 from dashboard.research_artifacts import labelled_runs
 from dashboard.significance import (
@@ -689,3 +695,80 @@ def test_pooled_test_declines_to_bootstrap_a_handful_of_days() -> None:
     overall = evaluate_overall(rows)
     assert overall.block_bootstrap_p_value is None
     assert "判定不能" in overall.verdict
+
+
+def _settled(day: str, ticker: str, correct: bool, rose: bool, version: str = "v1"):
+    return {
+        "date": day,
+        "ticker": ticker,
+        "signal": "NO_BUY",
+        "actual_return": 0.01 if rose else -0.01,
+        "direction_correct": correct,
+        "net_profit_jpy": 0.0,
+        "model_version": version,
+    }
+
+
+def test_progress_compares_against_the_same_day_not_a_fixed_fifty_percent() -> None:
+    """On a day when everything rose, being right 100% of the time is nothing.
+
+    Scoring against a fixed 50% would call that a triumph; scoring against the
+    day's own up-rate correctly calls it par.
+    """
+
+    rows = [_settled("2026-08-10", str(t), True, True) for t in range(1000, 1010)]
+    point = daily_points(rows)[0]
+    assert point.direction_accuracy == pytest.approx(1.0)
+    assert point.baseline_up_rate == pytest.approx(1.0)
+    assert point.edge == pytest.approx(0.0)
+
+
+def test_rolling_average_stays_absent_until_the_window_is_full() -> None:
+    """A "20-session average" from three sessions is a different statistic."""
+
+    rows = [
+        _settled(f"2026-08-{day:02d}", "7203", day % 2 == 0, day % 3 == 0)
+        for day in range(1, 6)
+    ]
+    series = rolling_series(daily_points(rows), window=20)
+    assert all(row["方向的中率(20日移動平均)"] is None for row in series)
+    assert series[-1]["累積の方向的中率"] is not None
+
+
+def test_rolling_average_appears_once_there_are_enough_sessions() -> None:
+    rows = [
+        _settled(f"2026-08-{day:02d}", "7203", True, day % 2 == 0)
+        for day in range(1, 8)
+    ]
+    series = rolling_series(daily_points(rows), window=3)
+    assert series[0]["方向的中率(3日移動平均)"] is None
+    assert series[2]["方向的中率(3日移動平均)"] == pytest.approx(1.0)
+
+
+def test_model_version_changes_are_located_on_the_series() -> None:
+    """A change you cannot locate is a change you cannot credit."""
+
+    rows = [_settled(f"2026-08-{d:02d}", "7203", True, True, "v1") for d in (1, 2)]
+    rows += [_settled(f"2026-08-{d:02d}", "7203", True, True, "v2") for d in (3, 4)]
+    changes = version_changes(daily_points(rows))
+    assert [c["date"] for c in changes] == ["2026-08-01", "2026-08-03"]
+    assert changes[1]["previous"] == "v1"
+    summary = version_summary(daily_points(rows))
+    assert [row["model_version"] for row in summary] == ["v1", "v2"]
+    assert summary[0]["sessions"] == 2
+
+
+def test_progress_ignores_sessions_that_have_not_closed() -> None:
+    rows = [_settled("2026-08-10", "7203", True, True)]
+    rows.append(
+        {
+            "date": "2026-08-11",
+            "ticker": "7203",
+            "signal": "BUY",
+            "actual_return": None,
+            "direction_correct": None,
+            "net_profit_jpy": 0.0,
+            "model_version": "v1",
+        }
+    )
+    assert [point.date for point in daily_points(rows)] == ["2026-08-10"]

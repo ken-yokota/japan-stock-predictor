@@ -110,7 +110,14 @@ class DashboardQueryService:
                     }
                 ),
                 "prediction_sets": frozenset(
-                    {"prediction_set_id", "prediction_date", "status"}
+                    {
+                        "prediction_set_id",
+                        "prediction_date",
+                        "status",
+                        "model_version",
+                        "feature_version",
+                        "strategy_version",
+                    }
                 ),
                 "actual_results": frozenset(
                     {
@@ -127,7 +134,9 @@ class DashboardQueryService:
             },
             statement=f"""
                 SELECT
-                    s.prediction_date, p.ticker, p.status, p.signal,
+                    s.prediction_date, s.model_version, s.feature_version,
+                    s.strategy_version,
+                    p.ticker, p.status, p.signal,
                     p.predicted_intraday_return, p.probability_up,
                     p.reference_price, p.predicted_close,
                     p.predicted_price_difference,

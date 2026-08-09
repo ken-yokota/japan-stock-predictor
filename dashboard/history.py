@@ -85,6 +85,9 @@ def build_history_report(source: list[dict[str, Any]]) -> dict[str, Any]:
         rows.append(
             {
                 "date": str(record["prediction_date"]),
+                "model_version": record.get("model_version"),
+                "feature_version": record.get("feature_version"),
+                "strategy_version": record.get("strategy_version"),
                 "ticker": str(record["ticker"]),
                 "signal": record.get("signal"),
                 "status": record.get("status"),
