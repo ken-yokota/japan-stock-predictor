@@ -9,6 +9,8 @@ import pandas as pd
 import pytest
 
 from models.base import ModelTrainingConfig
+from models.optimization import fit_with_weights
+from models.ridge import build_ridge_pipeline
 from models.training import recency_weights, train_ticker_model
 from research import feature_sets, history
 from research.dataset import (
@@ -402,3 +404,48 @@ def test_half_life_none_is_spelled_several_ways_and_defaults_to_unweighted() -> 
     assert _parse_half_lives("none,60") == [None, 60]
     assert _parse_half_lives("") == [None]
     assert _parse_half_lives("flat") == [None]
+
+
+def test_a_cross_validation_fold_is_reweighted_to_its_own_size() -> None:
+    """Each fit must be regularized the same way, whatever slice it receives.
+
+    Cross-validation hands an early fold only the oldest, lightest rows. Left
+    as-is, that fold's weights sum to far less than its row count, so the same
+    alpha shrinks it much harder than the last fold — and the alpha chosen that
+    way is not the alpha the final fit wants. Rescaling happens at the fit, so
+    a slice and a whole array are treated alike.
+    """
+
+    generator = np.random.default_rng(1)
+    weights = recency_weights(250, 60)
+    assert weights is not None
+    oldest_fold = slice(0, 45)
+    features = pd.DataFrame(generator.normal(size=(45, 3)), columns=["a", "b", "c"])
+    targets = generator.normal(scale=0.01, size=45)
+
+    # Fitting the light slice must match fitting it with weights that already
+    # sum to the fold size; before the fix these two disagreed.
+    sliced = weights[oldest_fold]
+    assert sliced.sum() < len(sliced) / 2  # the imbalance the fix exists for
+
+    from_slice = build_ridge_pipeline(1.0)
+    fit_with_weights(from_slice, features, targets, sliced)
+    from_balanced = build_ridge_pipeline(1.0)
+    fit_with_weights(
+        from_balanced, features, targets, sliced * (len(sliced) / sliced.sum())
+    )
+    assert np.allclose(
+        from_slice.named_steps["model"].coef_,
+        from_balanced.named_steps["model"].coef_,
+    )
+
+
+def test_an_all_zero_weight_vector_is_rejected_rather_than_dividing_by_zero() -> None:
+    features = pd.DataFrame({"a": [1.0, 2.0, 3.0]})
+    with pytest.raises(ValueError, match="positive"):
+        fit_with_weights(
+            build_ridge_pipeline(1.0),
+            features,
+            np.array([0.1, 0.2, 0.3]),
+            np.zeros(3),
+        )

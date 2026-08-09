@@ -49,7 +49,7 @@ SMTP_PASSWORD=16桁のアプリパスワード（スペースは詰める）
 EMAIL_FROM=あなたのGmailアドレス
 ```
 
-`EMAIL_TO` はすでに `ky3141120@icloud.com` になっています。
+`EMAIL_TO` はすでに設定済みです（`.env` を参照）。
 
 **確認**: これで送れるようになります。
 
@@ -118,7 +118,7 @@ cd ~/Desktop/japan-stock-predictor
 | `SMTP_USERNAME` | Gmailアドレス |
 | `SMTP_PASSWORD` | 16桁のアプリパスワード |
 | `EMAIL_FROM` | Gmailアドレス |
-| `EMAIL_TO` | `ky3141120@icloud.com` |
+| `EMAIL_TO` | 送信先アドレス（`.env` に設定済み） |
 | `APP_URL` | StreamlitのURL |
 
 そのあと

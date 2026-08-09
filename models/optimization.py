@@ -24,12 +24,26 @@ def fit_with_weights(
     The imputer's median and the scaler's mean/scale stay unweighted on
     purpose: they describe what the feature *is*, and reweighting them would
     make the standardization depend on how recent the rows are.
+
+    Weights are rescaled here, at the point of fitting, to sum to the number of
+    rows being fitted. Normalizing once when the weights are built is not
+    enough: cross-validation hands each fold a *slice* of that array, and an
+    early fold holds only the oldest, lightest rows. Measured on a 250-session
+    window with a 60-session half-life, the first fold's weights summed to 10
+    against 45 rows, making a given alpha bite 4.5x harder there than in the
+    last fold -- so hyperparameter selection was comparing folds that were not
+    regularized alike. Rescaling per fit is idempotent for an already-balanced
+    array, so the final full-window fit is unchanged.
     """
 
     if weights is None:
         pipeline.fit(features, targets)
-    else:
-        pipeline.fit(features, targets, model__sample_weight=weights)
+        return
+    total = float(np.sum(weights))
+    if total <= 0.0:
+        raise ValueError("sample weights must sum to a positive value")
+    balanced = np.asarray(weights, dtype=float) * (len(targets) / total)
+    pipeline.fit(features, targets, model__sample_weight=balanced)
 
 
 def chronological_splitter(

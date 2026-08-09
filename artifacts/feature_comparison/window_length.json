@@ -1,0 +1,20 @@
+{
+  "paired_predictions": 1078,
+  "window_120": {
+    "direction_accuracy": 0.5538033395176253,
+    "mae": 0.012312905766403018,
+    "buy_signals": 20,
+    "net_profit_jpy": 78482.22785000145
+  },
+  "window_250": {
+    "direction_accuracy": 0.5630797773654916,
+    "mae": 0.012273113720464643,
+    "buy_signals": 44,
+    "net_profit_jpy": 202922.64806304593
+  },
+  "direction_accuracy_delta": 0.009276437847866359,
+  "only_250_correct": 126,
+  "only_120_correct": 116,
+  "discordant_pairs": 242,
+  "p_value": 0.5629885810243815
+}
