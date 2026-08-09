@@ -75,6 +75,7 @@ def main() -> None:
             "予測プレビュー",
             "次営業日の予測と、使われた指標の一覧",
         ),
+        ("pages/10_History.py", "実績", "公開した予測と、その後の実績の記録"),
     )
     for path, label, help_text in pages:
         st.page_link(path, label=label, help=help_text, icon="➡️")

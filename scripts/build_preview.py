@@ -123,6 +123,10 @@ def _contributions(computed: Any, limit: int = 6) -> dict[str, Any]:
             {
                 "feature": name,
                 "coefficient": coefficients.get(name, 0.0),
+                # The observed move itself, before standardization. A reader
+                # asks "how much did that index actually change", and the
+                # standardized value alone cannot answer it.
+                "raw_value": None if pd.isna(raw) else float(raw),
                 "standardized_value": float(standardized),
                 "contribution": float(coefficients.get(name, 0.0) * standardized),
             }

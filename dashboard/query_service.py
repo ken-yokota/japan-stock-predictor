@@ -80,6 +80,73 @@ class DashboardQueryService:
             return QueryResult.unavailable()
         return QueryResult.from_rows(rows)
 
+    def published_prediction_history(self, since: str | None = None) -> QueryResult:
+        """Every published prediction in the window, with its settled outcome.
+
+        Left joins on purpose: a prediction whose session has not closed yet
+        must still appear, showing what was predicted and nothing else. Dropping
+        it would make today's page look empty until the evening.
+        """
+
+        clause = "WHERE s.prediction_date >= :since" if since else ""
+        return self._read(
+            required={
+                "predictions": frozenset(
+                    {
+                        "prediction_id",
+                        "prediction_set_id",
+                        "ticker",
+                        "status",
+                        "signal",
+                        "predicted_intraday_return",
+                        "probability_up",
+                        "reference_price",
+                        "predicted_close",
+                        "predicted_price_difference",
+                        "return_threshold",
+                        "probability_threshold",
+                        "positive_factors",
+                        "negative_factors",
+                    }
+                ),
+                "prediction_sets": frozenset(
+                    {"prediction_set_id", "prediction_date", "status"}
+                ),
+                "actual_results": frozenset(
+                    {
+                        "prediction_id",
+                        "actual_open",
+                        "actual_close",
+                        "actual_intraday_return",
+                        "actual_price_difference",
+                    }
+                ),
+                "simulated_trades": frozenset(
+                    {"prediction_id", "shares", "net_profit_jpy"}
+                ),
+            },
+            statement=f"""
+                SELECT
+                    s.prediction_date, p.ticker, p.status, p.signal,
+                    p.predicted_intraday_return, p.probability_up,
+                    p.reference_price, p.predicted_close,
+                    p.predicted_price_difference,
+                    p.return_threshold, p.probability_threshold,
+                    p.positive_factors, p.negative_factors,
+                    a.actual_open, a.actual_close, a.actual_intraday_return,
+                    a.actual_price_difference,
+                    t.shares, t.net_profit_jpy
+                FROM predictions p
+                JOIN prediction_sets s
+                  ON s.prediction_set_id = p.prediction_set_id
+                LEFT JOIN actual_results a ON a.prediction_id = p.prediction_id
+                LEFT JOIN simulated_trades t ON t.prediction_id = p.prediction_id
+                {clause}
+                ORDER BY s.prediction_date, p.ticker
+            """,
+            parameters={"since": since} if since else None,
+        )
+
     def latest_run(self) -> QueryResult:
         return self._read(
             required={

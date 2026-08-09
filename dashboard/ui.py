@@ -55,6 +55,13 @@ def cached_today_predictions(_service: DashboardQueryService) -> QueryResult:
 
 
 @st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+def cached_prediction_history_window(
+    _service: DashboardQueryService, since: str | None
+) -> QueryResult:
+    return _service.published_prediction_history(since)
+
+
+@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_prediction_history(_service: DashboardQueryService) -> QueryResult:
     return _service.prediction_history()
 

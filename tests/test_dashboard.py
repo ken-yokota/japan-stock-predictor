@@ -7,12 +7,15 @@ import json
 import subprocess
 import sys
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
+import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Connection
 
 from dashboard.catalog import STOCKS_BY_TICKER
+from dashboard.history import build_history_report
 from dashboard.presenters import (
     AlertLevel,
     derive_operational_alerts,
@@ -458,3 +461,133 @@ def test_an_unreadable_artifact_is_skipped_rather_than_breaking_the_page(
     tmp_path.joinpath("broken.json").write_text("{not json", encoding="utf-8")
     _write_window(tmp_path, "2026-06-01_2026-08-07.json", "2026-06-01", "2026-08-07")
     assert len(labelled_runs(tmp_path)) == 1
+
+
+def _history_row(
+    day: str, ticker: str, predicted: float, actual: float | None, **extra
+):
+    """One joined prediction/outcome row shaped like the read query returns."""
+
+    row = {
+        "prediction_date": day,
+        "ticker": ticker,
+        "status": "SUCCESS",
+        "signal": extra.get("signal", "BUY"),
+        "predicted_intraday_return": Decimal(str(predicted)),
+        "probability_up": Decimal("0.65"),
+        "reference_price": Decimal("1000"),
+        "predicted_close": Decimal("1010"),
+        "predicted_price_difference": Decimal("10"),
+        "return_threshold": Decimal("0.003"),
+        "probability_threshold": Decimal("0.60"),
+        "positive_factors": ["usdjpy (+0.20%)"],
+        "negative_factors": [],
+        "actual_open": None,
+        "actual_close": None,
+        "actual_intraday_return": None,
+        "actual_price_difference": None,
+        "shares": extra.get("shares", 100),
+        "net_profit_jpy": extra.get("net_profit_jpy"),
+    }
+    if actual is not None:
+        row.update(
+            actual_open=Decimal("1000"),
+            actual_close=Decimal(str(1000 * (1 + actual))),
+            actual_intraday_return=Decimal(str(actual)),
+            actual_price_difference=Decimal(str(1000 * actual)),
+        )
+    return row
+
+
+def test_history_scores_only_the_sessions_that_have_closed() -> None:
+    """An unsettled prediction must not count as right or as wrong.
+
+    Counting it wrong drags the day's accuracy down for no reason; counting it
+    right flatters it. Both are worse than leaving it out.
+    """
+
+    report = build_history_report(
+        [
+            _history_row(
+                "2026-08-10", "7203", 0.01, 0.02, net_profit_jpy=Decimal("500")
+            ),
+            _history_row(
+                "2026-08-10", "7267", 0.01, -0.02, net_profit_jpy=Decimal("-300")
+            ),
+            _history_row("2026-08-11", "7203", 0.01, None),
+        ]
+    )
+    totals = report["totals"]
+    assert totals["predictions"] == 3
+    # Two settled, one right: the unsettled row is excluded from the ratio.
+    assert totals["direction_accuracy"] == pytest.approx(0.5)
+    assert totals["wins"] == 1
+    assert totals["losses"] == 1
+    assert totals["net_profit_jpy"] == pytest.approx(200.0)
+
+
+def test_history_reports_the_rule_stored_on_the_prediction() -> None:
+    # Not today's config: an edited threshold that never ran must not be shown
+    # as though it produced these signals.
+    report = build_history_report([_history_row("2026-08-10", "7203", 0.01, 0.02)])
+    assert report["rule"]["return_threshold"] == pytest.approx(0.003)
+    assert report["rule"]["probability_threshold"] == pytest.approx(0.60)
+
+
+def test_history_splits_by_day_and_keeps_them_ordered() -> None:
+    report = build_history_report(
+        [
+            _history_row(
+                "2026-08-11", "7203", 0.01, 0.02, net_profit_jpy=Decimal("100")
+            ),
+            _history_row(
+                "2026-08-10", "7203", 0.01, -0.02, net_profit_jpy=Decimal("-50")
+            ),
+        ]
+    )
+    assert [day["date"] for day in report["daily"]] == ["2026-08-10", "2026-08-11"]
+    assert report["generated_for"]["from"] == "2026-08-10"
+    assert report["generated_for"]["to"] == "2026-08-11"
+
+
+def test_history_renders_the_same_shape_the_report_view_expects() -> None:
+    """The page reuses the research renderer, so the keys must line up."""
+
+    report = build_history_report([_history_row("2026-08-10", "7203", 0.01, 0.02)])
+    for key in (
+        "generated_for",
+        "rule",
+        "totals",
+        "daily",
+        "predictions",
+        "coefficient_changes",
+        "company_coefficients",
+        "failures",
+        "caveats",
+    ):
+        assert key in report
+    row = report["predictions"][0]
+    for key in (
+        "date",
+        "ticker",
+        "signal",
+        "predicted_return",
+        "probability_up",
+        "actual_open",
+        "actual_close",
+        "actual_return",
+        "direction_correct",
+        "shares",
+        "net_profit_jpy",
+        "reference_close",
+        "morning_predicted_close",
+        "post_open_predicted_close",
+    ):
+        assert key in row
+
+
+def test_history_is_empty_without_predictions_rather_than_raising() -> None:
+    report = build_history_report([])
+    assert report["totals"]["predictions"] == 0
+    assert report["totals"]["direction_accuracy"] is None
+    assert report["predictions"] == []
