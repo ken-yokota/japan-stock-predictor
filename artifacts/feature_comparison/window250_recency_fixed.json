@@ -42,38 +42,6 @@
       "feature_count": 25,
       "excluded_tickers": 0,
       "missing_symbols": []
-    },
-    "focused": {
-      "predictions": 1078,
-      "direction_accuracy": 0.5500927643784786,
-      "mean_absolute_error": 0.012338602133154691,
-      "root_mean_squared_error": 0.015823679788034905,
-      "buy_signals": 75,
-      "win_rate": 0.5866666666666667,
-      "net_profit_jpy": 125689.1877569494,
-      "trade_stats_are_evidence": true,
-      "label": "現行 + 日経先物/日本ETF/ユーロ円/半導体/米10年金利 + 出来高・ギャップ・ATR・RSI / 全期間を等しく扱う",
-      "feature_set": "focused",
-      "recency_half_life_sessions": null,
-      "feature_count": 44,
-      "excluded_tickers": 0,
-      "missing_symbols": []
-    },
-    "focused@hl60": {
-      "predictions": 1078,
-      "direction_accuracy": 0.5602968460111317,
-      "mean_absolute_error": 0.01238814376955514,
-      "root_mean_squared_error": 0.015937532630827953,
-      "buy_signals": 84,
-      "win_rate": 0.5952380952380952,
-      "net_profit_jpy": 172854.01177819178,
-      "trade_stats_are_evidence": true,
-      "label": "現行 + 日経先物/日本ETF/ユーロ円/半導体/米10年金利 + 出来高・ギャップ・ATR・RSI / 直近重視 (半減期60営業日)",
-      "feature_set": "focused",
-      "recency_half_life_sessions": 60,
-      "feature_count": 44,
-      "excluded_tickers": 0,
-      "missing_symbols": []
     }
   },
   "comparisons": [
@@ -87,28 +55,6 @@
       "discordant_pairs": 218,
       "p_value": 0.9460223749390716,
       "verdict": "不採用: 方向的中率の差 +0.19pp は 符号検定 p=0.946 で、偶然と区別できません。"
-    },
-    {
-      "candidate": "focused",
-      "baseline": "baseline",
-      "direction_accuracy_delta": -0.012987012987012991,
-      "mean_absolute_error_delta": 6.548841269005297e-05,
-      "candidate_only_correct": 100,
-      "baseline_only_correct": 114,
-      "discordant_pairs": 214,
-      "p_value": 0.37422524579214084,
-      "verdict": "不採用: 方向的中率の差 -1.30pp は 符号検定 p=0.374 で、偶然と区別できません。"
-    },
-    {
-      "candidate": "focused@hl60",
-      "baseline": "baseline",
-      "direction_accuracy_delta": -0.002782931354359919,
-      "mean_absolute_error_delta": 0.00011503004909050284,
-      "candidate_only_correct": 144,
-      "baseline_only_correct": 147,
-      "discordant_pairs": 291,
-      "p_value": 0.9066945944892676,
-      "verdict": "不採用: 方向的中率の差 -0.28pp は 符号検定 p=0.907 で、偶然と区別できません。"
     }
   ],
   "caveats": [
@@ -126,8 +72,6 @@
       "データ経路が一致しない: 研究はYahoo日足を直接取得し、本番はDB経由でProvider選択・品質ゲート・PIT lineage・Adjusted Close優先を通る。",
       "07:00取得と08:30鮮度判定の矛盾が未解決で、本番ではFX・先物がstale扱いで除外されている可能性がある。",
       "したがって、本番相当のOOS性能としては解釈できない。",
-      "加えて、交差検証のfoldごとに重み合計が学習件数へ再正規化されておらず、alpha選択時の実効正則化がfold間で最大4.5倍ばらついた状態で測定した(fold1: 45件に対し重み合計10.05 / fold5: 209件に対し150.12)。手続きは 01d19d6 で修正済み。",
-      "baseline対baseline@hl60 は修正後に再測定し、結果は同一 (p=0.946)。focused系2件は未再測定。",
       "加えて、この期間の検証で検出可能な効果は約3.1pp（方向的中率）と実測された。記録されている差はいずれも+0.19〜+0.93ppで検出限界の1/3以下であり、これらの結果は「効果がない」ではなく「判定できない」を意味する。同日22銘柄の級内相関は生データで0.082、不一致ペアで0.348、ペアリング後の実効サンプルは約101件。"
     ],
     "reopen_when": "本番datasetビルダーで同一OOS期間・同一利用可能データ・同一売買条件により再測定したとき (docs/RESEARCH_VALIDITY.md の P0〜P4 を参照)"
