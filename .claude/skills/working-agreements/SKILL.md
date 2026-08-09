@@ -51,8 +51,18 @@ Send:
 Track the stages against what the operator actually asked for, so the mail
 reads as progress on their request rather than progress on your implementation.
 
+**This covers background work too — every task, without exception.** A job
+running unattended is the one the operator can least see, so it needs the mail
+most. Anything started in the background gets its own watcher before you move
+on to something else; a background task with no watcher is a task whose failure
+nobody learns about until someone thinks to ask.
+
 Watch a long job from a **separate process that only reads its output file**.
 Never restart a running job to add notification to it.
+
+When several tasks run at once, each mail must say which one it is about and
+what the others are doing, or the operator receives fragments and has to
+assemble the picture themselves.
 
 See `email-status-reports` for the send path, the subject-line conventions, the
 certificate trap, and the rule that silence is not success.
