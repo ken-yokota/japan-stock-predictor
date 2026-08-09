@@ -89,11 +89,27 @@ def _database_sections(target: date) -> list[Section]:
     sections: list[Section] = []
     try:
         run = service.latest_run()
-        lines = (
-            [str(row) for row in run.rows[:1]]
-            if run.state is QueryState.READY and run.rows
-            else ["直近のrun記録がありません。"]
-        )
+        if run.state is QueryState.READY and run.rows:
+            row = run.rows[0]
+            same_day = str(row.get("prediction_date")) == target.isoformat()
+            lines = [
+                f"種別 {row.get('run_type')} / 状態 {row.get('status')} / "
+                f"対象日 {row.get('prediction_date')}",
+                f"開始 {row.get('started_at')} / 終了 {row.get('finished_at')}",
+            ]
+            failed = row.get("failed_symbols") or []
+            if failed:
+                lines.append(
+                    f"失敗した銘柄 {len(failed)}件: {', '.join(map(str, failed))[:120]}"
+                )
+            if not same_day:
+                # Silence here would read as "today ran fine".
+                lines.append(
+                    f"※ これは {row.get('prediction_date')} の記録です。"
+                    f"{target} の実行記録はまだありません。"
+                )
+        else:
+            lines = ["直近のrun記録がありません。"]
         sections.append(Section(f"{target} の実行状況", lines))
 
         predictions = service.today_predictions()
@@ -153,8 +169,15 @@ def _research_section() -> Section:
         except (OSError, ValueError):
             continue
         status = report.get("validity", {})
-        if str(status.get("state", "")).upper() == "INVALID":
-            lines.append(f"{path.name}: INVALID — {status.get('reason', '理由未記録')}")
+        state = str(status.get("state", "")).upper()
+        # Any state carrying INVALID is retired. Matching the exact string is
+        # how INVALID_FOR_ADOPTION slipped through and had its p-values quoted
+        # in this very report, which is the one place they must not appear.
+        if "INVALID" in state:
+            # The full reasons live in the artifact and in
+            # docs/RESEARCH_VALIDITY.md; repeating them for every file each
+            # evening buries the one line that matters.
+            lines.append(f"{path.name}: {state} — 採用判断・性能評価に使用不可")
             continue
         window = report.get("generated_for", {})
         verdicts = [
@@ -169,6 +192,11 @@ def _research_section() -> Section:
             )
     if not lines:
         lines.append("比較結果がありません。")
+    elif all("INVALID" in line for line in lines):
+        lines.append(
+            "全ての研究結果が無効化されています。"
+            "理由は docs/RESEARCH_VALIDITY.md を参照。"
+        )
     lines.append("採用は方向精度と検定で判断し、勝率・損益では判断していません。")
     return Section("研究: 予測要素の採否", lines)
 

@@ -143,3 +143,50 @@ def test_resend_sender_sets_idempotency_header() -> None:
     assert result.message_id == "email_123"
     assert seen_headers["idempotency-key"] == message.idempotency_key
     client.close()
+
+
+def test_a_missing_prediction_is_mailed_rather_than_raised(monkeypatch) -> None:
+    """An unsent mail and a crashed process look identical from a phone.
+
+    The morning job can fail for reasons unrelated to this script. When it
+    does, "no prediction today" is exactly the message worth delivering, and
+    the reader is usually away from the machine.
+    """
+
+    import scripts.send_morning_email as script
+
+    sent: list[object] = []
+
+    class _Environment:
+        def require_email_addresses(self):
+            return ("from@example.com", "to@example.com")
+
+    monkeypatch.setattr(
+        script,
+        "_sender",
+        lambda environment: type(
+            "S", (), {"send": lambda self, message: sent.append(message)}
+        )(),
+    )
+    script._notify_missing(_Environment(), date(2026, 8, 10))
+
+    assert len(sent) == 1
+    assert "2026-08-10" in sent[0].subject
+    # The job fires three times by design; one notice per date, not three.
+    assert sent[0].idempotency_key == "missing-prediction/2026-08-10"
+
+
+def test_the_missing_prediction_notice_never_raises(monkeypatch) -> None:
+    """This path runs when something is already wrong.
+
+    A failure here must not replace one silent morning with a louder one, so a
+    broken sender is reported on stdout and swallowed.
+    """
+
+    import scripts.send_morning_email as script
+
+    class _Environment:
+        def require_email_addresses(self):
+            raise RuntimeError("credentials missing")
+
+    script._notify_missing(_Environment(), None)

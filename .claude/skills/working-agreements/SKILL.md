@@ -56,3 +56,35 @@ Never restart a running job to add notification to it.
 
 See `email-status-reports` for the send path, the subject-line conventions, the
 certificate trap, and the rule that silence is not success.
+
+## 3. Enumerate the failure modes, then exercise them
+
+Before calling anything ready, list every way it can fail, decide what each
+failure should do, and **run each one**. Reading the code is not the same
+check: two of the failures found this way were in code that read correctly.
+
+What this found on a system that had already passed 234 tests and a green CI:
+
+- The evening summary matched `state == "INVALID"` while artifacts were stamped
+  `INVALID_FOR_ADOPTION`. Every retired result was being mailed out with its
+  p-values intact — by the one report written to prevent exactly that.
+- The morning mail raised `ValueError` when no prediction existed, so the
+  morning most worth hearing about produced no mail at all, three times over.
+- The fallback written to fix that failed on its first run with an
+  `AttributeError`, because it built an SMTP client by hand instead of using
+  the factory the real path uses. A fallback that fails silently is worse than
+  no fallback: it converts a loud failure into a quiet one.
+
+Cover at least: empty inputs, a missing upstream artifact or row, a
+non-business day, a date with no data, a credential that is absent, and the
+same job running twice. For anything scheduled, check what a *second* run does
+— idempotency keys must be per-date, not per-invocation.
+
+Exercise the failure branch against the real dependency where it is read-only.
+A dry run that only validates configuration proves nothing about the path that
+breaks.
+
+Prefer an existing factory or helper over rebuilding one at the call site. The
+provider choice, credentials, retries, and timeouts already live in one place;
+a second copy is a second thing to get wrong, and it will be the copy nobody
+tests.

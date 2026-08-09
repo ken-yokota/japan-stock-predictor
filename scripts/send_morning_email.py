@@ -1,16 +1,31 @@
 #!/usr/bin/env python3
-"""Send one persisted prediction email through free Gmail SMTP by default."""
+"""Send one persisted prediction email through free Gmail SMTP by default.
+
+If no prediction set exists, the operator is told so by mail rather than by an
+exception. The morning job can fail for reasons that have nothing to do with
+this script -- a throttled provider, a database outage, a cancelled run -- and
+the reader is usually away from the machine. An unsent mail and a crashed
+process look identical from a phone, and "no prediction today" is exactly the
+message worth delivering.
+"""
 
 from __future__ import annotations
 
 import argparse
 import json
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
+from data.env import EnvironmentSettings
+from notifications.contracts import RenderedEmail
 from notifications.templates import render_morning_email
 from scripts.runtime import load_runtime
-from services.email import load_morning_email_payload, send_persisted_morning_email
+from services.email import (
+    _sender,
+    load_morning_email_payload,
+    send_persisted_morning_email,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -20,6 +35,55 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--top-n", type=int, default=5)
     parser.add_argument("--dry-run", action="store_true")
     return parser
+
+
+def _notify_missing(environment: EnvironmentSettings, target: date | None) -> None:
+    """Mail a plain notice that no prediction exists, and never raise.
+
+    Reuses the same sender factory the real mail uses, so provider choice,
+    credentials, retries, and timeouts stay in one place. Building a client by
+    hand here was the first attempt and it failed on an attribute name -- the
+    fallback path silently not working is precisely the failure this exists to
+    prevent.
+
+    Best effort by design: this runs when something has already gone wrong, so
+    a failure here must not replace one silent morning with a louder one.
+    """
+
+    label = target.isoformat() if target else "本日"
+    stamp = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d %H:%M")
+    body = (
+        f"{label} の予測が見つかりませんでした。\n\n"
+        "朝のpipelineが完走していない可能性があります。以下を確認してください。\n"
+        "  GitHub Actions の Morning prediction 実行結果\n"
+        "  17:00 の日次サマリーメール (実行状況が入ります)\n\n"
+        "本メールは、予測が無いこと自体をお知らせするためのものです。\n"
+        "予測が作られていれば通常の予測メールが届きます。"
+    )
+    try:
+        sender_address, recipient = environment.require_email_addresses()
+        _sender(environment).send(
+            RenderedEmail(
+                subject=f"【予測なし】{label} の朝の予測が見つかりません",
+                text=f"{body}\n\n---\n{stamp} JST",
+                html=(
+                    "<pre style='font-family:ui-monospace,monospace;font-size:13px'>"
+                    f"{body}</pre>"
+                ),
+                sender=sender_address,
+                recipient=recipient,
+                # The job runs three times by design; one notice per date.
+                idempotency_key=f"missing-prediction/{label}",
+            )
+        )
+        print(json.dumps({"status": "NO_PREDICTION_NOTIFIED"}, ensure_ascii=False))
+    except Exception as error:
+        print(
+            json.dumps(
+                {"status": "NO_PREDICTION", "notify_failed": type(error).__name__},
+                ensure_ascii=False,
+            )
+        )
 
 
 def main() -> int:
@@ -53,13 +117,19 @@ def main() -> int:
                 )
             )
             return 0
-        delivery = send_persisted_morning_email(
-            factory,
-            config,
-            environment,
-            prediction_date=args.prediction_date,
-            top_n=args.top_n,
-        )
+        try:
+            delivery = send_persisted_morning_email(
+                factory,
+                config,
+                environment,
+                prediction_date=args.prediction_date,
+                top_n=args.top_n,
+            )
+        except ValueError:
+            # Raised only when no terminal prediction set exists. Every other
+            # failure still propagates, so a genuine bug stays loud.
+            _notify_missing(environment, args.prediction_date)
+            return 0
         result_payload = {
             "status": "ALREADY_SENT" if delivery is None else "SENT",
             "provider": delivery.provider if delivery is not None else None,
