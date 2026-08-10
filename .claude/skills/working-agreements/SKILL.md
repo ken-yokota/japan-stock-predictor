@@ -54,9 +54,11 @@ This is the part that gets inverted. The operator asked for something; the mail
 must say **how far along that thing is**, in their words, not narrate the steps
 you happened to take.
 
-Every mail carries the same shape:
+Every mail carries the same shape, and **the subject line carries the count**:
 
 ```
+件名: 【進捗 3/5】予測を計算中（完了見込み09:40）
+
 依頼内容        <- quoted back, so there is no doubt which request this is
 進捗            3/5 完了
 完了したもの     <- what they can now rely on
@@ -64,6 +66,18 @@ Every mail carries the same shape:
 残り            <- what has not started
 操作の要否       <- almost always "不要"; say so explicitly
 ```
+
+**The count is required, in the subject and in the body, on every mail.** The
+operator reads the subject on a phone and must know how far along their request
+is without opening anything. `【進捗 3/5】` does that; `【進捗】` does not.
+
+Fix the denominator when the request arrives, by breaking it into the steps
+*they* would recognise, and keep it stable. If the work turns out to need more
+steps, say so — `3/5 → 3/7 に増えました。理由:` — rather than quietly
+renumbering, which makes progress look like it went backwards.
+
+A request that is one step is `1/1`. Say it anyway; the operator should never
+have to guess whether a count was omitted or the work was unstructured.
 
 Write it so someone who has forgotten the conversation can read one mail and
 know where their request stands. "予測を公開しました" is progress. "Ridgeの

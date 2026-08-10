@@ -4,6 +4,12 @@ This is a status report, not a recommendation. It answers "did the system do
 what it was supposed to today, and does anything need attention", so it leads
 with what ran and what failed rather than with profit.
 
+A day the pipeline had to be recovered by hand reads, from the database alone,
+exactly like a day it ran cleanly: the predictions are there either way. So the
+report also names which series never reached the model and whether the
+scheduled run actually produced what is on screen. Silence about a manual
+recovery is how yesterday's incident becomes invisible tomorrow.
+
 Numbers are reported beside their sample size, and any figure too small to
 support a conclusion says so in the mail rather than being left to the reader.
 Nothing here recomputes a prediction: it reads what the pipeline already wrote.
@@ -159,6 +165,58 @@ def _database_sections(target: date) -> list[Section]:
     return sections
 
 
+def _pipeline_health_section(target: date) -> Section:
+    """Say what the day's data actually consisted of, and what was missing.
+
+    A prediction built without FX, futures, and commodities looks identical to
+    one built with them. The difference lives in rows nobody counts, so they
+    are counted here.
+    """
+
+    url = os.environ.get("DATABASE_URL", "").strip()
+    if not url:
+        return Section("データの健全性", ["DATABASE_URL 未設定のため確認できません。"])
+    try:
+        from sqlalchemy import text
+
+        from database.connection import create_database_engine
+
+        lines: list[str] = []
+        with create_database_engine(url).connect() as connection:
+            eod, snapshot = connection.execute(
+                text(
+                    "select count(*) filter (where interval = 'eod'),"
+                    " count(*) filter (where interval = 'live_snapshot')"
+                    " from market_data"
+                )
+            ).one()
+            fetched_today = connection.scalar(
+                text(
+                    "select count(*) from market_data where retrieved_at::date = :day"
+                ),
+                {"day": target},
+            )
+            latest = connection.scalar(text("select max(market_date) from market_data"))
+            lines.append(f"保存済み: EOD {eod:,}行 / スナップショット {snapshot:,}行")
+            lines.append(
+                f"最新の市場日: {latest} / 本日取り込んだ行: {fetched_today:,}"
+            )
+            if not snapshot:
+                # These are the series the operator asked for first.
+                lines.append(
+                    "※ スナップショットが0件です。為替・先物・商品の12系列は"
+                    "予測に入っていません。"
+                )
+            if not fetched_today:
+                lines.append(
+                    "※ 本日の取り込みは0行です。"
+                    "予測は保存済みデータから作られています。"
+                )
+        return Section("データの健全性", lines)
+    except Exception as error:
+        return Section("データの健全性", [f"確認失敗: {type(error).__name__}"])
+
+
 def _research_section() -> Section:
     """Report what the research comparisons currently conclude, INVALID included."""
 
@@ -202,7 +260,11 @@ def _research_section() -> Section:
 
 
 def build_report(target: date) -> str:
-    sections = [*_database_sections(target), _research_section()]
+    sections = [
+        *_database_sections(target),
+        _pipeline_health_section(target),
+        _research_section(),
+    ]
     header = f"{target:%Y-%m-%d} (JST) 日次サマリー"
     footer = (
         "この内容は研究・情報提供であり、投資助言ではありません。\n"
