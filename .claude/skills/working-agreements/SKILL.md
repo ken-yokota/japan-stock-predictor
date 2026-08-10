@@ -48,8 +48,35 @@ Send:
 - **At the end**: the result, the numbers with their sample sizes, what the
   numbers do *not* establish, and whether anything needs the operator.
 
-Track the stages against what the operator actually asked for, so the mail
-reads as progress on their request rather than progress on your implementation.
+### The mail reports on their request, not on your work
+
+This is the part that gets inverted. The operator asked for something; the mail
+must say **how far along that thing is**, in their words, not narrate the steps
+you happened to take.
+
+Every mail carries the same shape:
+
+```
+依頼内容        <- quoted back, so there is no doubt which request this is
+進捗            3/5 完了
+完了したもの     <- what they can now rely on
+実行中          <- with an estimate and a projected finish time
+残り            <- what has not started
+操作の要否       <- almost always "不要"; say so explicitly
+```
+
+Write it so someone who has forgotten the conversation can read one mail and
+know where their request stands. "予測を公開しました" is progress. "Ridgeの
+係数を再計算しました" is narration.
+
+When one request spawns several tasks, one mail covers all of them. Several
+mails, each about a fragment, leaves the operator assembling the picture.
+
+**Send whether or not there is good news.** A morning that failed, a step that
+is slower than estimated, a result that came back null — those are the mails
+that matter most, and they are the ones most easily skipped because there is
+nothing pleasant to report. Reporting progress in chat does not discharge this:
+the agreement assumes the operator is not reading the screen.
 
 **This covers background work too — every task, without exception.** A job
 running unattended is the one the operator can least see, so it needs the mail
