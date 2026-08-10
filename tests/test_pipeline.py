@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 import pytest
 import yaml
-from sqlalchemy import create_engine, func, select
+from sqlalchemy import create_engine, event, func, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -43,7 +43,11 @@ from database.models import (
 from database.repository import MarketDataRepository, PredictionPipelineRepository
 from notifications.contracts import EmailDelivery, RenderedEmail
 from pipeline.close import ClosePipeline
-from pipeline.morning import MorningPipeline
+from pipeline.morning import (
+    NON_TRADING_DAY_WARNING,
+    MorningPipeline,
+    MorningPipelineResult,
+)
 from pipeline.open import OpenPipeline
 from services.dataset import ModelDataset, ModelSample, SourceReference
 from services.email import load_morning_email_payload, send_persisted_morning_email
@@ -358,6 +362,113 @@ def test_persistence_rejects_feature_lineage_after_prediction_cutoff(
         assert session.scalar(select(func.count()).select_from(FeatureInput)) == 0
 
 
+def test_feature_persistence_selects_scale_by_set_not_by_cell(
+    sqlite_factory: sessionmaker[Session], app_config: AppConfig, make_bar
+) -> None:
+    """The hosted DB must not receive a SELECT for every persisted cell."""
+
+    feature_names = tuple(f"factor_{index}" for index in range(5))
+    sessions = japan_sessions_before(
+        PREDICTION_DATE, app_config.model.training.window_jpx_sessions
+    )
+    raw_at = datetime(2026, 1, 5, 20, 0, tzinfo=UTC)
+    with sqlite_factory() as session:
+        market = MarketDataRepository(session)
+        market.upsert_bars(
+            [
+                make_bar(
+                    market_date=raw_at.date(),
+                    timestamp=raw_at,
+                    available_timestamp=raw_at,
+                    first_observed_at=raw_at,
+                    retrieved_at=raw_at,
+                )
+            ]
+        )
+        raw = session.scalar(select(MarketData))
+        assert raw is not None
+        reference = SourceReference(
+            table_name="market_data",
+            row_id=raw.id,
+            canonical_symbol=raw.canonical_symbol,
+            market_date=raw.market_date,
+            available_at=raw.available_timestamp,
+            first_observed_at=raw.first_observed_at,
+            retrieved_at=raw.retrieved_at,
+            raw_hash=raw.raw_hash,
+            data_quality=raw.data_quality,
+        )
+        training_samples = tuple(
+            ModelSample(
+                ticker="9101",
+                sample_date=session_date,
+                cutoff_at=prediction_cutoff(session_date),
+                values={
+                    name: float(index + 1) for index, name in enumerate(feature_names)
+                },
+                lineage={name: (reference,) for name in feature_names},
+                target_return=0.001,
+                target_lineage=(reference,),
+            )
+            for session_date in sessions
+        )
+        current = ModelSample(
+            ticker="9101",
+            sample_date=PREDICTION_DATE,
+            cutoff_at=prediction_cutoff(PREDICTION_DATE),
+            values={name: float(index + 1) for index, name in enumerate(feature_names)},
+            lineage={name: (reference,) for name in feature_names},
+        )
+        dataset = ModelDataset(
+            ticker="9101",
+            feature_names=feature_names,
+            training_frame=pd.DataFrame(
+                [sample.values for sample in training_samples], index=sessions
+            ),
+            training_target=pd.Series(
+                [sample.target_return for sample in training_samples], index=sessions
+            ),
+            current_frame=pd.DataFrame([current.values], index=[PREDICTION_DATE]),
+            training_samples=training_samples,
+            current_sample=current,
+            candidate_feature_count=len(feature_names),
+            feature_coverage=1.0,
+        )
+        run = market.create_run(
+            run_type="MORNING",
+            prediction_date=PREDICTION_DATE,
+            cutoff_at=prediction_cutoff(PREDICTION_DATE),
+            data_version="config-test",
+        )
+        engine = session.get_bind()
+        select_count = 0
+
+        def count_selects(
+            _connection, _cursor, statement, _parameters, _context, _executemany
+        ) -> None:
+            nonlocal select_count
+            if statement.lstrip().upper().startswith("SELECT"):
+                select_count += 1
+
+        event.listen(engine, "before_cursor_execute", count_selects)
+        try:
+            feature_set = persist_feature_set(
+                PredictionPipelineRepository(session),
+                run_id=run.run_id,
+                prediction_date=PREDICTION_DATE,
+                config=app_config,
+                dataset=dataset,
+                terminal_status="READY",
+            )
+        finally:
+            event.remove(engine, "before_cursor_execute", count_selects)
+
+        expected_values = len(sessions) * (len(feature_names) + 1) + len(feature_names)
+        assert feature_set.status == "READY"
+        assert feature_set.required_feature_count == expected_values
+        assert select_count <= 10
+
+
 class _FakeYahooOpenProvider:
     """Deterministic provider fake for the optional post-open observation."""
 
@@ -548,11 +659,16 @@ def test_email_payload_and_database_claim_allow_exactly_one_send(
 
 def test_scheduled_workflows_use_jst_equivalent_utc_crons_and_safety_gate() -> None:
     workflow_dir = Path(__file__).parents[1] / ".github" / "workflows"
-    # UTC, with the JST time each one lands at. The prediction starts 07:00 so
-    # a 34-minute fetch still finishes before the 08:45 email that reads it.
+    # UTC, with the JST time each one lands at. Prediction retries are
+    # idempotent and the first one waits for the 08:20 snapshot window.
     expected = {
-        "morning_prediction.yml": ["0 22 * * 0-4"],  # 07:00 JST
-        "morning_email.yml": ["45,50,55 23 * * 0-4"],  # 08:45/50/55 JST
+        "morning_prefetch.yml": ["10,25 22 * * 0-4"],  # 07:10/25 JST
+        "morning_prediction.yml": ["10,20,30 23 * * 0-4"],  # 08:10/20/30 JST
+        "morning_email.yml": [
+            "45 23 * * 0-4",
+            "50 23 * * 0-4",
+            "55 23 * * 0-4",
+        ],  # 08:45/50/55 JST
         "close_update.yml": [
             "45 6 * * 1-5",  # 15:45 JST
             "55 6 * * 1-5",  # 15:55 JST
@@ -565,3 +681,74 @@ def test_scheduled_workflows_use_jst_equivalent_utc_crons_and_safety_gate() -> N
         assert [item["cron"] for item in parsed["on"]["schedule"]] == crons
         assert "vars.AUTOMATION_ENABLED == 'true'" in text
         assert 'python-version: "3.12"' in text
+
+
+def test_morning_command_exposes_partial_or_empty_publication_as_failure() -> None:
+    from scripts.run_morning_prediction import _exit_code
+
+    ready = MorningPipelineResult(
+        PREDICTION_DATE,
+        "READY",
+        "run-ready",
+        "set-ready",
+        successful_tickers=("9101",),
+    )
+    partial = MorningPipelineResult(
+        PREDICTION_DATE,
+        "READY",
+        "run-partial",
+        "set-partial",
+        successful_tickers=("9101",),
+        insufficient_tickers=("9104",),
+    )
+    empty = MorningPipelineResult(
+        PREDICTION_DATE,
+        "INSUFFICIENT_DATA",
+        "run-empty",
+        "set-empty",
+        insufficient_tickers=("9101", "9104"),
+    )
+    skipped = MorningPipelineResult(
+        HOLIDAY,
+        "SKIPPED",
+        "run-holiday",
+        None,
+    )
+
+    assert _exit_code(ready) == 0
+    assert _exit_code(partial) == 2
+    assert _exit_code(empty) == 2
+    assert _exit_code(skipped) == 0
+
+
+def test_forced_holiday_run_publishes_and_labels_the_set_as_reference_only(
+    sqlite_factory: sessionmaker[Session], app_config: AppConfig
+) -> None:
+    """A holiday prediction must be produced, and must say it is not tradeable."""
+
+    pipeline = MorningPipeline(sqlite_factory, app_config, _environment())
+
+    forced = pipeline.run(HOLIDAY, perform_ingestion=False, allow_non_business_day=True)
+
+    assert forced.status != "SKIPPED"
+    assert NON_TRADING_DAY_WARNING in forced.warnings
+    with sqlite_factory() as session:
+        run = session.scalar(
+            select(DailyRun).where(DailyRun.prediction_date == HOLIDAY)
+        )
+        assert run is not None
+        assert run.status != "SKIPPED"
+
+
+def test_holiday_still_skips_without_the_explicit_override(
+    sqlite_factory: sessionmaker[Session], app_config: AppConfig
+) -> None:
+    """The override must be opt-in, so a scheduled run never invents a session."""
+
+    pipeline = MorningPipeline(sqlite_factory, app_config, _environment())
+
+    result = pipeline.run(HOLIDAY, perform_ingestion=False)
+
+    assert result.status == "SKIPPED"
+    assert result.prediction_set_id is None
+    assert NON_TRADING_DAY_WARNING not in result.warnings

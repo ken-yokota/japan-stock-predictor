@@ -139,3 +139,71 @@ Prefer an existing factory or helper over rebuilding one at the call site. The
 provider choice, credentials, retries, and timeouts already live in one place;
 a second copy is a second thing to get wrong, and it will be the copy nobody
 tests.
+
+## 4. Test the production path, by the production procedure
+
+A check that skips a step proves nothing about that step. Two mornings were
+lost here to exactly that: the pre-flight ran with `--skip-ingestion`, so the
+fetch that timed out was never exercised; then it ran read-only with a
+rollback, so the write path that took six hours was never exercised either.
+Both times the report said "verified, it will work tomorrow".
+
+So: **run what production runs, the way production runs it, and time it.**
+
+- Same command, same flags, same database, same data volume. If a flag is
+  dropped to make the test cheap, that flag is the untested part — name it in
+  the report or do not claim coverage.
+- **Measure wall-clock against the timeout**, not just success. 34 minutes
+  against a 60-minute limit is not "fine", it is a job that fails on a slow
+  day. Report the margin.
+- Measure the cost that scales: round trips to a hosted database, requests to
+  a rate-limited provider, rows written. A step that is instant on ten rows
+  can be hours on twenty thousand.
+
+### When it fails, the report is fixed in shape
+
+Every failure report carries all five, in the mail as well as in chat:
+
+1. **何が起きたか** — the observed behaviour, with numbers
+2. **原因** — the mechanism, established by measurement rather than inferred
+   from reading the code
+3. **対応** — what was done immediately, including any cleanup of records a
+   killed process left behind
+4. **解決策** — each option with **想定工数と想定時間**, so the operator can
+   choose rather than being handed a single plan
+5. **結果** — what the fix actually achieved, measured the same way
+
+Estimates are required. "後で直します" is not a solution; "バルク化: 想定4〜8
+時間、往復821万回が数百回になる見込み" is one the operator can act on.
+
+Report the result by mail whether the fix worked or not. A fix that did not
+work is the more important mail.
+
+## 5. A standing report every three hours
+
+While any work is in flight, mail a status every three hours even when nothing
+notable has happened. Silence over a long stretch is indistinguishable from a
+stall, and the operator should never have to ask "how's it going".
+
+```
+件名: 【進捗 2/5】来歴書き込みのバルク化（3時間ごとの定期報告）
+
+いま進めているタスク
+  2/5  来歴書き込みのバルク化   想定4〜8時間 / 経過2時間15分
+       現状: 往復821万回 → 数百回にする変更を実装、テスト修正中
+
+これからのタスク
+  3/5  本日の予測を公開         想定30分
+  4/5  取得と予測のジョブ分離   想定1時間
+  5/5  全テストとpush           想定30分
+
+残り想定 約6時間 / 完了予定 21:00頃
+操作の要否  不要
+```
+
+Every one of these carries the same three things: **何分の何が終わったか**,
+**それぞれの想定工数と想定時間**, and **残りの見込み**. An estimate that has
+been overtaken says so and gives a new one, with the reason.
+
+The three-hour report is a floor, not a substitute. Stage boundaries, failures,
+and overruns are still mailed when they happen.

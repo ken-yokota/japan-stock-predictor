@@ -22,7 +22,15 @@ from services.persistence import (
     prediction_set_versions,
 )
 from services.prediction import PredictionComputation, PredictionService
+from services.recovery import reconcile_stale_runs
 from services.versioning import config_hash
+
+# Marks a prediction whose named session never opens. Consumers key off this
+# exact string, so evaluation can exclude the set from the live record and the
+# email and dashboard can label it, without any of them consulting a calendar.
+NON_TRADING_DAY_WARNING = (
+    "JPX休場日のため参考予測です。この日は取引が成立せず、実績は発生しません。"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,12 +109,28 @@ class MorningPipeline:
         *,
         perform_ingestion: bool = True,
         history_days: int = 550,
+        allow_non_business_day: bool = False,
     ) -> MorningPipelineResult:
         if history_days < 250:
             raise ValueError("history_days must be at least 250")
-        if not is_japan_business_day(prediction_date):
+        is_business_day = is_japan_business_day(prediction_date)
+        if not is_business_day and not allow_non_business_day:
             return self._skip(prediction_date)
 
+        recovery = reconcile_stale_runs(self._factory)
+        recovery_warning = (
+            f"recovered {recovery.recovered} stale in-progress audit rows"
+            if recovery.recovered
+            else None
+        )
+        # A forced run names a session that never opens, so no actual can ever
+        # settle against it. The warning rides on the prediction set itself so
+        # the evaluation, the email, and the dashboard all read the same fact
+        # rather than each re-deriving it from a calendar.
+        holiday_warning = NON_TRADING_DAY_WARNING if not is_business_day else None
+        preamble = tuple(
+            warning for warning in (holiday_warning, recovery_warning) if warning
+        )
         existing = self._existing(prediction_date)
         if existing is not None:
             return MorningPipelineResult(
@@ -115,9 +139,10 @@ class MorningPipeline:
                 existing.run_id,
                 existing.prediction_set_id,
                 reused=True,
+                warnings=preamble,
             )
 
-        warnings: list[str] = []
+        warnings: list[str] = list(preamble)
         ingestion: IngestionOutcome | None = None
         if perform_ingestion:
             try:
