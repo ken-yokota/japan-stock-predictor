@@ -71,6 +71,24 @@ Every mail carries the same shape, and **the subject line carries the count**:
 operator reads the subject on a phone and must know how far along their request
 is without opening anything. `【進捗 3/5】` does that; `【進捗】` does not.
 
+### One step, one mail — never batch several steps into one
+
+The operator has asked for this directly. **Send a mail as each numbered step
+finishes, not a combined mail once several are done.** `2/7` finishing is its
+own mail; so is `3/7`. A single mail reporting "2/7 and 3/7 are done" is a
+batch, and it hides how long each step actually took.
+
+This holds even when two steps finish minutes apart, and even when the second
+one is small. The count is the operator's only view of pace: three mails
+arriving at 01:10, 01:40 and 02:30 tell them the third step is dragging.
+One mail at 02:30 saying "3/7 完了" tells them nothing about that.
+
+It also holds when a step *fails*. A failure is that step's mail, sent then,
+with its own count — not folded into the next step's report.
+
+The only thing that shares a mail is a single step's own detail: its result,
+its numbers, and what starts next.
+
 Fix the denominator when the request arrives, by breaking it into the steps
 *they* would recognise, and keep it stable. If the work turns out to need more
 steps, say so — `3/5 → 3/7 に増えました。理由:` — rather than quietly
@@ -179,7 +197,53 @@ Estimates are required. "後で直します" is not a solution; "バルク化: �
 Report the result by mail whether the fix worked or not. A fix that did not
 work is the more important mail.
 
-## 5. A standing report every three hours
+## 5. A standing report every ten minutes while Claude Code is running
+
+**Whenever Claude Code is working in this repository, mail the operator every
+ten minutes.** Not only at stage boundaries, and not only when something
+happens — every ten minutes, for as long as the session is doing work.
+
+The operator set this deliberately. Ten minutes is short enough that a stalled
+job, a wrong turn, or a silent crash is caught while it still matters, and they
+never have to open a terminal to find out where things stand.
+
+Every one of these carries three things, in a table:
+
+- **進行中タスク** — which numbered step, and how long it has been running
+- **残タスク** — what has not started, each with its 想定時間
+- **想定時間** — the revised finish time for the whole request
+
+```
+件名: 【進捗 4/9】特徴量の永続化を実行中（10分ごとの定期報告 03:20）
+
+進行中
+  工程    内容                        経過      想定      完了目安
+  ------  --------------------------  --------  --------  --------
+   4/9    8/10の予測を本番で実行       13分      12分      03:05
+
+残タスク
+  工程    内容                        想定時間
+  ------  --------------------------  ----------
+   5/9    メール配信                   5分
+   6/9    ダッシュボード反映確認       5分
+   7/9    夕方の引け更新              10分
+
+  残り想定 約20分 / 完了予定 03:40頃
+  操作の要否  不要
+```
+
+Set the timer up as a **separate process that only reads the working log**, the
+same way a job watcher is set up, so the report keeps arriving even if the main
+work blocks on something long. Start it when the work starts and stop it when
+the work is done — a ten-minute mail arriving after everything finished is
+noise, and noise is what stops the mails being read.
+
+If nothing has changed since the previous report, say exactly that and give the
+elapsed time. "変化なし、経過22分、想定12分を超過" is a useful report; skipping
+the mail because there is nothing new is the failure this rule exists to
+prevent.
+
+## 6. A standing report every three hours
 
 While any work is in flight, mail a status every three hours even when nothing
 notable has happened. Silence over a long stretch is indistinguishable from a

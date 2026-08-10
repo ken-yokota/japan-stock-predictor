@@ -63,6 +63,44 @@ The body, in this order:
    finish time.
 5. **What, if anything, the operator needs to do.** Usually nothing. Say so.
 
+### Put numbers in a table, never in a paragraph
+
+The operator asked for this directly, twice. Any comparison, any set of
+measurements, any list of stages with times — it goes in a table. Prose that
+buries three numbers in a sentence forces the reader to rebuild the table in
+their head, and on a phone they simply will not.
+
+Use a table whenever the content has **two or more rows sharing the same
+columns**: before/after, option A/B/C, stage/estimate/actual, per-symbol
+results. One number in one sentence is fine as prose; two are not.
+
+```
+工程            所要時間    状態
+------------  ----------  ----------
+データ取得        2.1秒     完了
+特徴量構築        6.6分     完了
+学習              1.0分     実行中
+永続化           10.0分     未着手
+------------  ----------  ----------
+合計            約18分
+```
+
+Rules that keep a table readable in a monospace mail on a phone:
+
+- **Four columns at most.** A fifth column wraps and the table stops being one.
+- **Align the numbers, and give every one its unit.** `6.6分`, not `6.6`.
+- **Name what changed in the last column**, not in a footnote below.
+- **Always show the comparison side by side** when reporting an improvement:
+  before, after, and the ratio. A lone "after" number proves nothing.
+- **Totals go in the table**, as their own row, not in the sentence after it.
+
+Options the operator has to choose between are also a table, and each option
+needs 想定工数 and 想定効果 as columns. A recommendation goes in one sentence
+underneath, not inside the table.
+
+Everything else in the mail stays plain sentences. A table of prose is worse
+than prose.
+
 Include the stage table with estimates and a projected finish time when a run is
 still in flight; it is the difference between "it's running" and "I know when to
 come back".
