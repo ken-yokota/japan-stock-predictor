@@ -237,9 +237,20 @@ def test_officially_confirmed_symbols_and_endpoints_are_verified() -> None:
                 "/eod/{ticker}",
                 "yfinance.Ticker.history",
             }
-            assert source.market in {"US", "US_INDEX"}
-            assert source.market_timezone == "America/New_York"
-            assert source.market_close == "16:00"
+            assert source.market in {"US", "US_INDEX", "FOREX", "FUTURES"}
+            # The daily index Yahoo returns is stamped in the venue's own
+            # timezone, and reading it in any other one moves a bar onto the
+            # wrong calendar day. FX comes back in London, everything else in
+            # New York, so the config must name the matching close.
+            expected_zone = (
+                "Europe/London" if source.market == "FOREX" else "America/New_York"
+            )
+            expected_close = {
+                "FOREX": "22:00",
+                "FUTURES": "17:00",
+            }.get(source.market, "16:00")
+            assert source.market_timezone == expected_zone
+            assert source.market_close == expected_close
             assert source.session_policy == "previous_completed_session"
         elif source.data_mode == "real_time":
             assert source.endpoint in {

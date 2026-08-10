@@ -168,6 +168,23 @@ indicators:
         max_age_minutes: 10
         status: verified
         availability_at_0830: conditional
+      # Daily history for the same instrument. The snapshot above is a
+      # point-in-time quote and carries no past sessions, so without this
+      # entry the indicator has no training history at all.
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance JPY=X daily history"
+        provider_symbol: "JPY=X"
+        endpoint: yfinance.Ticker.history
+        market: FOREX
+        market_timezone: Europe/London
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "22:00"
+        is_proxy: false
+        snapshot_enabled: false
+        status: verified
+        availability_at_0830: available
       - kind: direct
         provider: eodhd_free
         instrument_hint: "USDJPY"
@@ -197,6 +214,23 @@ indicators:
         max_age_minutes: 10
         status: verified
         availability_at_0830: conditional
+      # Daily history for the same instrument. The snapshot above is a
+      # point-in-time quote and carries no past sessions, so without this
+      # entry the indicator has no training history at all.
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance EURJPY=X daily history"
+        provider_symbol: "EURJPY=X"
+        endpoint: yfinance.Ticker.history
+        market: FOREX
+        market_timezone: Europe/London
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "22:00"
+        is_proxy: false
+        snapshot_enabled: false
+        status: verified
+        availability_at_0830: available
       - kind: direct
         provider: eodhd_free
         instrument_hint: "EURJPY"
@@ -226,6 +260,23 @@ indicators:
         max_age_minutes: 20
         status: verified
         availability_at_0830: conditional
+      # Daily history for the same instrument. The snapshot above is a
+      # point-in-time quote and carries no past sessions, so without this
+      # entry the indicator has no training history at all.
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance DX-Y.NYB daily history"
+        provider_symbol: "DX-Y.NYB"
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "17:00"
+        is_proxy: false
+        snapshot_enabled: false
+        status: verified
+        availability_at_0830: available
       - kind: direct
         provider: eodhd_free
         instrument_hint: "US Dollar Index"
@@ -266,6 +317,23 @@ indicators:
         max_age_minutes: 20
         status: verified
         availability_at_0830: conditional
+      # Daily history for the same instrument. The snapshot above is a
+      # point-in-time quote and carries no past sessions, so without this
+      # entry the indicator has no training history at all.
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance NIY=F daily history"
+        provider_symbol: "NIY=F"
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "17:00"
+        is_proxy: false
+        snapshot_enabled: false
+        status: verified
+        availability_at_0830: available
       - kind: direct
         provider: eodhd_free
         instrument_hint: "Nikkei 225 Futures"
@@ -293,6 +361,23 @@ indicators:
         max_age_minutes: 20
         status: verified
         availability_at_0830: conditional
+      # Daily history for the same instrument. The snapshot above is a
+      # point-in-time quote and carries no past sessions, so without this
+      # entry the indicator has no training history at all.
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance ES=F daily history"
+        provider_symbol: "ES=F"
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "17:00"
+        is_proxy: false
+        snapshot_enabled: false
+        status: verified
+        availability_at_0830: available
       - kind: direct
         provider: eodhd_free
         instrument_hint: "S&P 500 Futures"
@@ -320,6 +405,23 @@ indicators:
         max_age_minutes: 20
         status: verified
         availability_at_0830: conditional
+      # Daily history for the same instrument. The snapshot above is a
+      # point-in-time quote and carries no past sessions, so without this
+      # entry the indicator has no training history at all.
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance NQ=F daily history"
+        provider_symbol: "NQ=F"
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "17:00"
+        is_proxy: false
+        snapshot_enabled: false
+        status: verified
+        availability_at_0830: available
       - kind: direct
         provider: eodhd_free
         instrument_hint: "NASDAQ 100 Futures"
@@ -347,6 +449,23 @@ indicators:
         max_age_minutes: 40
         status: verified
         availability_at_0830: conditional
+      # Daily history for the same instrument. The snapshot above is a
+      # point-in-time quote and carries no past sessions, so without this
+      # entry the indicator has no training history at all.
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance GC=F daily history"
+        provider_symbol: "GC=F"
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "17:00"
+        is_proxy: false
+        snapshot_enabled: false
+        status: verified
+        availability_at_0830: available
       - kind: direct
         provider: eodhd_free
         instrument_hint: "Gold"
@@ -633,6 +752,23 @@ indicators:
         max_age_minutes: 40
         status: verified
         availability_at_0830: conditional
+      # Daily history for the same instrument. The snapshot above is a
+      # point-in-time quote and carries no past sessions, so without this
+      # entry the indicator has no training history at all.
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance HG=F daily history"
+        provider_symbol: "HG=F"
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "17:00"
+        is_proxy: false
+        snapshot_enabled: false
+        status: verified
+        availability_at_0830: available
       - kind: direct
         provider: eodhd_free
         instrument_hint: "Copper"
@@ -694,6 +830,23 @@ indicators:
         max_age_minutes: 40
         status: verified
         availability_at_0830: conditional
+      # Daily history for the same instrument. The snapshot above is a
+      # point-in-time quote and carries no past sessions, so without this
+      # entry the indicator has no training history at all.
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance CL=F daily history"
+        provider_symbol: "CL=F"
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "17:00"
+        is_proxy: false
+        snapshot_enabled: false
+        status: verified
+        availability_at_0830: available
       - kind: direct
         provider: eodhd_free
         instrument_hint: "WTI"
@@ -734,6 +887,23 @@ indicators:
         max_age_minutes: 40
         status: verified
         availability_at_0830: conditional
+      # Daily history for the same instrument. The snapshot above is a
+      # point-in-time quote and carries no past sessions, so without this
+      # entry the indicator has no training history at all.
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance BZ=F daily history"
+        provider_symbol: "BZ=F"
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "17:00"
+        is_proxy: false
+        snapshot_enabled: false
+        status: verified
+        availability_at_0830: available
       - kind: direct
         provider: eodhd_free
         instrument_hint: "Brent"
@@ -774,6 +944,23 @@ indicators:
         max_age_minutes: 10
         status: verified
         availability_at_0830: conditional
+      # Daily history for the same instrument. The snapshot above is a
+      # point-in-time quote and carries no past sessions, so without this
+      # entry the indicator has no training history at all.
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance AUDJPY=X daily history"
+        provider_symbol: "AUDJPY=X"
+        endpoint: yfinance.Ticker.history
+        market: FOREX
+        market_timezone: Europe/London
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "22:00"
+        is_proxy: false
+        snapshot_enabled: false
+        status: verified
+        availability_at_0830: available
       - kind: direct
         provider: eodhd_free
         instrument_hint: "AUDJPY"
@@ -883,6 +1070,23 @@ indicators:
         max_age_minutes: 40
         status: verified
         availability_at_0830: conditional
+      # Daily history for the same instrument. The snapshot above is a
+      # point-in-time quote and carries no past sessions, so without this
+      # entry the indicator has no training history at all.
+      - kind: direct
+        provider: yahoo_finance
+        instrument_hint: "Yahoo Finance NG=F daily history"
+        provider_symbol: "NG=F"
+        endpoint: yfinance.Ticker.history
+        market: FUTURES
+        market_timezone: America/New_York
+        data_mode: eod
+        session_policy: previous_completed_session
+        market_close: "17:00"
+        is_proxy: false
+        snapshot_enabled: false
+        status: verified
+        availability_at_0830: available
       - kind: direct
         provider: eodhd_free
         instrument_hint: "Natural Gas"

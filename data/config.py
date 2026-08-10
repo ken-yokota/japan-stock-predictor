@@ -484,6 +484,7 @@ class IndicatorsConfig(_StrictModel):
             raise ValueError(f"unassigned indicators: {sorted(unassigned)}")
 
         resolved_symbols: dict[tuple[str, str], str] = {}
+        resolved_roles: set[tuple[str, str, str]] = set()
         dependencies: dict[str, set[str]] = {
             indicator_id: set() for indicator_id in ids
         }
@@ -503,13 +504,25 @@ class IndicatorsConfig(_StrictModel):
 
                 if source.provider is None or source.provider_symbol is None:
                     continue
+                # One indicator may describe the same instrument twice when the
+                # roles differ: a live snapshot for the morning cutoff and the
+                # daily history that trains on it. Two *different* indicators
+                # sharing a symbol is still an aliasing mistake.
+                role = "snapshot" if source.snapshot_enabled else str(source.data_mode)
                 key = (source.provider, source.provider_symbol.casefold())
-                if key in resolved_symbols:
-                    first_id = resolved_symbols[key]
+                first_id = resolved_symbols.get(key)
+                if first_id is not None and first_id != indicator.id:
                     raise ValueError(
                         f"duplicate {source.provider} symbol "
                         f"{source.provider_symbol!r} for {first_id} and {indicator.id}"
                     )
+                role_key = (*key, role)
+                if role_key in resolved_roles:
+                    raise ValueError(
+                        f"indicator {indicator.id} repeats {source.provider} symbol "
+                        f"{source.provider_symbol!r} in the {role} role"
+                    )
+                resolved_roles.add(role_key)
                 resolved_symbols[key] = indicator.id
 
         self._reject_dependency_cycles(dependencies)

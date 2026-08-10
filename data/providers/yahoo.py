@@ -8,6 +8,7 @@ import math
 import re
 import time
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Any, Protocol, cast
@@ -93,6 +94,14 @@ def _raw_hash(payload: Mapping[str, Any]) -> str:
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
+@dataclass(frozen=True, slots=True)
+class _RejectedRow:
+    """One daily row Yahoo published in an unusable state."""
+
+    market_date: date
+    reason: str
+
+
 def _column(row: pd.Series, name: str) -> Any:
     for candidate in (name, name.lower(), name.upper()):
         if candidate in row.index:
@@ -123,6 +132,15 @@ class YahooFinanceProvider(MarketDataProvider):
         self._backoff_seconds = backoff_seconds
         self._clock = clock
         self._sleeper = sleeper
+        self._last_eod_rejections: tuple[_RejectedRow, ...] = ()
+
+    @property
+    def last_eod_rejections(self) -> tuple[tuple[date, str], ...]:
+        """Rows dropped by the most recent ``fetch_eod`` call, for reporting."""
+
+        return tuple(
+            (item.market_date, item.reason) for item in self._last_eod_rejections
+        )
 
     @staticmethod
     def _safe_symbol(value: str) -> str:
@@ -194,6 +212,8 @@ class YahooFinanceProvider(MarketDataProvider):
 
         observed_at = self._now()
         normalized: list[MarketBar] = []
+        rejected: list[_RejectedRow] = []
+        self._last_eod_rejections = ()
         for index_value, row in frame.iterrows():
             market_date = self._daily_market_date(index_value, request.market_timezone)
             if not request.start_date <= market_date <= request.end_date:
@@ -249,11 +269,22 @@ class YahooFinanceProvider(MarketDataProvider):
                         quality_flags=tuple(flags),
                     )
                 )
-            except ValueError as exc:
-                raise ProviderResponseError(
-                    "Yahoo returned invalid EOD OHLCV semantics"
-                ) from exc
+            except (ValueError, ProviderResponseError) as exc:
+                # Yahoo publishes individually defective daily rows: a Japanese
+                # equity whose close has not been consolidated yet, or an FX
+                # pair whose low rounds above its close. Discarding the whole
+                # symbol for one of them threw away 365 usable sessions out of
+                # 366, which is what left every series unfetched. Drop the row,
+                # keep the evidence, and let the caller judge the coverage.
+                rejected.append(_RejectedRow(market_date, str(exc)))
+        self._last_eod_rejections = tuple(rejected)
         if not normalized:
+            if rejected:
+                reasons = ", ".join(sorted({item.reason for item in rejected}))
+                raise ProviderResponseError(
+                    f"Yahoo returned no usable EOD rows ({len(rejected)} rejected: "
+                    f"{reasons})"
+                )
             raise ProviderResponseError("Yahoo returned no rows in requested range")
         return normalized
 
