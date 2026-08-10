@@ -93,6 +93,9 @@ class _PendingFeatureValue:
     sample_date: date
     feature_name: str
     references: tuple[SourceReference, ...]
+    # Only the scored row's lineage is written out as rows. See
+    # ``persist_feature_set`` for why the training rows keep the hash instead.
+    is_scored: bool = False
 
 
 def _persist_value(
@@ -106,6 +109,7 @@ def _persist_value(
     references: tuple[SourceReference, ...],
     value_kind: str = "FEATURE",
     sample_cutoff_at: datetime | None = None,
+    is_scored: bool = False,
 ) -> _PendingFeatureValue:
     row = repository.add_feature_value(
         feature_set_id=feature_set_id,
@@ -124,6 +128,7 @@ def _persist_value(
         sample_date=sample.sample_date,
         feature_name=feature_name,
         references=references,
+        is_scored=is_scored,
     )
 
 
@@ -208,14 +213,25 @@ def persist_feature_set(
                 feature_name=name,
                 value=dataset.current_sample.values.get(name),
                 references=dataset.current_sample.lineage.get(name, ()),
+                is_scored=True,
             )
         )
     # Autoincrement IDs are needed by lineage rows. Assign every feature ID in
     # one flush, then stage all lineage and flush that batch once as well.
     repository.flush_pending()
+    # A morning's training rows carried 340,000 lineage rows -- 102 MB of the
+    # 156 MB one run wrote, and the reason the hosted database hit its 512 MB
+    # ceiling before any prediction was ever published. Those rows are audit
+    # evidence, never model input, and the manifest hash below is built from
+    # every one of them either way. So the hash still proves that no training
+    # input was substituted; only the ability to walk a single training cell
+    # back to its raw revision by query is given up. The scored row -- the one
+    # the published prediction is actually computed from -- keeps its lineage
+    # rows, because that is the provenance anyone would ask about.
+    scored = [pending for pending in pending_values if pending.is_scored]
     market_data_ids: set[int] = set()
     stock_price_ids: set[int] = set()
-    for pending in pending_values:
+    for pending in scored:
         for reference in pending.references:
             if _source_type(reference) == "MARKET_DATA":
                 market_data_ids.add(reference.row_id)
@@ -230,13 +246,14 @@ def persist_feature_set(
         if pending.row.feature_value_id is None:
             raise RuntimeError("feature value ID was not assigned by batch flush")
         for index, reference in enumerate(pending.references, start=1):
-            repository.add_feature_input(
-                feature_value_id=pending.row.feature_value_id,
-                input_role=f"source_{index:03d}",
-                source_type=_source_type(reference),
-                source_row_id=reference.row_id,
-                flush=False,
-            )
+            if pending.is_scored:
+                repository.add_feature_input(
+                    feature_value_id=pending.row.feature_value_id,
+                    input_role=f"source_{index:03d}",
+                    source_type=_source_type(reference),
+                    source_row_id=reference.row_id,
+                    flush=False,
+                )
             manifest.append(
                 _manifest_entry(
                     sample_date=pending.sample_date,

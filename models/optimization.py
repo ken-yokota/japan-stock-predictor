@@ -13,9 +13,23 @@ from models.classifier import build_logistic_pipeline
 from models.ridge import build_ridge_pipeline
 
 
+def as_model_matrix(features: pd.DataFrame | np.ndarray) -> np.ndarray:
+    """Return the float matrix scikit-learn would build from ``features``.
+
+    Selection refits the same frame 45 times per prediction, and every fit made
+    scikit-learn re-derive this conversion from a freshly sliced DataFrame.
+    Measured on one research window, validation and imputation input-checking
+    accounted for 317 of 559 seconds. Doing the conversion once is arithmetic
+    scikit-learn performs anyway, so no fitted value changes; only the number
+    of times the frame is inspected does.
+    """
+
+    return np.asarray(features, dtype=float)
+
+
 def fit_with_weights(
     pipeline: Pipeline,
-    features: pd.DataFrame,
+    features: pd.DataFrame | np.ndarray,
     targets: np.ndarray,
     weights: np.ndarray | None,
 ) -> None:
@@ -87,20 +101,21 @@ def select_ridge_alpha(
     if splitter is None:
         return float(candidates[0])
 
+    matrix = as_model_matrix(features)
     best_value = float(candidates[0])
     best_loss = float("inf")
     for candidate in candidates:
         fold_losses: list[float] = []
-        for train_positions, validation_positions in splitter.split(features):
+        for train_positions, validation_positions in splitter.split(matrix):
             pipeline = build_ridge_pipeline(float(candidate))
             fit_with_weights(
                 pipeline,
-                features.iloc[train_positions],
+                matrix[train_positions],
                 targets[train_positions],
                 None if sample_weight is None else sample_weight[train_positions],
             )
             prediction = np.asarray(
-                pipeline.predict(features.iloc[validation_positions]), dtype=float
+                pipeline.predict(matrix[validation_positions]), dtype=float
             )
             error = prediction - targets[validation_positions]
             fold_losses.append(float(np.mean(np.square(error))))
@@ -133,11 +148,12 @@ def select_logistic_c(
     if splitter is None:
         return float(candidates[0])
 
+    matrix = as_model_matrix(features)
     best_value = float(candidates[0])
     best_loss = float("inf")
     for candidate in candidates:
         fold_losses: list[float] = []
-        for train_positions, validation_positions in splitter.split(features):
+        for train_positions, validation_positions in splitter.split(matrix):
             training_targets = targets[train_positions]
             if len(np.unique(training_targets)) < 2:
                 continue
@@ -146,12 +162,12 @@ def select_logistic_c(
             )
             fit_with_weights(
                 pipeline,
-                features.iloc[train_positions],
+                matrix[train_positions],
                 training_targets,
                 None if sample_weight is None else sample_weight[train_positions],
             )
             probabilities = np.asarray(
-                pipeline.predict_proba(features.iloc[validation_positions]),
+                pipeline.predict_proba(matrix[validation_positions]),
                 dtype=float,
             )[:, 1]
             actual = targets[validation_positions].astype(float)

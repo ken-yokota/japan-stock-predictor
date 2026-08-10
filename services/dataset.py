@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from collections import defaultdict
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from typing import TypeAlias
@@ -277,10 +277,41 @@ class PointInTimeDatasetBuilder:
     def __init__(self, session: Session, config: AppConfig) -> None:
         self._session = session
         self._config = config
+        # The indicator query does not mention the ticker, so every ticker in a
+        # morning asked the hosted database for the same 16k rows and rebuilt
+        # the same objects: 6.6 seconds each, 22 times over.
+        self._market_index: dict[datetime, dict[tuple[str, str], list[MarketData]]]
+        self._market_index = {}
+
+    def _market_rows(
+        self, cutoff_at: datetime
+    ) -> dict[tuple[str, str], list[MarketData]]:
+        """Return indicator rows grouped by series, loaded once per cutoff.
+
+        Grouping matters as much as the caching. Each sample scanned the whole
+        indicator table once per indicator, so one ticker's 120 sessions cost
+        86 million row comparisons and 22 tickers cost 1.9 billion -- 61
+        seconds per ticker, 22 minutes for a morning, against a 20-minute step
+        limit. Grouping once turns each scan into a dictionary lookup.
+
+        Insertion order within a series is preserved, and revision selection
+        already keys off an explicit total order, so the rows each sample sees
+        are the same rows in the same order as before.
+        """
+
+        cached = self._market_index.get(cutoff_at)
+        if cached is None:
+            cached = defaultdict(list)
+            for row in self._session.scalars(
+                select(MarketData).where(MarketData.available_timestamp <= cutoff_at)
+            ):
+                cached[(row.canonical_symbol, row.interval)].append(row)
+            self._market_index[cutoff_at] = cached
+        return cached
 
     def _load_rows(
         self, ticker: str, cutoff_at: datetime
-    ) -> tuple[list[StockPrice], list[MarketData]]:
+    ) -> tuple[list[StockPrice], dict[tuple[str, str], list[MarketData]]]:
         stocks = list(
             self._session.scalars(
                 select(StockPrice).where(
@@ -289,12 +320,7 @@ class PointInTimeDatasetBuilder:
                 )
             )
         )
-        market = list(
-            self._session.scalars(
-                select(MarketData).where(MarketData.available_timestamp <= cutoff_at)
-            )
-        )
-        return stocks, market
+        return stocks, self._market_rows(cutoff_at)
 
     def _indicator_ids(self, ticker: str) -> tuple[str, ...]:
         stock = next(
@@ -345,7 +371,7 @@ class PointInTimeDatasetBuilder:
         ticker: str,
         sample_date: date,
         stock_rows: Sequence[StockPrice],
-        market_rows: Sequence[MarketData],
+        market_rows: Mapping[tuple[str, str], Sequence[MarketData]],
         indicator_ids: Sequence[str],
         operational: bool,
         target_cutoff_at: datetime,
@@ -362,11 +388,7 @@ class PointInTimeDatasetBuilder:
         values, lineage = _price_features(visible_stock, prefix="stock")
         warnings: set[str] = set()
         for indicator_id in indicator_ids:
-            candidates = [
-                row
-                for row in market_rows
-                if row.canonical_symbol == indicator_id and row.interval == "eod"
-            ]
+            candidates = market_rows.get((indicator_id, "eod"), ())
             selected = _one_provider(
                 _visible(candidates, cutoff_at, operational=operational)
             )
@@ -392,10 +414,8 @@ class PointInTimeDatasetBuilder:
                 cutoff_utc = _utc(cutoff_at)
                 snapshot_candidates = [
                     row
-                    for row in market_rows
-                    if row.canonical_symbol == indicator_id
-                    and row.interval == "live_snapshot"
-                    and _utc(row.timestamp) <= cutoff_utc
+                    for row in market_rows.get((indicator_id, "live_snapshot"), ())
+                    if _utc(row.timestamp) <= cutoff_utc
                     and _utc(row.available_timestamp) <= cutoff_utc
                     and _utc(row.first_observed_at) <= cutoff_utc
                     and _utc(row.retrieved_at) <= cutoff_utc

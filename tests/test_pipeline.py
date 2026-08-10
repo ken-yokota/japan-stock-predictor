@@ -36,6 +36,7 @@ from database.models import (
     DailyRun,
     EmailLog,
     FeatureInput,
+    FeatureValue,
     MarketData,
     SimulatedTrade,
     StockPrice,
@@ -752,3 +753,109 @@ def test_holiday_still_skips_without_the_explicit_override(
     assert result.status == "SKIPPED"
     assert result.prediction_set_id is None
     assert NON_TRADING_DAY_WARNING not in result.warnings
+
+
+def test_only_the_scored_row_keeps_lineage_rows(
+    sqlite_factory: sessionmaker[Session], app_config: AppConfig, make_bar
+) -> None:
+    """Training lineage must live in the hash, not in 340,000 rows."""
+
+    feature_names = tuple(f"factor_{index}" for index in range(3))
+    sessions = japan_sessions_before(
+        PREDICTION_DATE, app_config.model.training.window_jpx_sessions
+    )
+    raw_at = datetime(2026, 1, 5, 20, 0, tzinfo=UTC)
+    with sqlite_factory() as session:
+        market = MarketDataRepository(session)
+        market.upsert_bars(
+            [
+                make_bar(
+                    market_date=raw_at.date(),
+                    timestamp=raw_at,
+                    available_timestamp=raw_at,
+                    first_observed_at=raw_at,
+                    retrieved_at=raw_at,
+                )
+            ]
+        )
+        raw = session.scalar(select(MarketData))
+        assert raw is not None
+        reference = SourceReference(
+            table_name="market_data",
+            row_id=raw.id,
+            canonical_symbol=raw.canonical_symbol,
+            market_date=raw.market_date,
+            available_at=raw.available_timestamp,
+            first_observed_at=raw.first_observed_at,
+            retrieved_at=raw.retrieved_at,
+            raw_hash=raw.raw_hash,
+            data_quality=raw.data_quality,
+        )
+        training_samples = tuple(
+            ModelSample(
+                ticker="9101",
+                sample_date=session_date,
+                cutoff_at=prediction_cutoff(session_date),
+                values={name: 1.0 for name in feature_names},
+                lineage={name: (reference,) for name in feature_names},
+                target_return=0.001,
+                target_lineage=(reference,),
+            )
+            for session_date in sessions
+        )
+        current = ModelSample(
+            ticker="9101",
+            sample_date=PREDICTION_DATE,
+            cutoff_at=prediction_cutoff(PREDICTION_DATE),
+            values={name: 1.0 for name in feature_names},
+            lineage={name: (reference,) for name in feature_names},
+        )
+        dataset = ModelDataset(
+            ticker="9101",
+            feature_names=feature_names,
+            training_frame=pd.DataFrame(
+                [sample.values for sample in training_samples], index=sessions
+            ),
+            training_target=pd.Series(
+                [sample.target_return for sample in training_samples], index=sessions
+            ),
+            current_frame=pd.DataFrame([current.values], index=[PREDICTION_DATE]),
+            training_samples=training_samples,
+            current_sample=current,
+            candidate_feature_count=len(feature_names),
+            feature_coverage=1.0,
+        )
+        run = market.create_run(
+            run_type="MORNING",
+            prediction_date=PREDICTION_DATE,
+            cutoff_at=prediction_cutoff(PREDICTION_DATE),
+            data_version="config-test",
+        )
+
+        feature_set = persist_feature_set(
+            PredictionPipelineRepository(session),
+            run_id=run.run_id,
+            prediction_date=PREDICTION_DATE,
+            config=app_config,
+            dataset=dataset,
+            terminal_status="READY",
+        )
+
+        # One lineage row per scored feature, and nothing for the 120 training
+        # sessions that used to dominate the table.
+        assert session.scalar(select(func.count()).select_from(FeatureInput)) == len(
+            feature_names
+        )
+        scored_ids = set(
+            session.scalars(
+                select(FeatureValue.feature_value_id).where(
+                    FeatureValue.row_role == "SCORE"
+                )
+            )
+        )
+        written_for = set(session.scalars(select(FeatureInput.feature_value_id)))
+        assert written_for == scored_ids
+        # The hash still covers every training reference, so a substituted
+        # training input remains detectable.
+        assert feature_set.input_manifest_hash is not None
+        assert feature_set.status == "READY"
