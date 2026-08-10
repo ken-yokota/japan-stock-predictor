@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
@@ -99,53 +100,65 @@ class MarketDataRepository:
         targets = stock_symbols or set()
         inserted = 0
         reused = 0
+        grouped: dict[
+            tuple[type[MarketData] | type[StockPrice], str, str, str],
+            list[MarketBar],
+        ] = defaultdict(list)
         for row in rows:
             if row.raw_hash is None:
                 raise ValueError("raw_hash is required for idempotent persistence")
             model = self._model_for(row, targets)
-            existing = cast(
-                MarketData | StockPrice | None,
-                self.session.scalar(
-                    select(model).where(
-                        model.provider == row.provider,
-                        model.symbol == row.provider_symbol,
-                        model.interval == row.interval.value,
-                        model.timestamp == row.timestamp,
-                        model.raw_hash == row.raw_hash,
+            grouped[
+                (model, row.provider, row.provider_symbol, row.interval.value)
+            ].append(row)
+
+        # A normal morning contains roughly 20k already-known bars.  Loading
+        # their revisions once per logical series avoids one or two hosted-DB
+        # round trips for every individual bar.
+        for (model, provider, symbol, interval), group in grouped.items():
+            timestamps = list(dict.fromkeys(row.timestamp for row in group))
+            stored: list[MarketData | StockPrice] = []
+            # Keep the IN predicate below conservative SQLite/Postgres bind
+            # limits while retaining the same production query shape.
+            for offset in range(0, len(timestamps), 500):
+                stored.extend(
+                    self.session.scalars(
+                        select(model).where(
+                            model.provider == provider,
+                            model.symbol == symbol,
+                            model.interval == interval,
+                            model.timestamp.in_(timestamps[offset : offset + 500]),
+                        )
                     )
-                ),
-            )
-            if existing is not None:
-                if _as_utc(row.retrieved_at) > _as_utc(existing.last_seen_at):
-                    existing.last_seen_at = row.retrieved_at
-                reused += 1
-                continue
-            prior_revision = cast(
-                MarketData | StockPrice | None,
-                self.session.scalar(
-                    select(model)
-                    .where(
-                        model.provider == row.provider,
-                        model.symbol == row.provider_symbol,
-                        model.interval == row.interval.value,
-                        model.timestamp == row.timestamp,
-                    )
-                    .order_by(model.available_timestamp.desc())
-                    .limit(1)
-                ),
-            )
-            persisted_row = row
-            if prior_revision is not None:
-                persisted_row = replace(
-                    row,
-                    available_timestamp=row.first_observed_at,
-                    availability_method=AvailabilityMethod.FIRST_OBSERVED,
-                    quality_flags=tuple(
-                        sorted(set((*row.quality_flags, "corrected_revision")))
-                    ),
                 )
-            self.session.add(
-                model(
+            exact = {
+                (_as_utc(existing.timestamp), existing.raw_hash): existing
+                for existing in stored
+            }
+            prior_timestamps = {_as_utc(existing.timestamp) for existing in stored}
+
+            for row in group:
+                timestamp_key = _as_utc(row.timestamp)
+                raw_hash = row.raw_hash
+                if raw_hash is None:  # Defensive narrowing for static analysis.
+                    raise ValueError("raw_hash is required for idempotent persistence")
+                existing = exact.get((timestamp_key, raw_hash))
+                if existing is not None:
+                    if _as_utc(row.retrieved_at) > _as_utc(existing.last_seen_at):
+                        existing.last_seen_at = row.retrieved_at
+                    reused += 1
+                    continue
+                persisted_row = row
+                if timestamp_key in prior_timestamps:
+                    persisted_row = replace(
+                        row,
+                        available_timestamp=row.first_observed_at,
+                        availability_method=AvailabilityMethod.FIRST_OBSERVED,
+                        quality_flags=tuple(
+                            sorted(set((*row.quality_flags, "corrected_revision")))
+                        ),
+                    )
+                new_row = model(
                     canonical_symbol=persisted_row.canonical_symbol,
                     symbol=persisted_row.provider_symbol,
                     provider=persisted_row.provider,
@@ -173,10 +186,66 @@ class MarketDataRepository:
                     raw_hash=persisted_row.raw_hash,
                     quality_flags=list(persisted_row.quality_flags),
                 )
-            )
-            inserted += 1
+                self.session.add(new_row)
+                persisted_hash = persisted_row.raw_hash
+                if persisted_hash is None:  # replace() preserves the checked hash.
+                    raise ValueError("raw_hash is required for idempotent persistence")
+                exact[(timestamp_key, persisted_hash)] = new_row
+                prior_timestamps.add(timestamp_key)
+                inserted += 1
         self.session.flush()
         return UpsertSummary(inserted, reused)
+
+    def stored_coverage(
+        self,
+        interval: str = "eod",
+        *,
+        cutoff_at: datetime | None = None,
+    ) -> dict[str, date]:
+        """Return the newest stored market date per series.
+
+        Used to skip a fetch entirely. Narrowing the requested date range does
+        not help -- one series is one request whether it asks for five days or
+        five hundred and fifty -- so the only lever is not asking at all when
+        storage already reaches the date being requested.
+        """
+
+        market_filters = [MarketData.interval == interval]
+        stock_filters = [StockPrice.interval == interval]
+        if cutoff_at is not None:
+            normalized_cutoff = _require_aware(cutoff_at, field_name="cutoff_at")
+            market_filters.extend(
+                (
+                    MarketData.available_timestamp <= normalized_cutoff,
+                    MarketData.first_observed_at <= normalized_cutoff,
+                    MarketData.retrieved_at <= normalized_cutoff,
+                )
+            )
+            stock_filters.extend(
+                (
+                    StockPrice.available_timestamp <= normalized_cutoff,
+                    StockPrice.first_observed_at <= normalized_cutoff,
+                    StockPrice.retrieved_at <= normalized_cutoff,
+                )
+            )
+        rows = self.session.execute(
+            select(
+                MarketData.canonical_symbol,
+                func.max(MarketData.market_date),
+            )
+            .where(*market_filters)
+            .group_by(MarketData.canonical_symbol)
+        ).all()
+        stock_rows = self.session.execute(
+            select(StockPrice.canonical_symbol, func.max(StockPrice.market_date))
+            .where(*stock_filters)
+            .group_by(StockPrice.canonical_symbol)
+        ).all()
+        return {
+            str(symbol): latest
+            for symbol, latest in [*rows, *stock_rows]
+            if latest is not None
+        }
 
     def save_provider_attempts(
         self,
@@ -401,6 +470,64 @@ class PredictionPipelineRepository:
 
     def __init__(self, session: Session) -> None:
         self.session = session
+        # Per-set indexes of what has already been written, so idempotency does
+        # not cost a query per row. Scoped to this repository instance, which
+        # lives for one session, so they cannot outlive their transaction.
+        self._feature_value_caches: dict[
+            str, dict[tuple[date, str, str, str], FeatureValue]
+        ] = {}
+        self._feature_input_keys: dict[tuple[int, str, str, int], FeatureInput] = {}
+        self._feature_inputs_loaded_for_sets: set[str] = set()
+        self._model_coefficient_caches: dict[str, dict[str, ModelCoefficient]] = {}
+        # Rows fetched by primary key during one write, keyed by model and id.
+        self._row_cache: dict[tuple[str, Any], Any] = {}
+
+    def _cached_get(self, model: type[Any], row_id: Any) -> Any:
+        """Keep frequently validated ORM rows alive for the whole write."""
+
+        key = (model.__name__, row_id)
+        if key not in self._row_cache:
+            self._row_cache[key] = self.session.get(model, row_id)
+        return self._row_cache[key]
+
+    def flush_pending(self) -> None:
+        """Flush one completed persistence batch instead of every cell."""
+
+        self.session.flush()
+
+    def preload_feature_input_sources(
+        self,
+        *,
+        market_data_ids: set[int],
+        stock_price_ids: set[int],
+    ) -> None:
+        """Load raw lineage sources in bounded batches before cell validation."""
+
+        for model, requested in (
+            (MarketData, market_data_ids),
+            (StockPrice, stock_price_ids),
+        ):
+            missing = {
+                row_id
+                for row_id in requested
+                if (model.__name__, row_id) not in self._row_cache
+            }
+            ordered = sorted(missing)
+            for offset in range(0, len(ordered), 500):
+                for row in self.session.scalars(
+                    select(model).where(model.id.in_(ordered[offset : offset + 500]))
+                ):
+                    persisted = cast(MarketData | StockPrice, row)
+                    self._row_cache[(model.__name__, persisted.id)] = persisted
+            unresolved = {
+                row_id
+                for row_id in requested
+                if self._row_cache.get((model.__name__, row_id)) is None
+            }
+            if unresolved:
+                label = "MARKET_DATA" if model is MarketData else "STOCK_PRICE"
+                sample = sorted(unresolved)[:5]
+                raise ValueError(f"unknown {label} rows: {sample}")
 
     def start_run_step(
         self,
@@ -578,10 +705,11 @@ class PredictionPipelineRepository:
         available_timestamp: datetime | None = None,
         data_quality: str | None = None,
         details: Mapping[str, object] | None = None,
+        flush: bool = True,
     ) -> FeatureValue:
         """Store a feature/target cell after validating its sample-time boundary."""
 
-        feature_set = self.session.get(FeatureSet, feature_set_id)
+        feature_set = self._cached_get(FeatureSet, feature_set_id)
         if feature_set is None:
             raise ValueError(f"unknown feature set: {feature_set_id}")
         if feature_set.status != "BUILDING":
@@ -613,15 +741,15 @@ class PredictionPipelineRepository:
             )
             if normalized_available > normalized_sample_cutoff:
                 raise ValueError("feature value was unavailable at its sample cutoff")
-        existing = self.session.scalar(
-            select(FeatureValue).where(
-                FeatureValue.feature_set_id == feature_set_id,
-                FeatureValue.sample_date == sample_date,
-                FeatureValue.row_role == row_role,
-                FeatureValue.value_kind == value_kind,
-                FeatureValue.feature_name == feature_name,
-            )
-        )
+        # A feature set writes tens of thousands of these. Asking the database
+        # whether each one exists costs a round trip apiece, which is what made
+        # a morning's persistence take hours against a hosted database; the set
+        # is loaded once and answered from memory instead. Rows added in this
+        # session are registered below, so the cache stays authoritative
+        # without another query.
+        cache = self._feature_value_cache(feature_set_id)
+        key = (sample_date, row_role, value_kind, feature_name)
+        existing = cache.get(key)
         if existing is not None:
             identity = (existing.value, existing.is_missing, existing.data_quality)
             if identity != (value, is_missing, data_quality):
@@ -642,8 +770,31 @@ class PredictionPipelineRepository:
             created_at=datetime.now(UTC),
         )
         self.session.add(feature_value)
-        self.session.flush()
+        # Existing callers receive the old immediate-ID behavior. The
+        # production persistence service stages a complete feature set and
+        # flushes it once, reducing thousands of hosted-DB round trips to one.
+        if flush:
+            self.session.flush()
+        cache[key] = feature_value
         return feature_value
+
+    def _feature_value_cache(
+        self, feature_set_id: str
+    ) -> dict[tuple[date, str, str, str], FeatureValue]:
+        """Load one feature set's existing rows once, keyed for lookup."""
+
+        cached = self._feature_value_caches.get(feature_set_id)
+        if cached is None:
+            cached = {
+                (row.sample_date, row.row_role, row.value_kind, row.feature_name): row
+                for row in self.session.scalars(
+                    select(FeatureValue).where(
+                        FeatureValue.feature_set_id == feature_set_id
+                    )
+                )
+            }
+            self._feature_value_caches[feature_set_id] = cached
+        return cached
 
     def add_feature_input(
         self,
@@ -652,13 +803,14 @@ class PredictionPipelineRepository:
         input_role: str,
         source_type: str,
         source_row_id: int,
+        flush: bool = True,
     ) -> FeatureInput:
         """Attach the exact raw revision and reject any look-ahead evidence."""
 
-        feature_value = self.session.get(FeatureValue, feature_value_id)
+        feature_value = self._cached_get(FeatureValue, feature_value_id)
         if feature_value is None:
             raise ValueError(f"unknown feature value: {feature_value_id}")
-        feature_set = self.session.get(FeatureSet, feature_value.feature_set_id)
+        feature_set = self._cached_get(FeatureSet, feature_value.feature_set_id)
         if feature_set is None:
             raise ValueError("feature value has no feature set")
         if feature_set.status != "BUILDING":
@@ -667,11 +819,11 @@ class PredictionPipelineRepository:
             raise ValueError("a missing feature value cannot have raw inputs")
         raw_row: MarketData | StockPrice | None
         if source_type == "MARKET_DATA":
-            raw_row = self.session.get(MarketData, source_row_id)
+            raw_row = self._cached_get(MarketData, source_row_id)
             market_data_id = source_row_id
             stock_price_id = None
         elif source_type == "STOCK_PRICE":
-            raw_row = self.session.get(StockPrice, source_row_id)
+            raw_row = self._cached_get(StockPrice, source_row_id)
             market_data_id = None
             stock_price_id = source_row_id
         else:
@@ -691,16 +843,27 @@ class PredictionPipelineRepository:
             feature_set.set_kind == "WALK_FORWARD" or feature_value.row_role == "SCORE"
         ) and (observed_at > sample_cutoff or retrieved_at > sample_cutoff):
             raise ValueError("raw input violates walk-forward first-observed cutoff")
-        existing = self.session.scalar(
-            select(FeatureInput).where(
-                FeatureInput.feature_value_id == feature_value_id,
-                FeatureInput.input_role == input_role,
-                FeatureInput.source_type == source_type,
-                FeatureInput.source_row_id == source_row_id,
-            )
-        )
-        if existing is not None:
-            return existing
+        if feature_set.feature_set_id not in self._feature_inputs_loaded_for_sets:
+            for stored_input in self.session.scalars(
+                select(FeatureInput)
+                .join(
+                    FeatureValue,
+                    FeatureValue.feature_value_id == FeatureInput.feature_value_id,
+                )
+                .where(FeatureValue.feature_set_id == feature_set.feature_set_id)
+            ):
+                stored_key = (
+                    stored_input.feature_value_id,
+                    stored_input.input_role,
+                    stored_input.source_type,
+                    stored_input.source_row_id,
+                )
+                self._feature_input_keys[stored_key] = stored_input
+            self._feature_inputs_loaded_for_sets.add(feature_set.feature_set_id)
+        lineage_key = (feature_value_id, input_role, source_type, source_row_id)
+        existing_input = self._feature_input_keys.get(lineage_key)
+        if existing_input is not None:
+            return existing_input
         feature_input = FeatureInput(
             feature_value_id=feature_value_id,
             input_role=input_role,
@@ -719,7 +882,9 @@ class PredictionPipelineRepository:
         ):
             feature_value.available_timestamp = raw_row.available_timestamp
         self.session.add(feature_input)
-        self.session.flush()
+        self._feature_input_keys[lineage_key] = feature_input
+        if flush:
+            self.session.flush()
         return feature_input
 
     def finalize_feature_set(
@@ -898,22 +1063,29 @@ class PredictionPipelineRepository:
         coefficient: Decimal,
         scaler_mean: Decimal | None,
         scaler_scale: Decimal | None,
+        flush: bool = True,
     ) -> ModelCoefficient:
         """Persist one coefficient and the StandardScaler state needed to reuse it."""
 
-        model_run = self.session.get(ModelRun, model_run_id)
+        model_run = self._cached_get(ModelRun, model_run_id)
         if model_run is None:
             raise ValueError(f"unknown model run: {model_run_id}")
         if model_run.status != "RUNNING":
             raise ValueError("coefficients can only be added while a model is RUNNING")
         if scaler_scale is not None and scaler_scale <= 0:
             raise ValueError("scaler_scale must be positive")
-        existing = self.session.scalar(
-            select(ModelCoefficient).where(
-                ModelCoefficient.model_run_id == model_run_id,
-                ModelCoefficient.feature_name == feature_name,
-            )
-        )
+        cache = self._model_coefficient_caches.get(model_run_id)
+        if cache is None:
+            cache = {
+                row.feature_name: row
+                for row in self.session.scalars(
+                    select(ModelCoefficient).where(
+                        ModelCoefficient.model_run_id == model_run_id
+                    )
+                )
+            }
+            self._model_coefficient_caches[model_run_id] = cache
+        existing = cache.get(feature_name)
         if existing is not None:
             identity = (
                 existing.coefficient,
@@ -932,7 +1104,9 @@ class PredictionPipelineRepository:
             created_at=datetime.now(UTC),
         )
         self.session.add(row)
-        self.session.flush()
+        cache[feature_name] = row
+        if flush:
+            self.session.flush()
         return row
 
     def finish_model_run(

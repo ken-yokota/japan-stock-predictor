@@ -10,7 +10,13 @@ from decimal import Decimal
 from data.availability import prediction_cutoff
 from data.config import AppConfig
 from data.market_calendar import japan_sessions_before
-from database.models import FeatureSet, ModelRun, Prediction, PredictionSet
+from database.models import (
+    FeatureSet,
+    FeatureValue,
+    ModelRun,
+    Prediction,
+    PredictionSet,
+)
 from database.repository import PredictionPipelineRepository
 from services.dataset import ModelDataset, ModelSample, SourceReference
 from services.prediction import PredictionComputation
@@ -81,6 +87,14 @@ def _manifest_entry(
     }
 
 
+@dataclass(frozen=True, slots=True)
+class _PendingFeatureValue:
+    row: FeatureValue
+    sample_date: date
+    feature_name: str
+    references: tuple[SourceReference, ...]
+
+
 def _persist_value(
     repository: PredictionPipelineRepository,
     *,
@@ -92,7 +106,7 @@ def _persist_value(
     references: tuple[SourceReference, ...],
     value_kind: str = "FEATURE",
     sample_cutoff_at: datetime | None = None,
-) -> list[dict[str, object]]:
+) -> _PendingFeatureValue:
     row = repository.add_feature_value(
         feature_set_id=feature_set_id,
         sample_date=sample.sample_date,
@@ -103,23 +117,14 @@ def _persist_value(
         value=_decimal(value),
         is_missing=value is None,
         data_quality=_quality(references),
+        flush=False,
     )
-    entries: list[dict[str, object]] = []
-    for index, reference in enumerate(references, start=1):
-        repository.add_feature_input(
-            feature_value_id=row.feature_value_id,
-            input_role=f"source_{index:03d}",
-            source_type=_source_type(reference),
-            source_row_id=reference.row_id,
-        )
-        entries.append(
-            _manifest_entry(
-                sample_date=sample.sample_date,
-                feature_name=feature_name,
-                reference=reference,
-            )
-        )
-    return entries
+    return _PendingFeatureValue(
+        row=row,
+        sample_date=sample.sample_date,
+        feature_name=feature_name,
+        references=references,
+    )
 
 
 def persist_feature_set(
@@ -161,12 +166,12 @@ def persist_feature_set(
     if feature_set.status != "BUILDING":
         return feature_set
 
-    manifest: list[dict[str, object]] = []
+    pending_values: list[_PendingFeatureValue] = []
     for sample in dataset.training_samples:
         for name in dataset.feature_names:
             value = sample.values.get(name)
             references = sample.lineage.get(name, ()) if value is not None else ()
-            manifest.extend(
+            pending_values.append(
                 _persist_value(
                     repository,
                     feature_set_id=feature_set.feature_set_id,
@@ -177,7 +182,7 @@ def persist_feature_set(
                     references=references,
                 )
             )
-        manifest.extend(
+        pending_values.append(
             _persist_value(
                 repository,
                 feature_set_id=feature_set.feature_set_id,
@@ -194,7 +199,7 @@ def persist_feature_set(
             )
         )
     for name in dataset.feature_names:
-        manifest.extend(
+        pending_values.append(
             _persist_value(
                 repository,
                 feature_set_id=feature_set.feature_set_id,
@@ -205,6 +210,41 @@ def persist_feature_set(
                 references=dataset.current_sample.lineage.get(name, ()),
             )
         )
+    # Autoincrement IDs are needed by lineage rows. Assign every feature ID in
+    # one flush, then stage all lineage and flush that batch once as well.
+    repository.flush_pending()
+    market_data_ids: set[int] = set()
+    stock_price_ids: set[int] = set()
+    for pending in pending_values:
+        for reference in pending.references:
+            if _source_type(reference) == "MARKET_DATA":
+                market_data_ids.add(reference.row_id)
+            else:
+                stock_price_ids.add(reference.row_id)
+    repository.preload_feature_input_sources(
+        market_data_ids=market_data_ids,
+        stock_price_ids=stock_price_ids,
+    )
+    manifest: list[dict[str, object]] = []
+    for pending in pending_values:
+        if pending.row.feature_value_id is None:
+            raise RuntimeError("feature value ID was not assigned by batch flush")
+        for index, reference in enumerate(pending.references, start=1):
+            repository.add_feature_input(
+                feature_value_id=pending.row.feature_value_id,
+                input_role=f"source_{index:03d}",
+                source_type=_source_type(reference),
+                source_row_id=reference.row_id,
+                flush=False,
+            )
+            manifest.append(
+                _manifest_entry(
+                    sample_date=pending.sample_date,
+                    feature_name=pending.feature_name,
+                    reference=reference,
+                )
+            )
+    repository.flush_pending()
     manifest.sort(
         key=lambda item: (
             str(item["sample_date"]),
@@ -347,6 +387,7 @@ def _persist_model(
             scaler_scale=(
                 Decimal(str(scaler.scales[name])) if scaler is not None else None
             ),
+            flush=False,
         )
     artifact_hash = sha256_json(
         {

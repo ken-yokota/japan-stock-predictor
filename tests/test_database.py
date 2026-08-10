@@ -1,6 +1,7 @@
-from datetime import UTC, date, datetime
+import hashlib
+from datetime import UTC, date, datetime, timedelta
 
-from sqlalchemy import create_engine, func, select
+from sqlalchemy import create_engine, event, func, select
 from sqlalchemy.orm import Session
 
 from data.snapshot import FreshnessStatus, SelectionRole
@@ -25,6 +26,50 @@ def test_market_data_upsert_is_idempotent(make_bar) -> None:
         assert first.inserted == 1
         assert second.reused == 1
         assert session.scalar(select(func.count()).select_from(MarketData)) == 1
+
+
+def test_bulk_rerun_uses_one_revision_lookup_instead_of_one_per_bar(make_bar) -> None:
+    """Hosted-DB latency must scale by series, not by historical row count."""
+
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    start = datetime(2025, 10, 1, 20, 0, tzinfo=UTC)
+    rows = []
+    for offset in range(300):
+        timestamp = start + timedelta(days=offset)
+        observed = timestamp + timedelta(hours=4)
+        rows.append(
+            make_bar(
+                market_date=timestamp.date(),
+                timestamp=timestamp,
+                available_timestamp=timestamp + timedelta(minutes=15),
+                first_observed_at=observed,
+                retrieved_at=observed,
+                raw_hash=hashlib.sha256(str(offset).encode()).hexdigest(),
+            )
+        )
+
+    with Session(engine) as session:
+        MarketDataRepository(session).upsert_bars(rows)
+        session.commit()
+        select_count = 0
+
+        def count_selects(
+            _connection, _cursor, statement, _parameters, _context, _executemany
+        ) -> None:
+            nonlocal select_count
+            if statement.lstrip().upper().startswith("SELECT"):
+                select_count += 1
+
+        event.listen(engine, "before_cursor_execute", count_selects)
+        try:
+            summary = MarketDataRepository(session).upsert_bars(rows)
+        finally:
+            event.remove(engine, "before_cursor_execute", count_selects)
+
+        assert summary.inserted == 0
+        assert summary.reused == 300
+        assert select_count == 1
 
 
 def test_target_stock_is_routed_to_stock_prices(make_bar) -> None:
