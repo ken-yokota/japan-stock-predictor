@@ -2,8 +2,12 @@ name: Morning email
 
 on:
   schedule:
-    # 08:45/08:50/08:55 JST Monday-Friday; DB idempotency sends at most once.
-    - cron: "45,50,55 23 * * 0-4"
+    # 08:45/08:50/08:55 JST Monday-Friday. The first two attempts allow an
+    # in-flight prediction to land; the last attempt reports and fails if it
+    # is still missing. DB idempotency sends a persisted prediction at most once.
+    - cron: "45 23 * * 0-4"
+    - cron: "50 23 * * 0-4"
+    - cron: "55 23 * * 0-4"
   workflow_dispatch:
     inputs:
       prediction_date:
@@ -42,6 +46,9 @@ jobs:
       TIMEZONE: Asia/Tokyo
       PREDICTION_DATE: ${{ inputs.prediction_date }}
       DRY_RUN: ${{ inputs.dry_run || false }}
+      # Scheduled jobs can start late. Use the intended cron identity instead
+      # of wall-clock time so only the final retry sends a missing-set notice.
+      DEFER_MISSING: ${{ github.event_name == 'schedule' && github.event.schedule != '55 23 * * 0-4' }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -53,14 +60,18 @@ jobs:
         run: python -m pip install -e .
       - name: Apply database migrations
         run: python -m alembic upgrade head
-      - name: Send persisted prediction email once
+      - name: Send persisted prediction email or expose the failure
         shell: bash
         run: |
+          set -eo pipefail
           args=()
           if [[ -n "$PREDICTION_DATE" ]]; then
             args+=(--prediction-date "$PREDICTION_DATE")
           fi
           if [[ "$DRY_RUN" == "true" ]]; then
             args+=(--dry-run)
+          fi
+          if [[ "$DEFER_MISSING" == "true" ]]; then
+            args+=(--defer-missing)
           fi
           python -m scripts.send_morning_email "${args[@]}"

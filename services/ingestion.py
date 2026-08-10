@@ -33,6 +33,7 @@ def ingest_free_morning_data(
     prediction_date: date,
     start_date: date,
     end_date: date,
+    include_snapshots: bool = True,
 ) -> IngestionOutcome:
     """Fetch Yahoo/Treasury and optional quota-capped EODHD before cutoff."""
 
@@ -95,7 +96,10 @@ def ingest_free_morning_data(
             start_date=start_date,
             end_date=end_date,
             cutoff_at=cutoff_at,
-            include_snapshots=True,
+            include_snapshots=include_snapshots,
+            # The morning run only needs what is not already stored. A backfill
+            # calls this with the flag off and still fetches everything.
+            skip_covered=True,
             operational_run=True,
             run_id=run.run_id,
         )

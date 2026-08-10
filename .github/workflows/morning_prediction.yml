@@ -2,18 +2,18 @@ name: Morning prediction
 
 on:
   schedule:
-    # 07:00 JST Monday-Friday (JST has no daylight-saving time).
+    # 08:10/08:20/08:30 JST Monday-Friday (JST has no daylight-saving time).
+    # The retries tolerate GitHub's non-guaranteed cron start time; successful
+    # publication is idempotent, so later invocations return the existing set.
+    # The first setup runs before the 08:20 snapshot window and waits below.
+    # Existing EOD history is incrementally skipped, while fresh snapshots are
+    # evaluated against the fixed 08:30 cutoff. A delayed snapshot is excluded
+    # by the PIT gate rather than used after its allowed age.
     #
-    # The fetch walks 59 series one at a time to respect free-provider rate
-    # limits and has taken over 34 minutes when Yahoo throttles. Starting at
-    # 08:20 left under 25 minutes before the 08:45 email, so a throttled
-    # morning would mail before the prediction existed. 07:00 leaves 105
-    # minutes.
-    #
-    # Starting earlier costs no information: the prediction cutoff stays fixed
-    # at 08:30 JST, and the US session that feeds it closes around 05:00 JST,
-    # so nothing the model uses arrives between 07:00 and 08:30.
-    - cron: "0 22 * * 0-4"
+    # The optimized build target is under 15 minutes (about 08:35 completion).
+    # Its step-level 20-minute stop leaves five minutes before the first 08:45
+    # email attempt to make a failure visible.
+    - cron: "10,20,30 23 * * 0-4"
   workflow_dispatch:
     inputs:
       prediction_date:
@@ -22,6 +22,16 @@ on:
         type: string
       dry_run:
         description: "Build and validate without publishing predictions"
+        required: false
+        default: false
+        type: boolean
+      skip_ingestion:
+        description: "Reuse persisted PIT-valid inputs without fetching"
+        required: false
+        default: false
+        type: boolean
+      force_non_business_day:
+        description: "Publish a reference prediction on a JPX holiday (no actual settles)"
         required: false
         default: false
         type: boolean
@@ -37,13 +47,15 @@ jobs:
   predict:
     if: github.event_name == 'workflow_dispatch' || vars.AUTOMATION_ENABLED == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
       TIMEZONE: Asia/Tokyo
       PREDICTION_DATE: ${{ inputs.prediction_date }}
       DRY_RUN: ${{ inputs.dry_run || false }}
+      SKIP_INGESTION: ${{ inputs.skip_ingestion || false }}
+      FORCE_NON_BUSINESS_DAY: ${{ inputs.force_non_business_day || false }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -55,14 +67,50 @@ jobs:
         run: python -m pip install -e .
       - name: Apply database migrations
         run: python -m alembic upgrade head
-      - name: Build morning predictions
+      - name: Wait for the 08:20 JST snapshot window
+        if: github.event_name == 'schedule'
         shell: bash
         run: |
+          set -euo pipefail
+          python - <<'PY'
+          import math
+          import time
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+
+          jst = ZoneInfo("Asia/Tokyo")
+          now = datetime.now(jst)
+          target = now.replace(hour=8, minute=20, second=0, microsecond=0)
+          # A severely delayed cron must never sleep toward the wrong day's
+          # window. The intended 08:10 firing needs at most ten minutes.
+          wait_seconds = min(
+              15 * 60,
+              max(0, math.ceil((target - now).total_seconds())),
+          )
+          print(
+              f"PIT snapshot wait: {wait_seconds}s "
+              f"(now={now:%H:%M:%S}, target={target:%H:%M:%S} JST)",
+              flush=True,
+          )
+          if wait_seconds:
+              time.sleep(wait_seconds)
+          PY
+      - name: Build morning predictions
+        shell: bash
+        timeout-minutes: 20
+        run: |
+          set -eo pipefail
           args=()
           if [[ -n "$PREDICTION_DATE" ]]; then
             args+=(--prediction-date "$PREDICTION_DATE")
           fi
           if [[ "$DRY_RUN" == "true" ]]; then
             args+=(--dry-run)
+          fi
+          if [[ "$SKIP_INGESTION" == "true" ]]; then
+            args+=(--skip-ingestion)
+          fi
+          if [[ "$FORCE_NON_BUSINESS_DAY" == "true" ]]; then
+            args+=(--force-non-business-day)
           fi
           python -m scripts.run_morning_prediction "${args[@]}"

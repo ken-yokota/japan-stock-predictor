@@ -24,7 +24,7 @@ from zoneinfo import ZoneInfo
 import exchange_calendars as xcals
 from sqlalchemy.orm import Session
 
-from data.availability import prediction_cutoff
+from data.availability import parse_market_time, prediction_cutoff
 from data.config import (
     AppConfig,
     IndicatorSourceConfig,
@@ -105,6 +105,7 @@ class IngestionReport:
     reused_rows: int = 0
     failed_sources: dict[str, str] = field(default_factory=dict)
     skipped_sources: dict[str, str] = field(default_factory=dict)
+    covered_sources: dict[str, str] = field(default_factory=dict)
     unresolved_required: list[str] = field(default_factory=list)
     selected_providers: dict[str, str] = field(default_factory=dict)
 
@@ -120,18 +121,36 @@ class IngestionReport:
         self.inserted_rows += summary.inserted
         self.reused_rows += summary.reused
 
+    def add_covered(
+        self,
+        canonical_symbol: str,
+        *,
+        stored_through: date,
+        target_session: date,
+    ) -> None:
+        """Count a stored series as a successful source without refetching it."""
+
+        self.succeeded_sources += 1
+        self.covered_sources[canonical_symbol] = (
+            f"保存済み ({stored_through} まで / 必要最終日 {target_session}): "
+            "取得を省略"
+        )
+
+
+def _verified_sources(
+    sources: list[IndicatorSourceConfig], provider: str
+) -> list[IndicatorSourceConfig]:
+    return [
+        source
+        for source in sources
+        if source.provider == provider and source.status == "verified"
+    ]
+
 
 def _verified_source(
     sources: list[IndicatorSourceConfig], provider: str
 ) -> IndicatorSourceConfig | None:
-    return next(
-        (
-            source
-            for source in sources
-            if source.provider == provider and source.status == "verified"
-        ),
-        None,
-    )
+    return next(iter(_verified_sources(sources, provider)), None)
 
 
 def build_fetch_plan(config: AppConfig) -> FetchPlan:
@@ -144,7 +163,7 @@ def build_fetch_plan(config: AppConfig) -> FetchPlan:
     for indicator in config.indicators.indicators:
         derived = _verified_source(indicator.sources, "internal")
         treasury = _verified_source(indicator.sources, "us_treasury")
-        yahoo = _verified_source(indicator.sources, "yahoo_finance")
+        yahoo_sources = _verified_sources(indicator.sources, "yahoo_finance")
         fallback = _verified_source(indicator.sources, "eodhd_free")
 
         if derived is not None:
@@ -152,27 +171,38 @@ def build_fetch_plan(config: AppConfig) -> FetchPlan:
         if treasury is not None:
             treasury_symbols.append(indicator.id)
             continue
-        if yahoo is None:
+        if not yahoo_sources:
             if indicator.required:
                 unresolved.append(indicator.id)
             continue
-        if yahoo.data_mode == "eod":
+        # An indicator may carry one Yahoo entry for the daily history and a
+        # separate one for the 08:20 snapshot. The FX pairs need this: their
+        # daily bars are stamped in Europe/London while the snapshot is a
+        # point-in-time quote, so a single entry cannot describe both without
+        # shifting one of them onto the wrong calendar day.
+        yahoo_eod = next(
+            (source for source in yahoo_sources if source.data_mode == "eod"), None
+        )
+        yahoo_snapshot = next(
+            (source for source in yahoo_sources if source.snapshot_enabled), None
+        )
+        if yahoo_eod is not None:
             eod.append(
                 IndicatorTarget(
                     indicator.id,
                     indicator.name,
                     indicator.required,
-                    yahoo,
+                    yahoo_eod,
                     fallback if fallback and fallback.data_mode == "eod" else None,
                 )
             )
-        if yahoo.snapshot_enabled:
+        if yahoo_snapshot is not None:
             snapshots.append(
                 SnapshotTarget(
                     indicator.id,
                     indicator.name,
                     indicator.required,
-                    yahoo,
+                    yahoo_snapshot,
                 )
             )
     return FetchPlan(
@@ -216,6 +246,97 @@ def _sessions(
             if (start_date + timedelta(days=offset)).weekday() < 5
         )
     return tuple(stamp.date() for stamp in sessions)
+
+
+@dataclass(frozen=True, slots=True)
+class _EodFetchWindow:
+    """The PIT-safe, optionally incremental window for one EOD series."""
+
+    target_session: date | None
+    request_start: date | None
+    required_sessions: tuple[date, ...]
+    stored_through: date | None
+
+    @property
+    def is_covered(self) -> bool:
+        return (
+            self.target_session is not None
+            and self.stored_through is not None
+            and self.stored_through >= self.target_session
+        )
+
+
+def _completed_sessions(
+    start_date: date,
+    end_date: date,
+    *,
+    market: str,
+    market_timezone: str,
+    market_close: str,
+    availability_lag_minutes: int,
+    cutoff_at: datetime,
+) -> tuple[date, ...]:
+    """Return sessions whose conservative EOD availability is before cutoff."""
+
+    if cutoff_at.tzinfo is None or cutoff_at.utcoffset() is None:
+        raise ValueError("cutoff_at must be timezone-aware")
+    if availability_lag_minutes < 0:
+        raise ValueError("availability_lag_minutes must be non-negative")
+    zone = ZoneInfo(market_timezone)
+    close_time = parse_market_time(market_close)
+    completed: list[date] = []
+    for session_date in _sessions(start_date, end_date, market=market):
+        available_at = datetime.combine(session_date, close_time, zone) + timedelta(
+            minutes=availability_lag_minutes
+        )
+        if available_at <= cutoff_at:
+            completed.append(session_date)
+    return tuple(completed)
+
+
+def _eod_fetch_window(
+    *,
+    canonical_symbol: str,
+    start_date: date,
+    end_date: date,
+    market: str,
+    market_timezone: str,
+    market_close: str,
+    availability_lag_minutes: int,
+    cutoff_at: datetime,
+    coverage: Mapping[str, date],
+) -> _EodFetchWindow:
+    """Resolve the last completed session and the first date still needed."""
+
+    completed = _completed_sessions(
+        start_date,
+        end_date,
+        market=market,
+        market_timezone=market_timezone,
+        market_close=market_close,
+        availability_lag_minutes=availability_lag_minutes,
+        cutoff_at=cutoff_at,
+    )
+    if not completed:
+        return _EodFetchWindow(None, None, (), coverage.get(canonical_symbol))
+
+    target_session = completed[-1]
+    stored_through = coverage.get(canonical_symbol)
+    if stored_through is not None and stored_through >= target_session:
+        return _EodFetchWindow(target_session, None, (), stored_through)
+
+    request_start = start_date
+    if stored_through is not None:
+        request_start = max(request_start, stored_through + timedelta(days=1))
+    required_sessions = tuple(
+        session_date for session_date in completed if session_date >= request_start
+    )
+    return _EodFetchWindow(
+        target_session,
+        request_start,
+        required_sessions,
+        stored_through,
+    )
 
 
 def _source_request(
@@ -303,11 +424,24 @@ def execute_fetch_plan(
     include_snapshots: bool,
     operational_run: bool = False,
     run_id: str | None = None,
+    skip_covered: bool = False,
 ) -> IngestionReport:
-    """Execute independent free sources and exclude failed/stale observations."""
+    """Execute independent free sources and exclude failed/stale observations.
+
+    ``skip_covered`` resolves the last completed session separately for each
+    market. A series that reaches that session makes no provider call; a stale
+    series starts on the calendar day after its newest stored row. Snapshot
+    targets remain independent and are attempted on every requested run.
+
+    Off by default: a backfill must still be able to ask for everything.
+    """
 
     if start_date > end_date:
         raise ValueError("start_date must not be after end_date")
+    coverage: dict[str, date] = (
+        repository.stored_coverage(cutoff_at=cutoff_at) if skip_covered else {}
+    )
+
     report = IngestionReport(
         requested_sources=plan.external_target_count,
         unresolved_required=list(plan.unresolved_required),
@@ -322,6 +456,32 @@ def execute_fetch_plan(
                 f"missing {plan.stock_provider_key} stock symbol"
             )
             continue
+        window = _eod_fetch_window(
+            canonical_symbol=stock.ticker,
+            start_date=start_date,
+            end_date=end_date,
+            market="JP",
+            market_timezone=stock.market_timezone,
+            market_close="15:30",
+            availability_lag_minutes=20,
+            cutoff_at=cutoff_at,
+            coverage=coverage,
+        )
+        if window.target_session is None:
+            report.skipped_sources[stock.ticker] = (
+                "prediction cutoff has no completed JPX session in the request window"
+            )
+            continue
+        if window.is_covered:
+            assert window.stored_through is not None
+            report.add_covered(
+                stock.ticker,
+                stored_through=window.stored_through,
+                target_session=window.target_session,
+            )
+            continue
+        assert window.request_start is not None
+        assert window.required_sessions
         try:
             selection = router.fetch_eod_series(
                 [
@@ -334,13 +494,13 @@ def execute_fetch_plan(
                             market_timezone=stock.market_timezone,
                             market_close="15:30",
                             availability_lag_minutes=20,
-                            start_date=start_date,
-                            end_date=end_date,
+                            start_date=window.request_start,
+                            end_date=window.target_session,
                             currency="JPY",
                         ),
                     )
                 ],
-                required_dates=_sessions(start_date, end_date, market="JP"),
+                required_dates=window.required_sessions,
                 cutoff_at=cutoff_at,
                 operational_run=operational_run,
             )
@@ -377,8 +537,41 @@ def execute_fetch_plan(
 
     for target in plan.eod:
         try:
-            primary_request = _source_request(
+            request_template = _source_request(
                 target, target.primary, start_date=start_date, end_date=end_date
+            )
+            window = _eod_fetch_window(
+                canonical_symbol=target.canonical_symbol,
+                start_date=start_date,
+                end_date=end_date,
+                market=request_template.market,
+                market_timezone=request_template.market_timezone,
+                market_close=request_template.market_close,
+                availability_lag_minutes=request_template.availability_lag_minutes,
+                cutoff_at=cutoff_at,
+                coverage=coverage,
+            )
+            if window.target_session is None:
+                report.skipped_sources[target.canonical_symbol] = (
+                    "prediction cutoff has no completed market session in the "
+                    "request window"
+                )
+                continue
+            if window.is_covered:
+                assert window.stored_through is not None
+                report.add_covered(
+                    target.canonical_symbol,
+                    stored_through=window.stored_through,
+                    target_session=window.target_session,
+                )
+                continue
+            assert window.request_start is not None
+            assert window.required_sessions
+            primary_request = _source_request(
+                target,
+                target.primary,
+                start_date=window.request_start,
+                end_date=window.target_session,
             )
             if target.primary.provider is None:
                 raise ValueError("primary source has no provider registry key")
@@ -395,19 +588,14 @@ def execute_fetch_plan(
                         _source_request(
                             target,
                             fallback,
-                            start_date=start_date,
-                            end_date=end_date,
+                            start_date=window.request_start,
+                            end_date=window.target_session,
                         ),
                     )
                 )
-            required_dates = _sessions(
-                start_date,
-                end_date,
-                market=target.primary.market or "US",
-            )
             selection = router.fetch_eod_series(
                 candidates,
-                required_dates=required_dates,
+                required_dates=window.required_sessions,
                 cutoff_at=cutoff_at,
                 operational_run=operational_run,
             )
@@ -446,40 +634,94 @@ def execute_fetch_plan(
             )
 
     if plan.treasury_symbols:
-        try:
-            treasury_rows = treasury_provider.fetch_range(start_date, end_date)
-            derived_rows = build_treasury_features(treasury_rows)
-            _store(repository, [*treasury_rows, *derived_rows], report)
-            expected_sessions = _sessions(start_date, end_date, market="US")
-            expected_latest = expected_sessions[-1] if expected_sessions else None
-            for symbol in plan.treasury_symbols:
-                matching = [
-                    row for row in treasury_rows if row.canonical_symbol == symbol
-                ]
-                if not matching:
-                    report.failed_sources[symbol] = "official Treasury tenor is missing"
-                    continue
-                if operational_run and any(
-                    row.first_observed_at > cutoff_at or row.retrieved_at > cutoff_at
-                    for row in matching
-                ):
-                    report.skipped_sources[symbol] = (
-                        "Treasury value was first retrieved after the 08:30 cutoff"
-                    )
-                    continue
-                if operational_run and (
-                    expected_latest is None
-                    or max(row.market_date for row in matching) != expected_latest
-                ):
-                    report.skipped_sources[symbol] = (
-                        "Treasury latest U.S. session is not yet published"
-                    )
-                    continue
-                report.succeeded_sources += 1
-                report.selected_providers[symbol] = treasury_provider.name
-        except (ProviderError, ValueError) as exc:
-            for symbol in plan.treasury_symbols:
-                report.failed_sources[symbol] = str(exc)
+        # Treasury publishes its same-day curve at about 18:00 Eastern.  The
+        # XNYS calendar is also used by the existing freshness gate so a
+        # weekend/holiday end_date resolves to the preceding expected row.
+        treasury_sessions = _completed_sessions(
+            start_date,
+            end_date,
+            market="US",
+            market_timezone="America/New_York",
+            market_close="18:00",
+            availability_lag_minutes=0,
+            cutoff_at=cutoff_at,
+        )
+        treasury_target = treasury_sessions[-1] if treasury_sessions else None
+        missing_treasury: list[str] = []
+        for symbol in plan.treasury_symbols:
+            stored_through = coverage.get(symbol)
+            if (
+                treasury_target is not None
+                and stored_through is not None
+                and stored_through >= treasury_target
+            ):
+                report.add_covered(
+                    symbol,
+                    stored_through=stored_through,
+                    target_session=treasury_target,
+                )
+            else:
+                missing_treasury.append(symbol)
+
+        if treasury_target is None:
+            for symbol in missing_treasury:
+                report.skipped_sources[symbol] = (
+                    "prediction cutoff has no completed Treasury session in the "
+                    "request window"
+                )
+        elif missing_treasury:
+            treasury_new_start = start_date
+            stored_missing = [coverage.get(symbol) for symbol in missing_treasury]
+            if skip_covered and all(value is not None for value in stored_missing):
+                treasury_new_start = max(
+                    start_date,
+                    min(value for value in stored_missing if value is not None)
+                    + timedelta(days=1),
+                )
+            # The provider request retains only a small overlap.  Five prior
+            # Treasury observations are needed to emit the configured 1/3/5
+            # observation-change series for the first newly stored date.
+            # Fourteen calendar days covers that warm-up without returning to
+            # the former 550-day request.
+            treasury_fetch_start = max(
+                start_date, treasury_new_start - timedelta(days=14)
+            )
+            try:
+                treasury_rows = treasury_provider.fetch_range(
+                    treasury_fetch_start, treasury_target
+                )
+                derived_rows = build_treasury_features(treasury_rows)
+                _store(repository, [*treasury_rows, *derived_rows], report)
+                for symbol in missing_treasury:
+                    matching = [
+                        row for row in treasury_rows if row.canonical_symbol == symbol
+                    ]
+                    if not matching:
+                        report.failed_sources[symbol] = (
+                            "official Treasury tenor is missing"
+                        )
+                        continue
+                    if operational_run and any(
+                        row.first_observed_at > cutoff_at
+                        or row.retrieved_at > cutoff_at
+                        for row in matching
+                    ):
+                        report.skipped_sources[symbol] = (
+                            "Treasury value was first retrieved after the 08:30 cutoff"
+                        )
+                        continue
+                    if operational_run and (
+                        max(row.market_date for row in matching) != treasury_target
+                    ):
+                        report.skipped_sources[symbol] = (
+                            "Treasury latest U.S. session is not yet published"
+                        )
+                        continue
+                    report.succeeded_sources += 1
+                    report.selected_providers[symbol] = treasury_provider.name
+            except (ProviderError, ValueError) as exc:
+                for symbol in missing_treasury:
+                    report.failed_sources[symbol] = str(exc)
 
     if not include_snapshots:
         for snapshot_target in plan.snapshots:

@@ -21,7 +21,13 @@ if [[ "${1:-}" == "--lan" ]]; then
   shift
 fi
 
-if [[ -d .venv ]]; then
+local_python312_venv="${JPSTOCK_VENV:-${HOME}/.venvs/japan-stock-predictor-python312}"
+if [[ -x "${local_python312_venv}/bin/python" ]]; then
+  # Keep the runtime outside Desktop/iCloud: dataless package files there can
+  # make Streamlit's startup scan stall for several minutes.
+  # shellcheck disable=SC1091
+  source "${local_python312_venv}/bin/activate"
+elif [[ -d .venv ]]; then
   # shellcheck disable=SC1091
   source .venv/bin/activate
 fi
@@ -31,6 +37,15 @@ if [[ -f .env ]]; then
   # shellcheck disable=SC1091
   source .env
   set +a
+fi
+
+# The dashboard is SELECT-only, so show the same hosted data used by Actions
+# when that optional local alias is configured. Set
+# JPSTOCK_DASHBOARD_DATABASE=local to inspect the workstation database instead.
+dashboard_database="${JPSTOCK_DASHBOARD_DATABASE:-production}"
+if [[ "$dashboard_database" == "production" && -n "${NEON_DATABASE_URL:-}" ]]; then
+  DATABASE_URL="$NEON_DATABASE_URL"
+  export DATABASE_URL
 fi
 
 if [[ -z "${DATABASE_URL:-}" ]]; then

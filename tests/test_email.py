@@ -1,13 +1,19 @@
 from __future__ import annotations
 
+import json
+import os
+import subprocess
+import sys
 from datetime import UTC, date, datetime
 from email.message import EmailMessage
-from types import TracebackType
+from pathlib import Path
+from types import SimpleNamespace, TracebackType
 from typing import Any, ClassVar
 
 import httpx
+import yaml
 
-from notifications.contracts import EmailCandidate, MorningEmailPayload
+from notifications.contracts import EmailCandidate, EmailDelivery, MorningEmailPayload
 from notifications.senders import DryRunSender, GmailSmtpSender, ResendSender
 from notifications.service import EmailDispatcher, InMemoryEmailLogStore
 from notifications.templates import render_morning_email
@@ -165,20 +171,33 @@ def test_a_missing_prediction_is_mailed_rather_than_raised(monkeypatch) -> None:
         script,
         "_sender",
         lambda environment: type(
-            "S", (), {"send": lambda self, message: sent.append(message)}
+            "S",
+            (),
+            {
+                "send": lambda self, message: (
+                    sent.append(message)
+                    or EmailDelivery("fake", "missing-notice-1", datetime.now(UTC))
+                )
+            },
         )(),
     )
-    script._notify_missing(_Environment(), date(2026, 8, 10))
+    result = script._notify_missing(_Environment(), date(2026, 8, 10))
 
     assert len(sent) == 1
     assert "2026-08-10" in sent[0].subject
+    assert sent[0].idempotency_key == "missing-prediction/2026-08-10"
+    assert result == {
+        "notification_status": "SENT",
+        "notification_provider": "fake",
+        "notification_message_id": "missing-notice-1",
+        "notification_error_type": None,
+    }
 
 
-def test_the_missing_prediction_notice_never_raises(monkeypatch) -> None:
+def test_the_missing_prediction_notice_reports_missing_credentials(monkeypatch) -> None:
     """This path runs when something is already wrong.
 
-    A failure here must not replace one silent morning with a louder one, so a
-    broken sender is reported on stdout and swallowed.
+    A failure here is returned in sanitized form so main can make Actions red.
     """
 
     import scripts.send_morning_email as script
@@ -187,7 +206,11 @@ def test_the_missing_prediction_notice_never_raises(monkeypatch) -> None:
         def require_email_addresses(self):
             raise RuntimeError("credentials missing")
 
-    script._notify_missing(_Environment(), None)
+    result = script._notify_missing(_Environment(), date(2026, 8, 10))
+
+    assert result["notification_status"] == "FAILED"
+    assert result["notification_error_type"] == "RuntimeError"
+    assert "credentials missing" not in result.values()
 
 
 def test_only_the_last_scheduled_firing_reports_a_missing_prediction() -> None:
@@ -222,3 +245,359 @@ def test_an_explicitly_requested_date_always_reports() -> None:
 
     early = datetime(2026, 8, 10, 8, 45, tzinfo=ZoneInfo("Asia/Tokyo"))
     assert _should_notify(date(2026, 8, 10), early) is True
+
+
+def test_an_early_scheduled_attempt_stays_deferred_even_when_actions_is_late() -> None:
+    """Cron identity, not delayed runner wall time, selects the final notice."""
+
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from scripts.send_morning_email import _should_notify
+
+    delayed = datetime(2026, 8, 10, 9, 30, tzinfo=ZoneInfo("Asia/Tokyo"))
+    assert _should_notify(None, delayed, defer_missing=True) is False
+
+
+class _DisposableEngine:
+    def __init__(self) -> None:
+        self.disposed = False
+
+    def dispose(self) -> None:
+        self.disposed = True
+
+
+def _prepare_main(
+    monkeypatch: Any,
+    *,
+    explicit_date: bool = True,
+    business_day: bool = True,
+) -> tuple[object, object, _DisposableEngine]:
+    """Give the CLI deterministic runtime collaborators without touching a DB."""
+
+    import scripts.send_morning_email as script
+
+    config = object()
+    environment = SimpleNamespace(app_url="https://dashboard.example.test")
+    engine = _DisposableEngine()
+    factory = object()
+    argv = ["send_morning_email"]
+    if explicit_date:
+        argv.extend(["--prediction-date", "2026-08-10"])
+    monkeypatch.setattr("sys.argv", argv)
+    monkeypatch.setattr(
+        script,
+        "load_runtime",
+        lambda config_dir: (config, environment, engine, factory),
+    )
+    monkeypatch.setattr(
+        script,
+        "today_in_application_timezone",
+        lambda loaded_config: date(2026, 8, 10),
+    )
+    monkeypatch.setattr(script, "is_japan_business_day", lambda target: business_day)
+    monkeypatch.setattr(script, "_validate_delivery_configuration", lambda env: None)
+    return environment, factory, engine
+
+
+def _last_result(capsys: Any) -> dict[str, object]:
+    lines = [line for line in capsys.readouterr().out.splitlines() if line.strip()]
+    assert lines
+    return json.loads(lines[-1])
+
+
+def test_final_missing_prediction_notice_is_red_even_when_delivered(
+    monkeypatch: Any, capsys: Any
+) -> None:
+    """Mail delivery succeeded, but the requested prediction still did not."""
+
+    import scripts.send_morning_email as script
+
+    _prepare_main(monkeypatch)
+    monkeypatch.setattr(
+        script,
+        "send_persisted_morning_email",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            ValueError("no terminal prediction set is available for 2026-08-10")
+        ),
+    )
+    monkeypatch.setattr(
+        script,
+        "_notify_missing",
+        lambda environment, target: {
+            "notification_status": "SENT",
+            "notification_provider": "fake",
+            "notification_message_id": "notice-1",
+            "notification_error_type": None,
+        },
+    )
+
+    exit_code = script.main()
+    result = _last_result(capsys)
+
+    assert exit_code == script.EXIT_NO_PREDICTION == 2
+    assert result["status"] == "FAILED"
+    assert result["reason"] == "NO_PREDICTION_SET"
+    assert result["notification_status"] == "SENT"
+    assert result["exit_code"] == 2
+
+
+def test_missing_delivery_credentials_exit_three_before_database_claim(
+    monkeypatch: Any, capsys: Any
+) -> None:
+    """A bad sender must not leave a claimed row that blocks all three retries."""
+
+    import scripts.send_morning_email as script
+
+    _prepare_main(monkeypatch)
+    monkeypatch.setattr(
+        script,
+        "_validate_delivery_configuration",
+        lambda environment: (_ for _ in ()).throw(ValueError("credentials missing")),
+    )
+    monkeypatch.setattr(
+        script,
+        "send_persisted_morning_email",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("configuration must fail before the database claim")
+        ),
+    )
+
+    exit_code = script.main()
+    result = _last_result(capsys)
+
+    assert exit_code == script.EXIT_NOTIFICATION_FAILED == 3
+    assert result["status"] == "FAILED"
+    assert result["reason"] == "EMAIL_CONFIGURATION_FAILED"
+    assert result["error_type"] == "ValueError"
+    assert "credentials missing" not in json.dumps(result)
+
+
+def test_missing_prediction_notice_smtp_failure_is_red(
+    monkeypatch: Any, capsys: Any
+) -> None:
+    """A failed fallback is visible as exit 3, never a green Actions run."""
+
+    import scripts.send_morning_email as script
+
+    _prepare_main(monkeypatch)
+    monkeypatch.setattr(
+        script,
+        "send_persisted_morning_email",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            ValueError("no terminal prediction set is available for 2026-08-10")
+        ),
+    )
+    monkeypatch.setattr(
+        script,
+        "_notify_missing",
+        lambda environment, target: {
+            "notification_status": "FAILED",
+            "notification_provider": None,
+            "notification_message_id": None,
+            "notification_error_type": "NotificationError",
+        },
+    )
+
+    exit_code = script.main()
+    result = _last_result(capsys)
+
+    assert exit_code == script.EXIT_NOTIFICATION_FAILED == 3
+    assert result["status"] == "FAILED"
+    assert result["reason"] == "NO_PREDICTION_SET"
+    assert result["notification_status"] == "FAILED"
+    assert result["notification_error_type"] == "NotificationError"
+
+
+def test_early_missing_prediction_attempt_stays_retryable(
+    monkeypatch: Any, capsys: Any
+) -> None:
+    """The first two cron firings wait; only the final one pages and fails."""
+
+    import scripts.send_morning_email as script
+
+    _prepare_main(monkeypatch, explicit_date=False)
+    monkeypatch.setattr(script, "_should_notify", lambda explicit_date, **kwargs: False)
+    monkeypatch.setattr(
+        script,
+        "send_persisted_morning_email",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            ValueError("no terminal prediction set is available for 2026-08-10")
+        ),
+    )
+    monkeypatch.setattr(
+        script,
+        "_notify_missing",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("early retry must not send the fallback notice")
+        ),
+    )
+
+    exit_code = script.main()
+    result = _last_result(capsys)
+
+    assert exit_code == 0
+    assert result["status"] == "RETRY_PENDING"
+    assert result["notification_status"] == "DEFERRED"
+
+
+def test_duplicate_delivery_is_an_explicit_success(
+    monkeypatch: Any, capsys: Any
+) -> None:
+    """A DB idempotency claim held by a prior run means no second email."""
+
+    import scripts.send_morning_email as script
+
+    _prepare_main(monkeypatch)
+    monkeypatch.setattr(script, "send_persisted_morning_email", lambda *a, **k: None)
+
+    exit_code = script.main()
+    result = _last_result(capsys)
+
+    assert exit_code == 0
+    assert result["status"] == "SUCCESS"
+    assert result["outcome"] == "ALREADY_SENT"
+
+
+def test_non_business_day_skips_without_querying_or_sending(
+    monkeypatch: Any, capsys: Any
+) -> None:
+    """A JPX holiday is expected silence, not a missing-prediction incident."""
+
+    import scripts.send_morning_email as script
+
+    _prepare_main(monkeypatch, business_day=False)
+    monkeypatch.setattr(
+        script,
+        "send_persisted_morning_email",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("non-business days must not query or send")
+        ),
+    )
+
+    exit_code = script.main()
+    result = _last_result(capsys)
+
+    assert exit_code == 0
+    assert result == {
+        "status": "SKIPPED",
+        "reason": "NON_BUSINESS_DAY",
+        "prediction_date": "2026-08-10",
+        "exit_code": 0,
+    }
+
+
+def test_workflows_keep_retries_and_fail_only_required_close_attempt() -> None:
+    """Pin the Actions policy that distinguishes retry-pending from false green."""
+
+    workflow_dir = Path(__file__).parents[1] / ".github" / "workflows"
+    morning_text = (workflow_dir / "morning_email.yml").read_text(encoding="utf-8")
+    morning = yaml.load(morning_text, Loader=yaml.BaseLoader)
+    assert morning["on"]["schedule"] == [
+        {"cron": "45 23 * * 0-4"},
+        {"cron": "50 23 * * 0-4"},
+        {"cron": "55 23 * * 0-4"},
+    ]
+    assert "DEFER_MISSING" in morning["jobs"]["email"]["env"]
+    assert "args+=(--defer-missing)" in morning["jobs"]["email"]["steps"][-1]["run"]
+
+    prediction = yaml.load(
+        (workflow_dir / "morning_prediction.yml").read_text(encoding="utf-8"),
+        Loader=yaml.BaseLoader,
+    )
+    assert prediction["on"]["schedule"] == [{"cron": "10,20,30 23 * * 0-4"}]
+    assert prediction["jobs"]["predict"]["timeout-minutes"] == "90"
+    prediction_inputs = prediction["on"]["workflow_dispatch"]["inputs"]
+    assert prediction_inputs["skip_ingestion"]["default"] == "false"
+    prediction_steps = prediction["jobs"]["predict"]["steps"]
+    wait_step = next(
+        step for step in prediction_steps if step.get("name", "").startswith("Wait ")
+    )
+    assert wait_step["if"] == "github.event_name == 'schedule'"
+    wait_run = wait_step["run"]
+    assert "15 * 60" in wait_run
+    assert "max(0, math.ceil((target - now).total_seconds()))" in wait_run
+    assert (
+        subprocess.run(
+            ["bash", "-n"], input=wait_run, text=True, check=False
+        ).returncode
+        == 0
+    )
+    python_source = wait_run.split("python - <<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
+    compile(python_source, "morning_prediction_wait_step", "exec")
+    build_step = next(
+        step
+        for step in prediction_steps
+        if step.get("name") == "Build morning predictions"
+    )
+    assert build_step["timeout-minutes"] == "20"
+    assert "args+=(--skip-ingestion)" in build_step["run"]
+
+    close_text = (workflow_dir / "close_update.yml").read_text(encoding="utf-8")
+    close = yaml.load(close_text, Loader=yaml.BaseLoader)
+    requirement = close["jobs"]["close"]["env"]["REQUIRE_COMPLETE"]
+    assert "workflow_dispatch" in requirement
+    assert "10 7 * * 1-5" in requirement
+    run = close["jobs"]["close"]["steps"][-1]["run"]
+    assert "PARTIAL|NO_PREDICTION_SET" in run
+    assert '[[ "$REQUIRE_COMPLETE" == "true" ]]' in run
+    assert "exit 2" in run
+
+
+def test_close_workflow_policy_executes_early_retry_and_final_failure(
+    tmp_path: Path,
+) -> None:
+    """Execute the Actions shell with a fake pipeline, not just text-match it."""
+
+    workflow_path = Path(__file__).parents[1] / ".github/workflows/close_update.yml"
+    workflow = yaml.load(workflow_path.read_text(), Loader=yaml.BaseLoader)
+    run = workflow["jobs"]["close"]["steps"][-1]["run"]
+
+    fake_python = tmp_path / "python"
+    fake_python.write_text(
+        "#!/bin/sh\n"
+        'if [ "$1" = "-m" ]; then\n'
+        '  printf \'%s\\n\' "{\\"status\\":\\"$FAKE_CLOSE_STATUS\\"}"\n'
+        '  exit "${FAKE_CLOSE_EXIT:-0}"\n'
+        "fi\n"
+        'exec "$REAL_PYTHON" "$@"\n',
+        encoding="utf-8",
+    )
+    fake_python.chmod(0o755)
+
+    def execute(
+        status: str, *, require_complete: bool
+    ) -> subprocess.CompletedProcess[str]:
+        environment = os.environ.copy()
+        environment.update(
+            {
+                "PATH": f"{tmp_path}:{environment['PATH']}",
+                "REAL_PYTHON": sys.executable,
+                "FAKE_CLOSE_STATUS": status,
+                "PREDICTION_DATE": "",
+                "DRY_RUN": "false",
+                "REQUIRE_COMPLETE": str(require_complete).lower(),
+            }
+        )
+        return subprocess.run(
+            ["bash"],
+            input=run,
+            text=True,
+            capture_output=True,
+            check=False,
+            env=environment,
+        )
+
+    early = execute("PARTIAL", require_complete=False)
+    final = execute("PARTIAL", require_complete=True)
+    missing = execute("NO_PREDICTION_SET", require_complete=True)
+    successful = execute("SUCCESS", require_complete=True)
+
+    assert early.returncode == 0
+    assert "Close update retry pending" in early.stdout
+    assert final.returncode == 2
+    assert "Close update incomplete" in final.stdout
+    assert missing.returncode == 2
+    assert "NO_PREDICTION_SET" in missing.stdout
+    assert successful.returncode == 0
+    assert "Close update status: SUCCESS" in successful.stdout

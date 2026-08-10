@@ -35,6 +35,9 @@ jobs:
       TIMEZONE: Asia/Tokyo
       PREDICTION_DATE: ${{ inputs.prediction_date }}
       DRY_RUN: ${{ inputs.dry_run || false }}
+      # The first two scheduled runs are expected to see provider lag. A
+      # manual run or the final 16:10 retry must produce a terminal result.
+      REQUIRE_COMPLETE: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '10 7 * * 1-5' }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -46,9 +49,10 @@ jobs:
         run: python -m pip install -e .
       - name: Apply database migrations
         run: python -m alembic upgrade head
-      - name: Finalize actuals or leave them pending
+      - name: Finalize actuals and expose an incomplete final retry
         shell: bash
         run: |
+          set -eo pipefail
           args=()
           if [[ -n "$PREDICTION_DATE" ]]; then
             args+=(--prediction-date "$PREDICTION_DATE")
@@ -56,4 +60,36 @@ jobs:
           if [[ "$DRY_RUN" == "true" ]]; then
             args+=(--dry-run)
           fi
-          python -m scripts.run_close_update "${args[@]}"
+          set +e
+          result="$(python -m scripts.run_close_update "${args[@]}")"
+          command_status=$?
+          set -e
+          printf '%s\n' "$result"
+          if ((command_status != 0)); then
+            echo "::error title=Close update command failed::exit_code=$command_status"
+            exit "$command_status"
+          fi
+          status="$(printf '%s\n' "$result" | python -c \
+            'import json, sys; lines=[x for x in sys.stdin if x.strip()]; print(json.loads(lines[-1])["status"])')"
+          printf 'Close update status: %s (require_complete=%s)\n' \
+            "$status" "$REQUIRE_COMPLETE"
+
+          case "$status" in
+            SUCCESS|SKIPPED|DRY_RUN)
+              ;;
+            PARTIAL|NO_PREDICTION_SET)
+              if [[ "$REQUIRE_COMPLETE" == "true" ]]; then
+                echo "::error title=Close update incomplete::$status on the final required attempt"
+                exit 2
+              fi
+              echo "::warning title=Close update retry pending::$status; a later scheduled attempt will retry"
+              ;;
+            FAILED)
+              echo "::error title=Close update failed::Pipeline returned FAILED"
+              exit 2
+              ;;
+            *)
+              echo "::error title=Close update invalid result::Unknown status: $status"
+              exit 3
+              ;;
+          esac

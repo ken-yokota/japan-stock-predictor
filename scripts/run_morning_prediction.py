@@ -9,9 +9,21 @@ from dataclasses import asdict
 from datetime import date
 from pathlib import Path
 
-from pipeline.morning import MorningPipeline
+from pipeline.morning import MorningPipeline, MorningPipelineResult
 from scripts.runtime import load_runtime
 from services.ingestion import today_in_application_timezone
+
+
+def _exit_code(result: MorningPipelineResult) -> int:
+    """Keep a partial publication usable while making automation health red."""
+
+    if result.status == "SKIPPED":
+        return 0
+    if result.status != "READY":
+        return 2
+    if result.insufficient_tickers or result.failed_tickers:
+        return 2
+    return 0
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -21,6 +33,14 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--skip-ingestion", action="store_true")
     parser.add_argument("--history-days", type=int, default=550)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--force-non-business-day",
+        action="store_true",
+        help=(
+            "Publish a reference prediction for a JPX holiday. No actual can "
+            "settle against it, so evaluation excludes it from the live record."
+        ),
+    )
     return parser
 
 
@@ -46,9 +66,10 @@ def main() -> int:
             prediction_date,
             perform_ingestion=not args.skip_ingestion,
             history_days=args.history_days,
+            allow_non_business_day=args.force_non_business_day,
         )
         print(json.dumps(asdict(result), ensure_ascii=False, default=str))
-        return 0 if result.status in {"READY", "INSUFFICIENT_DATA", "SKIPPED"} else 2
+        return _exit_code(result)
     finally:
         engine.dispose()
 
