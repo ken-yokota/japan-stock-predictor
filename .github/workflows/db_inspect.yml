@@ -1,0 +1,39 @@
+name: Database usage inspect
+
+# Manual only, read-only. Before anything is deleted or any schema changes,
+# this establishes where the 512 MB actually goes: which tables and indexes
+# hold the bytes, how many rows each day adds, and how much is the same
+# logical row stored again.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-inspect
+  cancel-in-progress: true
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install only what a read needs
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "SQLAlchemy>=2.0.31,<3" "psycopg[binary]>=3.2,<4"
+
+      - name: Measure the database
+        run: python -m scripts.inspect_database_usage
