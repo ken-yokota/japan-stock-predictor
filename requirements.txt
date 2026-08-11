@@ -13,5 +13,5 @@ resend>=2.4,<3
 scikit-learn>=1.5,<2
 SQLAlchemy>=2.0.31,<3
 statsmodels>=0.14,<1
-streamlit>=1.36,<2
+streamlit>=1.61,<2
 yfinance>=1.5,<2
