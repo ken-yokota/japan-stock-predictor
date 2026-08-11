@@ -56,7 +56,9 @@ def _module_exports(module: str) -> set[str] | None:
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
             exports.add(node.target.id)
         elif isinstance(node, ast.Import | ast.ImportFrom):
-            exports.update(alias.asname or alias.name.split(".")[0] for alias in node.names)
+            exports.update(
+                alias.asname or alias.name.split(".")[0] for alias in node.names
+            )
     return exports
 
 
