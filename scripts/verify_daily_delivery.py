@@ -118,12 +118,21 @@ def _settled_count(connection: object, prediction_set_id: str) -> int:
     )
 
 
+def _email_detail(email: dict[str, object] | None) -> str:
+    """One line saying whether the day's mail is on record as delivered."""
+
+    if email is None:
+        return "SENTの記録がありません"
+    return f"sent_at={email['sent_at']}"
+
+
 def _snapshot(url: str, timeout: int = 20) -> dict[str, object] | None:
     try:
-        with urllib.request.urlopen(url, timeout=timeout) as response:  # noqa: S310
-            if response.status != 200:
+        request = urllib.request.Request(url)  # noqa: S310
+        with urllib.request.urlopen(request, timeout=timeout) as reply:  # noqa: S310
+            if reply.status != 200:
                 return None
-            return json.loads(response.read().decode("utf-8"))
+            return json.loads(reply.read().decode("utf-8"))
     except (urllib.error.URLError, TimeoutError, ValueError, OSError):
         return None
 
@@ -165,7 +174,7 @@ def verify(
                 Check(
                     "email",
                     email is not None,
-                    f"sent_at={email['sent_at']}" if email else "SENTの記録がありません",
+                    _email_detail(email),
                 )
             )
 
@@ -194,8 +203,9 @@ def verify(
 
     age = datetime.now(UTC) - generated.astimezone(UTC)
     fresh = age <= timedelta(minutes=max_snapshot_age_minutes)
+    published: object = snapshot.get("prediction_set") or {}
     snapshot_date = str(
-        (snapshot.get("prediction_set") or {}).get("prediction_date")  # type: ignore[union-attr]
+        published.get("prediction_date") if isinstance(published, dict) else None
     )
     outcome.checks.append(
         Check(
