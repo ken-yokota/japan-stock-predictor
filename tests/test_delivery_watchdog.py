@@ -11,6 +11,8 @@ from datetime import UTC, date, datetime, time
 import pytest
 
 from scripts.verify_daily_delivery import (
+    JST,
+    WINDOW_HOURS,
     Check,
     Outcome,
     _alert_bodies,
@@ -72,9 +74,9 @@ def test_a_disabled_flag_alerts_even_outside_the_window() -> None:
 
 
 def test_before_the_window_closes_nothing_is_due() -> None:
-    early = datetime(2026, 8, 12, 6, 17, tzinfo=UTC).astimezone()
-    assert not window_is_due("morning", datetime(2026, 8, 12, 6, 17, tzinfo=UTC))
-    assert early is not None
+    """06:17 JST is 21:17 UTC the previous day - the mail is not due yet."""
+
+    assert not window_is_due("morning", datetime(2026, 8, 11, 21, 17, tzinfo=UTC))
 
 
 def test_after_the_window_closes_it_is_due() -> None:
@@ -167,7 +169,7 @@ def test_an_unreachable_snapshot_is_a_failure() -> None:
     [
         (0.10, "NORMAL"),
         (0.69, "NORMAL"),
-        (0.70, "WARNING"),
+        (0.75, "WARNING"),
         (0.86, "ALERT"),
         (0.99, "CRITICAL"),
     ],
@@ -193,8 +195,12 @@ def test_the_subject_names_what_is_missing() -> None:
     assert "NG" in text_body and "OK" in text_body
 
 
-def test_window_hours_are_ordered() -> None:
-    for window in ("morning", "evening"):
-        start = window_start(window, TODAY)
-        assert isinstance(start, datetime)
-        assert window_is_due(window, datetime.combine(TODAY, time(23, 0), start.tzinfo))
+def test_a_window_starts_before_it_is_due() -> None:
+    """The snapshot floor must sit inside the window, not after it."""
+
+    for window, (start, due) in WINDOW_HOURS.items():
+        assert start < due
+        opened = window_start(window, TODAY)
+        assert opened == datetime.combine(TODAY, start, JST).astimezone(UTC)
+        assert not window_is_due(window, datetime.combine(TODAY, start, JST))
+        assert window_is_due(window, datetime.combine(TODAY, due, JST))
