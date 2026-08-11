@@ -8,17 +8,17 @@ import unicodedata
 from collections.abc import Iterable, Sequence
 
 from notifications.contracts import EmailCandidate, MorningEmailPayload, RenderedEmail
-
-# The palette the operator approved on 2026-08-11. See docs/EMAIL_FORMAT.md;
-# a signed number without a colour is unreadable on a phone.
-UP = "#15803d"
-DOWN = "#b91c1c"
-INK = "#111827"
-MUTED = "#6b7280"
-LINE = "#e5e7eb"
-HEAD = "#1f2937"
-BUY_BG = "#ecfdf5"
-BAND = "#f9fafb"
+from notifications.report_layout import (
+    BAND,
+    GOOD_BG,
+    INK,
+    MUTED,
+    cell,
+    page,
+    section,
+    signed_percent,
+    table,
+)
 
 
 def _percent(value: float | None) -> str:
@@ -60,7 +60,7 @@ def _price(value: float | None) -> str:
     return "—".rjust(9) if value is None else f"{value:>9,.1f}"
 
 
-def _buy_table(items: Sequence[EmailCandidate]) -> str:
+def _buytable(items: Sequence[EmailCandidate]) -> str:
     """The decision table: what to buy, at what price, with what confidence."""
 
     header = (
@@ -76,7 +76,7 @@ def _buy_table(items: Sequence[EmailCandidate]) -> str:
     return "\n".join([header, *rows])
 
 
-def _all_table(items: Sequence[EmailCandidate]) -> str:
+def _alltable(items: Sequence[EmailCandidate]) -> str:
     """Every ticker, so a missing name is visible rather than merely absent."""
 
     header = (
@@ -122,22 +122,6 @@ def _candidate_text(rank: int, item: EmailCandidate) -> str:
     )
 
 
-def _signed(value: float | None, digits: int = 2) -> str:
-    """A percentage that carries its own colour, green up and red down."""
-
-    if value is None:
-        return f"<span style='color:{MUTED}'>—</span>"
-    tone = UP if value > 0 else DOWN if value < 0 else MUTED
-    return f"<span style='color:{tone};font-weight:600'>{value:+.{digits}%}</span>"
-
-
-def _money(value: float | None) -> str:
-    if value is None:
-        return f"<span style='color:{MUTED}'>—</span>"
-    tone = UP if value > 0 else DOWN if value < 0 else MUTED
-    return f"<span style='color:{tone};font-weight:600'>{value:+,.0f}円</span>"
-
-
 def _price_html(value: float | None, *, bold: bool = False) -> str:
     if value is None:
         return f"<span style='color:{MUTED}'>—</span>"
@@ -145,60 +129,14 @@ def _price_html(value: float | None, *, bold: bool = False) -> str:
 
 
 def _chip(signal: str) -> str:
+    """BUY is the only signal worth a colour; everything else is quiet."""
+
     if signal == "BUY":
         return (
             "<span style='background:#15803d;color:#fff;border-radius:4px;"
             "padding:2px 8px;font-size:12px;font-weight:700'>買い</span>"
         )
     return f"<span style='color:{MUTED};font-size:12px'>見送り</span>"
-
-
-def _td(
-    content: str, *, align: str = "left", muted: bool = False, nowrap: bool = True
-) -> str:
-    style = (
-        f"padding:9px 10px;border-bottom:1px solid {LINE};"
-        f"text-align:{align};{'white-space:nowrap;' if nowrap else ''}"
-        f"color:{MUTED if muted else INK};font-size:14px"
-    )
-    return f"<td style='{style}'>{content}</td>"
-
-
-def _th(name: str, align: str = "left") -> str:
-    return (
-        f"<th style='padding:9px 10px;text-align:{align};font-size:12px;"
-        f"letter-spacing:.04em;color:#fff;background:{HEAD};"
-        f"white-space:nowrap;font-weight:600'>{html.escape(name)}</th>"
-    )
-
-
-def _table(headers: Sequence[tuple[str, str]], rows: Sequence[str]) -> str:
-    """Wrapped in its own scroller so the page body never scrolls sideways."""
-
-    head = "".join(_th(name, align) for name, align in headers)
-    return (
-        "<div style='overflow-x:auto;-webkit-overflow-scrolling:touch'>"
-        "<table role='presentation' style='border-collapse:collapse;width:100%;"
-        f"min-width:520px;border:1px solid {LINE};border-radius:8px'>"
-        f"<thead><tr>{head}</tr></thead><tbody>{''.join(rows)}</tbody>"
-        "</table></div>"
-    )
-
-
-def _section(title: str, body: str = "", note: str = "") -> str:
-    tail = (
-        (
-            f"<p style='margin:8px 0 0;color:{MUTED};font-size:12.5px;"
-            f"line-height:1.75'>{note}</p>"
-        )
-        if note
-        else ""
-    )
-    return (
-        f"<h2 style='margin:28px 0 10px;font-size:16px;color:{INK};"
-        f"border-left:4px solid {HEAD};padding-left:9px'>"
-        f"{html.escape(title)}</h2>{body}{tail}"
-    )
 
 
 def _name_html(item: EmailCandidate) -> str:
@@ -210,17 +148,17 @@ def _name_html(item: EmailCandidate) -> str:
 
 def _buy_rows_html(items: Sequence[EmailCandidate]) -> str:
     rows = [
-        f"<tr style='background:{BUY_BG}'>"
-        + _td(f"<strong>{item.rank or index}</strong>", align="center")
-        + _td(_name_html(item))
-        + _td(_signed(item.predicted_return), align="right")
-        + _td(_probability(item.probability_up), align="right")
-        + _td(_price_html(item.reference_price), align="right", muted=True)
-        + _td(_price_html(item.predicted_close, bold=True), align="right")
+        f"<tr style='background:{GOOD_BG}'>"
+        + cell(f"<strong>{item.rank or index}</strong>", align="center")
+        + cell(_name_html(item))
+        + cell(signed_percent(item.predicted_return), align="right")
+        + cell(_probability(item.probability_up), align="right")
+        + cell(_price_html(item.reference_price), align="right", muted=True)
+        + cell(_price_html(item.predicted_close, bold=True), align="right")
         + "</tr>"
         for index, item in enumerate(items, 1)
     ]
-    return _table(
+    return table(
         [
             ("順位", "center"),
             ("銘柄", "left"),
@@ -236,15 +174,15 @@ def _buy_rows_html(items: Sequence[EmailCandidate]) -> str:
 def _all_rows_html(items: Sequence[EmailCandidate]) -> str:
     rows = [
         f"<tr style='background:{'#fff' if index % 2 == 0 else BAND}'>"
-        + _td(_name_html(item))
-        + _td(_chip(item.signal), align="center")
-        + _td(_signed(item.predicted_return), align="right")
-        + _td(_probability(item.probability_up), align="right", muted=True)
-        + _td(_price_html(item.reference_price), align="right", muted=True)
+        + cell(_name_html(item))
+        + cell(_chip(item.signal), align="center")
+        + cell(signed_percent(item.predicted_return), align="right")
+        + cell(_probability(item.probability_up), align="right", muted=True)
+        + cell(_price_html(item.reference_price), align="right", muted=True)
         + "</tr>"
         for index, item in enumerate(items)
     ]
-    return _table(
+    return table(
         [
             ("銘柄", "left"),
             ("判定", "center"),
@@ -260,40 +198,23 @@ def _reasons_html(items: Sequence[EmailCandidate]) -> str:
     blocks: list[str] = []
     for item in items:
         rows = [
-            f"<tr>{_td('押し上げた要因', muted=True)}"
-            f"{_td(_factor_text(item.positive_factors), nowrap=False)}</tr>",
-            f"<tr>{_td('押し下げた要因', muted=True)}"
-            f"{_td(_factor_text(item.negative_factors), nowrap=False)}</tr>",
+            f"<tr>{cell('押し上げた要因', muted=True)}"
+            f"{cell(_factor_text(item.positive_factors), nowrap=False)}</tr>",
+            f"<tr>{cell('押し下げた要因', muted=True)}"
+            f"{cell(_factor_text(item.negative_factors), nowrap=False)}</tr>",
         ]
         if item.warnings:
             rows.append(
-                f"<tr>{_td('注意', muted=True)}"
-                f"{_td(_factor_text(item.warnings), nowrap=False)}</tr>"
+                f"<tr>{cell('注意', muted=True)}"
+                f"{cell(_factor_text(item.warnings), nowrap=False)}</tr>"
             )
         blocks.append(
             f"<p style='margin:16px 0 6px;font-size:14px;color:{INK}'>"
             f"{_name_html(item)} <span style='color:{MUTED}'>予測 "
             f"{_percent(item.predicted_return)}</span></p>"
-            + _table([("区分", "left"), ("要因", "left")], rows)
+            + table([("区分", "left"), ("要因", "left")], rows)
         )
     return "".join(blocks)
-
-
-def _page(title: str, lede: str, blocks: Sequence[str], footer: str) -> str:
-    return (
-        "<!doctype html><html><head><meta charset='utf-8'>"
-        "<meta name='viewport' content='width=device-width,initial-scale=1'>"
-        f"</head><body style='margin:0;background:{BAND};padding:16px 0'>"
-        "<div style='max-width:680px;margin:0 auto;background:#fff;padding:22px;"
-        "border-radius:10px;font-family:-apple-system,BlinkMacSystemFont,"
-        '"Hiragino Sans","Yu Gothic",sans-serif;line-height:1.6\'>'
-        f"<h1 style='margin:0 0 4px;font-size:19px;color:{INK}'>{title}</h1>"
-        f"<p style='margin:0 0 4px;color:{MUTED};font-size:13px'>{lede}</p>"
-        + "".join(blocks)
-        + f"<p style='margin:26px 0 0;color:{MUTED};font-size:11.5px;"
-        f"border-top:1px solid {LINE};padding-top:12px'>{footer}</p>"
-        "</div></body></html>"
-    )
 
 
 def render_morning_email(
@@ -320,7 +241,7 @@ def render_morning_email(
             [
                 "■ 買い候補",
                 "",
-                _buy_table(selected),
+                _buytable(selected),
                 "",
                 "",
                 "■ なぜその予測になったか",
@@ -328,21 +249,21 @@ def render_morning_email(
                 _reasons_text(selected),
             ]
         )
-        html_body = _section("買い候補", _buy_rows_html(selected)) + _section(
+        html_body = section("買い候補", _buy_rows_html(selected)) + section(
             "なぜその予測になったか",
             _reasons_html(selected),
             "モデルが押し上げた要因と押し下げた要因です。",
         )
     else:
         text_body = "本日は条件を満たすBUY候補なし"
-        html_body = _section(
+        html_body = section(
             "買い候補",
             "<p style='margin:0;padding:14px;background:#f9fafb;border-radius:8px'>"
             "<strong>本日は条件を満たすBUY候補はありません。</strong></p>",
         )
     if everything:
-        text_body += "\n\n\n■ 全銘柄\n\n" + _all_table(everything)
-        html_body += _section(
+        text_body += "\n\n\n■ 全銘柄\n\n" + _alltable(everything)
+        html_body += section(
             "全銘柄",
             _all_rows_html(everything),
             "買わなかった銘柄も載せています。欠けている銘柄は予測自体がありません。",
@@ -367,7 +288,7 @@ def render_morning_email(
         )
         or "<li>なし</li>"
     )
-    html_text = _page(
+    html_text = page(
         f"日本株AI予測　{date_text}",
         f"寄り付きに買い、大引けに売る前提　|　買い候補 {len(selected)}銘柄 / "
         f"全{len(everything)}銘柄　|　取得状態 "
@@ -375,7 +296,7 @@ def render_morning_email(
         f"{html.escape(payload.model_version)}",
         [
             html_body,
-            _section(
+            section(
                 "警告",
                 f"<ul style='margin:0;padding-left:20px;color:{INK};"
                 f"font-size:13.5px'>{warnings_html}</ul>",

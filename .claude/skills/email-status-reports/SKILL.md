@@ -73,6 +73,18 @@ three kinds of mail: the prediction, the result, and the progress report.
 **Read it before composing any mail, and do not deviate from it.** The rules
 below are the reasoning behind that document; the document is the spec.
 
+Do not hand-roll the HTML. `notifications/report_layout.py` holds the tables,
+the badges, and the signed-and-coloured number, and every mail is built from
+it. A progress report is sent by writing its rows as JSON and running:
+
+```bash
+python -m scripts.send_status_report report.json     # --dry-run to preview
+```
+
+This is the point of the module: readability stops depending on who wrote the
+mail. A one-off script that formats its own body will drift back into prose
+within a session — that is exactly how the mails became unreadable before.
+
 ### Put numbers in a table, never in a paragraph
 
 The operator asked for this directly, twice. Any comparison, any set of

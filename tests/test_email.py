@@ -601,3 +601,55 @@ def test_close_workflow_policy_executes_early_retry_and_final_failure(
     assert "NO_PREDICTION_SET" in missing.stdout
     assert successful.returncode == 0
     assert "Close update status: SUCCESS" in successful.stdout
+
+
+def test_status_report_renders_tables_and_badges_from_a_description() -> None:
+    """Progress mails go through the same layout as the prediction mail."""
+
+    from scripts.send_status_report import plain_text, render_status_report
+
+    report = {
+        "title": "進捗報告",
+        "lede": "工程 2/4 実行中",
+        "sections": [
+            {
+                "title": "いま進めているタスク",
+                "headers": [["工程", "center"], ["内容", "left"]],
+                "rows": [
+                    [
+                        {"text": "2/4", "align": "center"},
+                        {"text": "本番でのフル実行"},
+                        {"badge": "実行中", "tone": "now"},
+                    ]
+                ],
+                "note": "経過22分。想定を超えています。",
+            }
+        ],
+        "footer": "操作は不要です。",
+    }
+
+    html_body = render_status_report(report)
+
+    assert "<table" in html_body
+    assert "本番でのフル実行" in html_body
+    assert "実行中" in html_body
+    assert "経過22分" in html_body
+    # The tables must be able to scroll on their own, never the page body.
+    assert "overflow-x:auto" in html_body
+
+    text_body = plain_text(report)
+    assert "■ いま進めているタスク" in text_body
+    assert "2/4 / 本番でのフル実行 / 実行中" in text_body
+
+
+def test_status_report_survives_a_section_with_no_rows() -> None:
+    """An empty section must render its title, not raise."""
+
+    from scripts.send_status_report import render_status_report
+
+    html_body = render_status_report(
+        {"title": "t", "sections": [{"title": "残タスク", "note": "なし"}]}
+    )
+
+    assert "残タスク" in html_body
+    assert "なし" in html_body
