@@ -1,13 +1,17 @@
 """Recovery of audit rows left in-progress by an external timeout."""
 
 from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, func, select
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
-from database.models import Base
+from data.availability import prediction_cutoff
+from database.models import Base, FeatureValue, PredictionSet
 from database.repository import MarketDataRepository, PredictionPipelineRepository
 from services.recovery import reconcile_stale_runs
+from services.retention import prune_feature_history
 
 
 def test_reconcile_stale_runs_fails_old_rows_and_preserves_active_work() -> None:
@@ -153,3 +157,90 @@ def test_reconcile_stale_runs_fails_old_rows_and_preserves_active_work() -> None
         )
         assert session.get(type(active_run), active_run.run_id).status == "RUNNING"
         assert session.get(type(active_step), active_step.step_id).status == "RUNNING"
+
+
+def _prune_factory() -> sessionmaker[Session]:
+    engine = create_engine("sqlite+pysqlite:///:memory:", poolclass=StaticPool)
+    Base.metadata.create_all(engine)
+    return sessionmaker(engine, expire_on_commit=False)
+
+
+def _seed_day(factory: sessionmaker[Session], day: date, index: int) -> None:
+    with factory() as session:
+        market = MarketDataRepository(session)
+        repository = PredictionPipelineRepository(session)
+        run = market.create_run(
+            run_type="MORNING",
+            prediction_date=day,
+            cutoff_at=prediction_cutoff(day),
+            data_version="prune-test",
+        )
+        feature_set = repository.create_feature_set(
+            run_id=run.run_id,
+            ticker="9101",
+            prediction_date=day,
+            cutoff_at=prediction_cutoff(day),
+            feature_version="v1",
+            set_kind="MORNING",
+            training_start=day - timedelta(days=10),
+            training_end=day - timedelta(days=1),
+            config_hash="c" * 64,
+            required_feature_count=1,
+            idempotency_key=f"feature/prune/{index}",
+        )
+        sample_day = day - timedelta(days=1)
+        repository.add_feature_value(
+            feature_set_id=feature_set.feature_set_id,
+            sample_date=sample_day,
+            sample_cutoff_at=prediction_cutoff(sample_day),
+            row_role="TRAIN",
+            value_kind="FEATURE",
+            feature_name="factor",
+            value=Decimal("1"),
+            is_missing=False,
+            data_quality="FREE_UNVERIFIED",
+        )
+        repository.create_prediction_set(
+            run_id=run.run_id,
+            prediction_date=day,
+            cutoff_at=prediction_cutoff(day),
+            feature_version="v1",
+            model_version="m1",
+            strategy_version="s1",
+            training_start=day - timedelta(days=10),
+            training_end=day - timedelta(days=1),
+            idempotency_key=f"set/prune/{index}",
+        )
+        session.commit()
+
+
+def test_prune_keeps_the_newest_dates_and_drops_the_rest() -> None:
+    """Feature history is bounded; the track record is not touched."""
+
+    factory = _prune_factory()
+    for index, day in enumerate(
+        [date(2026, 8, 6), date(2026, 8, 7), date(2026, 8, 10)]
+    ):
+        _seed_day(factory, day, index)
+
+    report = prune_feature_history(factory, keep_dates=2)
+
+    assert report.pruned_dates == (date(2026, 8, 6),)
+    assert report.kept_dates == (date(2026, 8, 10), date(2026, 8, 7))
+    assert report.feature_values == 1
+    with factory() as session:
+        remaining = sorted(session.scalars(select(FeatureValue.sample_date)))
+        assert remaining == [date(2026, 8, 6), date(2026, 8, 9)]
+        assert session.scalar(select(func.count()).select_from(PredictionSet)) == 3
+
+
+def test_prune_does_nothing_when_history_is_short() -> None:
+    """A young database must not lose the only day it has."""
+
+    factory = _prune_factory()
+    _seed_day(factory, date(2026, 8, 10), 0)
+
+    report = prune_feature_history(factory, keep_dates=2)
+
+    assert report.pruned is False
+    assert report.feature_values == 0

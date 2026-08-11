@@ -23,6 +23,7 @@ from services.persistence import (
 )
 from services.prediction import PredictionComputation, PredictionService
 from services.recovery import reconcile_stale_runs
+from services.retention import prune_feature_history
 from services.versioning import config_hash
 
 # Marks a prediction whose named session never opens. Consumers key off this
@@ -123,13 +124,26 @@ class MorningPipeline:
             if recovery.recovered
             else None
         )
+        # Free the pages this run is about to need. The hosted project stops
+        # writes at 512 MB and one morning writes about 133 MB, so pruning
+        # before the write is what keeps the fourth morning from dying
+        # mid-transaction the way the first three did.
+        prune = prune_feature_history(self._factory)
+        prune_warning = (
+            f"pruned {prune.feature_values} feature values from "
+            f"{len(prune.pruned_dates)} earlier dates"
+            if prune.pruned
+            else None
+        )
         # A forced run names a session that never opens, so no actual can ever
         # settle against it. The warning rides on the prediction set itself so
         # the evaluation, the email, and the dashboard all read the same fact
         # rather than each re-deriving it from a calendar.
         holiday_warning = NON_TRADING_DAY_WARNING if not is_business_day else None
         preamble = tuple(
-            warning for warning in (holiday_warning, recovery_warning) if warning
+            warning
+            for warning in (holiday_warning, recovery_warning, prune_warning)
+            if warning
         )
         existing = self._existing(prediction_date)
         if existing is not None:
