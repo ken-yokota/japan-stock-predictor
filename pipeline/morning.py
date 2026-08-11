@@ -33,6 +33,15 @@ NON_TRADING_DAY_WARNING = (
     "JPX休場日のため参考予測です。この日は取引が成立せず、実績は発生しません。"
 )
 
+# Marks a set rebuilt after the fact. The look-ahead guard still held -- only
+# data available in the market by the cutoff was used -- but the evidence that
+# this system had fetched it by then does not exist, so the day is a backtest
+# and must never be counted as a live result.
+BACKFILL_WARNING = (
+    "過去日を後から再現した参考予測です。"
+    "取得時刻が推定のため、ライブ実績とは区別されます。"
+)
+
 
 @dataclass(frozen=True, slots=True)
 class MorningPipelineResult:
@@ -111,6 +120,7 @@ class MorningPipeline:
         perform_ingestion: bool = True,
         history_days: int = 550,
         allow_non_business_day: bool = False,
+        backfill: bool = False,
     ) -> MorningPipelineResult:
         if history_days < 250:
             raise ValueError("history_days must be at least 250")
@@ -140,9 +150,18 @@ class MorningPipeline:
         # the evaluation, the email, and the dashboard all read the same fact
         # rather than each re-deriving it from a calendar.
         holiday_warning = NON_TRADING_DAY_WARNING if not is_business_day else None
+        # A replay reconstructs what that day's data supports; it cannot show
+        # the system held the data at the time. The warning rides on the set
+        # so the dashboard, the mail and the evaluation all read one fact.
+        backfill_warning = BACKFILL_WARNING if backfill else None
         preamble = tuple(
             warning
-            for warning in (holiday_warning, recovery_warning, prune_warning)
+            for warning in (
+                holiday_warning,
+                backfill_warning,
+                recovery_warning,
+                prune_warning,
+            )
             if warning
         )
         existing = self._existing(prediction_date)
@@ -225,7 +244,7 @@ class MorningPipeline:
             for ticker in tickers:
                 try:
                     computations[ticker] = prediction_service.compute(
-                        ticker, prediction_date
+                        ticker, prediction_date, operational=not backfill
                     )
                 except Exception as exc:
                     failures[ticker] = _safe_error(exc)

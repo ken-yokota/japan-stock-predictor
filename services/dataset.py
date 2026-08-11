@@ -482,8 +482,22 @@ class PointInTimeDatasetBuilder:
         *,
         training_sessions: int = 120,
         minimum_feature_coverage: float = 0.80,
+        operational: bool = True,
     ) -> ModelDataset:
-        """Build the newest rolling window and current operational feature row."""
+        """Build the newest rolling window and current scored feature row.
+
+        ``operational`` selects which of the two point-in-time guards applies to
+        the scored row. Both always require that a value was *available in the
+        market* by the cutoff -- that is the look-ahead guard and it is never
+        relaxed. Only the operational form additionally requires that this
+        system had *actually fetched* the value by then, which is proof the
+        prediction could have been made live.
+
+        A replay of a past session cannot satisfy that second guard, because
+        the rows were fetched afterwards. Passing ``False`` reconstructs the
+        prediction that day's data supports, which is a backtest rather than a
+        live record, and callers must label it as one.
+        """
 
         if not 0.0 < minimum_feature_coverage <= 1.0:
             raise ValueError("minimum_feature_coverage must be in (0, 1]")
@@ -510,7 +524,7 @@ class PointInTimeDatasetBuilder:
             stock_rows=stock_rows,
             market_rows=market_rows,
             indicator_ids=indicators,
-            operational=True,
+            operational=operational,
             target_cutoff_at=main_cutoff,
         )
         candidates = sorted({name for item in usable for name in item.values})

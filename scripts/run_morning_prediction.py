@@ -34,6 +34,15 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--history-days", type=int, default=550)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
+        "--backfill",
+        action="store_true",
+        help=(
+            "Replay a past session. Only data available in the market by that "
+            "day's cutoff is used, but the set is labelled a backtest because "
+            "the evidence this system held it at the time does not exist."
+        ),
+    )
+    parser.add_argument(
         "--force-non-business-day",
         action="store_true",
         help=(
@@ -67,6 +76,7 @@ def main() -> int:
             perform_ingestion=not args.skip_ingestion,
             history_days=args.history_days,
             allow_non_business_day=args.force_non_business_day,
+            backfill=args.backfill,
         )
         print(json.dumps(asdict(result), ensure_ascii=False, default=str))
         return _exit_code(result)

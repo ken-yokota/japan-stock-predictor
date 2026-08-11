@@ -45,6 +45,7 @@ from database.repository import MarketDataRepository, PredictionPipelineReposito
 from notifications.contracts import EmailDelivery, RenderedEmail
 from pipeline.close import ClosePipeline
 from pipeline.morning import (
+    BACKFILL_WARNING,
     NON_TRADING_DAY_WARNING,
     MorningPipeline,
     MorningPipelineResult,
@@ -859,3 +860,53 @@ def test_only_the_scored_row_keeps_lineage_rows(
         # training input remains detectable.
         assert feature_set.input_manifest_hash is not None
         assert feature_set.status == "READY"
+
+
+def test_backfill_relaxes_only_the_observation_guard_and_says_so(
+    sqlite_factory: sessionmaker[Session], app_config: AppConfig
+) -> None:
+    """A replay must be labelled, and must keep the look-ahead guard intact."""
+
+    from services.dataset import SourceReference
+
+    cutoff = prediction_cutoff(PREDICTION_DATE)
+    after_cutoff = cutoff + timedelta(hours=6)
+    reference = SourceReference(
+        table_name="market_data",
+        row_id=1,
+        canonical_symbol="sp500",
+        market_date=PREDICTION_DATE - timedelta(days=1),
+        # Available in the market before the cutoff, but fetched afterwards --
+        # exactly the shape every backfilled row has.
+        available_at=cutoff - timedelta(hours=1),
+        first_observed_at=after_cutoff,
+        retrieved_at=after_cutoff,
+        raw_hash="a" * 64,
+        data_quality="FREE_UNVERIFIED",
+    )
+
+    with pytest.raises(ValueError, match="observed after cutoff"):
+        reference.assert_visible(cutoff, operational=True)
+    reference.assert_visible(cutoff, operational=False)
+
+    # A value that only became available after the cutoff stays rejected in
+    # both modes: that guard is look-ahead and is never relaxed.
+    future = SourceReference(
+        table_name="market_data",
+        row_id=2,
+        canonical_symbol="sp500",
+        market_date=PREDICTION_DATE,
+        available_at=after_cutoff,
+        first_observed_at=after_cutoff,
+        retrieved_at=after_cutoff,
+        raw_hash="b" * 64,
+        data_quality="FREE_UNVERIFIED",
+    )
+    for operational in (True, False):
+        with pytest.raises(ValueError, match="available after cutoff"):
+            future.assert_visible(cutoff, operational=operational)
+
+    result = MorningPipeline(sqlite_factory, app_config, _environment()).run(
+        PREDICTION_DATE, perform_ingestion=False, backfill=True
+    )
+    assert BACKFILL_WARNING in result.warnings

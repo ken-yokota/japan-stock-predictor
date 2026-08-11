@@ -165,6 +165,7 @@ class PredictionService:
         prediction_date: date,
         *,
         readability_score: float = 0.0,
+        operational: bool = True,
     ) -> PredictionComputation:
         """Compute one result while retaining reproducibility artifacts."""
 
@@ -176,6 +177,7 @@ class PredictionService:
             prediction_date,
             training_sessions=self._config.model.training.window_jpx_sessions,
             minimum_feature_coverage=1.0 - missing_limit,
+            operational=operational,
         )
         minimum_rows = self._config.model.training.minimum_complete_rows
         if len(dataset.training_frame) < minimum_rows:
