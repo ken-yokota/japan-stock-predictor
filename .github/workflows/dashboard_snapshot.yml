@@ -7,6 +7,16 @@ on:
     - cron: "40 23 * * 0-4"
     - cron: "20 7 * * 1-5"
     - cron: "10 8 * * 1-5"
+  # The clock is a floor, not the trigger. Chaining to the runs that actually
+  # change the database is what keeps the published state from describing a
+  # morning that had not landed yet when the cron fired.
+  workflow_run:
+    workflows:
+      - Morning prediction
+      - Morning email
+      - Close update
+      - Daily summary
+    types: [completed]
   workflow_dispatch:
 
 # The snapshot is force-pushed to its own branch, so it needs write access.

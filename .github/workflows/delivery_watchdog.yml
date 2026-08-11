@@ -1,0 +1,87 @@
+name: Delivery watchdog
+
+# The standing requirement is that the morning and the evening update are never
+# silently skipped. Each part already runs on its own schedule, which is the
+# problem: a workflow that fails is a red square nobody is watching. This
+# asserts the outcome after each window and mails an alert when one is missing.
+on:
+  schedule:
+    # 09:10 JST - after the last morning email attempt (08:55) and the 08:40
+    # snapshot, with margin for a late prediction.
+    - cron: "10 0 * * 1-5"
+    # 17:40 JST - after the daily summary (17:00) and its snapshot (17:10).
+    - cron: "40 8 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      window:
+        description: "Which window to verify"
+        required: false
+        default: "morning"
+        type: choice
+        options: [morning, evening]
+      for_date:
+        description: "Date to verify (YYYY-MM-DD); blank uses today in JST"
+        required: false
+        type: string
+      dry_run:
+        description: "Judge without sending the alert"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: delivery-watchdog
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.event_name == 'workflow_dispatch' || vars.AUTOMATION_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      EMAIL_PROVIDER: gmail_smtp
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: "587"
+      SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      EMAIL_TO: ${{ secrets.EMAIL_TO }}
+      APP_URL: ${{ secrets.APP_URL }}
+      TIMEZONE: Asia/Tokyo
+      FOR_DATE: ${{ inputs.for_date }}
+      DRY_RUN: ${{ inputs.dry_run || false }}
+      # The 09:10 cron verifies the morning; anything else verifies the evening
+      # unless a dispatch says otherwise.
+      WINDOW: >-
+        ${{ inputs.window
+            || (github.event.schedule == '10 0 * * 1-5' && 'morning')
+            || 'evening' }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install application
+        run: python -m pip install -e .
+
+      - name: Verify the window's mail and dashboard
+        shell: bash
+        run: |
+          set -eo pipefail
+          args=(--window "$WINDOW")
+          if [[ -n "$FOR_DATE" ]]; then
+            args+=(--for-date "$FOR_DATE")
+          fi
+          if [[ "$DRY_RUN" == "true" ]]; then
+            args+=(--dry-run)
+          fi
+          python -m scripts.verify_daily_delivery "${args[@]}"
