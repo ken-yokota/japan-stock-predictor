@@ -38,7 +38,10 @@ concurrency:
 
 jobs:
   verify:
-    if: github.event_name == 'workflow_dispatch' || vars.AUTOMATION_ENABLED == 'true'
+    # Deliberately NOT gated on AUTOMATION_ENABLED. A watchdog that switches
+    # off together with the thing it watches is not a watchdog: the flag going
+    # false would silence every workflow *and* the alarm. It is passed in as a
+    # value to be checked instead.
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -52,6 +55,7 @@ jobs:
       EMAIL_TO: ${{ secrets.EMAIL_TO }}
       APP_URL: ${{ secrets.APP_URL }}
       TIMEZONE: Asia/Tokyo
+      AUTOMATION_ENABLED: ${{ vars.AUTOMATION_ENABLED }}
       FOR_DATE: ${{ inputs.for_date }}
       DRY_RUN: ${{ inputs.dry_run || false }}
       # The 09:10 cron verifies the morning; anything else verifies the evening
