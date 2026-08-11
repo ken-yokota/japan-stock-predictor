@@ -730,3 +730,43 @@ def test_progress_report_plain_text_carries_the_same_facts() -> None:
     assert "3/5的中" in body
     assert "+14,042円" in body
     assert "381 MB" in body
+
+
+def test_todo_hook_mirrors_the_session_todo_list() -> None:
+    """The task table follows the todo list without anyone maintaining it."""
+
+    from scripts.todo_to_progress_tasks import convert
+
+    payload = convert(
+        [
+            {"content": "8/3を再現", "status": "in_progress"},
+            {"content": "結果を送信", "status": "pending"},
+            {"content": "案Eの実装", "status": "completed"},
+        ]
+    )
+
+    steps = [task["step"] for task in payload["tasks"]]
+    states = [task["state"] for task in payload["tasks"]]
+    tones = [task["tone"] for task in payload["tasks"]]
+    assert steps == ["1/3", "2/3", "3/3"]
+    assert states == ["実行中", "未着手", "完了"]
+    assert tones == ["now", "wait", "done"]
+
+
+def test_todo_hook_writes_nothing_on_malformed_input(tmp_path: Path) -> None:
+    """A reporting convenience must never interrupt the work it reports on."""
+
+    import subprocess
+    import sys
+
+    target = tmp_path / "tasks.json"
+    result = subprocess.run(
+        [sys.executable, "-m", "scripts.todo_to_progress_tasks", str(target)],
+        input="not json",
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parent.parent,
+    )
+
+    assert result.returncode == 0
+    assert not target.exists()

@@ -71,6 +71,34 @@ Every mail carries the same shape, and **the subject line carries the count**:
 operator reads the subject on a phone and must know how far along their request
 is without opening anything. `【進捗 3/5】` does that; `【進捗】` does not.
 
+### Read the current state, then send — never send from memory
+
+**Every progress mail is assembled at the moment it is sent, from what is
+true then.** Not from a note written earlier in the session, not from what you
+remember doing, not from a fragment you updated an hour ago. The operator
+asked for this repeatedly because the mails kept describing work that had
+already moved on.
+
+`scripts/send_progress_report.py` is how this is guaranteed. It re-reads, on
+every single send:
+
+| 節 | 読み直す先 |
+|---|---|
+| 本番の最新状態 | 本番DB（予測日・状態・買い候補・直近の確定実績・容量） |
+| 直近の自動実行 | GitHub Actions |
+| コードの状態 | git status と git log |
+| 今後の予定 | JPXカレンダーとworkflowのcron |
+| いま進めているタスク | `.progress-tasks.json` |
+
+That last file is written automatically by a PostToolUse hook on TodoWrite
+(`scripts/todo_to_progress_tasks.py`), so the task table matches whatever the
+session is actually tracking without anyone maintaining it. It still carries
+its own age in the mail: past `--stale-after` minutes the report says the note
+is old rather than presenting it as current.
+
+**Do not hand-write a progress mail.** If a number in a mail did not come from
+one of the sources above at send time, it is a number you are guessing at.
+
 ### A new request is itself a mail
 
 **Whenever the operator adds a task, mail them the updated picture before

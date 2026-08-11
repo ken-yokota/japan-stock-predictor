@@ -17,3 +17,6 @@ build/
 *.db
 logs/
 artifacts/
+
+# Written by the TodoWrite hook for the periodic progress mail.
+.progress-tasks.json
