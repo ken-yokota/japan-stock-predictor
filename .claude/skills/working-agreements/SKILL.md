@@ -71,6 +71,31 @@ Every mail carries the same shape, and **the subject line carries the count**:
 operator reads the subject on a phone and must know how far along their request
 is without opening anything. `【進捗 3/5】` does that; `【進捗】` does not.
 
+### A new request is itself a mail
+
+**Whenever the operator adds a task, mail them the updated picture before
+starting it**: what is in progress now, what the new task changed about the
+plan, and everything still remaining with its estimate.
+
+The operator adds work mid-flight constantly, and without this they cannot
+tell whether the new request landed, where it sits in the queue, or what it
+pushed back. Answering only in chat does not count — the whole point of the
+mail is that they are not watching the screen.
+
+The mail carries the same three tables as the periodic report:
+
+| 節 | 中身 |
+|---|---|
+| いま進めているタスク | 工程・内容・想定・経過 |
+| 新しく追加されたタスク | 何を頼まれたか、どこに入れたか、想定 |
+| 残タスク | 全部。優先度と想定つき |
+
+Say plainly what the new task displaced. `6/8 だった並列化は 7/9 に後ろ倒し`
+is the sentence that matters; a reordered list without it hides the cost.
+
+Send it through `scripts/send_progress_report.py`, which builds these tables
+from live state, so the numbers in it cannot be stale.
+
 ### One step, one mail — never batch several steps into one
 
 The operator has asked for this directly. **Send a mail as each numbered step

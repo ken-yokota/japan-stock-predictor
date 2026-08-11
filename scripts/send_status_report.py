@@ -69,9 +69,7 @@ def _section(spec: dict[str, Any]) -> str:
     ]
     body = ""
     if rows:
-        headers = [
-            (str(name), str(align)) for name, align in spec.get("headers", [])
-        ]
+        headers = [(str(name), str(align)) for name, align in spec.get("headers", [])]
         body = table(headers, rows, min_width=int(spec.get("min_width", 460)))
     return section(str(spec.get("title", "")), body, str(spec.get("note", "")))
 
@@ -108,22 +106,13 @@ def plain_text(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("report", type=Path, help="JSON description of the report")
-    parser.add_argument("--dry-run", action="store_true")
-    return parser
+def send_rendered(subject: str, text_body: str, html_body: str) -> str:
+    """Deliver an already-rendered report and return the provider name.
 
-
-def main() -> int:
-    args = _parser().parse_args()
-    report = json.loads(args.report.read_text(encoding="utf-8"))
-    subject = str(report.get("subject") or report.get("title") or "進捗報告")
-    html_body = render_status_report(report)
-    text_body = plain_text(report)
-    if args.dry_run:
-        print(json.dumps({"status": "DRY_RUN", "subject": subject}, ensure_ascii=False))
-        return 0
+    Shared so every report -- described as JSON here, or assembled from live
+    state by send_progress_report -- leaves through one path with one set of
+    credential checks.
+    """
 
     environment = EnvironmentSettings()
     sender_address, recipient = environment.require_email_addresses()
@@ -147,9 +136,30 @@ def main() -> int:
             idempotency_key=f"status/{stamp}/{digest}",
         )
     )
+    return delivery.provider
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("report", type=Path, help="JSON description of the report")
+    parser.add_argument("--dry-run", action="store_true")
+    return parser
+
+
+def main() -> int:
+    args = _parser().parse_args()
+    report = json.loads(args.report.read_text(encoding="utf-8"))
+    subject = str(report.get("subject") or report.get("title") or "進捗報告")
+    html_body = render_status_report(report)
+    text_body = plain_text(report)
+    if args.dry_run:
+        print(json.dumps({"status": "DRY_RUN", "subject": subject}, ensure_ascii=False))
+        return 0
+
+    provider = send_rendered(subject, text_body, html_body)
     print(
         json.dumps(
-            {"status": "SENT", "provider": delivery.provider, "subject": subject},
+            {"status": "SENT", "provider": provider, "subject": subject},
             ensure_ascii=False,
         )
     )

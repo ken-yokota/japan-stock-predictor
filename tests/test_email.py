@@ -653,3 +653,80 @@ def test_status_report_survives_a_section_with_no_rows() -> None:
 
     assert "残タスク" in html_body
     assert "なし" in html_body
+
+
+def _snapshot(**overrides: object):
+    from scripts.send_progress_report import Snapshot
+
+    return Snapshot(**overrides)  # type: ignore[arg-type]
+
+
+def test_progress_report_states_what_it_could_not_read() -> None:
+    """A failed read is named, never rendered as a dash that looks like zero."""
+
+    from scripts.send_progress_report import build_report, render
+
+    report = build_report(
+        _snapshot(errors=("データベース参照に失敗: OperationalError",)), None, 30
+    )
+
+    html_body = render(report)
+    assert "この報告で取得できなかったもの" in html_body
+    assert "OperationalError" in html_body
+    assert "本番状態を取得できませんでした" in report["lede"]
+
+
+def test_progress_report_flags_a_stale_task_note(tmp_path: Path) -> None:
+    """An old note must be labelled old, not presented as the current work."""
+
+    import os
+    import time
+
+    from scripts.send_progress_report import build_report, render
+
+    note = tmp_path / "tasks.json"
+    note.write_text(
+        json.dumps({"tasks": [{"step": "1/2", "title": "古い作業"}]}),
+        encoding="utf-8",
+    )
+    old = time.time() - 3600
+    os.utime(note, (old, old))
+
+    fresh = render(build_report(_snapshot(), note, 300))
+    stale = render(build_report(_snapshot(), note, 30))
+
+    assert "古い作業" in fresh
+    assert "更新されていません" not in fresh
+    assert "更新されていません" in stale
+
+
+def test_progress_report_lists_what_happens_next() -> None:
+    """The mail answers "今後" without the operator opening the app."""
+
+    from scripts.send_progress_report import build_report, render
+
+    html_body = render(build_report(_snapshot(), None, 30))
+
+    assert "今後の予定" in html_body
+    assert any(clock in html_body for clock in ("07:15", "08:20", "08:45", "16:10"))
+
+
+def test_progress_report_plain_text_carries_the_same_facts() -> None:
+    """No client is left with an empty body, and the numbers still appear."""
+
+    from scripts.send_progress_report import build_report, plain_text
+
+    snapshot = _snapshot(
+        prediction_date="2026-08-11",
+        prediction_status="READY",
+        buys=3,
+        settled=("2026-08-10", 5, 3, 14042.5),
+        database_size="381 MB",
+    )
+
+    body = plain_text(snapshot, build_report(snapshot, None, 30))
+
+    assert "2026-08-11" in body
+    assert "3/5的中" in body
+    assert "+14,042円" in body
+    assert "381 MB" in body
