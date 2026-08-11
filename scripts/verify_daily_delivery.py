@@ -128,8 +128,8 @@ def _email_detail(email: dict[str, object] | None) -> str:
 
 def _snapshot(url: str, timeout: int = 20) -> dict[str, object] | None:
     try:
-        request = urllib.request.Request(url)  # noqa: S310
-        with urllib.request.urlopen(request, timeout=timeout) as reply:  # noqa: S310
+        request = urllib.request.Request(url)
+        with urllib.request.urlopen(request, timeout=timeout) as reply:
             if reply.status != 200:
                 return None
             return json.loads(reply.read().decode("utf-8"))
