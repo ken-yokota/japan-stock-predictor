@@ -6,7 +6,7 @@ notices when everything else stops quietly.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime
 
 import pytest
 
