@@ -1,0 +1,60 @@
+name: Progress report
+
+# The operator is usually away from the machine, and the working agreement is
+# that progress is mailed rather than left in a terminal. The local machine
+# cannot send it - the credentials live here as secrets - so this is the send
+# path for any work in flight.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Render and log without sending"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: progress-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      EMAIL_PROVIDER: gmail_smtp
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: "587"
+      SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      EMAIL_TO: ${{ secrets.EMAIL_TO }}
+      APP_URL: ${{ secrets.APP_URL }}
+      TIMEZONE: Asia/Tokyo
+      DRY_RUN: ${{ inputs.dry_run || false }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install application
+        run: python -m pip install -e .
+
+      - name: Send the progress report
+        shell: bash
+        run: |
+          set -eo pipefail
+          args=()
+          if [[ "$DRY_RUN" == "true" ]]; then
+            args+=(--dry-run)
+          fi
+          python -m scripts.send_progress_report "${args[@]}"
