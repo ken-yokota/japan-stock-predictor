@@ -102,6 +102,38 @@ def cached_day_scoreboard(
 
 
 @st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+def cached_latest_settled_day(
+    _service: DashboardQueryService,
+) -> tuple[str, int, int, float] | None:
+    """Return (date, buys, correct buys, net yen) for the newest settled day."""
+
+    history = _service.published_prediction_history(None)
+    if not history.ready:
+        return None
+    settled = [
+        row for row in history.rows if row.get("actual_intraday_return") is not None
+    ]
+    if not settled:
+        return None
+    day = max(str(row["prediction_date"]) for row in settled)
+    buys = [
+        row
+        for row in settled
+        if str(row["prediction_date"]) == day and row.get("signal") == "BUY"
+    ]
+    if not buys:
+        return None
+    correct = sum(
+        1
+        for row in buys
+        if (float(row["predicted_intraday_return"]) > 0)
+        == (float(row["actual_intraday_return"]) > 0)
+    )
+    profit = sum(float(row.get("net_profit_jpy") or 0) for row in buys)
+    return day, len(buys), correct, profit
+
+
+@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_today_predictions(_service: DashboardQueryService) -> QueryResult:
     return _service.today_predictions()
 
@@ -250,6 +282,27 @@ def render_latest_day_banner() -> None:
         )
     for warning in warnings:
         st.warning(warning)
+    _render_settled_day(service, str(prediction_date))
+
+
+def _render_settled_day(service: DashboardQueryService, newest: str) -> None:
+    """Show the newest day whose actuals exist, when that is not the newest set.
+
+    A holiday publishes a reference prediction that can never settle, so the
+    banner above would otherwise show 未確定 with no way to see the last day
+    that did settle. This keeps the most recent real result one glance away.
+    """
+
+    settled = cached_latest_settled_day(service)
+    if settled is None:
+        return
+    day, buys, hits, profit = settled
+    if day == newest:
+        return
+    st.caption(
+        f"直近で実績が確定した日: **{day}**　買い{buys}銘柄　"
+        f"方向的中 {hits}/{buys}　仮の損益 {profit:+,.0f}円"
+    )
 
 
 def render_header(title: str, description: str) -> None:

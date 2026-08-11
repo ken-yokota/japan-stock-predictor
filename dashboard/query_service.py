@@ -181,7 +181,10 @@ class DashboardQueryService:
                     finished_at, status, current_step, data_version,
                     model_version, failed_symbols
                 FROM daily_runs
-                ORDER BY prediction_date DESC, started_at DESC
+                ORDER BY
+                    CASE WHEN status = 'SKIPPED' THEN 1 ELSE 0 END,
+                    prediction_date DESC,
+                    started_at DESC
                 LIMIT 1
             """,
         )
@@ -704,8 +707,8 @@ class DashboardQueryService:
                     freshness_status, cutoff_at, coverage, selected_at
                 FROM provider_selections
                 WHERE run_id = (
-                    SELECT run_id FROM daily_runs
-                    ORDER BY prediction_date DESC, started_at DESC
+                    SELECT run_id FROM provider_selections
+                    ORDER BY selected_at DESC
                     LIMIT 1
                 )
                 ORDER BY canonical_symbol, interval
@@ -738,8 +741,8 @@ class DashboardQueryService:
                     inserted_rows, reused_rows
                 FROM ingestion_batches
                 WHERE run_id = (
-                    SELECT run_id FROM daily_runs
-                    ORDER BY prediction_date DESC, started_at DESC
+                    SELECT run_id FROM ingestion_batches
+                    ORDER BY started_at DESC
                     LIMIT 1
                 )
                 ORDER BY started_at
@@ -767,7 +770,14 @@ class DashboardQueryService:
                 FROM run_steps
                 WHERE run_id = (
                     SELECT run_id FROM daily_runs
-                    ORDER BY prediction_date DESC, started_at DESC
+                    -- A holiday leaves a SKIPPED run as the newest row, and it
+                    -- owns no steps, batches or selections. Keying off it made
+                    -- every status panel read "no data" on the very morning a
+                    -- prediction had just been published.
+                    ORDER BY
+                        CASE WHEN status = 'SKIPPED' THEN 1 ELSE 0 END,
+                        prediction_date DESC,
+                        started_at DESC
                     LIMIT 1
                 )
                 ORDER BY started_at, attempt_number
