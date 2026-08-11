@@ -3,6 +3,7 @@
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
+import pytest
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -271,3 +272,45 @@ def test_prune_evicts_by_generation_order_not_by_session_date() -> None:
         remaining = sorted(session.scalars(select(FeatureValue.sample_date)))
         assert date(2026, 8, 2) in remaining
         assert session.scalar(select(func.count()).select_from(PredictionSet)) == 3
+
+
+def _postgres_factory() -> sessionmaker[Session] | None:
+    """A real PostgreSQL session factory, or None when one is not reachable."""
+
+    import os
+
+    url = os.environ.get("TEST_POSTGRES_URL") or (
+        "postgresql+psycopg://yokotaken@localhost:5432/jsp_retention_test"
+    )
+    try:
+        engine = create_engine(url)
+        with engine.connect():
+            pass
+    except Exception:
+        return None
+    Base.metadata.drop_all(engine)
+    Base.metadata.create_all(engine)
+    return sessionmaker(engine, expire_on_commit=False)
+
+
+def test_prune_query_is_valid_on_postgresql() -> None:
+    """The retention query must be exercised on the engine production uses.
+
+    SQLite accepts SELECT DISTINCT beside an ORDER BY on an aggregate that is
+    not in the select list; PostgreSQL rejects it. That difference shipped a
+    broken prune once, with every SQLite test green, and it only surfaced when
+    five replays died ten seconds in.
+    """
+
+    factory = _postgres_factory()
+    if factory is None:
+        pytest.skip("no local PostgreSQL available")
+
+    for index, day in enumerate([date(2026, 8, 11), date(2026, 8, 10)]):
+        _seed_day(factory, day, index)
+    _seed_day(factory, date(2026, 8, 3), 2)
+
+    report = prune_feature_history(factory, keep_dates=2)
+
+    assert date(2026, 8, 3) in report.kept_dates
+    assert report.pruned_dates == (date(2026, 8, 11),)

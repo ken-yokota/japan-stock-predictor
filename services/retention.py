@@ -80,15 +80,22 @@ def prune_feature_history(
         # the replayed date sorts below the two most recent live days, nothing
         # is evicted, and the run writes its 133 MB straight into the ceiling.
         # Newest-generated is what actually tracks "the last N runs of work".
-        dates = list(
-            session.scalars(
-                select(PredictionSet.prediction_date)
-                .distinct()
-                .order_by(func.max(PredictionSet.generated_at).desc())
+        # GROUP BY already yields one row per date, so DISTINCT is redundant --
+        # and PostgreSQL rejects DISTINCT beside an ORDER BY on an aggregate that
+        # is not in the select list. SQLite accepts it, which is precisely how
+        # this shipped broken once.
+        dates = [
+            row[0]
+            for row in session.execute(
+                select(
+                    PredictionSet.prediction_date,
+                    func.max(PredictionSet.generated_at).label("latest"),
+                )
                 .group_by(PredictionSet.prediction_date)
+                .order_by(func.max(PredictionSet.generated_at).desc())
                 .limit(keep_dates + 1)
             )
-        )
+        ]
         if len(dates) <= keep_dates:
             return PruneReport(kept_dates=tuple(dates))
         kept = tuple(dates[:keep_dates])
