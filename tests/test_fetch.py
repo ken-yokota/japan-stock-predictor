@@ -92,8 +92,14 @@ class FakeTreasuryProvider:
 
 
 def test_default_plan_is_yahoo_first_and_free_only() -> None:
-    plan = build_fetch_plan(load_app_config())
-    assert len(plan.stocks) == 22
+    config = load_app_config()
+    plan = build_fetch_plan(config)
+    # The plan covers exactly the enabled universe: a disabled name must cost no
+    # provider call. Which names those are is pinned in test_stock_universe.py,
+    # so narrowing the universe stays a one-file change.
+    assert {stock.ticker for stock in plan.stocks} == {
+        stock.ticker for stock in config.stocks.stocks if stock.enabled
+    }
     # The twelve snapshot indicators also carry a daily-history source. Without
     # it they reach the model with no past sessions at all, which is why they
     # were absent from every stored feature set.

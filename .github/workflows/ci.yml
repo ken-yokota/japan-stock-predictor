@@ -81,7 +81,9 @@ jobs:
           python -m pip install "SQLAlchemy>=2.0.31,<3" pytest
 
       - name: Run the dashboard contract
-        run: python -m pytest tests/test_dashboard_contract.py -q
+        # --noconftest keeps this job off the shared fixtures, which pull in the
+        # whole application stack. The point is the interpreter, not the suite.
+        run: python -m pytest tests/test_dashboard_contract.py -q --noconftest
 
   postgres-migrations:
     runs-on: ubuntu-latest
