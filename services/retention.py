@@ -13,11 +13,12 @@ so a pruned day can be rebuilt exactly if it is ever needed again.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
 from typing import Any, cast
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -46,10 +47,14 @@ class PruneReport:
         return bool(self.pruned_dates)
 
 
-def _feature_set_ids(session: Session, cutoff: date) -> list[str]:
+def _feature_set_ids(session: Session, kept: Sequence[date]) -> list[str]:
+    """Every feature set whose date is not one of the kept ones."""
+
     return list(
         session.scalars(
-            select(FeatureSet.feature_set_id).where(FeatureSet.prediction_date < cutoff)
+            select(FeatureSet.feature_set_id).where(
+                FeatureSet.prediction_date.notin_(kept)
+            )
         )
     )
 
@@ -70,20 +75,25 @@ def prune_feature_history(
     if keep_dates < 1:
         raise ValueError("keep_dates must be at least 1")
     with factory() as session:
+        # Ordered by when the set was *generated*, not by the session it names.
+        # Keying off prediction_date breaks the moment a past day is replayed:
+        # the replayed date sorts below the two most recent live days, nothing
+        # is evicted, and the run writes its 133 MB straight into the ceiling.
+        # Newest-generated is what actually tracks "the last N runs of work".
         dates = list(
             session.scalars(
                 select(PredictionSet.prediction_date)
                 .distinct()
-                .order_by(PredictionSet.prediction_date.desc())
+                .order_by(func.max(PredictionSet.generated_at).desc())
+                .group_by(PredictionSet.prediction_date)
                 .limit(keep_dates + 1)
             )
         )
         if len(dates) <= keep_dates:
             return PruneReport(kept_dates=tuple(dates))
         kept = tuple(dates[:keep_dates])
-        cutoff = kept[-1]
 
-        stale = _feature_set_ids(session, cutoff)
+        stale = _feature_set_ids(session, kept)
         if not stale:
             return PruneReport(kept_dates=kept)
 
@@ -91,7 +101,7 @@ def prune_feature_history(
             session.scalars(
                 select(FeatureSet.prediction_date)
                 .distinct()
-                .where(FeatureSet.prediction_date < cutoff)
+                .where(FeatureSet.prediction_date.notin_(kept))
                 .order_by(FeatureSet.prediction_date)
             )
         )

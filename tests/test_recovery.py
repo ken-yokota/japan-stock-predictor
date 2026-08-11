@@ -244,3 +244,30 @@ def test_prune_does_nothing_when_history_is_short() -> None:
 
     assert report.pruned is False
     assert report.feature_values == 0
+
+
+def test_prune_evicts_by_generation_order_not_by_session_date() -> None:
+    """Replaying an older session must still free room for its own write.
+
+    Keying retention off prediction_date meant a backfill of an early session
+    sorted below the recent live days, nothing was evicted, and the run wrote
+    straight into the hosted database's ceiling.
+    """
+
+    factory = _prune_factory()
+    # Generated in this order: the newest session first, the replayed one last.
+    for index, day in enumerate([date(2026, 8, 11), date(2026, 8, 10)]):
+        _seed_day(factory, day, index)
+    _seed_day(factory, date(2026, 8, 3), 2)
+
+    report = prune_feature_history(factory, keep_dates=2)
+
+    # The replay is one of the two most recent runs, so it survives; the
+    # oldest-generated day is the one that goes.
+    assert date(2026, 8, 3) in report.kept_dates
+    assert report.pruned_dates == (date(2026, 8, 11),)
+    assert report.feature_values == 1
+    with factory() as session:
+        remaining = sorted(session.scalars(select(FeatureValue.sample_date)))
+        assert date(2026, 8, 2) in remaining
+        assert session.scalar(select(func.count()).select_from(PredictionSet)) == 3
