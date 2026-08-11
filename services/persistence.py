@@ -514,6 +514,7 @@ def persist_prediction_computation(
         negative_factors=list(result.negative_factors),
         feature_coverage=result.feature_coverage,
         warnings=_warning_list(result.warnings),
+        observed_by_cutoff=observed_by_cutoff,
         idempotency_key=f"prediction/{run_id}/{result.ticker}",
     )
     return PersistedTickerPrediction(

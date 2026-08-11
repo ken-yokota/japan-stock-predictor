@@ -916,6 +916,7 @@ class PredictionPipelineRepository:
         input_manifest_hash: str | None,
         details: Mapping[str, object] | None = None,
         finalized_at: datetime | None = None,
+        observed_by_cutoff: bool = True,
     ) -> FeatureSet:
         """Freeze counts and maximum input timestamps after all cells are stored."""
 
@@ -960,11 +961,12 @@ class PredictionPipelineRepository:
             ).one(),
         )
         cutoff = _as_utc(feature_set.cutoff_at)
-        for label, timestamp in (
-            ("available", max_available),
-            ("first-observed", max_observed),
-            ("retrieved", max_retrieved),
-        ):
+        # "available" is the look-ahead guard and always applies. The other two
+        # are the liveness claim, which a replayed session cannot make.
+        checks = [("available", max_available)]
+        if observed_by_cutoff:
+            checks += [("first-observed", max_observed), ("retrieved", max_retrieved)]
+        for label, timestamp in checks:
             if timestamp is not None and _as_utc(timestamp) > cutoff:
                 raise ValueError(f"feature-set {label} lineage exceeds its cutoff")
         completed_at = _require_aware(
@@ -1267,6 +1269,7 @@ class PredictionPipelineRepository:
         positive_factors: list[str] | None = None,
         negative_factors: list[str] | None = None,
         feature_coverage: float | None = None,
+        observed_by_cutoff: bool = True,
     ) -> Prediction:
         """Persist one stock prediction after validating all upstream identities."""
 
@@ -1349,11 +1352,12 @@ class PredictionPipelineRepository:
             if reference_row is None:
                 raise ValueError("unknown reference stock-price revision")
             cutoff = _as_utc(prediction_set.cutoff_at)
-            if (
-                _as_utc(reference_row.available_timestamp) > cutoff
-                or _as_utc(reference_row.first_observed_at) > cutoff
+            unavailable = _as_utc(reference_row.available_timestamp) > cutoff
+            unobserved = observed_by_cutoff and (
+                _as_utc(reference_row.first_observed_at) > cutoff
                 or _as_utc(reference_row.retrieved_at) > cutoff
-            ):
+            )
+            if unavailable or unobserved:
                 raise ValueError("reference stock price was not known by the cutoff")
             if reference_price != reference_row.close:
                 raise ValueError("reference price differs from its raw revision")
