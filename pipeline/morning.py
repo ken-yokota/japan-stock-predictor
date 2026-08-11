@@ -275,6 +275,7 @@ class MorningPipeline:
                     computation=computation,
                     config=self._config,
                     rank=rank_by_ticker.get(ticker),
+                    observed_by_cutoff=not backfill,
                 )
             for ticker, reason in failures.items():
                 persist_failed_prediction(

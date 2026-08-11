@@ -804,8 +804,15 @@ class PredictionPipelineRepository:
         source_type: str,
         source_row_id: int,
         flush: bool = True,
+        observed_by_cutoff: bool = True,
     ) -> FeatureInput:
-        """Attach the exact raw revision and reject any look-ahead evidence."""
+        """Attach the exact raw revision and reject any look-ahead evidence.
+
+        ``observed_by_cutoff`` is the liveness claim, not the look-ahead one.
+        A replayed session sets it False: only data available in the market by
+        the cutoff is used, but the evidence that this system had fetched it by
+        then does not exist and must not be asserted.
+        """
 
         feature_value = self._cached_get(FeatureValue, feature_value_id)
         if feature_value is None:
@@ -835,13 +842,27 @@ class PredictionPipelineRepository:
         available_at = _as_utc(raw_row.available_timestamp)
         observed_at = _as_utc(raw_row.first_observed_at)
         retrieved_at = _as_utc(raw_row.retrieved_at)
+        # Look-ahead: the value must have existed in the market by the sample's
+        # own cutoff. Never relaxed -- a violation here is a leak.
         if available_at > sample_cutoff:
             raise ValueError("raw input was unavailable at the sample cutoff")
-        if observed_at > set_cutoff or retrieved_at > set_cutoff:
+        # Liveness: this system must also have *held* the value by then. A
+        # replay of a past session cannot satisfy that, because the rows were
+        # fetched afterwards, so a backfilled set records the weaker claim.
+        if observed_by_cutoff and (
+            observed_at > set_cutoff or retrieved_at > set_cutoff
+        ):
             raise ValueError("raw input was not observed by the prediction cutoff")
+        # The same liveness claim, tightened to the sample's own cutoff for the
+        # scored row and for walk-forward sets. A replay cannot assert it either.
         if (
-            feature_set.set_kind == "WALK_FORWARD" or feature_value.row_role == "SCORE"
-        ) and (observed_at > sample_cutoff or retrieved_at > sample_cutoff):
+            observed_by_cutoff
+            and (
+                feature_set.set_kind == "WALK_FORWARD"
+                or feature_value.row_role == "SCORE"
+            )
+            and (observed_at > sample_cutoff or retrieved_at > sample_cutoff)
+        ):
             raise ValueError("raw input violates walk-forward first-observed cutoff")
         if feature_set.feature_set_id not in self._feature_inputs_loaded_for_sets:
             for stored_input in self.session.scalars(

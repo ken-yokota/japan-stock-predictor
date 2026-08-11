@@ -910,3 +910,109 @@ def test_backfill_relaxes_only_the_observation_guard_and_says_so(
         PREDICTION_DATE, perform_ingestion=False, backfill=True
     )
     assert BACKFILL_WARNING in result.warnings
+
+
+def test_backfill_persists_lineage_the_operational_path_would_reject(
+    sqlite_factory: sessionmaker[Session], app_config: AppConfig, make_bar
+) -> None:
+    """The liveness guard exists in two places; a replay must clear both.
+
+    Relaxing it only in the dataset builder let five replayed sessions run for
+    seven minutes and then die in persistence, which has its own copy of the
+    same check.
+    """
+
+    cutoff = prediction_cutoff(PREDICTION_DATE)
+    # SQLite stores these naive, so keep the two sides a whole day apart: the
+    # point of the test is which guard fires, not timezone arithmetic.
+    available = cutoff - timedelta(days=2)
+    fetched_later = cutoff + timedelta(days=2)
+    with sqlite_factory() as session:
+        market = MarketDataRepository(session)
+        market.upsert_bars(
+            [
+                make_bar(
+                    market_date=available.date(),
+                    timestamp=available,
+                    available_timestamp=available,
+                    # Fetched after the cutoff, exactly like every backfilled row.
+                    first_observed_at=fetched_later,
+                    retrieved_at=fetched_later,
+                )
+            ]
+        )
+        raw = session.scalar(select(MarketData))
+        assert raw is not None
+        run = market.create_run(
+            run_type="MORNING",
+            prediction_date=PREDICTION_DATE,
+            cutoff_at=cutoff,
+            data_version="config-test",
+        )
+        repository = PredictionPipelineRepository(session)
+        sessions = japan_sessions_before(
+            PREDICTION_DATE, app_config.model.training.window_jpx_sessions
+        )
+        feature_set = repository.create_feature_set(
+            run_id=run.run_id,
+            ticker="9101",
+            prediction_date=PREDICTION_DATE,
+            cutoff_at=cutoff,
+            feature_version="v1",
+            set_kind="MORNING",
+            training_start=sessions[0],
+            training_end=sessions[-1],
+            config_hash=DIGEST,
+            required_feature_count=1,
+            idempotency_key=f"feature/backfill/{run.run_id}",
+        )
+        value = repository.add_feature_value(
+            feature_set_id=feature_set.feature_set_id,
+            sample_date=PREDICTION_DATE,
+            sample_cutoff_at=cutoff,
+            row_role="SCORE",
+            value_kind="FEATURE",
+            feature_name="factor",
+            value=Decimal("1"),
+            is_missing=False,
+            data_quality="FREE_UNVERIFIED",
+        )
+
+        with pytest.raises(ValueError, match="not observed by the prediction cutoff"):
+            repository.add_feature_input(
+                feature_value_id=value.feature_value_id,
+                input_role="source_001",
+                source_type="MARKET_DATA",
+                source_row_id=raw.id,
+            )
+
+        written = repository.add_feature_input(
+            feature_value_id=value.feature_value_id,
+            input_role="source_001",
+            source_type="MARKET_DATA",
+            source_row_id=raw.id,
+            observed_by_cutoff=False,
+        )
+        assert written.market_data_id == raw.id
+
+        # The look-ahead guard stays absolute in both modes: a row that only
+        # became available after the sample cutoff is refused either way.
+        late = repository.add_feature_value(
+            feature_set_id=feature_set.feature_set_id,
+            sample_date=PREDICTION_DATE,
+            sample_cutoff_at=available - timedelta(days=1),
+            row_role="SCORE",
+            value_kind="FEATURE",
+            feature_name="late_factor",
+            value=Decimal("1"),
+            is_missing=False,
+            data_quality="FREE_UNVERIFIED",
+        )
+        with pytest.raises(ValueError, match="unavailable at the sample cutoff"):
+            repository.add_feature_input(
+                feature_value_id=late.feature_value_id,
+                input_role="source_001",
+                source_type="MARKET_DATA",
+                source_row_id=raw.id,
+                observed_by_cutoff=False,
+            )

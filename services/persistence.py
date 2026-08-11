@@ -140,6 +140,7 @@ def persist_feature_set(
     config: AppConfig,
     dataset: ModelDataset,
     terminal_status: str,
+    observed_by_cutoff: bool = True,
 ) -> FeatureSet:
     """Freeze every selected train/score cell and its exact raw-row lineage."""
 
@@ -253,6 +254,7 @@ def persist_feature_set(
                     source_type=_source_type(reference),
                     source_row_id=reference.row_id,
                     flush=False,
+                    observed_by_cutoff=observed_by_cutoff,
                 )
             manifest.append(
                 _manifest_entry(
@@ -442,6 +444,7 @@ def persist_prediction_computation(
     computation: PredictionComputation,
     config: AppConfig,
     rank: int | None,
+    observed_by_cutoff: bool = True,
 ) -> PersistedTickerPrediction:
     result = computation.result
     success = result.status == "READY" and computation.model is not None
@@ -452,6 +455,7 @@ def persist_prediction_computation(
         config=config,
         dataset=computation.dataset,
         terminal_status="READY" if success else "INSUFFICIENT_DATA",
+        observed_by_cutoff=observed_by_cutoff,
     )
     regression_model = None
     classification_model = None
