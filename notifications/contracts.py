@@ -17,6 +17,11 @@ class EmailCandidate:
     probability_up: float | None
     signal: str
     status: str = "READY"
+    # The two prices the operator checks first: what it closed at yesterday and
+    # where the model expects it to close today.
+    reference_price: float | None = None
+    predicted_close: float | None = None
+    rank: int | None = None
     readability_score: float | None = None
     profit_factor: float | None = None
     expectancy_jpy: float | None = None

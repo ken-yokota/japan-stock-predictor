@@ -69,6 +69,10 @@ line-length = 88
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+# The report text sets these full-width marks against kanji on purpose. Their
+# ASCII lookalikes leave a visible half-width gap in the rendered mail, so the
+# ambiguity warning is not actionable here.
+allowed-confusables = ["（", "）", "／", "：", "，", "－"]
 
 [tool.mypy]
 python_version = "3.12"

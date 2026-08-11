@@ -63,6 +63,16 @@ The body, in this order:
    finish time.
 5. **What, if anything, the operator needs to do.** Usually nothing. Say so.
 
+### The approved layout lives in `docs/EMAIL_FORMAT.md`
+
+The operator approved a specific look on 2026-08-11 — coloured HTML tables, a
+signed-and-coloured number in every cell, the decision table first — and asked
+for it to be written down. `docs/EMAIL_FORMAT.md` is that record, covering all
+three kinds of mail: the prediction, the result, and the progress report.
+
+**Read it before composing any mail, and do not deviate from it.** The rules
+below are the reasoning behind that document; the document is the spec.
+
 ### Put numbers in a table, never in a paragraph
 
 The operator asked for this directly, twice. Any comparison, any set of

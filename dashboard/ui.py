@@ -8,7 +8,7 @@ from datetime import datetime
 import streamlit as st
 from sqlalchemy.exc import SQLAlchemyError
 
-from dashboard.presenters import JST, Alert, AlertLevel, format_jst
+from dashboard.presenters import JST, Alert, AlertLevel, format_jst, string_list
 from dashboard.query_service import DashboardQueryService
 from dashboard.types import QueryResult, QueryState
 from database.connection import create_database_engine
@@ -47,6 +47,58 @@ def cached_latest_run(_service: DashboardQueryService) -> QueryResult:
 @st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_prediction_set(_service: DashboardQueryService) -> QueryResult:
     return _service.latest_prediction_set()
+
+
+@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+def cached_day_scoreboard(
+    _service: DashboardQueryService, prediction_date: str
+) -> tuple[int, int, int, float] | None:
+    """Return (buy count, settled buys, correct buys, net yen) for one day.
+
+    Returns ``None`` when the schema or the data is not there yet, so the
+    banner degrades to "未確定" rather than showing a zero that reads as a loss.
+    """
+
+    predictions = _service.today_predictions()
+    if not predictions.ready or not predictions.rows:
+        return None
+    buys = [
+        row
+        for row in predictions.rows
+        if row.get("signal") == "BUY"
+        and str(row.get("prediction_date")) == prediction_date
+    ]
+    if not buys:
+        return 0, 0, 0, 0.0
+
+    actuals = _service.actual_results()
+    if not actuals.ready:
+        return len(buys), 0, 0, 0.0
+    realized = {
+        row["prediction_id"]: row["actual_intraday_return"]
+        for row in actuals.rows
+        if row.get("actual_intraday_return") is not None
+    }
+    settled = [row for row in buys if row["prediction_id"] in realized]
+    if not settled:
+        return len(buys), 0, 0, 0.0
+    correct = sum(
+        1
+        for row in settled
+        if (float(row["predicted_intraday_return"]) > 0)
+        == (float(realized[row["prediction_id"]]) > 0)
+    )
+
+    trades = _service.simulated_trades()
+    settled_ids = {row["prediction_id"] for row in settled}
+    profit = 0.0
+    if trades.ready:
+        profit = sum(
+            float(row.get("net_profit_jpy") or 0)
+            for row in trades.rows
+            if row.get("prediction_id") in settled_ids
+        )
+    return len(buys), len(settled), correct, profit
 
 
 @st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
@@ -161,9 +213,49 @@ def configure_page(title: str, icon: str) -> None:
         )
 
 
+def render_latest_day_banner() -> None:
+    """Show the newest published day on every tab, with its settled result.
+
+    The operator opens whichever tab answers their question and expects to see
+    where the system stands without navigating first. Reading the newest set
+    here -- rather than naming a date -- keeps the banner correct on the days
+    after this one, and shows plainly when nothing new has been published.
+    """
+
+    service = service_from_environment()
+    if service is None:
+        return
+    published = cached_prediction_set(service)
+    row = published.first
+    if not published.ready or row is None:
+        return
+    prediction_date = row.get("prediction_date")
+    status = str(row.get("status", "—"))
+    warnings = string_list(row.get("warnings"))
+
+    summary = cached_day_scoreboard(service, str(prediction_date))
+    columns = st.columns(4)
+    columns[0].metric("最新の予測日", str(prediction_date))
+    columns[1].metric("状態", status)
+    if summary is None:
+        columns[2].metric("買い候補", "—")
+        columns[3].metric("実績", "未確定")
+    else:
+        buys, settled, hits, profit = summary
+        columns[2].metric("買い候補", f"{buys}銘柄")
+        columns[3].metric(
+            "買いの的中",
+            "未確定" if settled == 0 else f"{hits}/{settled}",
+            delta=None if settled == 0 else f"{profit:+,.0f}円",
+        )
+    for warning in warnings:
+        st.warning(warning)
+
+
 def render_header(title: str, description: str) -> None:
     st.title(title)
     st.caption(description)
+    render_latest_day_banner()
     st.info(
         "研究用の参考情報であり、投資助言ではありません。予測値・順位・BUY表示だけで"
         "売買判断をしないでください。"

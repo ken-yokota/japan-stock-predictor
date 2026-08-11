@@ -128,6 +128,17 @@ def load_morning_email_payload(
                 ),
                 signal=row.signal,
                 status="READY" if row.status == "SUCCESS" else row.status,
+                reference_price=(
+                    float(row.reference_price)
+                    if row.reference_price is not None
+                    else None
+                ),
+                predicted_close=(
+                    float(row.predicted_close)
+                    if row.predicted_close is not None
+                    else None
+                ),
+                rank=row.rank,
                 readability_score=(
                     float(metric.readability_score)
                     if metric is not None and metric.readability_score is not None
