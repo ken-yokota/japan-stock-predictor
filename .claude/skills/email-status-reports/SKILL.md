@@ -85,6 +85,32 @@ This is the point of the module: readability stops depending on who wrote the
 mail. A one-off script that formats its own body will drift back into prose
 within a session — that is exactly how the mails became unreadable before.
 
+### Every report says what failed, not only what worked
+
+**A report that lists only successes is not a report.** The operator asked for
+this directly. Each mail carries both, as two tables, and the failures come
+first when there are any:
+
+| 節 | 中身 |
+|---|---|
+| できなかったこと | 何が失敗したか / なぜか / どう対処したか / 今どうなっているか |
+| できたこと | 何が完了したか / 検証した証拠 |
+
+Include, in the failure table:
+
+- **A failure that was caught before it did damage.** "8/3 は書き込み前に
+  止めた。あのまま進めれば DiskFull で死んでいた" is more useful than silence,
+  because it tells the operator the guard worked and where the edge is.
+- **A failure I caused myself.** Shipping a query PostgreSQL rejects, killing
+  a running job by mistake, reporting a job as running when it had died —
+  those go in the mail with the same weight as an external failure. The
+  operator cannot calibrate how much to trust the work without them.
+- **What is still not proven.** A step that has never once succeeded is not a
+  step that "should work".
+
+Do not soften. `5営業日とも10秒で失敗` is the sentence; "一部で問題が発生" is
+not. Numbers, cause, and current state — the same shape as any other table.
+
 ### Put numbers in a table, never in a paragraph
 
 The operator asked for this directly, twice. Any comparison, any set of
