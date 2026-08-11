@@ -58,7 +58,7 @@ def _type_name(value: object) -> str:
 def _picklable(value: object) -> bool:
     try:
         pickle.dumps(value)
-    except Exception:  # noqa: BLE001 - any failure means "not cacheable"
+    except Exception:  # any failure at all means "not cacheable"
         return False
     return True
 
@@ -95,7 +95,7 @@ def _walk(value: object, path: str, found: list[str], depth: int = 0) -> None:
     reason = ""
     try:
         pickle.dumps(value)
-    except Exception as error:  # noqa: BLE001
+    except Exception as error:
         reason = f"{type(error).__name__}: {error}"
     found.append(f"{path}  type={_type_name(value)}  {reason}")
 
