@@ -132,7 +132,8 @@ def _snapshot(url: str, timeout: int = 20) -> dict[str, object] | None:
         with urllib.request.urlopen(request, timeout=timeout) as reply:
             if reply.status != 200:
                 return None
-            return json.loads(reply.read().decode("utf-8"))
+            payload = json.loads(reply.read().decode("utf-8"))
+            return payload if isinstance(payload, dict) else None
     except (urllib.error.URLError, TimeoutError, ValueError, OSError):
         return None
 
@@ -203,9 +204,9 @@ def verify(
 
     age = datetime.now(UTC) - generated.astimezone(UTC)
     fresh = age <= timedelta(minutes=max_snapshot_age_minutes)
-    published: object = snapshot.get("prediction_set") or {}
+    snapshot_set: object = snapshot.get("prediction_set") or {}
     snapshot_date = str(
-        published.get("prediction_date") if isinstance(published, dict) else None
+        snapshot_set.get("prediction_date") if isinstance(snapshot_set, dict) else None
     )
     outcome.checks.append(
         Check(
