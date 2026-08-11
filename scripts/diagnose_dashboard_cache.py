@@ -147,9 +147,57 @@ def diagnose(service: DashboardQueryService, names: Sequence[str]) -> int:
     return failures
 
 
+def through_streamlit(service: DashboardQueryService, names: Sequence[str]) -> int:
+    """Reproduce the failure through the real decorator, not through pickle.
+
+    Plain ``pickle.dumps`` succeeding does not clear Streamlit: its cache wraps
+    the value in its own record before storing it. If the reads pickle but this
+    fails, the fault is in the caching layer or its interpreter, not in the
+    data, and that distinction decides the whole fix.
+    """
+
+    try:
+        import streamlit as st
+    except Exception as error:
+        print(f"streamlit could not be imported: {type(error).__name__}: {error}")
+        return 1
+
+    print("")
+    print(f"streamlit           : {getattr(st, '__version__', 'unknown')}")
+    header = f"{'query':30} through st.cache_data"
+    print(header)
+    print("-" * len(header))
+
+    failures = 0
+    for name in names:
+        method = getattr(service, name, None)
+        if method is None:
+            continue
+
+        @st.cache_data(ttl=60, show_spinner=False)
+        def _cached(_call: Any = method) -> Any:
+            return _call()
+
+        try:
+            _cached()
+        except Exception as error:
+            failures += 1
+            cause = error.__cause__
+            print(f"{name:30} FAILED  {type(error).__name__}")
+            print(f"    cause: {type(cause).__name__ if cause else 'none'}: {cause}")
+        else:
+            print(f"{name:30} ok")
+    return failures
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--only", nargs="*", default=None, help="query names to run")
+    parser.add_argument(
+        "--streamlit",
+        action="store_true",
+        help="also exercise the real @st.cache_data decorator",
+    )
     arguments = parser.parse_args(argv)
 
     database_url = os.environ.get("DATABASE_URL", "").strip()
@@ -158,9 +206,15 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     engine = create_database_engine(database_url)
-    failures = diagnose(DashboardQueryService(engine), arguments.only or QUERIES)
+    service = DashboardQueryService(engine)
+    names = arguments.only or QUERIES
+    failures = diagnose(service, names)
     print("")
-    print(f"uncacheable reads: {failures}")
+    print(f"uncacheable reads (plain pickle): {failures}")
+    if arguments.streamlit:
+        through = through_streamlit(service, names)
+        print("")
+        print(f"uncacheable reads (st.cache_data): {through}")
     return 0
 
 
