@@ -1,0 +1,44 @@
+name: Dashboard cache diagnose
+
+# Manual only. Streamlit Cloud hides the real reason a cached read cannot be
+# stored, so this reproduces it against the same database on the same
+# interpreter and names the offending type.
+on:
+  workflow_dispatch:
+    inputs:
+      python_version:
+        description: "Interpreter to reproduce on (Streamlit Cloud serves 3.14)"
+        required: false
+        default: "3.14"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dashboard-diagnose
+  cancel-in-progress: true
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ inputs.python_version || '3.14' }}
+
+      - name: Install only what a read needs
+        # Not the full application: the heavy scientific wheels are irrelevant
+        # here and may not exist yet for a just-released interpreter.
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "SQLAlchemy>=2.0.31,<3" "psycopg[binary]>=3.2,<4"
+
+      - name: Pickle every dashboard read
+        run: python -m scripts.diagnose_dashboard_cache
