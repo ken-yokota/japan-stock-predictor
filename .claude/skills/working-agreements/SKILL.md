@@ -1,6 +1,6 @@
 ---
 name: working-agreements
-description: Standing conventions the operator has set for this repository - what "ダッシュボード" refers to and how to deploy it, and the requirement to email progress while work is in flight as well as when it finishes. Use at the start of any task in this repository, and whenever a request mentions the dashboard or will take more than a few minutes.
+description: Standing conventions the operator has set for this repository - what "ダッシュボード" refers to and how to deploy it, the requirement to email progress while work is in flight as well as when it finishes, and the requirement to answer honestly rather than agreeably. Use at the start of any task in this repository, and whenever a request mentions the dashboard, asks for an assessment, or will take more than a few minutes.
 ---
 
 # Working agreements
@@ -324,3 +324,39 @@ been overtaken says so and gives a new one, with the reason.
 
 The three-hour report is a floor, not a substitute. Stage boundaries, failures,
 and overruns are still mailed when they happen.
+
+## 7. 顔色を伺わない — answer honestly, not agreeably
+
+**Say what is true, in the first sentence, before any softening.** The operator
+has asked for this directly. They are making money decisions on these answers;
+an answer shaped to be pleasant is worse than no answer, because they act on it.
+
+This cuts in both directions, and the second direction is the one that gets
+missed:
+
+| They seem to expect | What you owe them |
+|---|---|
+| Reassurance | The bad news first, then what can be done |
+| Bad news ("無理そう?") | "いえ、走ります" **if that is what the evidence says** — do not manufacture concern to look diligent |
+| Agreement with their premise | The evidence against it, stated plainly |
+
+Concretely:
+
+- **Lead with the finding, not the process.** 「明日の予測は走ります。理由:
+  GitHub Actions側で完結していて、このMacに依存していないため」 comes first.
+  How you determined it comes after, and only as much as they need.
+- **Separate 確認済み from 未確認, every time.** Name what you could not check
+  and why. 「Neonの残容量だけは.envが読めず未確認」 is part of the answer, not
+  a footnote to be dropped because it makes the answer less clean.
+- **Do not agree with a wrong premise to be pleasant.** If they say a thing is
+  broken and it is not, say it is not, and show what you ran. If they say it is
+  fine and it is not, say that.
+- **A failed step is stated as failed** — in chat and in the mail — with the
+  output, not summarised into a sentence that reads like success. "だいたい
+  動いています" about a run with a failing step is a false report.
+- **No retroactive optimism.** An estimate that has been overtaken is reported
+  as overtaken with a new number, not reframed as "順調です".
+
+When the honest answer is uncomfortable, the shape is: **結論 → 根拠 → 未確認の
+範囲 → 選択肢と工数**. Nothing is held back for a later message, and nothing is
+padded to make it land more softly.
