@@ -32,6 +32,7 @@ from typing import Any
 from sqlalchemy.exc import SQLAlchemyError
 
 from dashboard import DashboardQueryService, QueryResult
+from dashboard.completeness import stock_from_details, summarise
 from database.connection import create_database_engine
 
 SCHEMA_VERSION = 1
@@ -144,6 +145,70 @@ def _state(result: QueryResult) -> dict[str, Any]:
     return {"state": str(result.state), "message": result.message}
 
 
+def _completeness_block(
+    completeness: QueryResult, predictions: tuple[dict[str, Any], ...]
+) -> dict[str, Any]:
+    """The audit, as data, so nobody has to run a command to see it.
+
+    LEGACY_UNKNOWN is reported as itself rather than folded into "clean": a
+    feature set written before completeness was recorded says nothing about
+    whether anything was missing, and reading it as healthy is the mistake
+    this whole line of work exists to stop repeating.
+    """
+
+    if not completeness.ready:
+        return {"state": str(completeness.state), "stocks": []}
+    signals = {
+        str(row.get("ticker")): str(row.get("signal") or "")
+        for row in predictions
+    }
+    coverage = {
+        str(row.get("ticker")): row.get("feature_coverage") for row in predictions
+    }
+    summary = summarise(
+        [
+            stock_from_details(
+                str(row.get("ticker")),
+                row.get("details"),
+                feature_coverage=coverage.get(str(row.get("ticker"))),
+                signal=signals.get(str(row.get("ticker")), ""),
+            )
+            for row in completeness.rows
+        ]
+    )
+    return {
+        "state": str(completeness.state),
+        "data_status": summary.data_status,
+        "stock_count": summary.stock_count,
+        "clean": summary.clean_count,
+        "degraded": summary.degraded_count,
+        "legacy_unknown": summary.unknown_count,
+        "buy_count": summary.buy_count,
+        "clean_buy": summary.clean_buy_count,
+        "degraded_buy": summary.degraded_buy_count,
+        "degraded_buy_tickers": [item.ticker for item in summary.degraded_buys],
+        "feature_coverage_hides_a_gap": list(summary.hidden_by_feature_coverage),
+        "missing_required_ranking": [
+            {"indicator": name, "stocks": count}
+            for name, count in summary.missing_required_ranking
+        ],
+        "watched": [
+            {"indicator": name, "stocks": count} for name, count in summary.watched()
+        ],
+        "stocks": [
+            {
+                "ticker": item.ticker,
+                "status": item.status,
+                "indicator_coverage": item.indicator_coverage,
+                "missing_required": list(item.missing_required),
+                "missing_optional": list(item.missing_optional),
+                "signal": item.signal,
+            }
+            for item in summary.stocks
+        ],
+    }
+
+
 def build_snapshot(service: DashboardQueryService) -> dict[str, Any]:
     """Assemble the published state from the same reads the dashboard makes."""
 
@@ -152,6 +217,7 @@ def build_snapshot(service: DashboardQueryService) -> dict[str, Any]:
     prediction_set = service.latest_prediction_set()
     predictions = service.today_predictions()
 
+    completeness = service.feature_completeness()
     rows = predictions.rows if predictions.ready else ()
     by_status: dict[str, int] = {}
     for row in rows:
@@ -174,7 +240,12 @@ def build_snapshot(service: DashboardQueryService) -> dict[str, Any]:
             "latest_run": _state(latest_run),
             "prediction_set": _state(prediction_set),
             "predictions": _state(predictions),
+            "completeness": _state(completeness),
         },
+        # Whether the morning had the data it was owed, published where anyone
+        # can read it without a login or a command. Only counts and indicator
+        # ids - no values leave the database here either.
+        "completeness": _completeness_block(completeness, rows),
         "latest_run": _pick(latest_run.first, RUN_FIELDS),
         "prediction_set": _pick(prediction_set.first, PREDICTION_SET_FIELDS),
         "predictions": [_pick(row, PREDICTION_FIELDS) for row in rows],
