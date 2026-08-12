@@ -19,11 +19,10 @@ from __future__ import annotations
 
 import argparse
 import os
-import sys
 from datetime import UTC, date, datetime, timedelta
 
-from data.config import load_app_config
 from data.availability import prediction_cutoff
+from data.config import load_app_config
 from data.fetch import _eod_fetch_window, _sessions, _source_request, build_fetch_plan
 from data.providers.yahoo import YahooFinanceProvider
 
