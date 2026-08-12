@@ -376,7 +376,11 @@ class PointInTimeDatasetBuilder:
         operational: bool,
         target_cutoff_at: datetime,
     ) -> ModelSample:
-        cutoff_at = prediction_cutoff(sample_date)
+        cutoff_at = prediction_cutoff(
+            sample_date,
+            cutoff_time=self._config.settings.schedule.prediction_cutoff,
+            timezone_name=self._config.settings.application.timezone,
+        )
         prior_stock = [
             row
             for row in stock_rows
@@ -501,7 +505,11 @@ class PointInTimeDatasetBuilder:
 
         if not 0.0 < minimum_feature_coverage <= 1.0:
             raise ValueError("minimum_feature_coverage must be in (0, 1]")
-        main_cutoff = prediction_cutoff(prediction_date)
+        main_cutoff = prediction_cutoff(
+            prediction_date,
+            cutoff_time=self._config.settings.schedule.prediction_cutoff,
+            timezone_name=self._config.settings.application.timezone,
+        )
         stock_rows, market_rows = self._load_rows(ticker, main_cutoff)
         indicators = self._indicator_ids(ticker)
         sessions = japan_sessions_before(prediction_date, training_sessions)

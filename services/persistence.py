@@ -303,7 +303,11 @@ def persist_failed_feature_set(
         run_id=run_id,
         ticker=ticker,
         prediction_date=prediction_date,
-        cutoff_at=prediction_cutoff(prediction_date),
+        cutoff_at=prediction_cutoff(
+            prediction_date,
+            cutoff_time=config.settings.schedule.prediction_cutoff,
+            timezone_name=config.settings.application.timezone,
+        ),
         feature_version=FEATURE_VERSION,
         set_kind="MORNING",
         training_start=sessions[0],

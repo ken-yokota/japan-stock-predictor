@@ -1064,7 +1064,11 @@ def main(argv: list[str] | None = None) -> int:
                 ZoneInfo(config.settings.application.timezone)
             ).date()
             prediction_date = args.prediction_date or today_jst
-            cutoff_at = prediction_cutoff(prediction_date)
+            cutoff_at = prediction_cutoff(
+                prediction_date,
+                cutoff_time=config.settings.schedule.prediction_cutoff,
+                timezone_name=config.settings.application.timezone,
+            )
             run = repository.create_run(
                 run_type="INGESTION",
                 prediction_date=prediction_date,

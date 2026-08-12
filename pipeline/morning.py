@@ -100,7 +100,11 @@ class MorningPipeline:
             run = repository.create_run(
                 run_type="MORNING",
                 prediction_date=prediction_date,
-                cutoff_at=prediction_cutoff(prediction_date),
+                cutoff_at=prediction_cutoff(
+                    prediction_date,
+                    cutoff_time=self._config.settings.schedule.prediction_cutoff,
+                    timezone_name=self._config.settings.application.timezone,
+                ),
                 data_version=config_hash(self._config),
             )
             repository.finish_run(run, status="SKIPPED")
@@ -209,7 +213,11 @@ class MorningPipeline:
         run = market_repository.create_run(
             run_type="MORNING",
             prediction_date=prediction_date,
-            cutoff_at=prediction_cutoff(prediction_date),
+            cutoff_at=prediction_cutoff(
+                prediction_date,
+                cutoff_time=self._config.settings.schedule.prediction_cutoff,
+                timezone_name=self._config.settings.application.timezone,
+            ),
             data_version=config_hash(self._config),
         )
         run.model_version = model_version
@@ -221,7 +229,11 @@ class MorningPipeline:
         prediction_set = repository.create_prediction_set(
             run_id=run.run_id,
             prediction_date=prediction_date,
-            cutoff_at=prediction_cutoff(prediction_date),
+            cutoff_at=prediction_cutoff(
+                prediction_date,
+                cutoff_time=self._config.settings.schedule.prediction_cutoff,
+                timezone_name=self._config.settings.application.timezone,
+            ),
             feature_version=feature_version,
             model_version=model_version,
             strategy_version=strategy_version,

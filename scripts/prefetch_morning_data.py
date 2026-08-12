@@ -77,7 +77,11 @@ def run_prefetch(
 ) -> MorningPrefetchResult:
     """Fetch only history visible by the immutable prediction-date cutoff."""
 
-    cutoff_at = prediction_cutoff(prediction_date)
+    cutoff_at = prediction_cutoff(
+        prediction_date,
+        cutoff_time=config.settings.schedule.prediction_cutoff,
+        timezone_name=config.settings.application.timezone,
+    )
     start_date = prediction_date - timedelta(days=HISTORY_DAYS)
     end_date = prediction_date - timedelta(days=1)
     if not allow_non_business_day and not is_japan_business_day(prediction_date):
