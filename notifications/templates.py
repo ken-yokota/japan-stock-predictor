@@ -255,10 +255,11 @@ def _degraded_buy_notice(selected: Sequence[EmailCandidate]) -> str:
     degraded = [item for item in selected if item.data_quality == "DEGRADED"]
     if not degraded:
         return ""
-    rows = "、".join(
-        f"{item.ticker} {item.company}（{'・'.join(item.missing_required) or '必須指標'}）"
-        for item in degraded
-    )
+    parts = []
+    for item in degraded:
+        missing = "・".join(item.missing_required) or "必須指標"
+        parts.append(f"{item.ticker} {item.company}（{missing}）")
+    rows = "、".join(parts)
     return (
         f"⚠ {len(degraded)}件のBUY候補は必須指標が欠けた状態で作られています: {rows}"
     )
