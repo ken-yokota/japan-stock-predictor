@@ -40,3 +40,7 @@ jobs:
 
       - name: Count the days that published on incomplete inputs
         run: python -m scripts.analyze_required_gaps
+
+      - name: Audit the morning's data completeness
+        continue-on-error: true
+        run: python -m scripts.audit_morning_completeness
