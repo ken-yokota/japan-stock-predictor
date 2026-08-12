@@ -222,6 +222,32 @@ class DashboardQueryService:
             """,
         )
 
+    def feature_completeness(self) -> QueryResult:
+        """Per-ticker completeness for the newest published prediction date.
+
+        Read from the same feature sets the run wrote, so the page cannot
+        disagree with the audit about what a morning was missing.
+        """
+
+        return self._read(
+            required={
+                "feature_sets": frozenset(
+                    {"ticker", "prediction_date", "details", "run_id"}
+                )
+            },
+            statement="""
+                SELECT fs.ticker, fs.prediction_date, fs.details
+                FROM feature_sets AS fs
+                WHERE fs.prediction_date = (
+                    SELECT prediction_date
+                    FROM prediction_sets
+                    ORDER BY prediction_date DESC, generated_at DESC
+                    LIMIT 1
+                )
+                ORDER BY fs.ticker
+            """,
+        )
+
     def today_predictions(self) -> QueryResult:
         return self._read(
             required={

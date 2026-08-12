@@ -1,16 +1,8 @@
 """Audit one morning: what each stock was owed, what arrived, and what it bought.
 
-``feature_coverage`` cannot answer whether a day had the data it needed - its
-denominator is built from the features that materialised, so an indicator
-absent from every session never enters it. Indicator completeness is recorded
-separately, and this reads it back.
-
-The distinction that matters here is between "recorded as complete" and "not
-recorded at all". Feature sets written before the completeness fields existed
-carry no misses, and an empty list there means nothing was written rather than
-nothing was missing. Those days are reported as LEGACY_UNKNOWN. Reading them
-as COMPLETE would manufacture exactly the reassurance this audit exists to
-withdraw.
+The judgement itself lives in ``dashboard.completeness`` so that this command,
+the Today page and the morning mail cannot answer the same question
+differently. This file is only the terminal view of it.
 
 Read-only: it opens a read-only transaction and issues no statement that
 writes.
@@ -22,7 +14,6 @@ import argparse
 import json
 import os
 import sys
-from collections import Counter
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
@@ -30,31 +21,25 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 from sqlalchemy.exc import SQLAlchemyError
 
+from dashboard.completeness import (
+    MorningCompletenessSummary,
+    StockCompleteness,
+    stock_from_details,
+    summarise,
+)
 from database.connection import create_database_engine
 
 JST = ZoneInfo("Asia/Tokyo")
 
-# The five series that have been failing in the morning prefetch.
-WATCHED = ("usdjpy", "eurjpy", "audjpy", "oih", "kre")
 
-CLEAN, DEGRADED, UNKNOWN = "CLEAN", "DEGRADED", "LEGACY_UNKNOWN"
-
-
-def _rows(connection: Connection, for_date: date) -> list[dict[str, object]]:
+def _load(connection: Connection, for_date: date) -> list[StockCompleteness]:
     result = connection.execute(
         text(
             """
             SELECT fs.ticker,
-                   fs.feature_version,
                    fs.details::text AS details,
-                   p.status AS prediction_status,
                    p.signal,
-                   p.rank,
-                   p.predicted_intraday_return,
-                   p.probability_up,
-                   p.feature_coverage,
-                   ps.model_version,
-                   ps.cutoff_at
+                   p.feature_coverage
             FROM feature_sets AS fs
             LEFT JOIN prediction_sets AS ps
               ON ps.run_id = fs.run_id
@@ -67,122 +52,68 @@ def _rows(connection: Connection, for_date: date) -> list[dict[str, object]]:
         ),
         {"for_date": for_date},
     )
-    return [dict(row) for row in result.mappings().all()]
-
-
-def _as_list(value: object) -> list[str]:
-    """A recorded-but-empty list and an absent one are told apart by the caller."""
-
-    return [str(item) for item in value] if isinstance(value, list) else []
-
-
-def _as_float(value: object) -> float | None:
-    return float(value) if isinstance(value, int | float) else None
-
-
-def classify(
-    details: dict[str, object],
-) -> tuple[str, list[str], list[str], float | None]:
-    """COMPLETE only when the run actually recorded that it had everything."""
-
-    if "missing_required_indicators" not in details:
-        return UNKNOWN, [], [], None
-    required = _as_list(details.get("missing_required_indicators"))
-    optional = _as_list(details.get("missing_optional_indicators"))
-    coverage = _as_float(details.get("indicator_coverage"))
-    return (DEGRADED if required else CLEAN), required, optional, coverage
+    return [
+        stock_from_details(
+            str(row["ticker"]),
+            json.loads(str(row["details"] or "{}")),
+            feature_coverage=row["feature_coverage"],
+            signal=row["signal"],
+        )
+        for row in result.mappings().all()
+    ]
 
 
 def _percent(value: float | None) -> str:
     return "—" if value is None else f"{value * 100:5.1f}%"
 
 
-def audit(connection: Connection, for_date: date) -> int:
-    rows = _rows(connection, for_date)
-    if not rows:
-        print(f"{for_date}: no feature sets found")
-        return 1
-
+def render(summary: MorningCompletenessSummary, for_date: date) -> str:
+    lines = [f"prediction_date : {for_date}", ""]
     header = (
         f"{'code':6}{'indCov':>8}{'featCov':>9}{'status':16}"
-        f"{'signal':8}{'ret':>9}{'p_up':>7}  missing required"
+        f"{'signal':8}  missing required"
     )
-    print(f"prediction_date : {for_date}")
-    print("")
-    print(header)
-    print("-" * len(header))
-
-    degraded_buys: list[str] = []
-    clean_buys: list[str] = []
-    unknown_stocks: list[str] = []
-    degraded_stocks: list[str] = []
-    hidden_by_feature_coverage: list[str] = []
-    missing_tally: Counter[str] = Counter()
-
-    for row in rows:
-        details = json.loads(str(row["details"] or "{}"))
-        status, required, _optional, indicator_coverage = classify(details)
-        ticker = str(row["ticker"])
-        signal = str(row["signal"] or "—")
-        feature_coverage = row["feature_coverage"]
-        feature_value = _as_float(feature_coverage)
-        predicted = _as_float(row["predicted_intraday_return"])
-        probability = _as_float(row["probability_up"])
-
-        missing_tally.update(required)
-        if status == UNKNOWN:
-            unknown_stocks.append(ticker)
-        elif status == DEGRADED:
-            degraded_stocks.append(ticker)
-        if signal == "BUY":
-            (degraded_buys if status == DEGRADED else clean_buys).append(ticker)
-        if (
-            feature_value is not None
-            and feature_value >= 0.9999
-            and indicator_coverage is not None
-            and indicator_coverage < 0.9999
-        ):
-            hidden_by_feature_coverage.append(ticker)
-
-        print(
-            f"{ticker:6}{_percent(indicator_coverage):>8}{_percent(feature_value):>9}"
-            f"{status:16}{signal:8}"
-            f"{(f'{predicted:+.3%}' if predicted is not None else '—'):>9}"
-            f"{(f'{probability:.2f}' if probability is not None else '—'):>7}"
-            f"  {', '.join(required) if required else '-'}"
+    lines += [header, "-" * len(header)]
+    for stock in summary.stocks:
+        missing = ", ".join(stock.missing_required) if stock.missing_required else "-"
+        lines.append(
+            f"{stock.ticker:6}{_percent(stock.indicator_coverage):>8}"
+            f"{_percent(stock.feature_coverage):>9}{stock.status:16}"
+            f"{(stock.signal or '—'):8}  {missing}"
         )
 
-    print("")
-    print("=== summary ===")
-    print(f"  stocks with feature sets       : {len(rows)}")
-    print(f"  missing required (DEGRADED)    : {len(degraded_stocks)}")
-    print(f"  not recorded (LEGACY_UNKNOWN)  : {len(unknown_stocks)}")
-    print(f"  BUY candidates                 : {len(clean_buys) + len(degraded_buys)}")
-    print(f"    CLEAN_BUY                    : {len(clean_buys)} {clean_buys}")
-    print(f"    DEGRADED_BUY                 : {len(degraded_buys)} {degraded_buys}")
-    print(
-        "  featCov=100% but indCov<100%   : "
-        f"{len(hidden_by_feature_coverage)} {hidden_by_feature_coverage}"
-    )
-    print("")
-    print("=== missing required indicators, most affected first ===")
-    for indicator, count in missing_tally.most_common():
-        print(f"  {indicator:12} {count:3} stocks")
-    if not missing_tally:
-        print("  (none recorded)")
+    degraded = [item.ticker for item in summary.degraded_buys]
+    lines += [
+        "",
+        "=== summary ===",
+        f"  stocks                        : {summary.stock_count}",
+        f"  CLEAN                         : {summary.clean_count}",
+        f"  DEGRADED (missing required)   : {summary.degraded_count}",
+        f"  LEGACY_UNKNOWN (not recorded) : {summary.unknown_count}",
+        f"  data status                   : {summary.data_status}",
+        f"  BUY candidates                : {summary.buy_count}",
+        f"    CLEAN_BUY                   : {summary.clean_buy_count}",
+        f"    DEGRADED_BUY                : {summary.degraded_buy_count} {degraded}",
+        f"  featCov=100% but indCov<100%  : "
+        f"{len(summary.hidden_by_feature_coverage)} "
+        f"{list(summary.hidden_by_feature_coverage)}",
+        "",
+        "=== missing required indicators, most affected first ===",
+    ]
+    if summary.missing_required_ranking:
+        lines += [
+            f"  {name:12} {count:3} stocks"
+            for name, count in summary.missing_required_ranking
+        ]
+    else:
+        lines.append("  (none recorded)")
 
-    print("")
-    print("=== the five watched series ===")
-    for indicator in WATCHED:
-        count = missing_tally.get(indicator, 0)
-        affected = [t for t in degraded_buys if count] if count else []
-        state = "not recorded" if unknown_stocks and not missing_tally else f"{count}"
-        print(
-            f"  {indicator:12} missing for {state:>12} stocks"
-            f"   BUY affected: {len(affected)}"
-        )
-
-    return 0
+    lines += ["", "=== watched series ==="]
+    lines += [
+        f"  {name:12} missing for {count:3} stocks"
+        for name, count in summary.watched()
+    ]
+    return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -206,11 +137,17 @@ def main(argv: list[str] | None = None) -> int:
     try:
         with engine.connect() as connection:
             connection.execute(text("SET TRANSACTION READ ONLY"))
-            return audit(connection, for_date)
+            stocks = _load(connection, for_date)
     except SQLAlchemyError:
         # The message can carry the host and the user name, so it is not shown.
         print("database read failed", file=sys.stderr)
         return 1
+
+    if not stocks:
+        print(f"{for_date}: no feature sets found")
+        return 1
+    print(render(summarise(stocks), for_date))
+    return 0
 
 
 if __name__ == "__main__":

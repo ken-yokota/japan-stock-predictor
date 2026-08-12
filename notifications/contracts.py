@@ -28,6 +28,11 @@ class EmailCandidate:
     positive_factors: tuple[str, ...] = field(default_factory=tuple)
     negative_factors: tuple[str, ...] = field(default_factory=tuple)
     warnings: tuple[str, ...] = field(default_factory=tuple)
+    # CLEAN / DEGRADED / LEGACY_UNKNOWN, from dashboard.completeness. Defaults
+    # to the honest answer: a message built before completeness was recorded
+    # cannot claim the inputs were whole.
+    data_quality: str = "LEGACY_UNKNOWN"
+    missing_required: tuple[str, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True, slots=True)

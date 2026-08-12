@@ -1,78 +1,81 @@
-"""An empty list of misses is not the same as no misses.
+"""The audit's terminal view, and its agreement with the shared summary.
 
-Feature sets written before the completeness fields existed carry nothing, and
-reading that absence as "complete" would manufacture exactly the reassurance
-the audit exists to withdraw. These pin the three states apart.
+The point of the shared layer is that three surfaces cannot disagree about the
+same morning, so this asserts the rendered text carries exactly the counts the
+summary computed rather than recomputing them on its way to the screen.
 """
 
 from __future__ import annotations
 
-from scripts.audit_morning_completeness import CLEAN, DEGRADED, UNKNOWN, classify
+from datetime import date
+
+from dashboard.completeness import stock_from_details, summarise
+from scripts.audit_morning_completeness import render
+
+FOR_DATE = date(2026, 8, 13)
+RECORDED_CLEAN = {
+    "missing_required_indicators": [],
+    "missing_optional_indicators": [],
+    "indicator_coverage": 1.0,
+}
+LEGACY = {"feature_names": ["a"], "feature_coverage": 1.0}
 
 
-def test_a_run_that_recorded_no_misses_is_clean() -> None:
-    status, required, optional, coverage = classify(
-        {
-            "missing_required_indicators": [],
-            "missing_optional_indicators": [],
-            "indicator_coverage": 1.0,
-        }
+def _degraded(*missing: str) -> dict[str, object]:
+    return {
+        "missing_required_indicators": list(missing),
+        "missing_optional_indicators": [],
+        "indicator_coverage": 0.9,
+    }
+
+
+def _stock(ticker, details, signal=""):  # type: ignore[no-untyped-def]
+    return stock_from_details(ticker, details, feature_coverage=1.0, signal=signal)
+
+
+def test_the_report_names_every_stock_and_its_state() -> None:
+    summary = summarise(
+        [
+            _stock("9107", RECORDED_CLEAN, "BUY"),
+            _stock("9101", _degraded("usdjpy"), "BUY"),
+            _stock("8306", LEGACY),
+        ]
     )
-    assert status == CLEAN
-    assert required == [] and optional == []
-    assert coverage == 1.0
+    text = render(summary, FOR_DATE)
+    assert "2026-08-13" in text
+    for ticker in ("9107", "9101", "8306"):
+        assert ticker in text
+    assert "LEGACY_UNKNOWN" in text
+    assert "usdjpy" in text
 
 
-def test_a_run_that_recorded_a_required_miss_is_degraded() -> None:
-    status, required, _optional, coverage = classify(
-        {
-            "missing_required_indicators": ["usdjpy", "eurjpy"],
-            "missing_optional_indicators": [],
-            "indicator_coverage": 0.9,
-        }
+def test_the_report_counts_match_the_summary() -> None:
+    summary = summarise(
+        [
+            _stock("9107", RECORDED_CLEAN, "BUY"),
+            _stock("9101", _degraded("usdjpy"), "BUY"),
+            _stock("8306", LEGACY),
+        ]
     )
-    assert status == DEGRADED
-    assert required == ["usdjpy", "eurjpy"]
-    assert coverage == 0.9
+    text = render(summary, FOR_DATE)
+    assert f"CLEAN_BUY                   : {summary.clean_buy_count}" in text
+    assert f"DEGRADED_BUY                : {summary.degraded_buy_count}" in text
+    assert f"LEGACY_UNKNOWN (not recorded) : {summary.unknown_count}" in text
+    assert f"data status                   : {summary.data_status}" in text
 
 
-def test_an_optional_miss_alone_does_not_degrade() -> None:
-    status, required, optional, _coverage = classify(
-        {
-            "missing_required_indicators": [],
-            "missing_optional_indicators": ["iron_ore"],
-            "indicator_coverage": 0.95,
-        }
+def test_a_watched_series_with_no_misses_is_still_listed() -> None:
+    """Silence about a series is not the same as it being fine."""
+
+    text = render(summarise([_stock("9101", _degraded("usdjpy"), "BUY")]), FOR_DATE)
+    assert "usdjpy       missing for   1 stocks" in text
+    assert "kre          missing for   0 stocks" in text
+
+
+def test_all_22_degraded_reads_as_such() -> None:
+    summary = summarise(
+        [_stock(str(9100 + n), _degraded("usdjpy", "eurjpy")) for n in range(22)]
     )
-    assert status == CLEAN
-    assert required == []
-    assert optional == ["iron_ore"]
-
-
-def test_a_feature_set_from_before_the_fields_existed_is_unknown() -> None:
-    """The regression that matters: [] must not be read as COMPLETE."""
-
-    status, required, optional, coverage = classify(
-        {"feature_names": ["a", "b"], "feature_coverage": 1.0}
-    )
-    assert status == UNKNOWN
-    assert required == [] and optional == []
-    assert coverage is None
-
-
-def test_an_empty_details_blob_is_unknown_not_clean() -> None:
-    assert classify({})[0] == UNKNOWN
-
-
-def test_a_null_list_is_treated_as_recorded_and_empty() -> None:
-    """Postgres can hand back JSON null; that is still a recorded run."""
-
-    status, required, optional, _coverage = classify(
-        {
-            "missing_required_indicators": None,
-            "missing_optional_indicators": None,
-            "indicator_coverage": 1.0,
-        }
-    )
-    assert status == CLEAN
-    assert required == [] and optional == []
+    text = render(summary, FOR_DATE)
+    assert "DEGRADED (missing required)   : 22" in text
+    assert "usdjpy        22 stocks" in text
