@@ -290,7 +290,13 @@ class DashboardQueryService:
                     }
                 ),
                 "actual_results": frozenset(
-                    {"prediction_id", "result_version", "actual_open"}
+                    {
+                        "prediction_id",
+                        "result_version",
+                        "actual_open",
+                        "actual_close",
+                        "actual_intraday_return",
+                    }
                 ),
             },
             statement="""
@@ -315,7 +321,23 @@ class DashboardQueryService:
                           AND ar.actual_open IS NOT NULL
                         ORDER BY ar.result_version DESC
                         LIMIT 1
-                    ) AS actual_open
+                    ) AS actual_open,
+                    (
+                        SELECT ar.actual_close
+                        FROM actual_results AS ar
+                        WHERE ar.prediction_id = p.prediction_id
+                          AND ar.actual_close IS NOT NULL
+                        ORDER BY ar.result_version DESC
+                        LIMIT 1
+                    ) AS actual_close,
+                    (
+                        SELECT ar.actual_intraday_return
+                        FROM actual_results AS ar
+                        WHERE ar.prediction_id = p.prediction_id
+                          AND ar.actual_intraday_return IS NOT NULL
+                        ORDER BY ar.result_version DESC
+                        LIMIT 1
+                    ) AS actual_intraday_return
                 FROM predictions AS p
                 JOIN prediction_sets AS ps
                   ON ps.prediction_set_id = p.prediction_set_id

@@ -8,12 +8,14 @@ import streamlit as st
 from dashboard.catalog import stock_label
 from dashboard.presenters import (
     as_number,
+    buy_hit_ratio,
     format_jst,
     format_number,
     format_percent,
     format_percent_range,
     format_probability,
     latest_by,
+    outcome_table_rows,
     safe_text,
     string_list,
 )
@@ -27,6 +29,16 @@ from dashboard.ui import (
     render_query_state,
     require_service,
 )
+
+
+def _hit_text(predicted: float | None, observed: float | None) -> str:
+    """Direction agreement, blank while the session is unsettled."""
+
+    if predicted is None or observed is None:
+        return "—"
+    if observed == 0:
+        return "±0"
+    return "的中" if (predicted > 0) == (observed > 0) else "外れ"
 
 
 def main() -> None:
@@ -77,16 +89,20 @@ def main() -> None:
 
     chart_rows: list[dict[str, object]] = []
     table_rows: list[dict[str, object]] = []
-    for prediction in reversed(selected):
+    # Oldest first. The chart reads left to right in time; the table below is
+    # reversed at render so the newest day is on top.
+    for prediction in selected:
         prediction_id = str(prediction["prediction_id"])
         actual = latest_actual.get(prediction_id, {})
         predicted = as_number(prediction.get("predicted_intraday_return"))
         observed = as_number(actual.get("actual_intraday_return"))
+        # Plotted as percentages: a y-axis in raw ratios puts every series in
+        # the third decimal place and reads as a flat line.
         chart_rows.append(
             {
                 "日付": str(prediction.get("prediction_date")),
-                "予測リターン": predicted,
-                "実績リターン": observed,
+                "予測リターン(%)": None if predicted is None else predicted * 100,
+                "実績リターン(%)": None if observed is None else observed * 100,
             }
         )
         table_rows.append(
@@ -95,6 +111,10 @@ def main() -> None:
                 "Cutoff": format_jst(prediction.get("cutoff_at")),
                 "予測状態": safe_text(prediction.get("status", "—")),
                 "予測リターン": format_percent(predicted),
+                "実績リターン": (
+                    format_percent(observed) if observed is not None else "—"
+                ),
+                "方向": _hit_text(predicted, observed),
                 "予測区間": format_percent_range(
                     prediction.get("prediction_interval_low"),
                     prediction.get("prediction_interval_high"),
@@ -113,17 +133,47 @@ def main() -> None:
                 )
                 or "—",
                 "実績状態": safe_text(actual.get("status", "PENDING")),
-                "実績リターン": format_percent(observed),
             }
         )
 
     st.subheader("予測と実績")
-    if any(row["実績リターン"] is not None for row in chart_rows):
+    if any(row["実績リターン(%)"] is not None for row in chart_rows):
         frame = pd.DataFrame(chart_rows).set_index("日付")
         st.line_chart(frame, use_container_width=True)
+        st.caption(
+            "縦軸は%。実績が未確定の日は線が途切れます（0として描きません）。"
+        )
     else:
         st.info("PENDING: 確定した実績リターンがまだありません。")
     display_rows(list(reversed(table_rows)), height=420)
+
+    # The same builder the Today page and History use, so one prediction reads
+    # identically wherever it is opened from.
+    record = outcome_table_rows([dict(row) for row in selected])
+    st.subheader(f"この銘柄の予測と結果 {len(record)}件")
+    st.caption(
+        "公開された予測を新しい順に並べています。"
+        "「方向」は予測の符号が実績と一致したかどうかで、"
+        "実績が未確定の日は空欄です。"
+    )
+    display_rows(list(reversed(record)), height=420)
+
+    positive, issued, unsettled = buy_hit_ratio([dict(row) for row in selected])
+    st.metric("買いの的中", f"{positive}/{issued}")
+    st.caption(
+        "実際にプラスになった日 / 買いシグナルが出た日。"
+        "分母は出したシグナル全部で、未確定の日も含みます"
+        + (f"（未確定 {unsettled}日）" if unsettled else "")
+        + "。確定分だけを分母にすると、引けが取れていない日の分だけ"
+        "見かけの成績が良くなります。"
+    )
+
+    buys = outcome_table_rows([dict(row) for row in selected], buy_only=True)
+    with st.expander(f"BUYを出した日だけ {len(buys)}件"):
+        if buys:
+            display_rows(list(reversed(buys)), height=320)
+        else:
+            st.info("この銘柄でBUYを出した日はまだありません。")
 
     st.subheader("最新OOS評価")
     if metric:
