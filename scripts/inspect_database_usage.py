@@ -41,6 +41,12 @@ CANDIDATE_KEYS: tuple[tuple[str, ...], ...] = (
 DATE_COLUMNS = ("prediction_date", "market_date", "sample_date", "for_date")
 
 
+def _as_int(value: object) -> int:
+    """Catalog sizes arrive typed as ``object``; narrow them in one place."""
+
+    return int(value) if isinstance(value, int | float | str) else 0
+
+
 def _megabytes(value: int | None) -> str:
     return f"{(value or 0) / 1024 / 1024:8.2f} MB"
 
@@ -153,16 +159,16 @@ def report(connection: Connection) -> dict[str, object]:
         rows = _count(connection, name)
         print(
             f"{name:26}{rows:>12,}"
-            f"{_megabytes(int(entry['total_bytes'] or 0)):>14}"
-            f"{_megabytes(int(entry['table_bytes'] or 0)):>14}"
-            f"{_megabytes(int(entry['index_bytes'] or 0)):>14}"
+            f"{_megabytes(_as_int(entry["total_bytes"])):>14}"
+            f"{_megabytes(_as_int(entry["table_bytes"])):>14}"
+            f"{_megabytes(_as_int(entry["index_bytes"])):>14}"
         )
         summary.append(
             {
                 "table": name,
                 "rows": rows,
-                "total_bytes": int(entry["total_bytes"] or 0),
-                "index_bytes": int(entry["index_bytes"] or 0),
+                "total_bytes": _as_int(entry["total_bytes"]),
+                "index_bytes": _as_int(entry["index_bytes"]),
             }
         )
 
