@@ -37,3 +37,6 @@ jobs:
 
       - name: Measure the database
         run: python -m scripts.inspect_database_usage
+
+      - name: Count the days that published on incomplete inputs
+        run: python -m scripts.analyze_required_gaps
