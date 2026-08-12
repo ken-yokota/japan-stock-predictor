@@ -303,12 +303,9 @@ def _post_open_close(prediction: Mapping[str, Any]) -> str:
 def _direction_hit(predicted: object, actual: object) -> str:
     """Did the prediction get the direction right? Blank until it settles."""
 
-    if predicted is None or actual is None:
-        return "—"
-    try:
-        predicted_value = float(predicted)
-        actual_value = float(actual)
-    except (TypeError, ValueError):
+    predicted_value = as_number(predicted)
+    actual_value = as_number(actual)
+    if predicted_value is None or actual_value is None:
         return "—"
     if actual_value == 0.0:
         return "±0"
