@@ -24,7 +24,7 @@ from dashboard.ui import (
     cached_prediction_history,
     configure_page,
     display_rows,
-    render_header,
+    render_latest_day_banner,
     render_query_state,
     require_service,
 )
@@ -42,10 +42,9 @@ def _hit_text(predicted: float | None, observed: float | None) -> str:
 
 def main() -> None:
     configure_page("Stock Detail", "🔎")
-    render_header(
-        "Stock Detail",
-        "銘柄別に、保存済み予測と後日確定した実績を時系列で比較します。",
-    )
+    # The selector comes first. Everything below it is about one stock, so
+    # choosing which one should not be reached past a banner and a disclaimer.
+    st.title("Stock Detail")
     service = require_service()
     if service is None:
         return
@@ -60,6 +59,13 @@ def main() -> None:
         tickers,
         format_func=stock_label,
     )
+    st.caption("銘柄別に、保存済み予測と後日確定した実績を時系列で比較します。")
+    render_latest_day_banner()
+    st.info(
+        "研究用の参考情報であり、投資助言ではありません。予測値・順位・BUY表示だけで"
+        "売買判断をしないでください。"
+    )
+
     selected = [row for row in history.rows if str(row["ticker"]) == ticker]
     actuals = cached_actual_results(service)
     latest_actual = latest_by(
