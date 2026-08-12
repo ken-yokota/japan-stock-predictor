@@ -80,11 +80,16 @@ def main() -> int:
             buys_on_incomplete += int(row["buys"] or 0)
         else:
             complete_days += 1
+        day = row["d"]
+        status = row["set_status"]
+        predictions = int(row["predictions"])
+        buys = int(row["buys"] or 0)
+        settled = int(row["settled"])
+        avg_cov = float(row["avg_cov"] or 0)
         print(
-            f"{str(row['d']):12}{str(row['set_status']):16}"
-            f"{int(row['predictions']):>6}{int(row['buys'] or 0):>6}"
-            f"{min_cov:>8.3f}{float(row['avg_cov'] or 0):>8.3f}"
-            f"{int(row['settled']):>8}  {'yes' if partial else 'no'}"
+            f"{day!s:12}{status!s:16}{predictions:>6}{buys:>6}"
+            f"{min_cov:>8.3f}{avg_cov:>8.3f}{settled:>8}  "
+            f"{'yes' if partial else 'no'}"
         )
 
     total = complete_days + incomplete_days
