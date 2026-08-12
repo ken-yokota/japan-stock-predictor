@@ -71,7 +71,11 @@ def ingest_free_morning_data(
         "yahoo_finance": yahoo,
         **({"eodhd_free": eodhd} if eodhd is not None else {}),
     }
-    cutoff_at = prediction_cutoff(prediction_date)
+    cutoff_at = prediction_cutoff(
+        prediction_date,
+        cutoff_time=config.settings.schedule.prediction_cutoff,
+        timezone_name=config.settings.application.timezone,
+    )
     plan = build_fetch_plan(config)
     session = factory()
     repository = MarketDataRepository(session)
