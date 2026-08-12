@@ -8,7 +8,7 @@ a flat day rather than an unknown one.
 
 from __future__ import annotations
 
-from dashboard.presenters import outcome_table_rows
+from dashboard.outcomes import outcome_table_rows
 
 SETTLED_HIT = {
     "prediction_date": "2026-08-12",
@@ -81,7 +81,7 @@ def test_a_flat_session_is_not_reported_as_a_hit() -> None:
 def test_the_buy_hit_ratio_counts_every_signal_in_the_denominator() -> None:
     """A signal whose day has not closed is still a signal that was issued."""
 
-    from dashboard.presenters import buy_hit_ratio
+    from dashboard.outcomes import buy_hit_ratio
 
     rows = [
         SETTLED_HIT,                                   # BUY, rose
@@ -94,13 +94,13 @@ def test_the_buy_hit_ratio_counts_every_signal_in_the_denominator() -> None:
 
 
 def test_a_flat_close_does_not_count_as_positive() -> None:
-    from dashboard.presenters import buy_hit_ratio
+    from dashboard.outcomes import buy_hit_ratio
 
     flat = {**SETTLED_HIT, "actual_intraday_return": 0.0}
     assert buy_hit_ratio([flat]) == (0, 1, 0)
 
 
 def test_no_buys_gives_a_zero_denominator_rather_than_a_crash() -> None:
-    from dashboard.presenters import buy_hit_ratio
+    from dashboard.outcomes import buy_hit_ratio
 
     assert buy_hit_ratio([UNSETTLED]) == (0, 0, 0)

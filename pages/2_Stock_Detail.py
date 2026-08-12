@@ -6,16 +6,15 @@ import pandas as pd  # type: ignore[import-untyped]
 import streamlit as st
 
 from dashboard.catalog import stock_label
+from dashboard.outcomes import buy_hit_ratio, outcome_table_rows
 from dashboard.presenters import (
     as_number,
-    buy_hit_ratio,
     format_jst,
     format_number,
     format_percent,
     format_percent_range,
     format_probability,
     latest_by,
-    outcome_table_rows,
     safe_text,
     string_list,
 )
