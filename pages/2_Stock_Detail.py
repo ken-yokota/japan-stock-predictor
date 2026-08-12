@@ -14,6 +14,7 @@ from dashboard.presenters import (
     format_percent_range,
     format_probability,
     latest_by,
+    outcome_table_rows,
     safe_text,
     string_list,
 )
@@ -124,6 +125,24 @@ def main() -> None:
     else:
         st.info("PENDING: 確定した実績リターンがまだありません。")
     display_rows(list(reversed(table_rows)), height=420)
+
+    # The same builder the Today page and History use, so one prediction reads
+    # identically wherever it is opened from.
+    record = outcome_table_rows([dict(row) for row in selected])
+    st.subheader(f"この銘柄の予測と結果 {len(record)}件")
+    st.caption(
+        "公開された予測を新しい順に並べています。"
+        "「方向」は予測の符号が実績と一致したかどうかで、"
+        "実績が未確定の日は空欄です。"
+    )
+    display_rows(list(reversed(record)), height=420)
+
+    buys = outcome_table_rows([dict(row) for row in selected], buy_only=True)
+    with st.expander(f"BUYを出した日だけ {len(buys)}件"):
+        if buys:
+            display_rows(list(reversed(buys)), height=320)
+        else:
+            st.info("この銘柄でBUYを出した日はまだありません。")
 
     st.subheader("最新OOS評価")
     if metric:

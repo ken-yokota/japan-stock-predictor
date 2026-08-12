@@ -16,6 +16,7 @@ from dashboard.presenters import (
     derive_operational_alerts,
     format_percent,
     format_probability,
+    outcome_table_rows,
     today_table_rows,
 )
 from dashboard.ui import (
@@ -192,6 +193,26 @@ def main() -> None:
                         "Feature Coverage "
                         f"{format_percent(row.get('feature_coverage'), digits=1)}"
                     )
+
+    # The day's own record, once it settles. Kept separate from the forecast
+    # table above so an unsettled morning is visibly unsettled rather than a
+    # row of dashes inside the predictions.
+    settled = [
+        row for row in prediction_rows if row.get("actual_intraday_return") is not None
+    ]
+    if settled:
+        buy_outcomes = outcome_table_rows(prediction_rows, buy_only=True)
+        hits = sum(1 for row in buy_outcomes if row["方向"] == "的中")
+        scored = sum(1 for row in buy_outcomes if row["方向"] in {"的中", "外れ"})
+        st.subheader(f"本日の結果（確定 {len(settled)}銘柄）")
+        if scored:
+            st.caption(f"BUY候補の方向的中 {hits}/{scored}")
+        display_rows(outcome_table_rows(prediction_rows), height=420)
+    else:
+        st.caption(
+            "本日の実績はまだ確定していません。"
+            "引け後の更新で、この下に予測と結果の比較が出ます。"
+        )
 
     st.subheader("全銘柄")
     st.caption(

@@ -28,6 +28,7 @@ from dashboard.progress import (
     version_changes,
     version_summary,
 )
+from dashboard.presenters import outcome_table_rows
 from dashboard.report_view import render_report
 from dashboard.significance import (
     DISCOVERY_RATE,
@@ -248,6 +249,30 @@ def main() -> None:
 
             _render_progress(report)
             _render_significance(report)
+
+            # The record itself, before any aggregate of it: one row per
+            # prediction beside what the session actually did. Unsettled days
+            # keep their outcome columns empty rather than showing a zero,
+            # which would read as a flat result rather than an unknown one.
+            rows = [dict(row) for row in result.rows]
+            buys = outcome_table_rows(rows, buy_only=True)
+            st.subheader(f"過去の買い予測とその結果 {len(buys)}件")
+            if buys:
+                st.caption(
+                    "BUYを出した日だけを新しい順に並べています。"
+                    "「方向」は予測の符号が実績と一致したかどうかです。"
+                )
+                display_rows(list(reversed(buys)), height=420)
+            else:
+                st.info("この期間にBUYはありません。0件も正常な結果です。")
+
+            everything = outcome_table_rows(rows)
+            with st.expander(f"全銘柄の予測と結果 {len(everything)}件"):
+                st.caption(
+                    "BUY以外も含む全公開予測です。実績が未確定の日は空欄になります。"
+                )
+                display_rows(list(reversed(everything)), height=520)
+
             render_report(report, f"history_{label}")
 
 

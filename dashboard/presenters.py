@@ -300,6 +300,61 @@ def _post_open_close(prediction: Mapping[str, Any]) -> str:
     return f"{projection.predicted_close:,.1f}"
 
 
+def _direction_hit(predicted: object, actual: object) -> str:
+    """Did the prediction get the direction right? Blank until it settles."""
+
+    if predicted is None or actual is None:
+        return "—"
+    try:
+        predicted_value = float(predicted)
+        actual_value = float(actual)
+    except (TypeError, ValueError):
+        return "—"
+    if actual_value == 0.0:
+        return "±0"
+    return "的中" if (predicted_value > 0) == (actual_value > 0) else "外れ"
+
+
+def outcome_table_rows(
+    rows: Iterable[Mapping[str, Any]],
+    *,
+    buy_only: bool = False,
+) -> list[dict[str, object]]:
+    """One prediction per row, beside what actually happened.
+
+    The same builder serves Today, Stock Detail and History so a prediction
+    cannot read differently depending on which page it is opened from. Rows
+    whose session has not settled keep their outcome columns empty rather than
+    showing a zero, which would read as a flat day rather than an unknown one.
+    """
+
+    output: list[dict[str, object]] = []
+    for row in rows:
+        signal = safe_text(row.get("signal", "—"))
+        if buy_only and signal.upper() != "BUY":
+            continue
+        predicted = row.get("predicted_intraday_return")
+        actual = row.get("actual_intraday_return")
+        output.append(
+            {
+                "予測日": safe_text(row.get("prediction_date", "—")),
+                "銘柄": stock_label(str(row.get("ticker", ""))),
+                "判定": signal,
+                "予測リターン": format_percent(predicted),
+                "上昇確率": format_probability(row.get("probability_up")),
+                "実績リターン": format_percent(actual) if actual is not None else "—",
+                "方向": _direction_hit(predicted, actual),
+                "実績Open": format_number(row.get("actual_open")),
+                "実績Close": format_number(row.get("actual_close")),
+                "損益": format_yen(row.get("net_profit_jpy"))
+                if row.get("net_profit_jpy") is not None
+                else "—",
+                "状態": safe_text(row.get("status", "—")),
+            }
+        )
+    return output
+
+
 def today_table_rows(
     predictions: Iterable[Mapping[str, Any]],
     metrics: Iterable[Mapping[str, Any]],
