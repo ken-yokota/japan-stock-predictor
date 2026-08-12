@@ -312,6 +312,29 @@ def _direction_hit(predicted: object, actual: object) -> str:
     return "的中" if (predicted_value > 0) == (actual_value > 0) else "外れ"
 
 
+def buy_hit_ratio(rows: Iterable[Mapping[str, Any]]) -> tuple[int, int, int]:
+    """(days that actually rose, days a BUY was issued, days not settled yet).
+
+    The denominator is every BUY, not only the settled ones, because a signal
+    whose day has not closed is still a signal that was issued. Counting only
+    settled days would quietly improve the ratio whenever a session is missing
+    its close. The unsettled count is returned alongside so the fraction is
+    read with the right caveat rather than as a final score.
+    """
+
+    issued = settled_positive = unsettled = 0
+    for row in rows:
+        if safe_text(row.get("signal", "")).upper() != "BUY":
+            continue
+        issued += 1
+        actual = as_number(row.get("actual_intraday_return"))
+        if actual is None:
+            unsettled += 1
+        elif actual > 0:
+            settled_positive += 1
+    return settled_positive, issued, unsettled
+
+
 def outcome_table_rows(
     rows: Iterable[Mapping[str, Any]],
     *,

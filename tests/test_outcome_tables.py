@@ -76,3 +76,31 @@ def test_every_row_carries_the_same_columns() -> None:
 def test_a_flat_session_is_not_reported_as_a_hit() -> None:
     flat = {**SETTLED_HIT, "actual_intraday_return": 0.0}
     assert outcome_table_rows([flat])[0]["方向"] == "±0"
+
+
+def test_the_buy_hit_ratio_counts_every_signal_in_the_denominator() -> None:
+    """A signal whose day has not closed is still a signal that was issued."""
+
+    from dashboard.presenters import buy_hit_ratio
+
+    rows = [
+        SETTLED_HIT,                                   # BUY, rose
+        SETTLED_MISS,                                  # BUY, fell
+        {**SETTLED_HIT, "actual_intraday_return": None},  # BUY, unsettled
+        UNSETTLED,                                     # not a BUY
+    ]
+    positive, issued, unsettled = buy_hit_ratio(rows)
+    assert (positive, issued, unsettled) == (1, 3, 1)
+
+
+def test_a_flat_close_does_not_count_as_positive() -> None:
+    from dashboard.presenters import buy_hit_ratio
+
+    flat = {**SETTLED_HIT, "actual_intraday_return": 0.0}
+    assert buy_hit_ratio([flat]) == (0, 1, 0)
+
+
+def test_no_buys_gives_a_zero_denominator_rather_than_a_crash() -> None:
+    from dashboard.presenters import buy_hit_ratio
+
+    assert buy_hit_ratio([UNSETTLED]) == (0, 0, 0)
