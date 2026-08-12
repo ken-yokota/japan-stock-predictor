@@ -36,11 +36,15 @@ class _StubService:
         prediction_set: QueryResult,
         predictions: QueryResult,
         health: QueryResult | None = None,
+        completeness: QueryResult | None = None,
     ) -> None:
         self._run = run
         self._prediction_set = prediction_set
         self._predictions = predictions
         self._health = health or QueryResult.from_rows(({"ok": True},))
+        # Defaults to unavailable: a stub that silently claimed a complete
+        # morning would make the snapshot tests agree with a lie.
+        self._completeness = completeness or QueryResult.unavailable()
 
     def database_health(self) -> QueryResult:
         return self._health
@@ -53,6 +57,9 @@ class _StubService:
 
     def today_predictions(self) -> QueryResult:
         return self._predictions
+
+    def feature_completeness(self) -> QueryResult:
+        return self._completeness
 
 
 def _run_row(**overrides: Any) -> dict[str, Any]:
