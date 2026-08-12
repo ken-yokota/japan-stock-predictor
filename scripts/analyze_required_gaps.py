@@ -63,8 +63,11 @@ def main() -> int:
         print("database read failed", file=sys.stderr)
         return 1
 
-    print(f"{'date':12}{'status':16}{'preds':>6}{'buys':>6}{'minCov':>8}"
-          f"{'avgCov':>8}{'settled':>8}  partial")
+    header = (
+        f"{'date':12}{'status':16}{'preds':>6}{'buys':>6}"
+        f"{'minCov':>8}{'avgCov':>8}{'settled':>8}  partial"
+    )
+    print(header)
     print("-" * 78)
     complete_days = incomplete_days = 0
     buys_on_incomplete = 0
