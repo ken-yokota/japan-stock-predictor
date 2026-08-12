@@ -56,7 +56,11 @@ def main(argv: list[str] | None = None) -> int:
         if arguments.prediction_date
         else datetime.now(UTC).date()
     )
-    cutoff_at = prediction_cutoff(prediction_date)
+    cutoff_at = prediction_cutoff(
+        prediction_date,
+        cutoff_time=config.settings.schedule.prediction_cutoff,
+        timezone_name=config.settings.application.timezone,
+    )
     start_date = prediction_date - timedelta(days=arguments.history_days)
     end_date = prediction_date - timedelta(days=1)
 
