@@ -109,7 +109,7 @@ def test_a_late_start_does_not_move_the_cutoff(make_bar) -> None:
     """The cutoff comes from the prediction date, never from the wall clock."""
 
     del make_bar
-    assert CUTOFF == datetime(2026, 8, 12, 8, 30, tzinfo=JST)
+    assert datetime(2026, 8, 12, 8, 30, tzinfo=JST) == CUTOFF
     # Every scheduled attempt and the delayed one resolve to the same instant.
     for started_at in (*SCHEDULED_STARTS, DELAYED_START):
         assert prediction_cutoff(started_at.date()) == CUTOFF
