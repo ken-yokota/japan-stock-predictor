@@ -20,7 +20,12 @@ import streamlit as st
 
 from dashboard.catalog import stock_label
 from dashboard.history import build_history_report
-from dashboard.presenters import format_number, format_percent, format_yen
+from dashboard.presenters import (
+    format_number,
+    format_percent,
+    format_yen,
+    outcome_table_rows,
+)
 from dashboard.progress import (
     DEFAULT_ROLLING_SESSIONS,
     daily_points,
@@ -28,7 +33,6 @@ from dashboard.progress import (
     version_changes,
     version_summary,
 )
-from dashboard.presenters import outcome_table_rows
 from dashboard.report_view import render_report
 from dashboard.significance import (
     DISCOVERY_RATE,
