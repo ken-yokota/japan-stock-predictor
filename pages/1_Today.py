@@ -12,11 +12,11 @@ from dashboard.completeness import (
     stock_from_details,
     summarise,
 )
+from dashboard.outcomes import outcome_table_rows
 from dashboard.presenters import (
     derive_operational_alerts,
     format_percent,
     format_probability,
-    outcome_table_rows,
     today_table_rows,
 )
 from dashboard.ui import (

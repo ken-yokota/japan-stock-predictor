@@ -20,12 +20,8 @@ import streamlit as st
 
 from dashboard.catalog import stock_label
 from dashboard.history import build_history_report
-from dashboard.presenters import (
-    format_number,
-    format_percent,
-    format_yen,
-    outcome_table_rows,
-)
+from dashboard.outcomes import outcome_table_rows
+from dashboard.presenters import format_number, format_percent, format_yen
 from dashboard.progress import (
     DEFAULT_ROLLING_SESSIONS,
     daily_points,
