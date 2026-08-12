@@ -36,6 +36,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 from sqlalchemy.exc import SQLAlchemyError
 
+from dashboard.completeness import stock_from_details, summarise
 from data.market_calendar import is_japan_business_day
 from database.connection import create_database_engine
 
@@ -181,6 +182,59 @@ def snapshot_check(
     if not right_day:
         detail += "（日付が一致しない）"
     return Check("dashboard", fresh and right_day, detail)
+
+
+def _completeness(connection: Connection, for_date: date) -> Check:
+    """How much of what the morning was owed actually arrived.
+
+    Reported, not enforced. A required indicator can still be missing without
+    stopping anything - that decision needs measurements first, and this is
+    how they get taken without anybody running a command.
+    """
+
+    rows = (
+        connection.execute(
+            text(
+                """
+                SELECT fs.ticker, fs.details::text AS details, p.signal
+                FROM feature_sets AS fs
+                LEFT JOIN prediction_sets AS ps ON ps.run_id = fs.run_id
+                LEFT JOIN predictions AS p
+                  ON p.prediction_set_id = ps.prediction_set_id
+                 AND p.ticker = fs.ticker
+                WHERE fs.prediction_date = :for_date
+                """
+            ),
+            {"for_date": for_date},
+        )
+        .mappings()
+        .all()
+    )
+    if not rows:
+        return Check("completeness", True, "feature setがまだありません")
+    summary = summarise(
+        [
+            stock_from_details(
+                str(row["ticker"]),
+                json.loads(str(row["details"] or "{}")),
+                signal=row["signal"],
+            )
+            for row in rows
+        ]
+    )
+    worst = ", ".join(
+        f"{name}({count})" for name, count in summary.missing_required_ranking[:3]
+    )
+    detail = (
+        f"{summary.data_status} CLEAN {summary.clean_count} / "
+        f"DEGRADED {summary.degraded_count} / UNKNOWN {summary.unknown_count}"
+        f" / DEGRADED_BUY {summary.degraded_buy_count}"
+    )
+    if worst:
+        detail += f" / 欠損: {worst}"
+    # Always ok: this check informs, it does not gate. The counts travel in the
+    # detail so a degraded morning is legible without being an alarm yet.
+    return Check("completeness", True, detail)
 
 
 def _prediction_set(connection: Connection, for_date: date) -> dict[str, object] | None:
@@ -346,6 +400,7 @@ def verify(
             )
             sent = _sent_emails(connection, set_id)
             outcome.checks.append(email_check(sent))
+            outcome.checks.append(_completeness(connection, for_date))
 
             if window == "evening":
                 settled = _settled_count(connection, set_id)
