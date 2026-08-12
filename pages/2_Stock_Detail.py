@@ -8,12 +8,12 @@ import streamlit as st
 from dashboard.catalog import stock_label
 from dashboard.presenters import (
     as_number,
+    buy_hit_ratio,
     format_jst,
     format_number,
     format_percent,
     format_percent_range,
     format_probability,
-    buy_hit_ratio,
     latest_by,
     outcome_table_rows,
     safe_text,
@@ -111,7 +111,9 @@ def main() -> None:
                 "Cutoff": format_jst(prediction.get("cutoff_at")),
                 "予測状態": safe_text(prediction.get("status", "—")),
                 "予測リターン": format_percent(predicted),
-                "実績リターン": format_percent(observed) if observed is not None else "—",
+                "実績リターン": (
+                    format_percent(observed) if observed is not None else "—"
+                ),
                 "方向": _hit_text(predicted, observed),
                 "予測区間": format_percent_range(
                     prediction.get("prediction_interval_low"),
