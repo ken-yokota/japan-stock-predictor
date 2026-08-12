@@ -97,9 +97,10 @@ def main(argv: list[str] | None = None) -> int:
             coverage={},
         )
         required = set(window.required_sessions)
-        provider = providers.get(target.primary.provider)
+        provider_name = target.primary.provider or ""
+        provider = providers.get(provider_name)
         if provider is None:
-            print(f"{canonical}: provider {target.primary.provider} unavailable")
+            print(f"{canonical}: provider {provider_name or '(none)'} unavailable")
             continue
 
         try:
@@ -128,7 +129,7 @@ def main(argv: list[str] | None = None) -> int:
         }
 
         coverage = (len(required & visible) / len(required)) if required else 1.0
-        print(f"=== {canonical}  ({target.primary.provider} {request.market}) ===")
+        print(f"=== {canonical}  ({provider_name} {request.market}) ===")
         print(f"  market_timezone : {request.market_timezone}")
         print(f"  required        : {len(required)}")
         print(f"  returned        : {len(available)}")
