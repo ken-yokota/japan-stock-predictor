@@ -167,6 +167,15 @@ def persist_feature_set(
             "candidate_feature_count": dataset.candidate_feature_count,
             "feature_coverage": dataset.feature_coverage,
             "target": "raw_close/raw_open-1",
+            # Only the misses are stored. The expected set is reconstructible
+            # from the configuration for this feature version, so repeating it
+            # on every feature set would cost storage to say nothing new -
+            # and the hosted project has 512 MB in total.
+            "expected_indicator_count": len(dataset.expected_indicators),
+            "observed_indicator_count": len(dataset.observed_indicators),
+            "indicator_coverage": dataset.indicator_coverage,
+            "missing_required_indicators": list(dataset.missing_required_indicators),
+            "missing_optional_indicators": list(dataset.missing_optional_indicators),
         },
     )
     if feature_set.status != "BUILDING":

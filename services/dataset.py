@@ -113,6 +113,15 @@ class ModelDataset:
     current_sample: ModelSample
     candidate_feature_count: int
     feature_coverage: float
+    # What the configuration said this ticker needs, and what actually arrived.
+    # feature_coverage cannot answer that: its denominator is built from the
+    # features that materialised, so an indicator absent from every session
+    # never enters it and cannot lower it.
+    expected_indicators: tuple[str, ...] = ()
+    observed_indicators: tuple[str, ...] = ()
+    missing_required_indicators: tuple[str, ...] = ()
+    missing_optional_indicators: tuple[str, ...] = ()
+    indicator_coverage: float = 1.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -565,6 +574,21 @@ class PointInTimeDatasetBuilder:
             dtype=float,
         )
         feature_coverage = len(selected) / len(candidates) if candidates else 0.0
+        # An indicator counts as observed when it contributed at least one
+        # value to the scored row. Its features are always prefixed with the
+        # indicator id, which is what makes this exact rather than inferred.
+        observed = tuple(
+            indicator_id
+            for indicator_id in indicators
+            if any(name.startswith(f"{indicator_id}__") for name in current.values)
+        )
+        missing = [item for item in indicators if item not in set(observed)]
+        required_ids = {
+            item.id for item in self._config.indicators.indicators if item.required
+        }
+        missing_required = tuple(item for item in missing if item in required_ids)
+        missing_optional = tuple(item for item in missing if item not in required_ids)
+        indicator_coverage = len(observed) / len(indicators) if indicators else 0.0
         return ModelDataset(
             ticker=ticker,
             feature_names=selected,
@@ -575,6 +599,11 @@ class PointInTimeDatasetBuilder:
             current_sample=current,
             candidate_feature_count=len(candidates),
             feature_coverage=feature_coverage,
+            expected_indicators=tuple(indicators),
+            observed_indicators=observed,
+            missing_required_indicators=missing_required,
+            missing_optional_indicators=missing_optional,
+            indicator_coverage=indicator_coverage,
         )
 
     def build_backtest_frame(
