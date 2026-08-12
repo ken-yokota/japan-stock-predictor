@@ -6,11 +6,15 @@ name: Delivery watchdog
 # asserts the outcome after each window and mails an alert when one is missing.
 on:
   schedule:
-    # 09:10 JST - after the last morning email attempt (08:55) and the 08:40
-    # snapshot, with margin for a late prediction.
-    - cron: "10 0 * * 1-5"
-    # 17:40 JST - after the daily summary (17:00) and its snapshot (17:10).
+    # 09:10 / 09:30 / 09:50 JST - after the last morning email attempt (08:55)
+    # and the 08:40 snapshot, with margin for a late prediction. Three ticks
+    # because GitHub does not guarantee that a scheduled run fires at all: on
+    # 2026-08-12 neither the morning email cron nor this one did, so a single
+    # tick would have lost the alarm along with the thing it watches.
+    - cron: "10,30,50 0 * * 1-5"
+    # 17:40 / 18:00 JST - after the daily summary (17:00) and its snapshot.
     - cron: "40 8 * * 1-5"
+    - cron: "0 9 * * 1-5"
   workflow_dispatch:
     inputs:
       window:
@@ -62,7 +66,7 @@ jobs:
       # unless a dispatch says otherwise.
       WINDOW: >-
         ${{ inputs.window
-            || (github.event.schedule == '10 0 * * 1-5' && 'morning')
+            || (github.event.schedule == '10,30,50 0 * * 1-5' && 'morning')
             || 'evening' }}
 
     steps:

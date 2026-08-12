@@ -138,7 +138,7 @@ def email_check(sent: list[dict[str, object]]) -> Check:
     """Zero is a missed send and two is a double send. Both are faults."""
 
     if not sent:
-        return Check("email", False, "当日のSENT記録がありません")
+        return Check("email", False, "この予測セットのSENT記録がありません")
     if len(sent) > 1:
         keys = {str(row.get("idempotency_key")) for row in sent}
         return Check(
@@ -220,9 +220,16 @@ def _prediction_counts(connection: Connection, set_id: str) -> dict[str, int]:
     return {str(row[0]): int(row[1]) for row in rows}
 
 
-def _sent_emails(
-    connection: Connection, set_id: str, since: datetime
-) -> list[dict[str, object]]:
+def _sent_emails(connection: Connection, set_id: str) -> list[dict[str, object]]:
+    """Every delivered mail for this day's publication, whenever it was sent.
+
+    Not filtered by wall-clock date on purpose. A set published the previous
+    evening - which is how an ad-hoc "predict tomorrow" run works - has its
+    mail delivered that evening, and an earlier version of this check called
+    that a missed send on its first real morning. The prediction set is
+    already unique to the day; the send time is not part of the question.
+    """
+
     rows = (
         connection.execute(
             text(
@@ -231,11 +238,10 @@ def _sent_emails(
                 FROM email_logs
                 WHERE prediction_set_id = :set_id
                   AND status = 'SENT'
-                  AND sent_at >= :since
                 ORDER BY sent_at DESC
                 """
             ),
-            {"set_id": set_id, "since": since},
+            {"set_id": set_id},
         )
         .mappings()
         .all()
@@ -305,7 +311,6 @@ def verify(
         return outcome
 
     since = window_start(window, for_date)
-    day_start = datetime.combine(for_date, time(0, 0), JST).astimezone(UTC)
 
     engine = create_database_engine(database_url)
     try:
@@ -339,7 +344,7 @@ def verify(
                     f"status={status} 銘柄内訳={counts}",
                 )
             )
-            sent = _sent_emails(connection, set_id, day_start)
+            sent = _sent_emails(connection, set_id)
             outcome.checks.append(email_check(sent))
 
             if window == "evening":
