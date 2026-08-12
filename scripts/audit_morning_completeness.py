@@ -70,6 +70,16 @@ def _rows(connection: Connection, for_date: date) -> list[dict[str, object]]:
     return [dict(row) for row in result.mappings().all()]
 
 
+def _as_list(value: object) -> list[str]:
+    """A recorded-but-empty list and an absent one are told apart by the caller."""
+
+    return [str(item) for item in value] if isinstance(value, list) else []
+
+
+def _as_float(value: object) -> float | None:
+    return float(value) if isinstance(value, int | float) else None
+
+
 def classify(
     details: dict[str, object],
 ) -> tuple[str, list[str], list[str], float | None]:
@@ -77,10 +87,9 @@ def classify(
 
     if "missing_required_indicators" not in details:
         return UNKNOWN, [], [], None
-    required = [str(item) for item in details.get("missing_required_indicators") or []]
-    optional = [str(item) for item in details.get("missing_optional_indicators") or []]
-    raw_coverage = details.get("indicator_coverage")
-    coverage = float(raw_coverage) if isinstance(raw_coverage, int | float) else None
+    required = _as_list(details.get("missing_required_indicators"))
+    optional = _as_list(details.get("missing_optional_indicators"))
+    coverage = _as_float(details.get("indicator_coverage"))
     return (DEGRADED if required else CLEAN), required, optional, coverage
 
 
@@ -116,11 +125,9 @@ def audit(connection: Connection, for_date: date) -> int:
         ticker = str(row["ticker"])
         signal = str(row["signal"] or "—")
         feature_coverage = row["feature_coverage"]
-        feature_value = (
-            float(feature_coverage) if feature_coverage is not None else None
-        )
-        predicted = row["predicted_intraday_return"]
-        probability = row["probability_up"]
+        feature_value = _as_float(feature_coverage)
+        predicted = _as_float(row["predicted_intraday_return"])
+        probability = _as_float(row["probability_up"])
 
         missing_tally.update(required)
         if status == UNKNOWN:
@@ -140,8 +147,8 @@ def audit(connection: Connection, for_date: date) -> int:
         print(
             f"{ticker:6}{_percent(indicator_coverage):>8}{_percent(feature_value):>9}"
             f"{status:16}{signal:8}"
-            f"{(f'{float(predicted):+.3%}' if predicted is not None else '—'):>9}"
-            f"{(f'{float(probability):.2f}' if probability is not None else '—'):>7}"
+            f"{(f'{predicted:+.3%}' if predicted is not None else '—'):>9}"
+            f"{(f'{probability:.2f}' if probability is not None else '—'):>7}"
             f"  {', '.join(required) if required else '-'}"
         )
 
