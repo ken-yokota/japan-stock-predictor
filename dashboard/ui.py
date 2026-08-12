@@ -139,6 +139,11 @@ def cached_today_predictions(_service: DashboardQueryService) -> QueryResult:
 
 
 @st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+def cached_feature_completeness(_service: DashboardQueryService) -> QueryResult:
+    return _service.feature_completeness()
+
+
+@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_prediction_history_window(
     _service: DashboardQueryService, since: str | None
 ) -> QueryResult:

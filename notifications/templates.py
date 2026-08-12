@@ -217,6 +217,54 @@ def _reasons_html(items: Sequence[EmailCandidate]) -> str:
     return "".join(blocks)
 
 
+def _quality_label(item: EmailCandidate) -> str:
+    """Short text state - never colour alone, since mail clients strip styles."""
+
+    if item.data_quality == "DEGRADED":
+        return "⚠ DEGRADED"
+    if item.data_quality == "CLEAN":
+        return "CLEAN"
+    return "UNKNOWN"
+
+
+def _quality_summary_text(candidates: Sequence[EmailCandidate]) -> str:
+    """The day's completeness, counted from the same field the table shows."""
+
+    clean = sum(1 for item in candidates if item.data_quality == "CLEAN")
+    degraded = sum(1 for item in candidates if item.data_quality == "DEGRADED")
+    unknown = len(candidates) - clean - degraded
+    lines = [
+        f"データ品質  CLEAN {clean} / DEGRADED {degraded} / UNKNOWN {unknown}"
+        f"  （全{len(candidates)}銘柄）",
+    ]
+    missing: dict[str, int] = {}
+    for item in candidates:
+        for name in item.missing_required:
+            missing[name] = missing.get(name, 0) + 1
+    if missing:
+        ranked = sorted(missing.items(), key=lambda pair: (-pair[1], pair[0]))
+        lines.append("欠損した必須指標: " + "、".join(
+            f"{name}（{count}銘柄）" for name, count in ranked
+        ))
+    return "\n".join(lines)
+
+
+def _degraded_buy_notice(selected: Sequence[EmailCandidate]) -> str:
+    """Named explicitly: a BUY on incomplete inputs must not read as a clean one."""
+
+    degraded = [item for item in selected if item.data_quality == "DEGRADED"]
+    if not degraded:
+        return ""
+    parts = []
+    for item in degraded:
+        missing = "・".join(item.missing_required) or "必須指標"
+        parts.append(f"{item.ticker} {item.company}（{missing}）")
+    rows = "、".join(parts)
+    return (
+        f"⚠ {len(degraded)}件のBUY候補は必須指標が欠けた状態で作られています: {rows}"
+    )
+
+
 def render_morning_email(
     payload: MorningEmailPayload,
     *,
@@ -239,6 +287,12 @@ def render_morning_email(
     if selected:
         text_body = "\n".join(
             [
+                "■ 本日の要約",
+                "",
+                f"BUY候補 {len(selected)}銘柄",
+                _quality_summary_text(everything),
+                _degraded_buy_notice(selected),
+                "",
                 "■ 買い候補",
                 "",
                 _buytable(selected),
@@ -255,7 +309,14 @@ def render_morning_email(
             "モデルが押し上げた要因と押し下げた要因です。",
         )
     else:
-        text_body = "本日は条件を満たすBUY候補なし"
+        text_body = "\n".join(
+            [
+                "本日は条件を満たすBUY候補なし",
+                "（予測は生成されています。BUYなしと予測失敗は別です）",
+                "",
+                _quality_summary_text(everything),
+            ]
+        )
         html_body = section(
             "買い候補",
             "<p style='margin:0;padding:14px;background:#f9fafb;border-radius:8px'>"
