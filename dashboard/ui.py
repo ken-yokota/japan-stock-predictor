@@ -82,12 +82,10 @@ def cached_day_scoreboard(
     settled = [row for row in buys if row["prediction_id"] in realized]
     if not settled:
         return len(buys), 0, 0, 0.0
-    correct = sum(
-        1
-        for row in settled
-        if (float(row["predicted_intraday_return"]) > 0)
-        == (float(realized[row["prediction_id"]]) > 0)
-    )
+    # A BUY is right when the session actually rose. Direction agreement says
+    # the same thing for a BUY, whose predicted return is positive by
+    # construction, but the operator asked for the plain statement.
+    correct = sum(1 for row in settled if float(realized[row["prediction_id"]]) > 0)
 
     trades = _service.simulated_trades()
     settled_ids = {row["prediction_id"] for row in settled}
@@ -280,11 +278,23 @@ def render_latest_day_banner() -> None:
     else:
         buys, settled, hits, profit = summary
         columns[2].metric("買い候補", f"{buys}銘柄")
+        # The denominator is every BUY issued, not only the settled ones.
+        # Counting settled days alone quietly improves the ratio whenever a
+        # close is missing, which is the opposite of what it is read for.
         columns[3].metric(
             "買いの的中",
-            "未確定" if settled == 0 else f"{hits}/{settled}",
+            "—" if buys == 0 else f"{hits}/{buys}",
             delta=None if settled == 0 else f"{profit:+,.0f}円",
+            help=(
+                "実際にプラスになった日 / 買いシグナルが出た日。"
+                "分母は出したシグナル全部で、実績が未確定の日も含みます。"
+            ),
         )
+        if buys and settled < buys:
+            st.caption(
+                f"買い{buys}銘柄のうち{buys - settled}銘柄は実績が未確定です"
+                "（分母には含めています）。"
+            )
     for warning in warnings:
         st.warning(warning)
     _render_settled_day(service, str(prediction_date))

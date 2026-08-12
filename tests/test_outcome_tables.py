@@ -104,3 +104,19 @@ def test_no_buys_gives_a_zero_denominator_rather_than_a_crash() -> None:
     from dashboard.outcomes import buy_hit_ratio
 
     assert buy_hit_ratio([UNSETTLED]) == (0, 0, 0)
+
+
+def test_the_ratio_reads_as_positive_days_over_issued_signals() -> None:
+    """Two BUYs issued, one settled and up: 1/2, not 1/1.
+
+    Scoring only the settled day would report a perfect record on the strength
+    of a missing close.
+    """
+
+    from dashboard.outcomes import buy_hit_ratio
+
+    rows = [SETTLED_HIT, {**SETTLED_HIT, "ticker": "9101",
+                          "actual_intraday_return": None}]
+    positive, issued, unsettled = buy_hit_ratio(rows)
+    assert (positive, issued) == (1, 2)
+    assert unsettled == 1
