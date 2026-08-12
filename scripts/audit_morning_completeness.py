@@ -112,7 +112,7 @@ def audit(connection: Connection, for_date: date) -> int:
 
     for row in rows:
         details = json.loads(str(row["details"] or "{}"))
-        status, required, optional, indicator_coverage = classify(details)
+        status, required, _optional, indicator_coverage = classify(details)
         ticker = str(row["ticker"])
         signal = str(row["signal"] or "—")
         feature_coverage = row["feature_coverage"]
