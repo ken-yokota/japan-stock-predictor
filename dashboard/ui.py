@@ -15,6 +15,22 @@ from database.connection import create_database_engine
 
 _CACHE_TTL_SECONDS = 60
 
+# The read caches use ``cache_resource`` rather than ``cache_data``.
+#
+# ``cache_data`` pickles whatever it stores, and on Streamlit Community Cloud
+# that has repeatedly failed with the underlying reason redacted - the browser
+# is told only that something could not be serialised, never what. Every read
+# was exercised against the production database on the interpreter and
+# Streamlit version Cloud actually serves, and all sixteen pickled cleanly, so
+# the values are not the problem; the deployment's module state is. Removing
+# the serialisation removes the whole class of failure rather than the current
+# instance of it.
+#
+# This is safe because a QueryResult is frozen and its rows are a tuple, and no
+# page mutates a row it was handed - they build new structures from them. If
+# that ever stops being true, one session would corrupt another's view, so a
+# reader who wants to mutate must copy first.
+
 
 @st.cache_resource(show_spinner=False)
 def _service_for_url(database_url: str) -> DashboardQueryService:
@@ -34,22 +50,22 @@ def service_from_environment() -> DashboardQueryService | None:
         return None
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_database_health(_service: DashboardQueryService) -> QueryResult:
     return _service.database_health()
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_latest_run(_service: DashboardQueryService) -> QueryResult:
     return _service.latest_run()
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_prediction_set(_service: DashboardQueryService) -> QueryResult:
     return _service.latest_prediction_set()
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_day_scoreboard(
     _service: DashboardQueryService, prediction_date: str
 ) -> tuple[int, int, int, float] | None:
@@ -99,7 +115,7 @@ def cached_day_scoreboard(
     return len(buys), len(settled), correct, profit
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_latest_settled_day(
     _service: DashboardQueryService,
 ) -> tuple[str, int, int, float] | None:
@@ -131,81 +147,81 @@ def cached_latest_settled_day(
     return day, len(buys), correct, profit
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_today_predictions(_service: DashboardQueryService) -> QueryResult:
     return _service.today_predictions()
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_feature_completeness(_service: DashboardQueryService) -> QueryResult:
     return _service.feature_completeness()
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_prediction_history_window(
     _service: DashboardQueryService, since: str | None
 ) -> QueryResult:
     return _service.published_prediction_history(since)
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_prediction_history(_service: DashboardQueryService) -> QueryResult:
     return _service.prediction_history()
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_actual_results(_service: DashboardQueryService) -> QueryResult:
     return _service.actual_results()
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_metrics(_service: DashboardQueryService) -> QueryResult:
     return _service.latest_metrics()
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_coefficients(_service: DashboardQueryService) -> QueryResult:
     return _service.model_coefficients()
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_trades(_service: DashboardQueryService) -> QueryResult:
     return _service.simulated_trades()
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_oos_scenario_rows(_service: DashboardQueryService) -> QueryResult:
     return _service.oos_scenario_rows()
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_coefficient_history(
     _service: DashboardQueryService, ticker: str, task: str
 ) -> QueryResult:
     return _service.coefficient_history(ticker=ticker, task=task)
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_applied_buy_thresholds(_service: DashboardQueryService) -> QueryResult:
     return _service.applied_buy_thresholds()
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_selections(_service: DashboardQueryService) -> QueryResult:
     return _service.provider_selections()
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_batches(_service: DashboardQueryService) -> QueryResult:
     return _service.ingestion_batches()
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_run_steps(_service: DashboardQueryService) -> QueryResult:
     return _service.run_steps()
 
 
-@st.cache_data(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
 def cached_raw_summary(_service: DashboardQueryService) -> QueryResult:
     return _service.raw_data_summary()
 
@@ -240,7 +256,10 @@ def configure_page(title: str, icon: str) -> None:
         st.caption("READ ONLY • Asia/Tokyo")
         st.caption(f"表示時刻: {datetime.now(JST):%Y-%m-%d %H:%M JST}")
         if st.button("DB表示を更新", use_container_width=True):
+            # The reads now live in cache_resource; clearing only cache_data
+            # would leave the button doing nothing at all.
             st.cache_data.clear()
+            st.cache_resource.clear()
             st.rerun()
         st.divider()
         st.caption(
