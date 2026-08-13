@@ -30,10 +30,11 @@ jobs:
           cache: pip
           cache-dependency-path: requirements.txt
 
-      - name: Install only what a read needs
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install "SQLAlchemy>=2.0.31,<3" "psycopg[binary]>=3.2,<4"
+      - name: Install application
+        # The provenance audit needs the JPX calendar, which lives behind the
+        # configuration stack; a driver-only install cannot answer whether a
+        # date was a trading day.
+        run: python -m pip install -e .
 
       - name: Measure the database
         run: python -m scripts.inspect_database_usage
