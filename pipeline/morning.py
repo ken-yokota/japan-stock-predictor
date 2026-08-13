@@ -23,7 +23,7 @@ from services.persistence import (
 )
 from services.prediction import PredictionComputation, PredictionService
 from services.recovery import reconcile_stale_runs
-from services.retention import prune_feature_history
+from services.retention import prune_feature_history, prune_model_coefficients
 from services.versioning import config_hash
 
 # Marks a prediction whose named session never opens. Consumers key off this
@@ -143,6 +143,16 @@ class MorningPipeline:
         # before the write is what keeps the fourth morning from dying
         # mid-transaction the way the first three did.
         prune = prune_feature_history(self._factory)
+        # Coefficients age out on their own clock: they are the model's
+        # explanation of itself and outlive the cells they were fitted on, but
+        # 8,156 rows a day is 549 MB a year against a 512 MB ceiling.
+        coefficients = prune_model_coefficients(self._factory)
+        coefficient_warning = (
+            f"pruned {coefficients.coefficients} model coefficients from "
+            f"{len(coefficients.pruned_dates)} earlier dates"
+            if coefficients.pruned
+            else None
+        )
         prune_warning = (
             f"pruned {prune.feature_values} feature values from "
             f"{len(prune.pruned_dates)} earlier dates"
@@ -165,6 +175,7 @@ class MorningPipeline:
                 backfill_warning,
                 recovery_warning,
                 prune_warning,
+                coefficient_warning,
             )
             if warning
         )

@@ -22,9 +22,24 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session, sessionmaker
 
-from database.models import FeatureInput, FeatureSet, FeatureValue, PredictionSet
+from database.models import (
+    DailyRun,
+    FeatureInput,
+    FeatureSet,
+    FeatureValue,
+    ModelCoefficient,
+    ModelRun,
+    PredictionSet,
+)
 
 DEFAULT_KEEP_DATES = 2
+
+# Coefficients are the model's explanation of itself, so they outlive the
+# cells they were fitted on. 8,156 rows a day is 549 MB a year against a
+# 512 MB ceiling, though, so the window is finite - and the first run of
+# each month is kept for good, which is what makes a year-long drift still
+# visible after the daily rows age out.
+DEFAULT_KEEP_COEFFICIENT_DATES = 90
 
 
 def _rows(result: object) -> int:
@@ -57,6 +72,91 @@ def _feature_set_ids(session: Session, kept: Sequence[date]) -> list[str]:
             )
         )
     )
+
+
+@dataclass(frozen=True, slots=True)
+class CoefficientPruneReport:
+    """What one coefficient prune removed."""
+
+    kept_dates: tuple[date, ...] = ()
+    pruned_dates: tuple[date, ...] = ()
+    coefficients: int = 0
+
+    @property
+    def pruned(self) -> bool:
+        return bool(self.pruned_dates)
+
+
+def _monthly_anchors(dates: Sequence[date]) -> set[date]:
+    """The earliest date seen in each calendar month.
+
+    These survive the window so that coefficient stability stays measurable
+    over a year without keeping every day of it.
+    """
+
+    anchors: dict[tuple[int, int], date] = {}
+    for day in dates:
+        key = (day.year, day.month)
+        if key not in anchors or day < anchors[key]:
+            anchors[key] = day
+    return set(anchors.values())
+
+
+def prune_model_coefficients(
+    factory: sessionmaker[Session],
+    *,
+    keep_dates: int = DEFAULT_KEEP_COEFFICIENT_DATES,
+) -> CoefficientPruneReport:
+    """Drop per-feature coefficients outside the window and the monthly anchors.
+
+    Only the coefficient rows go. ``model_runs`` keeps its parameters, its
+    intercept and its cross-validation results, so which model ran on a day and
+    how it was fitted is still answerable after its per-feature rows age out.
+    """
+
+    if keep_dates < 1:
+        raise ValueError("keep_dates must be at least 1")
+    with factory() as session:
+        dates = list(
+            session.scalars(
+                select(DailyRun.prediction_date)
+                .join(ModelRun, ModelRun.run_id == DailyRun.run_id)
+                .distinct()
+                .order_by(DailyRun.prediction_date.desc())
+            )
+        )
+        if len(dates) <= keep_dates:
+            return CoefficientPruneReport(kept_dates=tuple(dates))
+
+        kept = set(dates[:keep_dates]) | _monthly_anchors(dates)
+        stale = [day for day in dates if day not in kept]
+        if not stale:
+            return CoefficientPruneReport(kept_dates=tuple(sorted(kept)))
+
+        run_ids = list(
+            session.scalars(
+                select(ModelRun.model_run_id)
+                .join(DailyRun, DailyRun.run_id == ModelRun.run_id)
+                .where(DailyRun.prediction_date.in_(stale))
+            )
+        )
+        removed = 0
+        # Chunked for the same reason the feature prune is: a driver will
+        # refuse an unbounded parameter list, and a long delete should not
+        # hold every page at once.
+        for offset in range(0, len(run_ids), 200):
+            result = session.execute(
+                delete(ModelCoefficient).where(
+                    ModelCoefficient.model_run_id.in_(run_ids[offset : offset + 200])
+                )
+            )
+            removed += _rows(result)
+        session.commit()
+        return CoefficientPruneReport(
+            kept_dates=tuple(sorted(kept)),
+            pruned_dates=tuple(sorted(stale)),
+            coefficients=removed,
+        )
 
 
 def prune_feature_history(
