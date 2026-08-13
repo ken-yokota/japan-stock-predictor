@@ -63,6 +63,21 @@ def _safe_error(exc: Exception) -> str:
     return type(exc).__name__
 
 
+# A run forced onto a closed market produces a reference prediction: the
+# session it names never opens, so no trade can settle against it and no
+# result can score it. Recording one as MORNING made it indistinguishable
+# from a live morning afterwards - which is how 2026-08-11, a JPX holiday,
+# came to carry three BUYs in the production record.
+LIVE_RUN_TYPE = "MORNING"
+REFERENCE_RUN_TYPE = "REFERENCE"
+
+
+def morning_run_type(*, is_business_day: bool) -> str:
+    """MORNING only when the market the prediction names actually opens."""
+
+    return LIVE_RUN_TYPE if is_business_day else REFERENCE_RUN_TYPE
+
+
 class MorningPipeline:
     """Coordinate free ingestion and atomically publish one prediction set."""
 
@@ -98,7 +113,7 @@ class MorningPipeline:
         with self._factory() as session:
             repository = MarketDataRepository(session)
             run = repository.create_run(
-                run_type="MORNING",
+                run_type=REFERENCE_RUN_TYPE,
                 prediction_date=prediction_date,
                 cutoff_at=prediction_cutoff(
                     prediction_date,
@@ -222,7 +237,7 @@ class MorningPipeline:
         market_repository = MarketDataRepository(session)
         repository = PredictionPipelineRepository(session)
         run = market_repository.create_run(
-            run_type="MORNING",
+            run_type=morning_run_type(is_business_day=is_business_day),
             prediction_date=prediction_date,
             cutoff_at=prediction_cutoff(
                 prediction_date,

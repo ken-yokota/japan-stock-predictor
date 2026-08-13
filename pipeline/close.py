@@ -22,6 +22,7 @@ from data.providers.yahoo import YahooFinanceProvider
 from data.schemas import FetchRequest
 from database.models import (
     ActualResult,
+    DailyRun,
     ModelCoefficient,
     ModelRun,
     Prediction,
@@ -153,11 +154,16 @@ def _fetch_close_rows(
 def _latest_prediction_set(
     session: Session, prediction_date: date
 ) -> PredictionSet | None:
+    # Only a live morning is scored. A reference prediction names a session
+    # that never opened, so settling one would put a day the market was closed
+    # into the track record.
     return session.scalar(
         select(PredictionSet)
+        .join(DailyRun, DailyRun.run_id == PredictionSet.run_id)
         .where(
             PredictionSet.prediction_date == prediction_date,
             PredictionSet.status.in_(("READY", "INSUFFICIENT_DATA")),
+            DailyRun.run_type == "MORNING",
         )
         .order_by(PredictionSet.generated_at.desc())
         .limit(1)
