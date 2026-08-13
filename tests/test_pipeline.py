@@ -465,9 +465,15 @@ def test_feature_persistence_selects_scale_by_set_not_by_cell(
         finally:
             event.remove(engine, "before_cursor_execute", count_selects)
 
-        expected_values = len(sessions) * (len(feature_names) + 1) + len(feature_names)
+        # Only the scored row is stored now. The training cells are still
+        # built, checked and folded into the manifest hash, but writing them
+        # cost 400 MB of a 512 MB ceiling for rows nothing ever read.
+        training_cells = len(sessions) * (len(feature_names) + 1)
         assert feature_set.status == "READY"
-        assert feature_set.required_feature_count == expected_values
+        assert feature_set.required_feature_count == len(feature_names)
+        assert (
+            feature_set.details["training_cells_validated_not_stored"] == training_cells
+        )
         assert select_count <= 10
 
 
