@@ -109,6 +109,7 @@ class DashboardQueryService:
                         "negative_factors",
                     }
                 ),
+                "daily_runs": frozenset({"run_id", "run_type"}),
                 "prediction_sets": frozenset(
                     {
                         "prediction_set_id",
@@ -192,6 +193,7 @@ class DashboardQueryService:
     def latest_prediction_set(self) -> QueryResult:
         return self._read(
             required={
+                "daily_runs": frozenset({"run_id", "run_type"}),
                 "prediction_sets": frozenset(
                     {
                         "prediction_set_id",
@@ -212,12 +214,15 @@ class DashboardQueryService:
             },
             statement="""
                 SELECT
-                    prediction_set_id, run_id, prediction_date, cutoff_at,
-                    status, feature_version, model_version, strategy_version,
-                    training_start, training_end, generated_at, published_at,
-                    warnings
-                FROM prediction_sets
-                ORDER BY prediction_date DESC, generated_at DESC
+                    ps.prediction_set_id, ps.run_id, ps.prediction_date,
+                    ps.cutoff_at, ps.status, ps.feature_version,
+                    ps.model_version, ps.strategy_version,
+                    ps.training_start, ps.training_end, ps.generated_at,
+                    ps.published_at, ps.warnings
+                FROM prediction_sets AS ps
+                JOIN daily_runs AS r ON r.run_id = ps.run_id
+                WHERE r.run_type = 'MORNING'
+                ORDER BY ps.prediction_date DESC, ps.generated_at DESC
                 LIMIT 1
             """,
         )
@@ -239,9 +244,11 @@ class DashboardQueryService:
                 SELECT fs.ticker, fs.prediction_date, fs.details
                 FROM feature_sets AS fs
                 WHERE fs.prediction_date = (
-                    SELECT prediction_date
-                    FROM prediction_sets
-                    ORDER BY prediction_date DESC, generated_at DESC
+                    SELECT s3.prediction_date
+                    FROM prediction_sets AS s3
+                    JOIN daily_runs AS r3 ON r3.run_id = s3.run_id
+                    WHERE r3.run_type = 'MORNING'
+                    ORDER BY s3.prediction_date DESC, s3.generated_at DESC
                     LIMIT 1
                 )
                 ORDER BY fs.ticker
@@ -251,6 +258,7 @@ class DashboardQueryService:
     def today_predictions(self) -> QueryResult:
         return self._read(
             required={
+                "daily_runs": frozenset({"run_id", "run_type"}),
                 "prediction_sets": frozenset(
                     {
                         "prediction_set_id",
@@ -342,9 +350,11 @@ class DashboardQueryService:
                 JOIN prediction_sets AS ps
                   ON ps.prediction_set_id = p.prediction_set_id
                 WHERE ps.prediction_set_id = (
-                    SELECT prediction_set_id
-                    FROM prediction_sets
-                    ORDER BY prediction_date DESC, generated_at DESC
+                    SELECT s2.prediction_set_id
+                    FROM prediction_sets AS s2
+                    JOIN daily_runs AS r2 ON r2.run_id = s2.run_id
+                    WHERE r2.run_type = 'MORNING'
+                    ORDER BY s2.prediction_date DESC, s2.generated_at DESC
                     LIMIT 1
                 )
                 ORDER BY
@@ -357,6 +367,7 @@ class DashboardQueryService:
     def prediction_history(self, *, limit: int = 500) -> QueryResult:
         return self._read(
             required={
+                "daily_runs": frozenset({"run_id", "run_type"}),
                 "prediction_sets": frozenset(
                     {
                         "prediction_set_id",

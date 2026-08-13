@@ -86,8 +86,16 @@ def load_morning_email_payload(
 ) -> tuple[PredictionSet, MorningEmailPayload]:
     """Read only a terminal persisted set; never calculate or fetch here."""
 
-    statement = select(PredictionSet).where(
-        PredictionSet.status.in_(("READY", "INSUFFICIENT_DATA"))
+    # A reference prediction is never mailed: it names a session that does not
+    # open, and a message that looks like every other morning would be read as
+    # one.
+    statement = (
+        select(PredictionSet)
+        .join(DailyRun, DailyRun.run_id == PredictionSet.run_id)
+        .where(
+            PredictionSet.status.in_(("READY", "INSUFFICIENT_DATA")),
+            DailyRun.run_type == "MORNING",
+        )
     )
     if prediction_date is not None:
         statement = statement.where(PredictionSet.prediction_date == prediction_date)
