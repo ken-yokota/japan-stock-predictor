@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from data.availability import prediction_cutoff
@@ -89,7 +89,8 @@ def _manifest_entry(
 
 @dataclass(frozen=True, slots=True)
 class _PendingFeatureValue:
-    row: FeatureValue
+    # None for a training cell: it is validated and hashed, but not stored.
+    row: FeatureValue | None
     sample_date: date
     feature_name: str
     references: tuple[SourceReference, ...]
@@ -109,8 +110,26 @@ def _persist_value(
     references: tuple[SourceReference, ...],
     value_kind: str = "FEATURE",
     sample_cutoff_at: datetime | None = None,
+    feature_set_cutoff_at: datetime,
     is_scored: bool = False,
+    persist: bool = True,
 ) -> _PendingFeatureValue:
+    if not persist:
+        # The cutoff check is the one guarantee add_feature_value was making
+        # for a training cell, so it is made here instead rather than dropped
+        # along with the row.
+        cutoff = sample_cutoff_at or sample.cutoff_at
+        if cutoff.tzinfo is None or cutoff.utcoffset() is None:
+            raise ValueError("sample_cutoff_at must be timezone-aware")
+        if cutoff.astimezone(UTC) > feature_set_cutoff_at.astimezone(UTC):
+            raise ValueError("sample cutoff cannot exceed feature-set cutoff")
+        return _PendingFeatureValue(
+            row=None,
+            sample_date=sample.sample_date,
+            feature_name=feature_name,
+            references=references,
+            is_scored=is_scored,
+        )
     row = repository.add_feature_value(
         feature_set_id=feature_set_id,
         sample_date=sample.sample_date,
@@ -148,7 +167,12 @@ def persist_feature_set(
         prediction_date, config.model.training.window_jpx_sessions
     )
     feature_count = len(dataset.feature_names)
-    required_count = len(dataset.training_samples) * (feature_count + 1) + feature_count
+    # Only the scored row is written now. Training cells are validated, folded
+    # into the manifest hash and dropped: one morning stored 543,000 of them,
+    # 400 MB of a 512 MB ceiling, and nothing in production ever read one. The
+    # raw rows they were computed from stay, so a day can still be rebuilt.
+    required_count = feature_count
+    training_cell_count = len(dataset.training_samples) * (feature_count + 1)
     key = f"feature/{run_id}/{dataset.ticker}/{FEATURE_VERSION}"
     feature_set = repository.create_feature_set(
         run_id=run_id,
@@ -195,6 +219,8 @@ def persist_feature_set(
                     feature_name=name,
                     value=value,
                     references=references,
+                    feature_set_cutoff_at=feature_set.cutoff_at,
+                    persist=False,
                 )
             )
         pending_values.append(
@@ -207,6 +233,8 @@ def persist_feature_set(
                 value=sample.target_return,
                 references=sample.target_lineage,
                 value_kind="TARGET",
+                feature_set_cutoff_at=feature_set.cutoff_at,
+                persist=False,
                 # The target becomes a permissible training label only once it
                 # is known by the current prediction cutoff, not at its own
                 # session's 08:30 feature cutoff.
@@ -223,6 +251,7 @@ def persist_feature_set(
                 feature_name=name,
                 value=dataset.current_sample.values.get(name),
                 references=dataset.current_sample.lineage.get(name, ()),
+                feature_set_cutoff_at=feature_set.cutoff_at,
                 is_scored=True,
             )
         )
@@ -253,10 +282,12 @@ def persist_feature_set(
     )
     manifest: list[dict[str, object]] = []
     for pending in pending_values:
-        if pending.row.feature_value_id is None:
+        if pending.is_scored and (
+            pending.row is None or pending.row.feature_value_id is None
+        ):
             raise RuntimeError("feature value ID was not assigned by batch flush")
         for index, reference in enumerate(pending.references, start=1):
-            if pending.is_scored:
+            if pending.is_scored and pending.row is not None:
                 repository.add_feature_input(
                     feature_value_id=pending.row.feature_value_id,
                     input_role=f"source_{index:03d}",
@@ -292,6 +323,15 @@ def persist_feature_set(
             "candidate_feature_count": dataset.candidate_feature_count,
             "feature_coverage": dataset.feature_coverage,
             "warnings": _warning_list(dataset.current_sample.warnings),
+            # finalize replaces details wholesale, so completeness has to be
+            # restated here or it would be written at creation and then lost -
+            # which is why the first audit reported every stock as UNKNOWN.
+            "expected_indicator_count": len(dataset.expected_indicators),
+            "observed_indicator_count": len(dataset.observed_indicators),
+            "indicator_coverage": dataset.indicator_coverage,
+            "missing_required_indicators": list(dataset.missing_required_indicators),
+            "missing_optional_indicators": list(dataset.missing_optional_indicators),
+            "training_cells_validated_not_stored": training_cell_count,
         },
     )
 
