@@ -1,0 +1,54 @@
+name: Database reclaim
+
+# Manual only. Prunes feature history to the kept dates and returns the freed
+# pages with VACUUM FULL, which takes an exclusive lock - so this must never be
+# run while a morning is in flight.
+on:
+  workflow_dispatch:
+    inputs:
+      keep_dates:
+        description: "Prediction dates of feature history to keep"
+        required: false
+        default: "1"
+        type: string
+      skip_vacuum:
+        description: "Prune only, leaving the freed pages allocated"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  # Shares the morning group: a reclaim must not overlap a prediction.
+  group: morning-prediction-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  reclaim:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      KEEP_DATES: ${{ inputs.keep_dates || '1' }}
+      SKIP_VACUUM: ${{ inputs.skip_vacuum || false }}
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install application
+        run: python -m pip install -e .
+      - name: Reclaim
+        shell: bash
+        run: |
+          set -eo pipefail
+          args=(--keep-dates "$KEEP_DATES")
+          if [[ "$SKIP_VACUUM" == "true" ]]; then
+            args+=(--skip-vacuum)
+          fi
+          python -m scripts.reclaim_feature_storage "${args[@]}"
