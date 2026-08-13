@@ -56,13 +56,17 @@ GitHub Actions は scheduled workflow の実行時刻を保証しません。実
    ```
 5. **Schedule**: 毎日 **08:05**（タイムゾーンを Asia/Tokyo に設定）、曜日は月〜金
 6. **Advanced** → **Request method**: `POST`
-7. **Headers** に3行追加：
+7. **Headers** に4行追加：
 
    | Key | Value |
    |---|---|
    | `Accept` | `application/vnd.github+json` |
    | `Authorization` | `Bearer <手順1でコピーしたトークン>` |
    | `X-GitHub-Api-Version` | `2022-11-28` |
+   | `Content-Type` | `application/json` |
+
+   `Content-Type` を落とすと、本文がフォーム送信として送られて GitHub が
+   読めず、422 で返ってきます。cron-job.org はこれを保存時に警告します。
 
 8. **Request body**:
    ```json
@@ -84,7 +88,7 @@ https://github.com/ken-yokota/japan-stock-predictor/actions/workflows/morning_ki
 |---|---|
 | HTTP 404 | トークンの Repository access がこのリポジトリを含んでいない |
 | HTTP 403 | Actions 権限が Read and write になっていない |
-| HTTP 422 | body の `ref` が `main` になっていない |
+| HTTP 422 | body の `ref` が `main` でない、または `Content-Type: application/json` が無い |
 | 実行はされるが何も起きない | `AUTOMATION_ENABLED` が true か確認（現在は true） |
 
 ## 代替サービス
