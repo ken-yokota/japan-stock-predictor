@@ -83,11 +83,17 @@ class RankICSummary:
     p_value: float | None
     lag1_autocorrelation: float | None
     detectable_ic: float
-    dropped_days: int = 0
 
     @property
     def is_detectable(self) -> bool:
-        """Was the measured effect large enough for this window to resolve?"""
+        """Does the measured mean clear the 80%-power floor for this window?
+
+        This is a question about design power, not about this result: the
+        floor uses 2.80 standard errors while significance needs about 2.04,
+        so a genuinely significant result can sit below it. It is therefore
+        only consulted to interpret a null - which is the case that was
+        being misreported.
+        """
 
         return abs(self.mean) >= self.detectable_ic
 

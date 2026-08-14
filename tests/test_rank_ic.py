@@ -67,7 +67,7 @@ def test_a_shared_market_move_does_not_create_skill() -> None:
 def test_a_day_with_too_few_names_is_dropped_not_scored() -> None:
     frame = pd.concat(
         [
-            _day("2026-08-03", [1.0] * MINIMUM_NAMES, [0.01, 0.02, 0.03]),
+            _day("2026-08-03", [3.0, 2.0, 1.0][:MINIMUM_NAMES], [0.01, 0.02, 0.03]),
             _day("2026-08-04", [1.0, 2.0], [0.01, 0.02]),
         ]
     )
@@ -100,15 +100,38 @@ def test_the_summary_reports_the_floor_it_could_detect() -> None:
 
 
 def test_a_tiny_effect_is_called_unmeasured_not_absent() -> None:
-    """The exact failure this module was written to stop repeating."""
+    """The exact failure this module was written to stop repeating.
 
-    generator = np.random.default_rng(7)
-    daily = pd.Series(generator.normal(0.004, 0.30, size=30))
+    Built deterministically rather than drawn: a sample from a small mean is
+    sometimes large by luck, and asserting on one draw tests the seed.
+    """
+
+    daily = pd.Series([0.304, -0.296] * 15)
     summary = summarise_rank_ic(daily)
 
+    assert summary.mean == pytest.approx(0.004)
     assert not summary.is_detectable
+    assert summary.p_value is not None and summary.p_value > 0.05
     assert "判定不能" in summary.verdict()
-    assert "効果がない" not in summary.verdict().split("効果がないのではなく")[0]
+    assert "検出下限" in summary.verdict()
+
+
+def test_a_significant_result_below_the_power_floor_is_still_significant() -> None:
+    """The floor is about design power, not about whether this result stands.
+
+    It takes 2.80 standard errors to have an 80% chance of detecting an effect
+    and about 2.04 to declare one, so the two can disagree. When they do, the
+    p-value wins: refusing a real detection because the window was underpowered
+    on average would be the same error in the opposite direction.
+    """
+
+    daily = pd.Series([0.478, -0.205] * 15)
+    summary = summarise_rank_ic(daily)
+
+    assert summary.p_value is not None and summary.p_value < 0.05
+    assert not summary.is_detectable, "this is the disagreement being pinned"
+    assert "有意" in summary.verdict()
+    assert "判定不能" not in summary.verdict()
 
 
 def test_a_real_effect_is_reported_as_significant() -> None:
