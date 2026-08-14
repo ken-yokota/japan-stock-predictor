@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Callable
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
@@ -30,7 +31,12 @@ import pandas as pd
 from data.config import load_app_config
 from models.base import ModelTrainingConfig
 from research.feature_sets import resolve
-from research.walk import default_history_start, run_pooled_window, run_window
+from research.walk import (
+    WindowResult,
+    default_history_start,
+    run_pooled_window,
+    run_window,
+)
 from scripts.run_feature_comparison import _require, _sign_test
 from trading.strategy import BuySignalConfig, ExecutionConfig
 
@@ -66,39 +72,48 @@ def main(argv: list[str] | None = None) -> int:
     history_start = default_history_start(from_date, arguments.training_window)
 
     trading = config.trading
-    common = {
-        "stocks": list(config.stocks.stocks),
-        "feature_set": feature_set,
-        "from_date": from_date,
-        "to_date": to_date,
-        "history_start": history_start,
-        "training_config": ModelTrainingConfig(
-            window_size=arguments.training_window,
-            minimum_training_sessions=max(20, arguments.training_window // 2),
-            time_series_splits=5,
+    training_config = ModelTrainingConfig(
+        window_size=arguments.training_window,
+        minimum_training_sessions=max(20, arguments.training_window // 2),
+        time_series_splits=5,
+    )
+    signal_config = BuySignalConfig(
+        return_threshold=_require(
+            trading.signal.predicted_intraday_return_threshold,
+            "predicted_intraday_return_threshold",
         ),
-        "signal_config": BuySignalConfig(
-            return_threshold=_require(
-                trading.signal.predicted_intraday_return_threshold,
-                "predicted_intraday_return_threshold",
-            ),
-            probability_threshold=_require(
-                trading.signal.probability_up_threshold, "probability_up_threshold"
-            ),
+        probability_threshold=_require(
+            trading.signal.probability_up_threshold, "probability_up_threshold"
         ),
-        "execution_config": ExecutionConfig(
-            capital_per_stock=_require(
-                trading.position.capital_per_stock_jpy, "capital_per_stock_jpy"
-            ),
-            lot_size=int(_require(trading.position.lot_size, "lot_size")),
-            commission_bps=_require(
-                trading.costs.commission_bps_per_side, "commission_bps_per_side"
-            ),
-            slippage_bps=_require(
-                trading.costs.slippage_bps_per_side, "slippage_bps_per_side"
-            ),
+    )
+    execution_config = ExecutionConfig(
+        capital_per_stock=_require(
+            trading.position.capital_per_stock_jpy, "capital_per_stock_jpy"
         ),
-    }
+        lot_size=int(_require(trading.position.lot_size, "lot_size")),
+        commission_bps=_require(
+            trading.costs.commission_bps_per_side, "commission_bps_per_side"
+        ),
+        slippage_bps=_require(
+            trading.costs.slippage_bps_per_side, "slippage_bps_per_side"
+        ),
+    )
+
+    def _run(runner: Callable[..., WindowResult]) -> pd.DataFrame:
+        """Both arms take the same arguments; only the fitting differs."""
+
+        return _frame(
+            runner(
+                stocks=list(config.stocks.stocks),
+                feature_set=feature_set,
+                from_date=from_date,
+                to_date=to_date,
+                history_start=history_start,
+                training_config=training_config,
+                signal_config=signal_config,
+                execution_config=execution_config,
+            ).predictions
+        )
 
     print(f"feature set   : {feature_set.name}")
     print(f"window        : {from_date} .. {to_date}")
@@ -106,9 +121,9 @@ def main(argv: list[str] | None = None) -> int:
     print("")
 
     print("fitting per ticker ...", flush=True)
-    baseline = _frame(run_window(**common).predictions)
+    baseline = _run(run_window)
     print("fitting per sector ...", flush=True)
-    pooled = _frame(run_pooled_window(**common).predictions)
+    pooled = _run(run_pooled_window)
 
     if baseline.empty or pooled.empty:
         print("one arm produced no predictions", file=sys.stderr)
