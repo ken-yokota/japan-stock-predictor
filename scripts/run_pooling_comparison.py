@@ -78,7 +78,7 @@ def _paired_error_test(candidate: pd.Series, baseline: pd.Series) -> dict[str, A
     return {
         "mean_delta_pp": float(difference.mean()),
         "p_value": float(result.pvalue),
-        "paired": int(len(difference)),
+        "paired": len(difference),
     }
 
 
