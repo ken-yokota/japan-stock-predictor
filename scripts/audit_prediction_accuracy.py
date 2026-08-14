@@ -16,11 +16,25 @@ import argparse
 import os
 import statistics
 import sys
+from typing import Any
 
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from database.connection import create_database_engine
+
+
+def _num(value: object) -> float | None:
+    """Row values arrive typed as object; narrow them once."""
+
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, int | float | str):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -69,7 +83,7 @@ def main(argv: list[str] | None = None) -> int:
         print("database read failed", file=sys.stderr)
         return 1
 
-    by_day: dict[str, list[dict[str, object]]] = {}
+    by_day: dict[str, list[dict[str, Any]]] = {}
     for row in rows:
         by_day.setdefault(str(row["d"]), []).append(dict(row))
 
@@ -81,17 +95,17 @@ def main(argv: list[str] | None = None) -> int:
     print("-" * len(header))
     for day, items in sorted(by_day.items()):
         settled = [i for i in items if i["actual"] is not None]
-        actuals = [float(i["actual"]) for i in settled]
+        actuals = [x for x in (_num(i["actual"]) for i in settled) if x is not None]
         up = sum(1 for a in actuals if a > 0)
         down = sum(1 for a in actuals if a < 0)
         median = statistics.median(actuals) if actuals else 0.0
         buys = [i for i in items if str(i["signal"]) == "BUY"]
-        hits = sum(
-            1
-            for i in buys
-            if i["actual"] is not None and float(i["actual"]) > 0
-        )
-        preds = [float(i["pred"]) for i in items if i["pred"] is not None]
+        hits = 0
+        for item in buys:
+            realised = _num(item["actual"])
+            if realised is not None and realised > 0:
+                hits += 1
+        preds = [x for x in (_num(i["pred"]) for i in items) if x is not None]
         predicted_median = statistics.median(preds) if preds else 0.0
         hit_text = f"{hits}/{len(buys)}" if buys else "—"
         print(
@@ -106,13 +120,13 @@ def main(argv: list[str] | None = None) -> int:
         for item in items:
             if str(item["signal"]) != "BUY":
                 continue
-            actual = item["actual"]
-            outcome = "—" if actual is None else f"{float(actual):+.2%}"
+            realised = _num(item["actual"])
+            outcome = "—" if realised is None else f"{realised:+.2%}"
+            predicted = _num(item["pred"]) or 0.0
+            probability = _num(item["prob"]) or 0.0
             print(
                 f"  {day}  {item['ticker']}  "
-                f"予測 {float(item['pred'] or 0):+.2%}  "
-                f"確率 {float(item['prob'] or 0):.0%}  "
-                f"実績 {outcome}"
+                f"予測 {predicted:+.2%}  確率 {probability:.0%}  実績 {outcome}"
             )
     return 0
 
