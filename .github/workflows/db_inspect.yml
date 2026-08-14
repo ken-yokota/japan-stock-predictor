@@ -42,6 +42,10 @@ jobs:
       - name: Count the days that published on incomplete inputs
         run: python -m scripts.analyze_required_gaps
 
+      - name: Audit predictions against outcomes
+        continue-on-error: true
+        run: python -m scripts.audit_prediction_accuracy
+
       - name: Audit which runs produced each day
         continue-on-error: true
         run: python -m scripts.audit_run_provenance
