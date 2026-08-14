@@ -31,6 +31,7 @@ import pandas as pd
 from data.config import load_app_config
 from models.base import ModelTrainingConfig
 from research.feature_sets import resolve
+from research.metrics import paired_rank_ic, rank_ic_series, summarise_rank_ic
 from research.walk import (
     WindowResult,
     default_history_start,
@@ -50,6 +51,35 @@ def _frame(predictions: list[dict[str, Any]]) -> pd.DataFrame:
 
 def _accuracy(frame: pd.DataFrame) -> float:
     return float(frame["direction_correct"].mean()) if not frame.empty else 0.0
+
+
+def _divergence(frame: pd.DataFrame) -> pd.Series:
+    """Absolute prediction-vs-outcome gap, per prediction, in points."""
+
+    gap = frame["predicted_return"].astype(float) - frame[
+        "actual_return"
+    ].astype(float)
+    return gap.abs() * 100
+
+
+def _paired_error_test(candidate: pd.Series, baseline: pd.Series) -> dict[str, Any]:
+    """Did the candidate miss by less, on the same predictions?
+
+    Paired on purpose: two aggregate MAEs differ by whichever days each arm
+    happened to see, and the same 22 tickers share one market every morning.
+    """
+
+    difference = (candidate - baseline).dropna()
+    if difference.empty or float(difference.std(ddof=1) or 0.0) == 0.0:
+        return {"mean_delta_pp": 0.0, "p_value": None, "paired": len(difference)}
+    from scipy.stats import ttest_rel  # type: ignore[import-untyped]
+
+    result = ttest_rel(candidate, baseline, nan_policy="omit")
+    return {
+        "mean_delta_pp": float(difference.mean()),
+        "p_value": float(result.pvalue),
+        "paired": int(len(difference)),
+    }
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -141,25 +171,43 @@ def main(argv: list[str] | None = None) -> int:
         baseline["direction_correct"].astype(bool),
     )
 
+    base_gap = _divergence(baseline)
+    pooled_gap = _divergence(pooled)
+    gap_test = _paired_error_test(pooled_gap, base_gap)
+
+    base_ic = summarise_rank_ic(rank_ic_series(baseline.reset_index()))
+    pooled_ic = summarise_rank_ic(rank_ic_series(pooled.reset_index()))
+    ic_test = paired_rank_ic(pooled.reset_index(), baseline.reset_index())
+
     print("")
-    print(f"paired predictions        : {len(shared):,}")
-    print(f"per-ticker training rows  : median "
-          f"{baseline['training_sessions'].median():.0f}")
-    print(f"pooled training rows      : median "
-          f"{pooled['training_sessions'].median():.0f}")
+    print(f"paired predictions : {len(shared):,}")
+    print(f"sessions           : {baseline.index.get_level_values('date').nunique()}")
     print("")
-    print(f"direction accuracy (ticker) : {base_accuracy:.4f}")
-    print(f"direction accuracy (pooled) : {pooled_accuracy:.4f}")
-    print(f"difference                  : {delta:+.2f}pp")
+    print("=== 予実乖離（小さいほど良い、単位=%ポイント） ===")
+    print(f"  MAE  銘柄別 : {base_gap.mean():.4f}")
+    print(f"  MAE  プール : {pooled_gap.mean():.4f}")
+    print(f"  差          : {gap_test['mean_delta_pp']:+.4f}  p={gap_test['p_value']}")
+    print(f"  RMSE 銘柄別 : {float((base_gap ** 2).mean() ** 0.5):.4f}")
+    print(f"  RMSE プール : {float((pooled_gap ** 2).mean() ** 0.5):.4f}")
     print("")
-    print(f"pooled only correct   : {test['candidate_only_correct']}")
-    print(f"ticker only correct   : {test['baseline_only_correct']}")
-    print(f"discordant pairs      : {test['discordant_pairs']}")
-    print(f"p-value               : {test['p_value']}")
+    print("=== 方向的中（従来指標） ===")
+    print(f"  銘柄別 : {base_accuracy:.4f}")
+    print(f"  プール : {pooled_accuracy:.4f}")
+    print(f"  差     : {delta:+.2f}pp   p={test['p_value']}")
+    print(f"  不一致ペア : {test['discordant_pairs']}")
     print("")
-    print(f"BUY (ticker) : {int((baseline['signal'] == 'BUY').sum())}")
-    print(f"BUY (pooled) : {int((pooled['signal'] == 'BUY').sum())}")
-    print("※ 売買統計は件数が少なく、採否の判断には使いません。")
+    print("=== Rank IC（日次断面、市場要因が相殺される） ===")
+    for name, summary in (("銘柄別", base_ic), ("プール", pooled_ic)):
+        print(f"  {name} : IC={summary.mean:+.4f} IR={summary.information_ratio:+.3f} "
+              f"p={summary.p_value} 日数={summary.days}")
+        print(f"         検出下限={summary.detectable_ic:.4f} "
+              f"lag1={summary.lag1_autocorrelation}")
+    print(f"  差    : {ic_test.mean:+.4f}  p={ic_test.p_value}")
+    print(f"  {ic_test.verdict()}")
+    print("")
+    print(f"BUY 銘柄別 {int((baseline['signal'] == 'BUY').sum())} / "
+          f"プール {int((pooled['signal'] == 'BUY').sum())}"
+          "   ※件数が少なく採否判断には使いません")
 
     if arguments.output:
         arguments.output.write_text(
@@ -169,6 +217,15 @@ def main(argv: list[str] | None = None) -> int:
                     "accuracy_per_ticker": base_accuracy,
                     "accuracy_pooled": pooled_accuracy,
                     "delta_pp": delta,
+                    "mae_per_ticker": float(base_gap.mean()),
+                    "mae_pooled": float(pooled_gap.mean()),
+                    "mae_delta_pp": gap_test["mean_delta_pp"],
+                    "mae_p_value": gap_test["p_value"],
+                    "rank_ic_per_ticker": base_ic.mean,
+                    "rank_ic_pooled": pooled_ic.mean,
+                    "rank_ic_delta": ic_test.mean,
+                    "rank_ic_p_value": ic_test.p_value,
+                    "rank_ic_detectable": ic_test.detectable_ic,
                     **test,
                 },
                 ensure_ascii=False,
