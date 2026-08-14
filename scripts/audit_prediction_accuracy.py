@@ -16,6 +16,7 @@ import argparse
 import os
 import statistics
 import sys
+from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import text
@@ -25,11 +26,19 @@ from database.connection import create_database_engine
 
 
 def _num(value: object) -> float | None:
-    """Row values arrive typed as object; narrow them once."""
+    """Row values arrive typed as object; narrow them once.
+
+    Numeric columns come back as ``Decimal``, which is neither int nor float.
+    An isinstance check that forgets that turns every price in the report into
+    a silent zero - which is exactly how the first run of this audit claimed
+    every prediction and every outcome was 0.00%.
+    """
 
     if value is None or isinstance(value, bool):
         return None
-    if isinstance(value, int | float | str):
+    if isinstance(value, Decimal | int | float):
+        return float(value)
+    if isinstance(value, str):
         try:
             return float(value)
         except ValueError:
