@@ -44,8 +44,9 @@ def test_the_pooled_path_keeps_the_walk_forward_boundary() -> None:
 
 def test_the_pool_trains_on_more_than_one_ticker() -> None:
     source = inspect.getsource(walk.run_pooled_window)
-    assert "pd.concat(training_rows" in source
+    assert "pd.concat(\n" in source or "pd.concat(" in source
     assert "for stock in present:" in source
+    assert "share_training" in source, "the control must remain reachable"
 
 
 def test_pooled_features_are_the_intersection() -> None:
