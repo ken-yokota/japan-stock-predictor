@@ -431,7 +431,8 @@ def run_cross_sectional_window(
                     "direction_correct": bool(
                         (prediction.predicted_return > 0.0) == (actual_return > 0.0)
                     ),
-                    "net_pnl": trade.net_pnl,
+                    "shares": trade.shares,
+                    "net_profit_jpy": trade.net_profit,
                     "relative_target": True,
                 }
             )
