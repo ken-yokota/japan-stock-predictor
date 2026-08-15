@@ -113,7 +113,37 @@ fixes that.
 
 The changes that address it are formulation changes, not data changes:
 predicting relative performance instead of direction removes the beta term and
-multiplies the effective sample; pooling by sector multiplies training
-observations; moving the prediction after the opening auction makes the
-realized gap available as a feature. Search for indicators inside whichever
-formulation is in force, but do not expect indicators to substitute for it.
+multiplies the effective sample; moving the prediction after the opening auction
+makes the realized gap available as a feature. Search for indicators inside
+whichever formulation is in force, but do not expect indicators to substitute
+for it.
+
+## 7. Sector pooling was measured and lost. Do not re-propose it
+
+It was the obvious move — three to five tickers per sector, so three to five
+times the training rows, without adding a series. On 63 sessions and 1,386
+paired predictions it made everything worse:
+
+| | per ticker | pooled | p |
+|---|---|---|---|
+| Divergence from outcome (MAE, pp) | **1.2283** | 1.2692 | 0.00006 |
+| Direction accuracy | **0.5599** | 0.5123 | 0.0006 |
+| Rank IC | **+0.0593** | −0.0002 | 0.13 |
+
+−4.76pp of direction accuracy is larger than the ~3.1pp this window resolves,
+so this is a detected loss and not another underpowered null.
+
+A control ran alongside it, because a pool can only use the columns every member
+shares and therefore drops ticker-specific ones at the same moment it shares the
+fit. Fitting per ticker *on the same reduced columns* reproduced the per-ticker
+arm exactly — 0 discordant predictions, identical MAE and IC. So the intersection
+removed nothing here, and **the shared fit accounts for the entire loss**.
+
+The lesson generalizes past pooling: more rows only help when the added rows come
+from the same relationship. Tickers in a sector do not share coefficients closely
+enough for that, and forcing them to costs more in bias than the extra rows
+return in variance. Ridge already selects the maximum alpha on every prediction,
+which says the fit is short of signal, not short of rows.
+
+Keep the control habit. Whenever a change moves two things at once, run the
+middle arm; without it this result would have been blamed on the lost columns.
