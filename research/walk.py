@@ -85,6 +85,7 @@ def run_pooled_window(
     signal_config: BuySignalConfig,
     execution_config: ExecutionConfig,
     cache_dir: Path | None = DEFAULT_CACHE_DIR,
+    share_training: bool = True,
 ) -> WindowResult:
     """One model per sector per session, instead of one per ticker.
 
@@ -168,36 +169,65 @@ def run_pooled_window(
             }
         )
         for target_date in sessions:
-            training_rows = []
-            targets = []
+            per_ticker: dict[str, tuple[pd.DataFrame, pd.Series]] = {}
             for stock in present:
                 frame = built_frames[stock.ticker].frame
                 history = frame.loc[frame["market_date"] < target_date]
                 usable = history.loc[history["intraday_return"].notna()]
                 if usable.empty:
                     continue
-                training_rows.append(usable.loc[:, list(feature_names)])
-                targets.append(usable["intraday_return"])
-            if not training_rows:
-                continue
-            pooled_features = pd.concat(training_rows, ignore_index=True)
-            pooled_target = pd.concat(targets, ignore_index=True)
-            if len(pooled_features) < training_config.minimum_training_sessions:
-                continue
-            try:
-                model = train_ticker_model(
-                    pool_name,
-                    pooled_features,
-                    pooled_target,
-                    feature_names=feature_names,
-                    config=training_config,
+                per_ticker[stock.ticker] = (
+                    usable.loc[:, list(feature_names)],
+                    usable["intraday_return"],
                 )
-            except InsufficientTrainingData as error:
-                for stock in present:
-                    result.failures.setdefault(stock.ticker, str(error)[:160])
+            if not per_ticker:
                 continue
 
+            models: dict[str, Any] = {}
+            if share_training:
+                pooled_features = pd.concat(
+                    [rows for rows, _ in per_ticker.values()], ignore_index=True
+                )
+                pooled_target = pd.concat(
+                    [target for _, target in per_ticker.values()], ignore_index=True
+                )
+                if len(pooled_features) < training_config.minimum_training_sessions:
+                    continue
+                try:
+                    shared_model = train_ticker_model(
+                        pool_name,
+                        pooled_features,
+                        pooled_target,
+                        feature_names=feature_names,
+                        config=training_config,
+                    )
+                except InsufficientTrainingData as error:
+                    for stock in present:
+                        result.failures.setdefault(stock.ticker, str(error)[:160])
+                    continue
+                models = dict.fromkeys(per_ticker, shared_model)
+            else:
+                # The control: same tickers, same sessions, same reduced column
+                # set, one model each. Comparing this against the pooled arm
+                # isolates shared fitting from the features the pool had to drop.
+                for ticker, (rows, target) in per_ticker.items():
+                    if len(rows) < training_config.minimum_training_sessions:
+                        continue
+                    try:
+                        models[ticker] = train_ticker_model(
+                            ticker,
+                            rows,
+                            target,
+                            feature_names=feature_names,
+                            config=training_config,
+                        )
+                    except InsufficientTrainingData as error:
+                        result.failures.setdefault(ticker, str(error)[:160])
+
             for stock in present:
+                model = models.get(stock.ticker)
+                if model is None:
+                    continue
                 frame = built_frames[stock.ticker].frame
                 rows = frame.loc[frame["market_date"] == target_date]
                 if rows.empty:
@@ -221,6 +251,7 @@ def run_pooled_window(
                         "date": target_date.isoformat(),
                         "ticker": stock.ticker,
                         "pool": pool_name,
+                        "share_training": share_training,
                         "predicted_return": prediction.predicted_return,
                         "probability_up": prediction.probability_up,
                         "training_sessions": model.training_sessions,
@@ -239,6 +270,172 @@ def run_pooled_window(
                         "net_profit_jpy": trade.net_profit,
                     }
                 )
+    return result
+
+
+def session_means(frames: dict[str, pd.DataFrame]) -> pd.Series:
+    """Mean intraday return per session across the universe.
+
+    Each session's mean uses only that session's own returns, which is what
+    lets a demeaned target stay free of look-ahead: the mean subtracted from a
+    training row is contemporaneous with that row, and every training row is
+    already strictly older than the session being predicted.
+
+    Tickers that did not trade a session simply do not contribute to it; a
+    missing return must not be read as a zero return, which would pull the mean
+    toward zero on exactly the thin days where it is least reliable.
+    """
+
+    if not frames:
+        return pd.Series(dtype=float)
+    observed = pd.concat(
+        [frame.loc[:, ["market_date", "intraday_return"]] for frame in frames.values()],
+        ignore_index=True,
+    ).dropna(subset=["intraday_return"])
+    if observed.empty:
+        return pd.Series(dtype=float)
+    return observed.groupby("market_date")["intraday_return"].mean()
+
+
+def run_cross_sectional_window(
+    *,
+    stocks: list[Any],
+    feature_set: FeatureSet,
+    from_date: date,
+    to_date: date,
+    history_start: date,
+    training_config: ModelTrainingConfig,
+    signal_config: BuySignalConfig,
+    execution_config: ExecutionConfig,
+    cache_dir: Path | None = DEFAULT_CACHE_DIR,
+) -> WindowResult:
+    """Fit each ticker against how far it beat the day, not against its return.
+
+    A daily return decomposes into alpha plus beta times the market plus noise,
+    and for these names the market term carries most of the variance while being
+    unknowable at the 08:30 cutoff. Fitting the raw return spends 120 rows and
+    185 predictors partly on a quantity that cannot be predicted from the
+    information available. Subtracting the day's cross-sectional mean from the
+    target deletes that component from what the model is asked to explain, so
+    the same budget goes entirely to the part that differs between tickers.
+
+    Only the target is demeaned. The features are untouched, and scoring is
+    unchanged: rank IC ranks within a session, and subtracting one number from
+    every name in a session does not reorder them, so this is measured on
+    exactly the same scale as the per-ticker path.
+
+    No look-ahead is introduced. The mean subtracted from a training row is the
+    mean of that row's own session, and every training row comes from a session
+    strictly before the one being predicted - the same boundary the per-ticker
+    path uses. The session being predicted never contributes to any mean.
+    """
+
+    indicators = build_indicator_frame(
+        feature_set.indicators, history_start, to_date, cache_dir=cache_dir
+    )
+    result = WindowResult(missing_series=list(indicators.missing))
+
+    built_frames: dict[str, Any] = {}
+    for stock in stocks:
+        if not stock.enabled:
+            continue
+        symbol = stock.provider_symbols.get("yahoo_finance")
+        if symbol is None:
+            result.failures[stock.ticker] = "Yahoo symbol is unresolved"
+            continue
+        try:
+            built = build_stock_frame(
+                stock.ticker,
+                symbol,
+                history_start,
+                to_date,
+                feature_set=feature_set,
+                indicators=indicators,
+                cache_dir=cache_dir,
+            )
+        except Exception as error:
+            result.failures[stock.ticker] = (
+                f"{type(error).__name__}: {str(error)[:160]}"
+            )
+            continue
+        if built.is_empty:
+            result.failures[stock.ticker] = "no price history returned"
+            result.missing_series.extend(built.missing)
+            continue
+        built_frames[stock.ticker] = built
+        result.feature_names[stock.ticker] = built.feature_names
+        result.missing_series.extend(built.missing)
+
+    if not built_frames:
+        return result
+
+    session_mean = session_means(
+        {ticker: built.frame for ticker, built in built_frames.items()}
+    )
+
+    sessions = sorted(
+        {
+            day
+            for built in built_frames.values()
+            for day in built.frame["market_date"]
+            if from_date <= day <= to_date
+        }
+    )
+
+    for ticker, built in built_frames.items():
+        frame = built.frame
+        feature_names = built.feature_names
+        relative = frame["intraday_return"] - frame["market_date"].map(session_mean)
+        for target_date in sessions:
+            history = frame.loc[frame["market_date"] < target_date]
+            usable = history.loc[history["intraday_return"].notna()]
+            if len(usable) < training_config.minimum_training_sessions:
+                continue
+            try:
+                model = train_ticker_model(
+                    ticker,
+                    usable.loc[:, list(feature_names)],
+                    relative.loc[usable.index],
+                    feature_names=feature_names,
+                    config=training_config,
+                )
+            except InsufficientTrainingData as error:
+                result.failures.setdefault(ticker, str(error)[:160])
+                continue
+
+            rows = frame.loc[frame["market_date"] == target_date]
+            if rows.empty:
+                continue
+            current = rows.iloc[[0]]
+            prediction = model.predict_one(current.loc[:, list(feature_names)])
+            actual_open = float(current.iloc[0]["open"])
+            actual_close = float(current.iloc[0]["close"])
+            actual_return = actual_close / actual_open - 1.0
+            is_buy = (
+                prediction.predicted_return > signal_config.return_threshold
+                and prediction.probability_up >= signal_config.probability_threshold
+            )
+            trade = simulate_intraday_trade(
+                actual_open, actual_close, execute=is_buy, config=execution_config
+            )
+            result.predictions.append(
+                {
+                    "date": target_date.isoformat(),
+                    "ticker": ticker,
+                    # Relative to the day, which is what this arm was fit on.
+                    "predicted_return": prediction.predicted_return,
+                    "probability_up": prediction.probability_up,
+                    "signal": "BUY" if is_buy else "NO_TRADE",
+                    "actual_return": actual_return,
+                    "training_sessions": len(usable),
+                    "direction_correct": bool(
+                        (prediction.predicted_return > 0.0) == (actual_return > 0.0)
+                    ),
+                    "shares": trade.shares,
+                    "net_profit_jpy": trade.net_profit,
+                    "relative_target": True,
+                }
+            )
     return result
 
 

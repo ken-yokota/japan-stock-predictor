@@ -35,6 +35,7 @@ from research.metrics import paired_rank_ic, rank_ic_series, summarise_rank_ic
 from research.walk import (
     WindowResult,
     default_history_start,
+    run_cross_sectional_window,
     run_pooled_window,
     run_window,
 )
@@ -85,6 +86,11 @@ def _paired_error_test(candidate: pd.Series, baseline: pd.Series) -> dict[str, A
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--feature-set", default="baseline")
+    parser.add_argument(
+        "--arms",
+        default="A,B,C",
+        help="which arms to run; A is always the baseline to compare against",
+    )
     parser.add_argument("--sessions", type=int, default=60)
     parser.add_argument("--to-date", default=None)
     parser.add_argument("--training-window", type=int, default=120)
@@ -129,8 +135,8 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
 
-    def _run(runner: Callable[..., WindowResult]) -> pd.DataFrame:
-        """Both arms take the same arguments; only the fitting differs."""
+    def _run(runner: Callable[..., WindowResult], **extra: Any) -> pd.DataFrame:
+        """Every arm takes the same arguments; only the fitting differs."""
 
         return _frame(
             runner(
@@ -142,95 +148,105 @@ def main(argv: list[str] | None = None) -> int:
                 training_config=training_config,
                 signal_config=signal_config,
                 execution_config=execution_config,
+                **extra,
             ).predictions
         )
 
-    print(f"feature set   : {feature_set.name}")
-    print(f"window        : {from_date} .. {to_date}")
-    print(f"history from  : {history_start}")
-    print("")
+    definitions: dict[str, tuple[str, Any, dict[str, Any]]] = {
+        "A": ("銘柄別・全特徴量（本番）", run_window, {}),
+        "B": ("銘柄別・共通特徴量のみ（対照）", run_pooled_window,
+              {"share_training": False}),
+        "C": ("業種プール・共通特徴量", run_pooled_window, {"share_training": True}),
+        "D": ("銘柄別・相対リターンを学習", run_cross_sectional_window, {}),
+    }
+    wanted = [name.strip().upper() for name in str(arguments.arms).split(",")]
+    wanted = [name for name in wanted if name in definitions]
+    if "A" not in wanted:
+        wanted.insert(0, "A")
 
-    print("fitting per ticker ...", flush=True)
-    baseline = _run(run_window)
-    print("fitting per sector ...", flush=True)
-    pooled = _run(run_pooled_window)
+    built: dict[str, pd.DataFrame] = {}
+    for name in wanted:
+        label, runner, extra = definitions[name]
+        print(f"{name} {label} を実行中 ...", flush=True)
+        built[name] = _run(runner, **extra)
+        if built[name].empty:
+            print(f"arm {name} produced no predictions", file=sys.stderr)
+            return 1
 
-    if baseline.empty or pooled.empty:
-        print("one arm produced no predictions", file=sys.stderr)
-        return 1
-
-    shared = baseline.index.intersection(pooled.index)
-    baseline = baseline.loc[shared]
-    pooled = pooled.loc[shared]
-
-    base_accuracy = _accuracy(baseline)
-    pooled_accuracy = _accuracy(pooled)
-    delta = (pooled_accuracy - base_accuracy) * 100
-    test = _sign_test(
-        pooled["direction_correct"].astype(bool),
-        baseline["direction_correct"].astype(bool),
-    )
-
-    base_gap = _divergence(baseline)
-    pooled_gap = _divergence(pooled)
-    gap_test = _paired_error_test(pooled_gap, base_gap)
-
-    base_ic = summarise_rank_ic(rank_ic_series(baseline.reset_index()))
-    pooled_ic = summarise_rank_ic(rank_ic_series(pooled.reset_index()))
-    ic_test = paired_rank_ic(pooled.reset_index(), baseline.reset_index())
+    shared = built[wanted[0]].index
+    for name in wanted[1:]:
+        shared = shared.intersection(built[name].index)
+    arms = {name: frame.loc[shared] for name, frame in built.items()}
 
     print("")
     print(f"paired predictions : {len(shared):,}")
-    print(f"sessions           : {baseline.index.get_level_values('date').nunique()}")
+    print(f"sessions           : {shared.get_level_values('date').nunique()}")
     print("")
-    print("=== 予実乖離（小さいほど良い、単位=%ポイント） ===")
-    print(f"  MAE  銘柄別 : {base_gap.mean():.4f}")
-    print(f"  MAE  プール : {pooled_gap.mean():.4f}")
-    print(f"  差          : {gap_test['mean_delta_pp']:+.4f}  p={gap_test['p_value']}")
-    print(f"  RMSE 銘柄別 : {float((base_gap ** 2).mean() ** 0.5):.4f}")
-    print(f"  RMSE プール : {float((pooled_gap ** 2).mean() ** 0.5):.4f}")
+    for name in wanted:
+        print(f"{name} = {definitions[name][0]}")
     print("")
-    print("=== 方向的中（従来指標） ===")
-    print(f"  銘柄別 : {base_accuracy:.4f}")
-    print(f"  プール : {pooled_accuracy:.4f}")
-    print(f"  差     : {delta:+.2f}pp   p={test['p_value']}")
-    print(f"  不一致ペア : {test['discordant_pairs']}")
+
+    header = f"{'arm':4}{'MAE':>9}{'RMSE':>9}{'方向的中':>11}{'RankIC':>10}{'IC p':>9}"
+    print(header)
+    print("-" * 56)
+    summaries = {}
+    for name, frame in arms.items():
+        gap = _divergence(frame)
+        summary = summarise_rank_ic(rank_ic_series(frame.reset_index()))
+        summaries[name] = (gap, summary)
+        print(
+            f"{name:4}{gap.mean():>9.4f}{float((gap ** 2).mean() ** 0.5):>9.4f}"
+            f"{_accuracy(frame):>11.4f}{summary.mean:>10.4f}"
+            f"{(summary.p_value or float('nan')):>9.3f}"
+        )
+
+    pairs = [(f"A→{name}", f"A に対する {name}", name, "A") for name in wanted[1:]]
+    if "B" in arms and "C" in arms:
+        pairs.append(("B→C", "プール学習そのものの効果", "C", "B"))
+
+    results: dict[str, Any] = {"paired": len(shared)}
+    for label, question, candidate, baseline in pairs:
+        left, right = arms[candidate], arms[baseline]
+        gap_test = _paired_error_test(
+            summaries[candidate][0], summaries[baseline][0]
+        )
+        sign = _sign_test(
+            left["direction_correct"].astype(bool),
+            right["direction_correct"].astype(bool),
+        )
+        ic = paired_rank_ic(left.reset_index(), right.reset_index())
+        accuracy_delta = (_accuracy(left) - _accuracy(right)) * 100
+        print("")
+        print(f"=== {label}  {question} ===")
+        print(
+            f"  予実乖離 : {gap_test['mean_delta_pp']:+.4f}pp  "
+            f"p={gap_test['p_value']}  （正なら悪化）"
+        )
+        print(
+            f"  方向的中 : {accuracy_delta:+.2f}pp  p={sign['p_value']}  "
+            f"不一致={sign['discordant_pairs']}"
+        )
+        print(f"  Rank IC  : {ic.mean:+.4f}  p={ic.p_value}")
+        print(f"  {ic.verdict()}")
+        results[label] = {
+            "mae_delta_pp": gap_test["mean_delta_pp"],
+            "mae_p_value": gap_test["p_value"],
+            "accuracy_delta_pp": accuracy_delta,
+            "accuracy_p_value": sign["p_value"],
+            "rank_ic_delta": ic.mean,
+            "rank_ic_p_value": ic.p_value,
+            "rank_ic_detectable": ic.detectable_ic,
+        }
+
     print("")
-    print("=== Rank IC（日次断面、市場要因が相殺される） ===")
-    for name, summary in (("銘柄別", base_ic), ("プール", pooled_ic)):
-        print(f"  {name} : IC={summary.mean:+.4f} IR={summary.information_ratio:+.3f} "
-              f"p={summary.p_value} 日数={summary.days}")
-        print(f"         検出下限={summary.detectable_ic:.4f} "
-              f"lag1={summary.lag1_autocorrelation}")
-    print(f"  差    : {ic_test.mean:+.4f}  p={ic_test.p_value}")
-    print(f"  {ic_test.verdict()}")
-    print("")
-    print(f"BUY 銘柄別 {int((baseline['signal'] == 'BUY').sum())} / "
-          f"プール {int((pooled['signal'] == 'BUY').sum())}"
-          "   ※件数が少なく採否判断には使いません")
+    print("※ BUY件数は少なすぎるため採否判断には使いません: " + ", ".join(
+        f"{name}={int((frame['signal'] == 'BUY').sum())}"
+        for name, frame in arms.items()
+    ))
 
     if arguments.output:
         arguments.output.write_text(
-            json.dumps(
-                {
-                    "paired": len(shared),
-                    "accuracy_per_ticker": base_accuracy,
-                    "accuracy_pooled": pooled_accuracy,
-                    "delta_pp": delta,
-                    "mae_per_ticker": float(base_gap.mean()),
-                    "mae_pooled": float(pooled_gap.mean()),
-                    "mae_delta_pp": gap_test["mean_delta_pp"],
-                    "mae_p_value": gap_test["p_value"],
-                    "rank_ic_per_ticker": base_ic.mean,
-                    "rank_ic_pooled": pooled_ic.mean,
-                    "rank_ic_delta": ic_test.mean,
-                    "rank_ic_p_value": ic_test.p_value,
-                    "rank_ic_detectable": ic_test.detectable_ic,
-                    **test,
-                },
-                ensure_ascii=False,
-                indent=2,
-            ),
+            json.dumps(results, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
     return 0
