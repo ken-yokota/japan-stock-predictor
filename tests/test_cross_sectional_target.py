@@ -124,7 +124,8 @@ def test_the_relative_arm_fits_the_demeaned_target() -> None:
     """It must train on the relative series, not merely compute it."""
 
     source = inspect.getsource(walk.run_cross_sectional_window)
-    assert "relative = frame[\"intraday_return\"] - frame[\"market_date\"].map(" in source
+    assert "relative = frame[\"intraday_return\"] - frame[" in source
+    assert '"market_date"].map(session_mean)' in source
     assert "relative.loc[usable.index]" in source
     # The features are deliberately untouched; only the target changes.
     assert "usable.loc[:, list(feature_names)]" in source
