@@ -45,7 +45,7 @@ def main(argv: list[str] | None = None) -> int:
             date.fromisoformat(arguments.end),
             cache_dir=cache_dir,
         )
-    except Exception as error:  # noqa: BLE001 - reported, never swallowed
+    except Exception as error:
         print(
             json.dumps(
                 {
@@ -60,7 +60,7 @@ def main(argv: list[str] | None = None) -> int:
     status = OK if not frame.empty else EMPTY
     print(
         json.dumps(
-            {"symbol": arguments.symbol, "status": status, "rows": int(len(frame))}
+            {"symbol": arguments.symbol, "status": status, "rows": len(frame)}
         )
     )
     return 0 if status == OK else 2

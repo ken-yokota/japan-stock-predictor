@@ -168,7 +168,7 @@ def evaluate(
 
     return StrategyResult(
         rule=rule,
-        trades=int(len(chosen)),
+        trades=len(chosen),
         sessions=sessions,
         win_rate=float((net > 0.0).mean()),
         gross_profit=gross_profit,
@@ -192,12 +192,20 @@ def evaluate_all(
 ) -> dict[str, StrategyResult]:
     """The four selection rules every arm is scored on."""
 
-    costs = {"commission_bps": commission_bps, "slippage_bps": slippage_bps}
     results = {
-        "threshold": evaluate(predictions, rule="threshold", **costs),
+        "threshold": evaluate(
+            predictions,
+            rule="threshold",
+            commission_bps=commission_bps,
+            slippage_bps=slippage_bps,
+        )
     }
     for k in (1, 3, 5):
         results[f"top{k}"] = evaluate(
-            predictions, rule=f"top{k}", top_k=k, **costs
+            predictions,
+            rule=f"top{k}",
+            top_k=k,
+            commission_bps=commission_bps,
+            slippage_bps=slippage_bps,
         )
     return results

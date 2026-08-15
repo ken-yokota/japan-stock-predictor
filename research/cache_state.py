@@ -82,7 +82,7 @@ def inspect_symbol(
     except (KeyError, TypeError, ValueError) as error:
         return SymbolState(symbol, CORRUPT, detail=type(error).__name__)
 
-    rows = int(len(frame))
+    rows = len(frame)
     if stored_start > start:
         return SymbolState(symbol, PARTIAL, stored_start, stored_end, rows,
                            f"starts {stored_start}, needs {start}")

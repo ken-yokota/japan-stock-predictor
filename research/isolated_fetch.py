@@ -68,6 +68,12 @@ class FetchOutcome:
         return self.status in (OK, SKIPPED_CACHED)
 
 
+def _as_int(value: object) -> int:
+    """A child's row count, or zero. A failure must never look like data."""
+
+    return int(value) if isinstance(value, int | float) else 0
+
+
 def _default_command(symbol: str, start: date, end: date, cache_dir: Path) -> list[str]:
     return [
         sys.executable,
@@ -108,7 +114,7 @@ def fetch_symbol(
     for attempt in range(1, attempts + 1):
         command = list(build_command(symbol, start, end, cache_dir))
         try:
-            completed = subprocess.run(  # noqa: S603 - command is built here
+            completed = subprocess.run(
                 command,
                 capture_output=True,
                 text=True,
@@ -140,7 +146,7 @@ def fetch_symbol(
             symbol,
             status,
             time.monotonic() - started,
-            rows=int(payload.get("rows") or 0),
+            rows=_as_int(payload.get("rows")),
             attempts=attempt,
             detail=str(payload.get("detail") or completed.stderr.strip()[:200]),
         )

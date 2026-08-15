@@ -30,6 +30,7 @@ Two things are reported that are easy to omit and change the reading:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import numpy as np
@@ -79,7 +80,9 @@ def pearson_ic_series(predictions: pd.DataFrame) -> pd.Series:
     return _daily(predictions, _pearson)
 
 
-def _daily(predictions: pd.DataFrame, statistic) -> pd.Series:
+def _daily(
+    predictions: pd.DataFrame, statistic: Callable[[pd.DataFrame], float]
+) -> pd.Series:
     if predictions.empty:
         return pd.Series(dtype=float)
     frame = predictions
@@ -196,7 +199,7 @@ def summarise_rank_ic(daily: pd.Series) -> RankICSummary:
     # an interval narrow enough to exclude anything that would matter.
     low = high = mean
     if days > 1 and error > 0:
-        from scipy.stats import t as student  # type: ignore[import-untyped]
+        from scipy.stats import t as student
 
         half = float(student.ppf(0.975, df=days - 1)) * error
         low, high = mean - half, mean + half

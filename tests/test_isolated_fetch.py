@@ -23,7 +23,14 @@ import pandas as pd
 import pytest
 
 from research import isolated_fetch
-from research.cache_state import CACHED, CORRUPT, MISSING, PARTIAL, STALE, inspect_symbol
+from research.cache_state import (
+    CACHED,
+    CORRUPT,
+    MISSING,
+    PARTIAL,
+    STALE,
+    inspect_symbol,
+)
 from research.isolated_fetch import (
     MAX_ATTEMPTS,
     OK,
@@ -157,7 +164,12 @@ def test_a_cached_symbol_is_never_requested(tmp_path: Path) -> None:
         return _succeeding()(symbol, start, end, cache_dir)
 
     outcomes, states = fetch_missing(
-        ["SPY"], START, END, cache_dir=tmp_path, build_command=build, sleep=lambda _: None
+        ["SPY"],
+        START,
+        END,
+        cache_dir=tmp_path,
+        build_command=build,
+        sleep=lambda _: None,
     )
     assert requested == []
     assert outcomes[0].status == SKIPPED_CACHED
