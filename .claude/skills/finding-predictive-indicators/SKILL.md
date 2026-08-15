@@ -50,6 +50,35 @@ common trap: `^BCOM` and `^MOVE` both return history that silently stops
 updating weeks earlier, because free redistribution of an index can be
 withdrawn. ETFs tracking the same thing keep working.
 
+## 2b. Rank IC, not direction accuracy, is the metric that can see anything
+
+Direction accuracy treats 22 tickers on one morning as 22 observations when
+they share a market. Rank IC ranks within the morning instead, so the common
+move cancels and every ticker contributes. Measured over the same 63 sessions
+and 1,386 predictions, the two metrics disagree about which predictor set is
+better, and only one of them is aligned with how the system is used:
+
+| set | MAE | direction | Rank IC | IC p |
+|---|---|---|---|---|
+| baseline (7 series) | **1.2283** | 0.5599 | 0.0593 | 0.042 |
+| focused (12) | 1.2288 | **0.5722** | 0.1073 | **0.001** |
+| extended (29) | 1.2638 | 0.5642 | **0.1130** | **0.001** |
+
+`extended` has the worst MAE and the best ordering. Point estimates get noisier
+as predictors are added while the *ranking* improves, and picking which stocks
+to buy needs the ranking. Judging on MAE alone would have discarded both sets
+that actually order the cross-section.
+
+Paired against baseline: `focused` gains +0.048 IC (p = 0.033) at no cost in
+MAE (p = 0.94); `extended` gains +0.054 IC (p = 0.075, not resolved) while MAE
+gets significantly worse (p = 0.002). `focused` is the better buy - the same
+ordering benefit, no divergence cost, and 12 series instead of 29.
+
+Neither improvement clears a Bonferroni line across the six tests run, so treat
+them as the direction to pursue rather than as settled. What *is* settled is
+that `focused` and `extended` have real cross-sectional skill against zero
+(p = 0.001 each), and baseline's does not survive correction.
+
 ## 3. Know the detectable effect size before running the test
 
 Measured on this repository, 49 sessions x 22 tickers:
@@ -133,11 +162,20 @@ paired predictions it made everything worse:
 −4.76pp of direction accuracy is larger than the ~3.1pp this window resolves,
 so this is a detected loss and not another underpowered null.
 
+It was re-run on `extended`, where pooling should do best - 76 predictors
+against 120 rows is where extra rows are worth most - and it lost there too:
+divergence +0.049pp (p = 0.0009), direction −2.74pp, Rank IC −0.068. The first
+measurement had been made on the set where pooling had least to offer, which
+was worth correcting before generalising from it.
+
 A control ran alongside it, because a pool can only use the columns every member
 shares and therefore drops ticker-specific ones at the same moment it shares the
 fit. Fitting per ticker *on the same reduced columns* reproduced the per-ticker
-arm exactly — 0 discordant predictions, identical MAE and IC. So the intersection
-removed nothing here, and **the shared fit accounts for the entire loss**.
+arm exactly on baseline — 0 discordant predictions — and on `extended`, where 18
+ADR columns really are dropped, it moved only 14 of 1,386 predictions and was
+very slightly *better* on all three metrics. So **the shared fit accounts for the
+entire loss**, and separately: the ADR columns are earning nothing and are the
+first thing to cut.
 
 The lesson generalizes past pooling: more rows only help when the added rows come
 from the same relationship. Tickers in a sector do not share coefficients closely

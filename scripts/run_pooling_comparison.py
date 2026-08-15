@@ -54,6 +54,18 @@ def _accuracy(frame: pd.DataFrame) -> float:
     return float(frame["direction_correct"].mean()) if not frame.empty else 0.0
 
 
+def _fitting_arms() -> dict[str, tuple[str, Any, dict[str, Any]]]:
+    """The arms that hold the predictors fixed and vary how the fit is done."""
+
+    return {
+        "A": ("銘柄別・全特徴量（本番）", run_window, {}),
+        "B": ("銘柄別・共通特徴量のみ（対照）", run_pooled_window,
+              {"share_training": False}),
+        "C": ("業種プール・共通特徴量", run_pooled_window, {"share_training": True}),
+        "D": ("銘柄別・相対リターンを学習", run_cross_sectional_window, {}),
+    }
+
+
 def _divergence(frame: pd.DataFrame) -> pd.Series:
     """Absolute prediction-vs-outcome gap, per prediction, in points."""
 
@@ -90,6 +102,14 @@ def main(argv: list[str] | None = None) -> int:
         "--arms",
         default="A,B,C",
         help="which arms to run; A is always the baseline to compare against",
+    )
+    parser.add_argument(
+        "--feature-sets",
+        default=None,
+        help=(
+            "compare feature sets instead of fitting modes: each named set is "
+            "run through the production path and paired against the first"
+        ),
     )
     parser.add_argument("--sessions", type=int, default=60)
     parser.add_argument("--to-date", default=None)
@@ -141,7 +161,7 @@ def main(argv: list[str] | None = None) -> int:
         return _frame(
             runner(
                 stocks=list(config.stocks.stocks),
-                feature_set=feature_set,
+                feature_set=extra.pop("feature_set", feature_set),
                 from_date=from_date,
                 to_date=to_date,
                 history_start=history_start,
@@ -152,17 +172,29 @@ def main(argv: list[str] | None = None) -> int:
             ).predictions
         )
 
-    definitions: dict[str, tuple[str, Any, dict[str, Any]]] = {
-        "A": ("銘柄別・全特徴量（本番）", run_window, {}),
-        "B": ("銘柄別・共通特徴量のみ（対照）", run_pooled_window,
-              {"share_training": False}),
-        "C": ("業種プール・共通特徴量", run_pooled_window, {"share_training": True}),
-        "D": ("銘柄別・相対リターンを学習", run_cross_sectional_window, {}),
-    }
-    wanted = [name.strip().upper() for name in str(arguments.arms).split(",")]
-    wanted = [name for name in wanted if name in definitions]
-    if "A" not in wanted:
-        wanted.insert(0, "A")
+    set_names = [
+        name.strip()
+        for name in str(arguments.feature_sets or "").split(",")
+        if name.strip()
+    ]
+    if set_names:
+        # One arm per feature set, all through the production fitting path, so
+        # the only thing that differs between them is the predictor list.
+        definitions = {
+            name: (
+                f"銘柄別・特徴量セット {name}",
+                run_window,
+                {"feature_set": resolve(name)},
+            )
+            for name in set_names
+        }
+        wanted = list(definitions)
+    else:
+        definitions = _fitting_arms()
+        wanted = [name.strip().upper() for name in str(arguments.arms).split(",")]
+        wanted = [name for name in wanted if name in definitions]
+        if "A" not in wanted:
+            wanted.insert(0, "A")
 
     built: dict[str, pd.DataFrame] = {}
     for name in wanted:
@@ -200,7 +232,11 @@ def main(argv: list[str] | None = None) -> int:
             f"{(summary.p_value or float('nan')):>9.3f}"
         )
 
-    pairs = [(f"A→{name}", f"A に対する {name}", name, "A") for name in wanted[1:]]
+    first = wanted[0]
+    pairs = [
+        (f"{first}→{name}", f"{first} に対する {name}", name, first)
+        for name in wanted[1:]
+    ]
     if "B" in arms and "C" in arms:
         pairs.append(("B→C", "プール学習そのものの効果", "C", "B"))
 
