@@ -254,7 +254,7 @@ def main(argv: list[str] | None = None) -> int:
     print("-" * 102)
     strategies: dict[str, Any] = {}
     for name, frame in arms.items():
-        results = evaluate_all(
+        by_rule = evaluate_all(
             frame.reset_index(),
             commission_bps=execution_config.commission_bps,
             slippage_bps=execution_config.slippage_bps,
@@ -271,9 +271,9 @@ def main(argv: list[str] | None = None) -> int:
                 "sortino": r.sortino,
                 "measurable": r.is_measurable,
             }
-            for rule, r in results.items()
+            for rule, r in by_rule.items()
         }
-        for rule, r in results.items():
+        for rule, r in by_rule.items():
             flag = "" if r.is_measurable else "  ※20件未満"
             print(
                 f"{name:22}{rule:10}{r.trades:>7}{r.win_rate:>8.3f}"

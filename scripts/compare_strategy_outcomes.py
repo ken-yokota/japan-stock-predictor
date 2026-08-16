@@ -64,7 +64,7 @@ def _bootstrap(difference: np.ndarray) -> tuple[float, float]:
 def compare(left: pd.Series, right: pd.Series) -> dict[str, float | int | None]:
     """Paired comparison of two arms' daily records over the same sessions."""
 
-    from scipy.stats import ttest_rel, wilcoxon
+    from scipy.stats import ttest_rel, wilcoxon  # type: ignore[import-untyped]
 
     difference = np.asarray(left - right, dtype=float)
     differing = int(np.count_nonzero(difference))
