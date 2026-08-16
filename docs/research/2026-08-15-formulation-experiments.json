@@ -1,0 +1,91 @@
+{
+  "recorded_on": "2026-08-15",
+  "commit": "b739533409a4d21f9f09c39c058fd3ac6173c8b8",
+  "status": "immutable record - reruns must write a new file, never overwrite this",
+  "window": {
+    "from": "2026-05-16",
+    "to": "2026-08-14",
+    "history_start": "2025-05-27",
+    "sessions": 63,
+    "paired_predictions": 1386,
+    "tickers": 22
+  },
+  "held_constant": {
+    "training_window_sessions": 120,
+    "model": "Ridge (return) + Logistic (probability up)",
+    "hyperparameter_search": "TimeSeriesSplit, 5 folds, inside the training window",
+    "scaler_fit": "training rows only",
+    "walk_forward_boundary": "market_date < target_date, strictly",
+    "cutoff": "08:30 JST, fixed by prediction date",
+    "evaluation": "out of sample, one refit per session per ticker"
+  },
+  "known_limits": [
+    "The research feature sets are not the production config; 'production' here is a close mirror missing us_2y_yield, us_10y_minus_2y_spread, baltic_capesize_index, baltic_panamax_index, iron_ore and us_shipping_equity_proxy, none of which has free daily history.",
+    "The production mirror comparison did not run: Yahoo rate limiting blocked the last five symbols.",
+    "BUY counts are reported and never used to judge; the threshold was tuned for absolute-return predictions and is not neutral across arms.",
+    "Trade statistics in these runs predate the strategy-metrics module, so only counts are recorded here."
+  ],
+  "experiments": [
+    {
+      "name": "sector pooling, baseline set",
+      "arms": {
+        "A_per_ticker_full": {"mae": 1.2283, "rmse": 1.6037, "direction": 0.5599, "rank_ic": 0.0593, "rank_ic_p": 0.042, "buys": 22},
+        "B_per_ticker_shared_columns": {"mae": 1.2283, "rmse": 1.6037, "direction": 0.5599, "rank_ic": 0.0593, "rank_ic_p": 0.042, "buys": 22},
+        "C_sector_pooled": {"mae": 1.2692, "rmse": 1.6408, "direction": 0.5123, "rank_ic": -0.0002, "rank_ic_p": 0.997, "buys": 20}
+      },
+      "paired_tests": {
+        "A_to_B": {"mae_delta_pp": 0.0000, "mae_p": 0.3969, "direction_delta_pp": 0.00, "discordant": 0, "rank_ic_delta": 0.0000},
+        "B_to_C": {"mae_delta_pp": 0.0409, "mae_p": 6.298e-05, "direction_delta_pp": -4.76, "direction_p": 0.000637, "discordant": 364, "rank_ic_delta": -0.0594, "rank_ic_p": 0.128}
+      }
+    },
+    {
+      "name": "sector pooling, extended set",
+      "arms": {
+        "A_per_ticker_full": {"mae": 1.2638, "rmse": 1.6388, "direction": 0.5642, "rank_ic": 0.1130, "rank_ic_p": 0.001, "buys": 107},
+        "B_per_ticker_shared_columns": {"mae": 1.2629, "rmse": 1.6380, "direction": 0.5685, "rank_ic": 0.1140, "rank_ic_p": 0.001, "buys": 111},
+        "C_sector_pooled": {"mae": 1.3120, "rmse": 1.6894, "direction": 0.5411, "rank_ic": 0.0457, "rank_ic_p": 0.222, "buys": 108}
+      },
+      "paired_tests": {
+        "A_to_B": {"mae_delta_pp": -0.0009, "mae_p": 0.2964, "direction_delta_pp": 0.43, "direction_p": 0.1796, "discordant": 14, "rank_ic_delta": 0.0009, "rank_ic_p": 0.758},
+        "A_to_C": {"mae_delta_pp": 0.0482, "mae_p": 0.001119, "direction_delta_pp": -2.31, "direction_p": 0.1069, "discordant": 370, "rank_ic_delta": -0.0673, "rank_ic_p": 0.0863},
+        "B_to_C": {"mae_delta_pp": 0.0491, "mae_p": 0.000915, "direction_delta_pp": -2.74, "direction_p": 0.0530, "discordant": 366, "rank_ic_delta": -0.0683, "rank_ic_p": 0.0807}
+      }
+    },
+    {
+      "name": "relative (cross-sectionally demeaned) target, baseline set",
+      "arms": {
+        "A_absolute_target": {"mae": 1.2283, "rmse": 1.6037, "direction": 0.5599, "rank_ic": 0.0593, "rank_ic_p": 0.042, "buys": 22},
+        "D_relative_target": {"mae": 1.2437, "rmse": 1.6220, "direction": 0.5447, "rank_ic": 0.0513, "rank_ic_p": 0.106, "buys": 40}
+      },
+      "paired_tests": {
+        "A_to_D": {"mae_delta_pp": 0.0154, "mae_p": 0.0298, "direction_delta_pp": -1.52, "direction_p": 0.273, "discordant": 333, "rank_ic_delta": -0.0080, "rank_ic_p": 0.529, "rank_ic_detectable": 0.0354}
+      }
+    },
+    {
+      "name": "feature sets, production fitting path",
+      "arms": {
+        "baseline_7": {"indicators": 7, "mae": 1.2283, "rmse": 1.6037, "direction": 0.5599, "rank_ic": 0.0593, "rank_ic_p": 0.042, "buys": 22},
+        "focused_12": {"indicators": 12, "mae": 1.2288, "rmse": 1.6012, "direction": 0.5722, "rank_ic": 0.1073, "rank_ic_p": 0.001, "buys": 49},
+        "extended_29": {"indicators": 29, "mae": 1.2638, "rmse": 1.6388, "direction": 0.5642, "rank_ic": 0.1130, "rank_ic_p": 0.001, "buys": 107}
+      },
+      "paired_tests": {
+        "baseline_to_focused": {"mae_delta_pp": 0.0005, "mae_p": 0.9355, "direction_delta_pp": 1.23, "direction_p": 0.2839, "discordant": 223, "rank_ic_delta": 0.0480, "rank_ic_p": 0.0325},
+        "baseline_to_extended": {"mae_delta_pp": 0.0355, "mae_p": 0.001869, "direction_delta_pp": 0.43, "direction_p": 0.7944, "discordant": 368, "rank_ic_delta": 0.0538, "rank_ic_p": 0.0746, "rank_ic_detectable": 0.0830}
+      }
+    }
+  ],
+  "multiple_testing": {
+    "tests_run": 6,
+    "bonferroni_threshold": 0.0083,
+    "note": "Arm-level IC significance against zero is a different question from a paired improvement, and is reported separately."
+  },
+  "findings": [
+    {"claim": "Sector pooling degrades prediction", "status": "REJECTED", "evidence": "divergence +0.041pp (p=6.3e-05) on baseline and +0.049pp (p=9.2e-04) on extended; direction -4.76pp (p=6.4e-04) on baseline, which clears the ~3.1pp this window resolves"},
+    {"claim": "focused (12) has real cross-sectional skill", "status": "CONFIRMED", "evidence": "rank IC +0.1073, p=0.001, 63 days; clears the Bonferroni threshold"},
+    {"claim": "extended (29) has real cross-sectional skill", "status": "CONFIRMED", "evidence": "rank IC +0.1130, p=0.001, 63 days; clears the Bonferroni threshold"},
+    {"claim": "focused matches extended on ranking at a third the size", "status": "STRONG EVIDENCE", "evidence": "IC gain over baseline +0.048 (p=0.033) vs +0.054 (p=0.075); focused costs nothing in divergence (p=0.94) while extended is significantly worse (p=0.0019)"},
+    {"claim": "ADR columns contribute nothing", "status": "STRONG EVIDENCE", "evidence": "dropping 18 of them moved 14 of 1,386 predictions and was slightly better on all three metrics; none of the differences is significant"},
+    {"claim": "Relative (demeaned) target improves prediction", "status": "INCONCLUSIVE", "evidence": "all three metrics fail the pre-registered p<0.017; the IC difference of -0.0080 is far inside the 0.0354 this window resolves"},
+    {"claim": "MAE and rank IC disagree about which set is better", "status": "CONFIRMED", "evidence": "extended has the worst divergence and the best ordering; judging on divergence alone would discard both sets that order the cross-section"}
+  ]
+}

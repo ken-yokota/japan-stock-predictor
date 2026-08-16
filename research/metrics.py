@@ -30,6 +30,7 @@ Two things are reported that are easy to omit and change the reading:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import numpy as np
@@ -55,9 +56,33 @@ def _spearman(frame: pd.DataFrame) -> float:
     return float(predicted.corr(actual, method="pearson"))
 
 
-def rank_ic_series(predictions: pd.DataFrame) -> pd.Series:
-    """Daily rank IC, indexed by date, with unrankable days dropped."""
+def _pearson(frame: pd.DataFrame) -> float:
+    """One morning's linear correlation between prediction and outcome."""
 
+    if len(frame) < MINIMUM_NAMES:
+        return float("nan")
+    predicted = frame["predicted_return"].astype(float)
+    actual = frame["actual_return"].astype(float)
+    if predicted.nunique() < 2 or actual.nunique() < 2:
+        return float("nan")
+    return float(predicted.corr(actual, method="pearson"))
+
+
+def pearson_ic_series(predictions: pd.DataFrame) -> pd.Series:
+    """Daily Pearson IC, for comparison against the rank version.
+
+    It is reported beside rank IC rather than instead of it. Pearson answers a
+    question about magnitudes and is moved by a single violent name, which is
+    exactly the day a ranking is unbothered by; when the two disagree, the
+    disagreement is the finding.
+    """
+
+    return _daily(predictions, _pearson)
+
+
+def _daily(
+    predictions: pd.DataFrame, statistic: Callable[[pd.DataFrame], float]
+) -> pd.Series:
     if predictions.empty:
         return pd.Series(dtype=float)
     frame = predictions
@@ -67,8 +92,14 @@ def rank_ic_series(predictions: pd.DataFrame) -> pd.Series:
     missing = required - set(frame.columns)
     if missing:
         raise KeyError(f"predictions are missing {sorted(missing)}")
-    daily = frame.groupby("date", sort=True).apply(_spearman, include_groups=False)
+    daily = frame.groupby("date", sort=True).apply(statistic, include_groups=False)
     return daily.dropna().astype(float)
+
+
+def rank_ic_series(predictions: pd.DataFrame) -> pd.Series:
+    """Daily rank IC, indexed by date, with unrankable days dropped."""
+
+    return _daily(predictions, _spearman)
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,6 +114,14 @@ class RankICSummary:
     p_value: float | None
     lag1_autocorrelation: float | None
     detectable_ic: float
+    confidence_low: float = 0.0
+    confidence_high: float = 0.0
+
+    @property
+    def effect_size(self) -> float:
+        """Cohen's d for a one-sample mean: the IR, under its statistical name."""
+
+        return self.information_ratio
 
     @property
     def is_detectable(self) -> bool:
@@ -109,9 +148,18 @@ class RankICSummary:
                 f"{self.detectable_ic:.4f} 未満です。効果がないのではなく、"
                 "測れていません。"
             )
+        # "Not significant" is not "the same". Only an interval that excludes
+        # everything worth acting on supports the second claim.
+        width = self.confidence_high - self.confidence_low
+        if width and max(abs(self.confidence_low), abs(self.confidence_high)) < 0.02:
+            return (
+                f"実質的に同等: p={self.p_value:.4f}、95%CI "
+                f"[{self.confidence_low:+.4f}, {self.confidence_high:+.4f}]。"
+            )
         return (
-            f"有意差なし: p={self.p_value:.4f}、{self.days}日。"
-            "検出力は足りています。"
+            f"有意差なし（同等ではない）: p={self.p_value:.4f}、95%CI "
+            f"[{self.confidence_low:+.4f}, {self.confidence_high:+.4f}]、"
+            f"{self.days}日。"
         )
 
 
@@ -145,6 +193,17 @@ def summarise_rank_ic(daily: pd.Series) -> RankICSummary:
     detectable = (
         _POWER_CONSTANT * deviation / np.sqrt(days) if deviation > 0 else float("inf")
     )
+
+    # A 95% interval, so "no significant difference" can be told apart from
+    # "equivalent": the first is an interval that includes zero, the second is
+    # an interval narrow enough to exclude anything that would matter.
+    low = high = mean
+    if days > 1 and error > 0:
+        from scipy.stats import t as student
+
+        half = float(student.ppf(0.975, df=days - 1)) * error
+        low, high = mean - half, mean + half
+
     return RankICSummary(
         days=days,
         mean=mean,
@@ -154,6 +213,8 @@ def summarise_rank_ic(daily: pd.Series) -> RankICSummary:
         p_value=p_value,
         lag1_autocorrelation=lag1,
         detectable_ic=float(detectable),
+        confidence_low=float(low),
+        confidence_high=float(high),
     )
 
 
