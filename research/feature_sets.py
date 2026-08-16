@@ -220,8 +220,106 @@ EXTENDED = FeatureSet(
     adr_symbols=_ADR_ALL,
 )
 
+# --- The production configuration, mirrored so it can be measured -----------
+
+# `config/indicators.yaml` drives production; the research sets above were
+# invented separately and never tested against it. These two exist so the
+# question "is production's list better than focused?" can be answered instead
+# of assumed.
+#
+# Four production series have no free Yahoo history and are absent here, which
+# means this is a close mirror rather than an exact one:
+#
+#   us_2y_yield, us_10y_minus_2y_spread  - no free 2Y symbol, and the spread is
+#                                          derived from it
+#   baltic_capesize_index, baltic_panamax_index, iron_ore,
+#   us_shipping_equity_proxy             - no free daily history
+#
+# And one substitution: sp500 uses SPY because ^GSPC will not return at all.
+#
+# Production also uses NIY=F for the Nikkei future. `_JAPAN_FUTURES` above
+# rejected that symbol because 63% of its recent daily bars print zero volume
+# and a zero-volume close is a quote rather than a trade. It is kept here to
+# mirror production faithfully; changing it is a separate experiment.
+_PRODUCTION_INDICATORS: tuple[IndicatorSpec, ...] = (
+    # ^GSPC does not return. Three attempts at 90s, 180s and 300s all timed
+    # out, while ^DJI answered in 3.1s and NIY=F in 1.9s between them, so this
+    # is the symbol and not a rate limit - the same shape as ^BCOM, ^MOVE and
+    # ^SOX, whose free redistribution was withdrawn. SPY tracks the same index
+    # and is what the research sets already use. This is a deviation from
+    # production, which names ^GSPC as its Yahoo primary, and it is recorded
+    # as one rather than passed off as a faithful mirror.
+    IndicatorSpec("sp500", "SPY"),
+    IndicatorSpec("nasdaq100", "^NDX"),
+    IndicatorSpec("dow", "^DJI"),
+    IndicatorSpec("vix", "^VIX"),
+    IndicatorSpec("usdjpy", "JPY=X"),
+    IndicatorSpec("eurjpy", "EURJPY=X"),
+    IndicatorSpec("audjpy", "AUDJPY=X"),
+    IndicatorSpec("dollar_index", "DX-Y.NYB"),
+    IndicatorSpec("nikkei225_futures", "NIY=F"),
+    IndicatorSpec("sp500_futures", "ES=F"),
+    IndicatorSpec("nasdaq100_futures", "NQ=F"),
+    IndicatorSpec("gold", "GC=F"),
+    IndicatorSpec("copper", "HG=F"),
+    IndicatorSpec("wti", "CL=F"),
+    IndicatorSpec("brent", "BZ=F"),
+    IndicatorSpec("natural_gas", "NG=F"),
+    IndicatorSpec("us_10y_yield", "^TNX", transform="difference"),
+    IndicatorSpec("us_30y_yield", "^TYX", transform="difference"),
+    IndicatorSpec("baltic_dry_index", "BDRY"),
+    IndicatorSpec("fxi", "FXI"),
+    IndicatorSpec("mchi", "MCHI"),
+    IndicatorSpec("ewy", "EWY"),
+    IndicatorSpec("xle", "XLE"),
+    IndicatorSpec("oih", "OIH"),
+    IndicatorSpec("xli", "XLI"),
+    IndicatorSpec("xlf", "XLF"),
+    IndicatorSpec("kre", "KRE"),
+)
+
+PRODUCTION = FeatureSet(
+    name="production",
+    label="本番相当 (config/indicators.yaml のうち無料で取得できる27指標)",
+    indicators=_PRODUCTION_INDICATORS,
+    extra_price_features=_EXTRA_PRICE_FEATURES,
+    adr_symbols={"7203": "TM", "7267": "HMC", "8306": "MUFG", "8316": "SMFG"},
+)
+
+# Six removals, each with a reason that does not depend on a measurement:
+#
+#   sp500, nasdaq100  - the cash indices stop at 05:00 JST while their own
+#                       futures trade to the cutoff. Once ES=F and NQ=F are
+#                       held, the cash close is strictly older information
+#                       about the same thing.
+#   dow               - 30 large caps whose move is nearly a linear combination
+#                       of the two indices already held.
+#   mchi              - China large-cap, the same exposure as FXI; their daily
+#                       returns are the same series to within tracking error.
+#   gold              - no mechanism reaching Japanese equity intraday returns.
+#                       "Just in case" is how a 120-row budget gets spent.
+#   ADR columns       - measured, not argued: dropping them moved 14 of 1,386
+#                       predictions and was slightly better on all three
+#                       metrics.
+#
+# Deliberately kept: the yield block. Production's rank-deficiency comes from
+# holding 2Y, 10Y and their spread together, and the 2Y is not in this mirror,
+# so removing anything here would not reproduce that fix.
+PRODUCTION_REDUCED = FeatureSet(
+    name="production_reduced",
+    label="本番相当から証明可能な冗長6種を削除",
+    indicators=tuple(
+        spec
+        for spec in _PRODUCTION_INDICATORS
+        if spec.key not in {"sp500", "nasdaq100", "dow", "mchi", "gold"}
+    ),
+    extra_price_features=_EXTRA_PRICE_FEATURES,
+)
+
+
 FEATURE_SETS: dict[str, FeatureSet] = {
-    set_.name: set_ for set_ in (BASELINE, FOCUSED, EXTENDED)
+    set_.name: set_
+    for set_ in (BASELINE, FOCUSED, EXTENDED, PRODUCTION, PRODUCTION_REDUCED)
 }
 
 DEFAULT_FEATURE_SET = BASELINE.name
