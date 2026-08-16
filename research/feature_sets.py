@@ -235,12 +235,21 @@ EXTENDED = FeatureSet(
 #   baltic_capesize_index, baltic_panamax_index, iron_ore,
 #   us_shipping_equity_proxy             - no free daily history
 #
+# And one substitution: sp500 uses SPY because ^GSPC will not return at all.
+#
 # Production also uses NIY=F for the Nikkei future. `_JAPAN_FUTURES` above
 # rejected that symbol because 63% of its recent daily bars print zero volume
 # and a zero-volume close is a quote rather than a trade. It is kept here to
 # mirror production faithfully; changing it is a separate experiment.
 _PRODUCTION_INDICATORS: tuple[IndicatorSpec, ...] = (
-    IndicatorSpec("sp500", "^GSPC"),
+    # ^GSPC does not return. Three attempts at 90s, 180s and 300s all timed
+    # out, while ^DJI answered in 3.1s and NIY=F in 1.9s between them, so this
+    # is the symbol and not a rate limit - the same shape as ^BCOM, ^MOVE and
+    # ^SOX, whose free redistribution was withdrawn. SPY tracks the same index
+    # and is what the research sets already use. This is a deviation from
+    # production, which names ^GSPC as its Yahoo primary, and it is recorded
+    # as one rather than passed off as a faithful mirror.
+    IndicatorSpec("sp500", "SPY"),
     IndicatorSpec("nasdaq100", "^NDX"),
     IndicatorSpec("dow", "^DJI"),
     IndicatorSpec("vix", "^VIX"),
