@@ -34,3 +34,18 @@ option for operational reasons.
 | File | Covers |
 |---|---|
 | `2026-08-15-formulation-experiments.json` | Sector pooling (rejected), relative target (inconclusive), feature-set comparison, ADR contribution |
+| `2026-08-16-production-vs-candidates.json` | Production's own list against three candidates, with trading outcomes and paired tests |
+
+## The finding that changes how these are read
+
+On 2026-08-16 four predictor sets produced rank ICs that no test could tell
+apart - 0.107 to 0.113, every paired difference far inside its detection floor -
+while their threshold-rule results ran from +0.44 to −0.01. Rank IC is still the
+primary metric, because it is the one with the power to see anything at this
+sample size. But it cannot be the only one: an ordering that is right about the
+middle of the cross-section and wrong about its top scores well and earns
+nothing, and that is not a hypothetical here.
+
+So a set is preferred only when the ranking metric and the trading record agree,
+and the trading record is *tested*, never compared. Profit factor 2.51 against
+1.77 looked decisive and did not survive a paired test.
