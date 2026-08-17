@@ -18,7 +18,7 @@ JPX session on top of that.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Literal
 
 Transform = Literal["return", "difference"]
@@ -43,9 +43,23 @@ class IndicatorSpec:
     # prices in FY3/2026 while the other three set records without them. Until
     # this existed there was no way to measure giving a series to one stock.
     applies_to: tuple[str, ...] = ()
+    # Windows for the level-deviation columns. Every indicator here is a rate of
+    # change, and a rate of change is what the opening auction prices: last
+    # night's move is in this morning's open by construction. How far a series
+    # now sits from its own recent average is a different quantity - it is a
+    # state rather than a piece of news, it accumulates over days that each look
+    # unremarkable as a return, and mean reversion out of it is something that
+    # happens during a session rather than at its start.
+    deviations: tuple[int, ...] = ()
 
     def covers(self, ticker: str) -> bool:
         return not self.applies_to or ticker in self.applies_to
+
+    def deviation_names(self) -> tuple[str, ...]:
+        return tuple(f"{self.key}_deviation_{window}d" for window in self.deviations)
+
+    def all_column_names(self) -> tuple[str, ...]:
+        return (*self.column_names(), *self.deviation_names())
 
     def column_names(self) -> tuple[str, ...]:
         suffix = "return" if self.transform == "return" else "change"
@@ -432,6 +446,48 @@ PRODUCTION_COMPACT = FeatureSet(
 )
 
 
+def with_deviations(
+    base: FeatureSet, windows: tuple[int, ...], *, name: str, label: str,
+    replace_returns: bool = False,
+) -> FeatureSet:
+    """Give every series in `base` a level-deviation column.
+
+    `replace_returns` swaps the rate-of-change columns out instead of adding to
+    them, which keeps the predictor count fixed. That distinction is the point
+    of running both: on a 120-session window an addition is charged against the
+    budget whether or not it earns anything, and three additions have already
+    been measured and lost here. A swap asks the narrower question - of the two
+    ways to read the same series, which one predicts - and cannot lose on
+    dimensionality alone.
+    """
+
+    return FeatureSet(
+        name=name,
+        label=label,
+        indicators=tuple(
+            replace(
+                spec,
+                deviations=windows,
+                windows=() if replace_returns else spec.windows,
+            )
+            for spec in base.indicators
+        ),
+        extra_price_features=base.extra_price_features,
+        adr_symbols=dict(base.adr_symbols),
+    )
+
+
+PRODUCTION_DEV = with_deviations(
+    PRODUCTION, (20, 60),
+    name="production_dev", label="本番相当 + 20日/60日の水準乖離",
+)
+PRODUCTION_DEV_ONLY = with_deviations(
+    PRODUCTION, (20, 60),
+    name="production_dev_only", label="本番相当の変化率を水準乖離へ置換",
+    replace_returns=True,
+)
+
+
 FEATURE_SETS: dict[str, FeatureSet] = {
     set_.name: set_
     for set_ in (
@@ -445,6 +501,8 @@ FEATURE_SETS: dict[str, FeatureSet] = {
         PRODUCTION_NO_CASH,
         PRODUCTION_LEAN,
         PRODUCTION_COMPACT,
+        PRODUCTION_DEV,
+        PRODUCTION_DEV_ONLY,
     )
 }
 

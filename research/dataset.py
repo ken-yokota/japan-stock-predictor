@@ -63,7 +63,13 @@ def _series_features(frame: pd.DataFrame, spec: IndicatorSpec) -> pd.DataFrame:
             series[name] = series["close"].pct_change(periods=window, fill_method=None)
         else:
             series[name] = series["close"].diff(periods=window)
-    columns = ["market_date", *spec.column_names()]
+    for window, name in zip(spec.deviations, spec.deviation_names(), strict=True):
+        # How far the level sits from its own trailing mean. Computed on the
+        # same close the returns use, so it inherits the same lag and the same
+        # visibility guarantee - nothing new has to be fetched or trusted.
+        average = series["close"].rolling(window=window, min_periods=window).mean()
+        series[name] = series["close"] / average.where(average != 0.0) - 1.0
+    columns = ["market_date", *spec.all_column_names()]
     return series.loc[:, columns].replace([np.inf, -np.inf], np.nan)
 
 
