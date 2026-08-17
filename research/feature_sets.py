@@ -527,6 +527,62 @@ PRODUCTION_HORIZONS = _shaped(
 )
 
 
+# --- Scoped arms: the config contradicts the businesses ----------------------
+
+# Three contradictions found in the FY3/2026 filings, each measurable now that
+# a series can belong to one ticker.
+#
+# Oil is not one trade. INPEX sells crude; Idemitsu, ENEOS and Cosmo buy it and
+# earn the crack. A rise helps the first and squeezes the other three, and all
+# four currently receive the same wti and brent.
+#
+# MOL's earnings come substantially from LNG carriers on twenty-year charters,
+# which a spot dry-bulk index cannot move. BDI reaches all three shipping names.
+#
+# The trading houses split in half in FY3/2026: Mitsubishi 800.5bn and Mitsui
+# 834bn both fell on resource prices while Itochu, Sumitomo and Marubeni set
+# records without them. All five read the same copper and iron ore.
+_UPSTREAM = ("1605",)
+_DOWNSTREAM = ("5019", "5020", "5021")
+_RESOURCE_HOUSES = ("8031", "8058")
+_SHIPPING_EX_MOL = ("9101", "9107")
+
+
+def _scope(base: FeatureSet, scopes: dict[str, tuple[str, ...]], name: str,
+           label: str) -> FeatureSet:
+    return FeatureSet(
+        name=name,
+        label=label,
+        indicators=tuple(
+            replace(spec, windows=_PRODUCTION_WINDOWS, deviations=(20,),
+                    applies_to=scopes.get(spec.key, spec.applies_to))
+            for spec in base.indicators
+        ),
+        extra_price_features=base.extra_price_features,
+        adr_symbols=dict(base.adr_symbols),
+    )
+
+
+# Crude goes to the producer and the refiners keep the products they refine;
+# BDI leaves MOL; the resource series go to the two houses that live on them.
+PRODUCTION_SCOPED = _scope(
+    PRODUCTION,
+    {
+        "wti": _UPSTREAM + _DOWNSTREAM,
+        "brent": _UPSTREAM,
+        "natural_gas": _UPSTREAM,
+        "oih": _UPSTREAM,
+        "xle": _UPSTREAM + _DOWNSTREAM,
+        "baltic_dry_index": _SHIPPING_EX_MOL,
+        "copper": _RESOURCE_HOUSES,
+        "fxi": _RESOURCE_HOUSES,
+        "mchi": _RESOURCE_HOUSES,
+    },
+    "production_scoped",
+    "本番構成 + 事業実態にもとづく銘柄別スコープ",
+)
+
+
 FEATURE_SETS: dict[str, FeatureSet] = {
     set_.name: set_
     for set_ in (
@@ -544,6 +600,7 @@ FEATURE_SETS: dict[str, FeatureSet] = {
         PRODUCTION_DEV_ONLY,
         PRODUCTION_SHAPED,
         PRODUCTION_HORIZONS,
+        PRODUCTION_SCOPED,
     )
 }
 
