@@ -1,0 +1,10 @@
+candidate,ticker,provider,market,timezone,frequency,history_rows,history_from,history_to,available_0830,publication_lag,missing_rate,cost,decision,note
+JPY domestic bond proxy,2510.T,yahoo_finance,JPX,Asia/Tokyo,daily,368,2025-02-10,2026-08-14,YES,t-1 15:30 JST close,0.000,free,TESTABLE,"NEXT FUNDS 国内債券. Tokyo close on t-1 is settled 17h before the 08:30 cutoff - same availability profile as the stock's own price, which production already relies on."
+TOPIX Banks sector,1615.T,yahoo_finance,JPX,Asia/Tokyo,daily,368,2025-02-10,2026-08-14,YES,t-1 15:30 JST close,0.000,free,TESTABLE,"NEXT FUNDS 銀行業. Direct sector proxy for the five financials; production has no Japanese sector series at all."
+JGB ETF,1482.T,yahoo_finance,JPX,Asia/Tokyo,daily,368,2025-02-10,2026-08-14,YES,t-1 15:30 JST close,0.000,free,TESTABLE,"Second JPY-rate proxy; check redundancy against 2510.T before adding both."
+US long Treasury in JPY,2621.T,yahoo_finance,JPX,Asia/Tokyo,daily,368,2025-02-10,2026-08-14,YES,t-1 15:30 JST close,0.000,free,TESTABLE,"US 20y+ expressed in JPY - carries the US rate and the FX leg together."
+TOPIX index ETF,1306.T,yahoo_finance,JPX,Asia/Tokyo,daily,369,2025-02-10,2026-08-14,YES,t-1 15:30 JST close,0.000,free,TESTABLE,"Market factor measured on the Tokyo session rather than via overnight US proxies."
+Crude oil ETF (JPY),1699.T,yahoo_finance,JPX,Asia/Tokyo,daily,368,2025-02-10,2026-08-14,YES,t-1 15:30 JST close,0.000,free,TESTABLE,"Oil exposure already priced in JPY; candidate for the four oil names."
+WTI ETF (JPY),1671.T,yahoo_finance,JPX,Asia/Tokyo,daily,368,2025-02-10,2026-08-14,YES,t-1 15:30 JST close,0.000,free,TESTABLE,"Alternative to 1699.T; test one, not both."
+JGB 10y yield,^JP10YB,yahoo_finance,-,-,-,0,-,-,NO,-,1.000,free,UNAVAILABLE,"404 Quote not found. No free Yahoo symbol for the JGB yield."
+JGB futures,JGBL=F,yahoo_finance,-,-,-,0,-,-,NO,-,1.000,free,UNAVAILABLE,"404 Quote not found. JPX night session runs to 06:00 JST so it would qualify on timing, but no free feed carries the history."

@@ -317,9 +317,126 @@ PRODUCTION_REDUCED = FeatureSet(
 )
 
 
+# --- Tokyo-session candidates ------------------------------------------------
+
+# Production carries US 2y/10y/30y and their spread and no Japanese rate at all,
+# while the megabanks' FY3/2026 profits - 5.26 trillion yen across the three,
+# up 33.9% - came from the BOJ taking policy from 0.25% to 0.75% over eighteen
+# months. The first-order driver of a bank's revenue is absent from the model
+# that predicts its stock.
+#
+# The direct instruments do not exist on a free feed: ^JP10YB and JGBL=F both
+# return 404. These Tokyo-listed ETFs do, with 368 complete sessions.
+#
+# Their availability needs no new assumption. They settle at 15:30 JST on t-1,
+# seventeen hours before the 08:30 cutoff on t - the same profile as the
+# ticker's own previous close, which production already depends on.
+_JAPAN_RATES: tuple[IndicatorSpec, ...] = (
+    IndicatorSpec("jp_bonds", "2510.T"),
+    IndicatorSpec("jp_banks", "1615.T"),
+)
+
+_JAPAN_MARKET: tuple[IndicatorSpec, ...] = (IndicatorSpec("topix", "1306.T"),)
+
+PRODUCTION_JPY = FeatureSet(
+    name="production_jpy",
+    label="本番相当 + 円金利・銀行セクター・TOPIX（東証ETF）",
+    indicators=(*_PRODUCTION_INDICATORS, *_JAPAN_RATES, *_JAPAN_MARKET),
+    extra_price_features=_EXTRA_PRICE_FEATURES,
+    adr_symbols={"7203": "TM", "7267": "HMC", "8306": "MUFG", "8316": "SMFG"},
+)
+
+# The add-one arm: rates only, so a gain cannot be credited to the market proxy.
+PRODUCTION_RATES_ONLY = FeatureSet(
+    name="production_rates",
+    label="本番相当 + 円金利・銀行セクターのみ",
+    indicators=(*_PRODUCTION_INDICATORS, *_JAPAN_RATES),
+    extra_price_features=_EXTRA_PRICE_FEATURES,
+    adr_symbols={"7203": "TM", "7267": "HMC", "8306": "MUFG", "8316": "SMFG"},
+)
+
+
+# --- Reduction arms, each removing one provable redundancy -------------------
+
+# Measured over 250 sessions the baseline's rank IC is 0.0334 at p = 0.050, so
+# the room above zero is thin. That argues for spending the 120-row budget on
+# fewer predictors, not for hunting a thirty-arm search that a 250-day window
+# cannot support - the arm count is itself a route to overfitting.
+#
+# Each of these removes one group whose redundancy can be argued without a
+# measurement, so a loss is attributable to a named cause.
+# The mirror has no 2Y and no spread - neither has a free symbol - so the
+# rank-deficiency that exists in config/indicators.yaml cannot be tested here.
+# 30Y against 10Y is collinearity rather than exact dependence, which is a
+# weaker claim, so it is only tested inside the lean arm.
+_REDUNDANT_RATES = {"us_30y_yield"}
+_REDUNDANT_CASH = {"sp500", "nasdaq100"}      # dominated by their own futures
+_REDUNDANT_CHINA = {"mchi"}                   # same exposure as FXI
+_NO_MECHANISM = {"gold", "dow"}
+
+
+def _drop(base: FeatureSet, keys: set[str], name: str, label: str) -> FeatureSet:
+    return FeatureSet(
+        name=name,
+        label=label,
+        indicators=tuple(s for s in base.indicators if s.key not in keys),
+        extra_price_features=base.extra_price_features,
+        adr_symbols=dict(base.adr_symbols),
+    )
+
+
+PRODUCTION_NO_CASH = _drop(
+    PRODUCTION, _REDUNDANT_CASH, "production_no_cash",
+    "本番相当から現物S&P・NASDAQを削除（自らの先物に劣後）",
+)
+PRODUCTION_LEAN = _drop(
+    PRODUCTION,
+    _REDUNDANT_RATES | _REDUNDANT_CASH | _REDUNDANT_CHINA | _NO_MECHANISM,
+    "production_lean",
+    "本番相当から証明可能な冗長6グループを削除",
+)
+
+
+# The compact arm. `production_lean` removed what was redundant; this asks the
+# harder question - how much of the remainder earns its place at all - by
+# keeping only series with a stated path to a Japanese intraday move:
+#
+#   the two futures that trade to the cutoff, so the market factor is current
+#   VIX, the one risk measure the others do not carry
+#   USD/JPY, which every one of these exporters and lenders is exposed to
+#   the 10y, the single rate the models weight consistently
+#   the sector commodity or proxy that names the business
+#
+# Ten groups against a 120-session window instead of twenty-two.
+_COMPACT_KEYS = {
+    "nikkei225_futures", "sp500_futures", "vix", "usdjpy", "us_10y_yield",
+    "wti", "brent", "copper", "baltic_dry_index", "fxi",
+}
+
+PRODUCTION_COMPACT = FeatureSet(
+    name="production_compact",
+    label="機序を説明できる10グループのみ",
+    indicators=tuple(
+        s for s in _PRODUCTION_INDICATORS if s.key in _COMPACT_KEYS
+    ),
+    extra_price_features=_EXTRA_PRICE_FEATURES,
+)
+
+
 FEATURE_SETS: dict[str, FeatureSet] = {
     set_.name: set_
-    for set_ in (BASELINE, FOCUSED, EXTENDED, PRODUCTION, PRODUCTION_REDUCED)
+    for set_ in (
+        BASELINE,
+        FOCUSED,
+        EXTENDED,
+        PRODUCTION,
+        PRODUCTION_REDUCED,
+        PRODUCTION_JPY,
+        PRODUCTION_RATES_ONLY,
+        PRODUCTION_NO_CASH,
+        PRODUCTION_LEAN,
+        PRODUCTION_COMPACT,
+    )
 }
 
 DEFAULT_FEATURE_SET = BASELINE.name

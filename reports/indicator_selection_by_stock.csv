@@ -1,0 +1,11 @@
+group,action,reason,oos_evidence,verdict
+sp500,REMOVE,現物は05:00 JST停止。自らの先物ES=Fが締切まで動くため古い情報,lean一括: MAE -0.0053pp p=0.0004,ADOPTED (in lean)
+nasdaq100,REMOVE,同上（NQ=Fに劣後）,同上,ADOPTED (in lean)
+dow,REMOVE,既存2指数のほぼ線形結合,同上,ADOPTED (in lean)
+mchi,REMOVE,fxiと同一の中国大型株エクスポージャー,同上,ADOPTED (in lean)
+gold,REMOVE,日本株の日中リターンに至る機序がない,同上,ADOPTED (in lean)
+us_30y_yield,REMOVE,10年債と高相関,同上,ADOPTED (in lean)
+us_2y_yield + spread,REMOVE?,本番で2Y/10Y/spreadが一次従属しランク落ち,無料シンボル無しで測定不能,NOT VERIFIED
+jp_bonds (2510.T),ADD?,政策金利0.25→0.75%、メガバンク3社最高益,Rank IC -0.0203 p=0.017、金融5銘柄中4銘柄で悪化,REJECTED
+jp_banks (1615.T),ADD?,日本の銀行セクター直接プロキシ,同上,REJECTED
+topix (1306.T),ADD?,東証セッションでの市場ファクター,MAE +0.0099pp p=0.069,REJECTED

@@ -1,0 +1,66 @@
+# Candidate indicators measured on 2026-08-17. Nothing here is in production.
+#
+# Availability is settled for all of these: Tokyo-listed ETFs print their close
+# at 15:30 JST on t-1, seventeen hours before the 08:30 cutoff on t. That is the
+# same profile as the ticker's own previous close, which production already
+# depends on, so no new assumption is required.
+#
+# They were rejected on measurement, not on availability.
+version: 1
+
+candidates:
+  - id: jp_bonds
+    provider_symbol: "2510.T"
+    name: NEXT FUNDS 国内債券
+    rationale: >
+      Production carries US 2y/10y/30y and no Japanese rate at all, while the
+      megabanks' FY3/2026 profit of 5.26 trillion yen (+33.9%) came from the BOJ
+      moving policy from 0.25% to 0.75%. The first-order driver of a bank's
+      revenue was absent from the model predicting its stock.
+    history_rows: 368
+    coverage: 1.000
+    available_at_0830: true
+    status: REJECTED
+    evidence: >
+      Added to production, rank IC fell 0.1119 to 0.0917, a paired difference of
+      -0.0203 with p=0.0172 and a 95% interval of [-0.0368, -0.0037] that
+      excludes zero. MAE moved +0.0014pp against a gate requiring 2% improvement.
+      The per-stock split is the reason to stop rather than retune: the five
+      financials got worse (4 of 5, mean +0.0069) while the other seventeen were
+      flat. The hypothesis failed hardest exactly where it was strongest.
+
+  - id: jp_banks
+    provider_symbol: "1615.T"
+    name: NEXT FUNDS 銀行業 (TOPIX Banks)
+    rationale: Direct Japanese sector proxy; production has no domestic sector series.
+    history_rows: 368
+    coverage: 1.000
+    available_at_0830: true
+    status: REJECTED
+    evidence: Tested in the same group as jp_bonds; see above.
+
+  - id: topix
+    provider_symbol: "1306.T"
+    name: TOPIX ETF
+    rationale: Market factor measured on the Tokyo session rather than via overnight US proxies.
+    history_rows: 369
+    coverage: 1.000
+    available_at_0830: true
+    status: REJECTED
+    evidence: >
+      Added on top of the rates group, MAE worsened a further +0.0099pp
+      (p=0.069) and rank IC fell to 0.0890. The second arm existed to separate a
+      rate effect from a market-proxy effect; neither was positive.
+
+unavailable:
+  - id: jgb_10y_yield
+    provider_symbol: "^JP10YB"
+    status: UNAVAILABLE
+    evidence: Yahoo returns 404, quote not found. No free feed carries the history.
+  - id: jgb_futures
+    provider_symbol: "JGBL=F"
+    status: UNAVAILABLE
+    evidence: >
+      Yahoo returns 404. The JPX night session runs to 06:00 JST so the timing
+      would qualify, but the history cannot be obtained free. PAID_CANDIDATE
+      only if 2510.T is ever shown to carry the signal, which it did not here.

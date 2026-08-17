@@ -82,6 +82,52 @@ class MarketBar:
     raw_hash: str | None = None
     quality_flags: tuple[str, ...] = field(default_factory=tuple)
 
+    def _drop_untrustworthy_bounds(self) -> None:
+        """Discard a high or low the bar's own values contradict.
+
+        Yahoo's FX daily bars are not internally consistent. Measured on
+        2026-08-17 over 390 sessions: `Open` equals `Close` exactly on 199 of
+        them for JPY=X and 193 for EURJPY=X and AUDJPY=X - about half - so the
+        published open is frequently a copy of the close rather than a session
+        open. On roughly 20 sessions per series the high or low then sits inside
+        the pair by a median of 1e-4 relative, a hundred times a four-decimal
+        rounding tick, because the range is measured over a window that does not
+        match the copied open.
+
+        Raising here discarded the whole row, and with it the close - the only
+        value in the bar that is trustworthy and the one every indicator feature
+        is built from. That is why usdjpy, eurjpy and audjpy produced no
+        features at all and all 22 tickers reported DEGRADED.
+
+        So the untrustworthy bound is dropped and the row is kept. Absent is the
+        honest state: it is not fabricated, and an imputer fitted inside the
+        training fold can handle it, whereas a bound silently widened to fit
+        would assert a range that was never observed. `open` and `close` are
+        never modified - one of them is the prediction target.
+        """
+
+        present = [
+            v for v in (self.open, self.high, self.low, self.close) if v is not None
+        ]
+        if not present:
+            return
+        dropped: list[str] = []
+        if self.high is not None and self.high < max(present):
+            object.__setattr__(self, "high", None)
+            dropped.append("high")
+        remaining = [
+            v for v in (self.open, self.high, self.low, self.close) if v is not None
+        ]
+        if self.low is not None and remaining and self.low > min(remaining):
+            object.__setattr__(self, "low", None)
+            dropped.append("low")
+        if dropped:
+            object.__setattr__(
+                self,
+                "quality_flags",
+                (*self.quality_flags, f"ohlc_bound_dropped_{'_'.join(dropped)}"),
+            )
+
     def __post_init__(self) -> None:
         for field_name in (
             "timestamp",
@@ -94,6 +140,7 @@ class MarketBar:
             _require_aware(self.source_timestamp, "source_timestamp")
         if not self.canonical_symbol.strip() or not self.provider_symbol.strip():
             raise ValueError("symbols must not be blank")
+        self._drop_untrustworthy_bounds()
         present = [
             v for v in (self.open, self.high, self.low, self.close) if v is not None
         ]
