@@ -253,8 +253,14 @@ def _eod_request() -> FetchRequest:
     )
 
 
-def test_fetch_eod_drops_defective_rows_instead_of_the_whole_symbol() -> None:
-    """One unusable session must not cost the other three hundred."""
+def test_fetch_eod_keeps_a_row_whose_bound_is_untrustworthy() -> None:
+    """An inconsistent high or low costs that bound, not the session.
+
+    This used to reject the row. On Yahoo's FX bars that discarded the close as
+    well - the only value the indicator features are built from - which is why
+    usdjpy, eurjpy and audjpy produced no features at all. A row missing its
+    close is still rejected, because there is then nothing left to keep.
+    """
 
     provider = YahooFinanceProvider(
         backend=FakeBackend(_multi_day_frame()),
@@ -264,17 +270,23 @@ def test_fetch_eod_drops_defective_rows_instead_of_the_whole_symbol() -> None:
 
     rows = provider.fetch_eod(_eod_request())
 
-    assert [row.market_date for row in rows] == [date(2026, 8, 6)]
+    assert [row.market_date for row in rows] == [date(2026, 8, 6), date(2026, 8, 7)]
+    kept = rows[1]
+    assert kept.low is None, "the contradicted bound is dropped"
+    assert kept.close is not None, "the traded value survives"
+    assert any(flag.startswith("ohlc_bound_dropped") for flag in kept.quality_flags)
+
     rejected = provider.last_eod_rejections
-    assert [item[0] for item in rejected] == [date(2026, 8, 7), date(2026, 8, 10)]
-    assert "low is above another OHLC value" in rejected[0][1]
-    assert "missing close" in rejected[1][1]
+    assert [item[0] for item in rejected] == [date(2026, 8, 10)]
+    assert "missing close" in rejected[0][1]
 
 
 def test_fetch_eod_reports_the_reasons_when_no_row_survives() -> None:
     """An empty result must say why, not look like an empty date range."""
 
-    frame = _multi_day_frame().iloc[1:]
+    # Only the row with no close remains unusable once bounds are dropped
+    # rather than rejected, so that is the one this case is built from.
+    frame = _multi_day_frame().iloc[2:]
     provider = YahooFinanceProvider(
         backend=FakeBackend(frame), clock=lambda: NOW, sleeper=lambda _: None
     )
@@ -284,8 +296,8 @@ def test_fetch_eod_reports_the_reasons_when_no_row_survives() -> None:
 
     message = str(excinfo.value)
     assert "no usable EOD rows" in message
-    assert "2 rejected" in message
-    assert len(provider.last_eod_rejections) == 2
+    assert "1 rejected" in message
+    assert len(provider.last_eod_rejections) == 1
 
 
 def test_last_eod_rejections_resets_between_calls() -> None:
