@@ -397,6 +397,32 @@ PRODUCTION_LEAN = _drop(
 )
 
 
+# The compact arm. `production_lean` removed what was redundant; this asks the
+# harder question - how much of the remainder earns its place at all - by
+# keeping only series with a stated path to a Japanese intraday move:
+#
+#   the two futures that trade to the cutoff, so the market factor is current
+#   VIX, the one risk measure the others do not carry
+#   USD/JPY, which every one of these exporters and lenders is exposed to
+#   the 10y, the single rate the models weight consistently
+#   the sector commodity or proxy that names the business
+#
+# Ten groups against a 120-session window instead of twenty-two.
+_COMPACT_KEYS = {
+    "nikkei225_futures", "sp500_futures", "vix", "usdjpy", "us_10y_yield",
+    "wti", "brent", "copper", "baltic_dry_index", "fxi",
+}
+
+PRODUCTION_COMPACT = FeatureSet(
+    name="production_compact",
+    label="機序を説明できる10グループのみ",
+    indicators=tuple(
+        s for s in _PRODUCTION_INDICATORS if s.key in _COMPACT_KEYS
+    ),
+    extra_price_features=_EXTRA_PRICE_FEATURES,
+)
+
+
 FEATURE_SETS: dict[str, FeatureSet] = {
     set_.name: set_
     for set_ in (
@@ -409,6 +435,7 @@ FEATURE_SETS: dict[str, FeatureSet] = {
         PRODUCTION_RATES_ONLY,
         PRODUCTION_NO_CASH,
         PRODUCTION_LEAN,
+        PRODUCTION_COMPACT,
     )
 }
 
