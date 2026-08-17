@@ -488,6 +488,45 @@ PRODUCTION_DEV_ONLY = with_deviations(
 )
 
 
+# --- The production feature shape, and the question that is actually open ----
+
+# Production does not give an indicator two columns. It gives it eleven - the
+# same price-feature treatment the ticker's own bars get - and `ma20_deviation`
+# is already among them, on all 22 groups. The two-column mirror above made a
+# level deviation look like a new idea when production has had one all along.
+#
+# So the open question is not whether to read a series as a level. It is which
+# horizons to read it over. Production sees 20 days and nothing else: a series
+# stretched against its quarter or its half-year is invisible to it.
+_PRODUCTION_WINDOWS = (1, 2, 3, 5, 20)
+
+
+def _shaped(base: FeatureSet, deviations: tuple[int, ...], name: str,
+            label: str) -> FeatureSet:
+    return FeatureSet(
+        name=name,
+        label=label,
+        indicators=tuple(
+            replace(spec, windows=_PRODUCTION_WINDOWS, deviations=deviations)
+            for spec in base.indicators
+        ),
+        extra_price_features=base.extra_price_features,
+        adr_symbols=dict(base.adr_symbols),
+    )
+
+
+# The baseline: production's horizons, and its single 20-day deviation.
+PRODUCTION_SHAPED = _shaped(
+    PRODUCTION, (20,), "production_shaped", "本番と同じ11特徴量構成（20日乖離のみ）",
+)
+
+# The add-one: the same series read over a quarter and a half-year as well.
+PRODUCTION_HORIZONS = _shaped(
+    PRODUCTION, (20, 60, 120), "production_horizons",
+    "本番構成 + 60日/120日の水準乖離",
+)
+
+
 FEATURE_SETS: dict[str, FeatureSet] = {
     set_.name: set_
     for set_ in (
@@ -503,6 +542,8 @@ FEATURE_SETS: dict[str, FeatureSet] = {
         PRODUCTION_COMPACT,
         PRODUCTION_DEV,
         PRODUCTION_DEV_ONLY,
+        PRODUCTION_SHAPED,
+        PRODUCTION_HORIZONS,
     )
 }
 
