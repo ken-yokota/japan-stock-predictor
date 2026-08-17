@@ -1,4 +1,7 @@
-arm,indicators,mae,rmse,direction,rank_ic,rank_ic_p,pearson_ic,buy_trades,buy_pf,buy_net,verdict
-production,27,1.2564,1.6327,0.557,0.1119,0.001,0.1002,104,1.77,0.3421,BASELINE
-production_rates,29,1.2577,1.6354,0.562,0.0917,0.006,0.083,105,1.93,0.387,REJECTED
-production_jpy,30,1.2663,1.6424,0.5577,0.089,0.006,0.0879,104,2.0,0.4011,REJECTED
+arm,window_sessions,indicators,mae,rmse,direction,rank_ic,rank_ic_p,buy_trades,buy_win,buy_pf,buy_net,buy_sharpe,verdict
+production,63,27,1.2564,1.6327,0.557,0.1119,0.001,104,0.606,1.77,0.3421,1.24,BASELINE (short window)
+production_rates,63,29,1.2577,1.6354,0.562,0.0917,0.006,105,0.629,1.93,0.387,3.1,REJECTED
+production_jpy,63,30,1.2663,1.6424,0.5577,0.089,0.006,104,0.635,2.0,0.4011,2.79,REJECTED
+production,250,27,1.2377,1.6415,0.5219,0.0334,0.05,526,0.504,1.15,0.4693,0.38,BASELINE (long window - the honest one)
+production_no_cash,250,25,1.2373,1.6404,0.5208,0.0324,0.058,515,0.499,1.19,0.5939,0.94,INCONCLUSIVE (mae p=0.45)
+production_lean,250,22,1.2324,1.6339,0.5219,0.0389,0.021,474,0.506,1.15,0.4284,1.49,"ADOPT AS SHADOW (mae -0.0053pp p=0.0004, direction unchanged)"

@@ -356,6 +356,47 @@ PRODUCTION_RATES_ONLY = FeatureSet(
 )
 
 
+# --- Reduction arms, each removing one provable redundancy -------------------
+
+# Measured over 250 sessions the baseline's rank IC is 0.0334 at p = 0.050, so
+# the room above zero is thin. That argues for spending the 120-row budget on
+# fewer predictors, not for hunting a thirty-arm search that a 250-day window
+# cannot support - the arm count is itself a route to overfitting.
+#
+# Each of these removes one group whose redundancy can be argued without a
+# measurement, so a loss is attributable to a named cause.
+# The mirror has no 2Y and no spread - neither has a free symbol - so the
+# rank-deficiency that exists in config/indicators.yaml cannot be tested here.
+# 30Y against 10Y is collinearity rather than exact dependence, which is a
+# weaker claim, so it is only tested inside the lean arm.
+_REDUNDANT_RATES = {"us_30y_yield"}
+_REDUNDANT_CASH = {"sp500", "nasdaq100"}      # dominated by their own futures
+_REDUNDANT_CHINA = {"mchi"}                   # same exposure as FXI
+_NO_MECHANISM = {"gold", "dow"}
+
+
+def _drop(base: FeatureSet, keys: set[str], name: str, label: str) -> FeatureSet:
+    return FeatureSet(
+        name=name,
+        label=label,
+        indicators=tuple(s for s in base.indicators if s.key not in keys),
+        extra_price_features=base.extra_price_features,
+        adr_symbols=dict(base.adr_symbols),
+    )
+
+
+PRODUCTION_NO_CASH = _drop(
+    PRODUCTION, _REDUNDANT_CASH, "production_no_cash",
+    "本番相当から現物S&P・NASDAQを削除（自らの先物に劣後）",
+)
+PRODUCTION_LEAN = _drop(
+    PRODUCTION,
+    _REDUNDANT_RATES | _REDUNDANT_CASH | _REDUNDANT_CHINA | _NO_MECHANISM,
+    "production_lean",
+    "本番相当から証明可能な冗長6グループを削除",
+)
+
+
 FEATURE_SETS: dict[str, FeatureSet] = {
     set_.name: set_
     for set_ in (
@@ -366,6 +407,8 @@ FEATURE_SETS: dict[str, FeatureSet] = {
         PRODUCTION_REDUCED,
         PRODUCTION_JPY,
         PRODUCTION_RATES_ONLY,
+        PRODUCTION_NO_CASH,
+        PRODUCTION_LEAN,
     )
 }
 
