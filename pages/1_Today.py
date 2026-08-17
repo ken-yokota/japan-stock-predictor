@@ -56,22 +56,18 @@ def main() -> None:
     publication = prediction_set.first
     prediction_rows = predictions.rows if predictions.ready else ()
     selection_rows = selections.rows if selections.ready else ()
-    render_alerts(
-        derive_operational_alerts(
-            run=run,
-            prediction_set=publication,
-            predictions=prediction_rows,
-            selections=selection_rows,
-        )
+    # Nothing above the BUY list. The page is opened at 08:30 to see which
+    # stocks to buy, and a banner between the title and that answer costs a
+    # scroll every single morning to say something that is usually routine.
+    # Operational alerts, the cutoff summary and the quality panel all sit at
+    # the bottom now, and the folded header names their state so a bad morning
+    # is still visible without opening anything.
+    alerts = derive_operational_alerts(
+        run=run,
+        prediction_set=publication,
+        predictions=prediction_rows,
+        selections=selection_rows,
     )
-
-    if publication is not None:
-        render_cutoff_summary(
-            cutoff_at=publication.get("cutoff_at"),
-            generated_at=publication.get("generated_at"),
-            status=publication.get("status"),
-            run_id=publication.get("run_id"),
-        )
 
     if not render_query_state(
         predictions,
@@ -114,13 +110,6 @@ def main() -> None:
             for row in (completeness.rows if completeness.ready else ())
         ]
     )
-    if quality.degraded_buy_count:
-        names = "、".join(
-            f"{stock_label(item.ticker)}（{'・'.join(item.missing_required)}）"
-            for item in quality.degraded_buys
-        )
-        st.warning(f"⚠ 必須指標が欠けた状態のBUY: {names}")
-
     st.subheader(f"BUY候補 {len(buy_rows)}件")
     if not buy_rows:
         st.info("BUY条件を満たす公開済み銘柄はありません。0件も正常な結果です。")
@@ -167,6 +156,29 @@ def main() -> None:
         "判定は丸め前の保存値で確定済みです。INSUFFICIENT_DATA・FAILEDはBUY対象外です。"
     )
     display_rows(table, height=620)
+
+    degraded_names = "、".join(
+        f"{stock_label(item.ticker)}（{'・'.join(item.missing_required)}）"
+        for item in quality.degraded_buys
+    )
+    if alerts or degraded_names or publication is not None:
+        worst = max((alert.level.value for alert in alerts), default="")
+        label = "システムの状態"
+        if degraded_names:
+            label = "⚠ システムの状態 — 必須指標が欠けたBUYがあります"
+        elif alerts:
+            label = f"システムの状態 — {len(alerts)}件の通知（{worst}）"
+        with st.expander(label, expanded=False):
+            if degraded_names:
+                st.warning(f"⚠ 必須指標が欠けた状態のBUY: {degraded_names}")
+            render_alerts(alerts)
+            if publication is not None:
+                render_cutoff_summary(
+                    cutoff_at=publication.get("cutoff_at"),
+                    generated_at=publication.get("generated_at"),
+                    status=publication.get("status"),
+                    run_id=publication.get("run_id"),
+                )
 
     if quality.stock_count:
         status_text = {
