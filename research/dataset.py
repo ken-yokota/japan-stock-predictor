@@ -157,7 +157,17 @@ def build_stock_frame(
     closing = pd.to_numeric(featured["close"], errors="coerce")
     lagged["intraday_return"] = (closing / opening.where(opening > 0.0)) - 1.0
 
-    frame = _attach_lagged(lagged, indicators.frame, indicators.names)
+    # Drop the indicator columns this ticker is not scoped for, so a series can
+    # be given to one stock without reaching the other twenty-one.
+    scoped = {
+        spec.key for spec in feature_set.indicators if not spec.covers(ticker)
+    }
+    indicator_names = [
+        name
+        for name in indicators.names
+        if not any(name.startswith(f"{key}_") for key in scoped)
+    ]
+    frame = _attach_lagged(lagged, indicators.frame, indicator_names)
 
     adr_names: list[str] = []
     missing: list[str] = []
@@ -170,5 +180,5 @@ def build_stock_frame(
         missing = adr.missing
         frame = _attach_lagged(frame, adr.frame, adr_names)
 
-    names = tuple([*price_columns, *indicators.names, *adr_names])
+    names = tuple([*price_columns, *indicator_names, *adr_names])
     return StockFrame(frame, names, missing)

@@ -37,6 +37,15 @@ class IndicatorSpec:
     symbol: str
     transform: Transform = "return"
     windows: tuple[int, ...] = (1, 5)
+    # Which tickers this series is for. Empty means every ticker, which is what
+    # production does for 33 of its 37 indicators - the five trading houses all
+    # receive the same resource series although two of them fell on resource
+    # prices in FY3/2026 while the other three set records without them. Until
+    # this existed there was no way to measure giving a series to one stock.
+    applies_to: tuple[str, ...] = ()
+
+    def covers(self, ticker: str) -> bool:
+        return not self.applies_to or ticker in self.applies_to
 
     def column_names(self) -> tuple[str, ...]:
         suffix = "return" if self.transform == "return" else "change"
