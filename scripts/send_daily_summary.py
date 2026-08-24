@@ -45,8 +45,11 @@ from notifications.report_layout import (
 )
 from notifications.result_report import (
     DayResult,
+    DaySummary,
+    history_caveat,
     lede,
     load_day_result,
+    load_history,
     no_result_section,
     plain_lines,
     result_sections,
@@ -58,6 +61,18 @@ RESEARCH_DIRECTORY = Path("artifacts/feature_comparison")
 # The free tier's ceiling. Reported every evening because the day it is reached
 # is the day the morning run stops writing, and there is no warning from Neon.
 DATABASE_LIMIT_MB = 512
+
+# How many settled sessions the trend figures show. Long enough that the
+# direction is visible, short enough that the table still fits a phone.
+HISTORY_SESSIONS = 10
+
+# The delivery record for this mail. Keyed by date so a retried workflow finds
+# its own earlier send instead of mailing the operator a second copy.
+SUMMARY_TEMPLATE = "daily-summary-v2"
+
+
+def summary_idempotency_key(target: date) -> str:
+    return f"daily-summary-{target.isoformat()}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,6 +101,7 @@ class Day:
     target: date
     trading_day: bool = True
     result: DayResult | None = None
+    history: tuple[DaySummary, ...] = ()
     no_result_reason: str = ""
     findings: tuple[Finding, ...] = ()
     achievements: tuple[Achievement, ...] = ()
@@ -107,6 +123,11 @@ def _parse_arguments() -> argparse.Namespace:
         "--dry-run",
         action="store_true",
         help="本文を標準出力に表示するだけで、送信しない。",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="既に送信済みでも送る。重複送信の記録は残る。",
     )
     parser.add_argument(
         "--output",
@@ -185,6 +206,7 @@ def collect(target: date, config_dir: Path) -> Day:
     runs: list[tuple[str, str, str, str]] = []
     health: list[tuple[str, str]] = []
     result: DayResult | None = None
+    history: tuple[DaySummary, ...] = ()
     reason = ""
     trading_day = _is_trading_day(target)
 
@@ -385,6 +407,7 @@ def collect(target: date, config_dir: Path) -> Day:
                     f"{predicted - settled}銘柄は答え合わせができていません",
                 )
             )
+        history = load_history(engine, target, limit=HISTORY_SESSIONS)
         if settled:
             result = load_day_result(engine, target)
             if result is not None:
@@ -473,6 +496,7 @@ def collect(target: date, config_dir: Path) -> Day:
         target=target,
         trading_day=trading_day,
         result=result,
+        history=history,
         no_result_reason=reason,
         findings=_dedupe(findings),
         achievements=tuple(achievements),
@@ -735,7 +759,7 @@ def subject_for(day: Day) -> str:
 def build_html(day: Day, names: dict[str, str]) -> str:
     blocks = [_findings_section(day.findings)]
     if day.result is not None:
-        blocks.extend(result_sections(day.result, names))
+        blocks.extend(result_sections(day.result, names, day.history))
     else:
         blocks.append(
             no_result_section(
@@ -787,6 +811,23 @@ def build_text(day: Day, names: dict[str, str]) -> str:
         lines.extend(f"  {line}" for line in plain_lines(day.result, names))
     else:
         lines.append(f"  実績が確定していません: {day.no_result_reason}")
+    if day.history:
+        lines.append("")
+        lines.append(f"■ 直近{len(day.history)}営業日")
+        lines.append("  日付    買い   日次損益      累積        方向的中")
+        lines.append("  ------  -----  ------------  ----------  --------")
+        running = 0.0
+        for session in day.history:
+            running += session.profit
+            rate = (
+                f"{session.hit_rate:.0%}" if session.hit_rate is not None else "—"
+            )
+            lines.append(
+                f"  {session.day:%m/%d}   {session.buys:>3}件  "
+                f"{session.profit:>+11,.0f}円  {running:>+9,.0f}円  "
+                f"{session.hits:>2}/{session.predicted:<2} {rate:>4}"
+            )
+        lines.append(f"  {history_caveat(day.history)}")
     lines.append("")
     lines.append("■ できたこと")
     for done in day.achievements:
@@ -824,10 +865,155 @@ def build_report(
     return subject_for(day), build_text(day, names), build_html(day, names)
 
 
+def _engine_or_none() -> Any:
+    """A connection for the delivery record, or None when there cannot be one.
+
+    The record is a convenience: it stops a retry mailing twice and lets the
+    watchdog see that this went out. It is never allowed to stop the mail --
+    a day the database is unreachable is a day the operator most needs to hear
+    from the system.
+    """
+
+    url = os.environ.get("DATABASE_URL", "").strip()
+    if not url:
+        return None
+    try:
+        from database.connection import create_database_engine
+
+        return create_database_engine(url)
+    except Exception:
+        return None
+
+
+def already_delivered(engine: Any, target: date) -> bool:
+    """Whether this date's summary has already been sent."""
+
+    if engine is None:
+        return False
+    try:
+        from sqlalchemy import text
+
+        with engine.connect() as connection:
+            status = connection.scalar(
+                text(
+                    "select status from email_logs where idempotency_key = :key"
+                ),
+                {"key": summary_idempotency_key(target)},
+            )
+        return str(status) == "SENT"
+    except Exception:
+        return False
+
+
+def _record(engine: Any, target: date, subject: str, recipient: str) -> Any:
+    """Register and claim the delivery, or return None if that is impossible."""
+
+    if engine is None:
+        return None
+    try:
+        from sqlalchemy.orm import Session
+
+        from database.repository import PredictionPipelineRepository
+
+        session = Session(engine)
+        repository = PredictionPipelineRepository(session)
+        repository.create_operational_email_log(
+            recipient=recipient,
+            template_version=SUMMARY_TEMPLATE,
+            subject=subject[:255],
+            idempotency_key=summary_idempotency_key(target),
+        )
+        session.commit()
+        if not repository.claim_email(summary_idempotency_key(target)):
+            session.close()
+            return None
+        session.commit()
+        return session
+    except Exception:
+        return None
+
+
+def _build_sender() -> Any:
+    from notifications.senders import GmailSmtpSender, ResendSender
+
+    if os.environ.get("EMAIL_PROVIDER", "gmail_smtp") == "resend":
+        return ResendSender(api_key=os.environ["RESEND_API_KEY"])
+    return GmailSmtpSender(
+        username=os.environ["SMTP_USERNAME"],
+        app_password=os.environ["SMTP_PASSWORD"],
+        host=os.environ.get("SMTP_HOST", "smtp.gmail.com"),
+        port=int(os.environ.get("SMTP_PORT", "587")),
+        timeout_seconds=60.0,
+    )
+
+
+def _fallback_report(target: date, error: BaseException) -> tuple[str, str, str]:
+    """The mail to send when the report itself could not be built.
+
+    A report that fails to assemble used to mean no mail at all, which is the
+    one outcome the operator cannot detect. This says plainly that the evening
+    report could not be produced, and names the step and the exception class --
+    never the message, which can carry a host or a user.
+    """
+
+    subject = f"【大引け後】{target:%Y-%m-%d} 報告を組み立てられませんでした"
+    body = section(
+        "できなかったこと",
+        table(
+            [("何が", "left"), ("なぜ", "left"), ("いまどうなっているか", "left")],
+            [
+                row(
+                    [
+                        cell(
+                            f"<span style='color:{DOWN};font-weight:700'>"
+                            "大引け後サマリーを組み立てられませんでした</span>",
+                            nowrap=False,
+                        ),
+                        cell(type(error).__name__, muted=True, nowrap=False),
+                        cell(
+                            "本日の成績・実行状況は不明のままです。"
+                            "ダッシュボードとGitHub Actionsのログを確認してください。",
+                            nowrap=False,
+                        ),
+                    ]
+                )
+            ],
+            min_width=520,
+        ),
+        "このメール自体は、報告が作れなかったことを知らせるために送っています。"
+        "届かないことで異常を伝える設計にはしていません。",
+    )
+    text_body = "\n".join(
+        [
+            f"{target:%Y-%m-%d} (JST) 大引け後サマリー",
+            "",
+            "■ できなかったこと（1件）",
+            "  - 大引け後サマリーを組み立てられませんでした",
+            f"      なぜ: {type(error).__name__}",
+            "      現状: 本日の成績・実行状況は不明です。",
+            "",
+            "報告が作れなかったこと自体を知らせるためのメールです。",
+        ]
+    )
+    html_body = page(
+        f"大引け後サマリー　{target:%Y-%m-%d}（JST）",
+        f"<span style='color:{DOWN};font-weight:700'>報告を組み立てられませんでした"
+        "</span>",
+        [body],
+        "この内容は研究・情報提供であり、投資助言ではありません。",
+    )
+    return subject, text_body, html_body
+
+
 def main() -> int:
     arguments = _parse_arguments()
     target = arguments.for_date or datetime.now(JST).date()
-    subject, text_body, html_body = build_report(target, arguments.config_dir)
+    try:
+        subject, text_body, html_body = build_report(target, arguments.config_dir)
+        built = True
+    except Exception as error:
+        subject, text_body, html_body = _fallback_report(target, error)
+        built = False
 
     if arguments.output is not None:
         arguments.output.write_text(html_body, encoding="utf-8")
@@ -836,41 +1022,58 @@ def main() -> int:
         print(subject)
         print()
         print(text_body)
-        return 0
+        return 0 if built else 1
 
     from notifications.contracts import RenderedEmail
-    from notifications.senders import GmailSmtpSender, ResendSender
 
     recipient = os.environ.get("EMAIL_TO", "").strip()
     if not recipient:
         print("EMAIL_TO が未設定のため送信できません。", flush=True)
         return 1
 
-    provider = os.environ.get("EMAIL_PROVIDER", "gmail_smtp")
-    sender: Any
-    if provider == "resend":
-        sender = ResendSender(api_key=os.environ["RESEND_API_KEY"])
-    else:
-        sender = GmailSmtpSender(
-            username=os.environ["SMTP_USERNAME"],
-            app_password=os.environ["SMTP_PASSWORD"],
-            host=os.environ.get("SMTP_HOST", "smtp.gmail.com"),
-            port=int(os.environ.get("SMTP_PORT", "587")),
-            timeout_seconds=60.0,
-        )
-    sender.send(
-        RenderedEmail(
-            subject=subject,
-            text=text_body,
-            html=html_body,
-            sender=os.environ.get("EMAIL_FROM") or os.environ["SMTP_USERNAME"],
-            recipient=recipient,
-            # One report per day: a retried workflow must not mail twice.
-            idempotency_key=f"daily-summary-{target.isoformat()}",
-        )
-    )
+    engine = _engine_or_none()
+    try:
+        if not arguments.force and already_delivered(engine, target):
+            print(f"送信済みのためスキップしました: {target}", flush=True)
+            return 0
+        session = _record(engine, target, subject, recipient)
+        try:
+            delivery = _build_sender().send(
+                RenderedEmail(
+                    subject=subject,
+                    text=text_body,
+                    html=html_body,
+                    sender=os.environ.get("EMAIL_FROM") or os.environ["SMTP_USERNAME"],
+                    recipient=recipient,
+                    # One report per day: a retried workflow must not mail twice.
+                    idempotency_key=summary_idempotency_key(target),
+                )
+            )
+        except Exception as error:
+            if session is not None:
+                from database.repository import PredictionPipelineRepository
+
+                PredictionPipelineRepository(session).mark_email_failed(
+                    summary_idempotency_key(target), error=type(error).__name__
+                )
+                session.commit()
+                session.close()
+            raise
+        if session is not None:
+            from database.repository import PredictionPipelineRepository
+
+            PredictionPipelineRepository(session).mark_email_sent(
+                summary_idempotency_key(target),
+                provider_message_id=delivery.message_id,
+                sent_at=delivery.sent_at,
+            )
+            session.commit()
+            session.close()
+    finally:
+        if engine is not None:
+            engine.dispose()
     print(f"送信しました: {target}", flush=True)
-    return 0
+    return 0 if built else 1
 
 
 if __name__ == "__main__":

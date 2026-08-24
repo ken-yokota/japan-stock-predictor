@@ -21,11 +21,16 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
 from database.models import Base
-from notifications.report_layout import DOWN, UP
+from notifications.report_layout import DOWN, FORECAST, UP, diverging_bar, ratio_bar
 from notifications.result_report import (
     DayResult,
+    DaySummary,
     caveat_text,
+    forecast_vs_actual_figure,
+    history_caveat,
+    hit_rate_figure,
     load_day_result,
+    profit_history_figure,
     result_sections,
     skip_reason,
     subject,
@@ -642,3 +647,162 @@ def test_a_trading_day_with_nothing_recorded_is_still_a_failure(
 
 def test_load_day_result_returns_none_for_a_day_with_no_rows(postgres: Engine) -> None:
     assert load_day_result(postgres, date(2026, 1, 1)) is None
+
+
+# --------------------------------------------------------------------------
+# The figures
+#
+# Nothing here checks that a chart is pretty. It checks that the chart says the
+# same thing as the numbers beside it, and that it will actually render in the
+# client the operator reads mail in.
+
+
+def _history(*rows: tuple[str, int, int, int, int, float]) -> list[DaySummary]:
+    return [
+        DaySummary(
+            day=date.fromisoformat(day),
+            buys=buys,
+            buy_hits=buy_hits,
+            predicted=predicted,
+            hits=hits,
+            profit=profit,
+        )
+        for day, buys, buy_hits, predicted, hits, profit in rows
+    ]
+
+
+# The right-hand cell is the only one without the centre rule on its border,
+# so its opening tag is where the figure splits into "loss side" and "gain
+# side".
+_RIGHT_CELL = "<td width='50%' style='padding:0'>"
+
+
+def _halves(bar: str) -> tuple[str, str]:
+    left, _, right = bar.partition(_RIGHT_CELL)
+    return left, right
+
+
+def test_a_gain_grows_right_and_a_loss_grows_left() -> None:
+    """The centre rule is the whole point; a bar on the wrong side is a lie."""
+
+    gain_left, gain_right = _halves(diverging_bar(5.0, 10.0))
+    loss_left, loss_right = _halves(diverging_bar(-5.0, 10.0))
+
+    assert UP in gain_right and UP not in gain_left
+    assert DOWN in loss_left and DOWN not in loss_right
+
+
+def test_a_zero_draws_no_bar() -> None:
+    assert UP not in diverging_bar(0.0, 10.0)
+    assert DOWN not in diverging_bar(0.0, 10.0)
+
+
+def test_a_bar_never_exceeds_its_scale() -> None:
+    assert "width:100%" in diverging_bar(20.0, 10.0)
+
+
+def test_a_ratio_is_green_above_the_reference_and_red_below() -> None:
+    assert UP in ratio_bar(0.62, reference=0.5)
+    assert DOWN in ratio_bar(0.45, reference=0.5)
+
+
+def test_the_forecast_bar_is_neither_green_nor_red() -> None:
+    """A forecast is a claim, not an outcome; colouring it like one misleads."""
+
+    html = forecast_vs_actual_figure(
+        _result(_row("9101", predicted=0.01, actual=-0.01, profit=-100.0)), NAMES
+    )
+
+    assert FORECAST in html
+    assert "予測" in html and "実績プラス" in html
+
+
+def test_every_row_of_a_figure_shares_one_ruler() -> None:
+    """A figure whose rows use different scales is a figure that lies."""
+
+    html = forecast_vs_actual_figure(
+        _result(
+            _row("9101", predicted=0.02, actual=0.02, profit=1.0),
+            _row("8306", predicted=0.01, actual=0.01, profit=1.0),
+        ),
+        NAMES,
+    )
+
+    # The largest value fills its half; the half-sized one is drawn at 50%.
+    assert "width:100%" in html
+    assert "width:50%" in html
+
+
+def test_the_profit_figure_plots_the_running_total_not_the_day() -> None:
+    history = _history(
+        ("2026-08-20", 2, 1, 22, 12, 100.0),
+        ("2026-08-21", 2, 1, 22, 12, -300.0),
+    )
+
+    html = profit_history_figure(history)
+
+    # +100 then -300 is a running total of +100 then -200: the second row is a
+    # loss even though neither cumulative value equals a daily one.
+    assert "+100円" in html and "-300円" in html
+    assert "-200円" in html
+
+
+def test_the_hit_rate_figure_uses_fifty_percent_as_the_threshold() -> None:
+    html = hit_rate_figure(
+        _history(
+            ("2026-08-20", 2, 1, 20, 14, 0.0),
+            ("2026-08-21", 2, 1, 20, 6, 0.0),
+        )
+    )
+
+    assert "70%" in html and "30%" in html
+    assert UP in html and DOWN in html
+
+
+def test_the_trend_caveat_names_the_sample_it_rests_on() -> None:
+    note = history_caveat(
+        _history(
+            ("2026-08-20", 2, 1, 20, 14, 100.0),
+            ("2026-08-21", 3, 1, 20, 6, -300.0),
+        )
+    )
+
+    assert "2営業日" in note
+    assert "買い5取引" in note
+    assert "-200円" in note
+    assert "優位性の証拠ではありません" in note
+
+
+def test_a_day_with_no_history_still_produces_a_mail() -> None:
+    day = _day(result=_result(_row("9101")), history=())
+
+    html = build_html(day, NAMES)
+
+    assert "本日の成績" in html
+    assert "図: 直近" not in html
+
+
+def test_the_figures_use_nothing_gmail_would_strip() -> None:
+    """Gmail removes <svg> and blocks remote images, leaving a blank row.
+
+    A chart that arrives as empty space is worse than no chart, because the
+    table still claims one is there.
+    """
+
+    day = _day(
+        result=_result(
+            _row("9101", predicted=0.01, actual=0.01, profit=100.0),
+            _row("8306", predicted=0.01, actual=-0.01, profit=-100.0),
+        ),
+        history=_history(("2026-08-24", 2, 1, 22, 10, -38910.0)),
+    )
+
+    html = build_html(day, NAMES)
+
+    assert "<svg" not in html
+    assert "<img" not in html
+    assert "src=" not in html
+    assert "background-image" not in html
+    assert "図: 本日の予測と実績" in html
+    assert "図: 直近1営業日の損益と累積" in html
+    assert "図: 方向的中率の推移" in html

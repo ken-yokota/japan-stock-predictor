@@ -951,7 +951,13 @@ class MetricSnapshot(Base):
 
 
 class EmailLog(Base):
-    """Idempotent Resend delivery record for one prediction publication."""
+    """Idempotent delivery record for one operational mail.
+
+    ``prediction_set_id`` is nullable because the after-close summary is a
+    delivery in its own right and, on a JPX holiday, there is no publication to
+    attach it to. ``idempotency_key`` carries the date and is what actually
+    stops a retried workflow sending the same mail twice.
+    """
 
     __tablename__ = "email_logs"
     __table_args__ = (
@@ -975,9 +981,9 @@ class EmailLog(Base):
     )
 
     email_log_id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    prediction_set_id: Mapped[str] = mapped_column(
+    prediction_set_id: Mapped[str | None] = mapped_column(
         ForeignKey("prediction_sets.prediction_set_id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
     )
     recipient: Mapped[str] = mapped_column(String(320), nullable=False)
     template_version: Mapped[str] = mapped_column(String(64), nullable=False)

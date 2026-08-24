@@ -148,6 +148,34 @@ def email_check(sent: list[dict[str, object]]) -> Check:
     return Check("email", True, f"sent_at={sent[0]['sent_at']}")
 
 
+def summary_check(sent_at: object | None) -> Check:
+    """The after-close mail is the one the operator reads every day.
+
+    It has its own delivery record now, keyed on the date rather than on a
+    prediction set, so a day it never went out is visible here instead of being
+    noticed only by its absence from an inbox.
+    """
+
+    if sent_at is None:
+        return Check("summary", False, "大引け後メールのSENT記録がありません")
+    return Check("summary", True, f"sent_at={sent_at}")
+
+
+def _summary_sent_at(connection: Connection, for_date: date) -> object | None:
+    row = connection.execute(
+        text(
+            """
+            SELECT sent_at
+            FROM email_logs
+            WHERE idempotency_key = :key
+              AND status = 'SENT'
+            """
+        ),
+        {"key": f"daily-summary-{for_date.isoformat()}"},
+    ).first()
+    return None if row is None else row[0]
+
+
 def snapshot_check(
     snapshot: dict[str, object] | None,
     *,
@@ -406,6 +434,9 @@ def verify(
                 settled = _settled_count(connection, set_id)
                 outcome.checks.append(
                     Check("actuals", settled > 0, f"確定 {settled} 銘柄")
+                )
+                outcome.checks.append(
+                    summary_check(_summary_sent_at(connection, for_date))
                 )
     except SQLAlchemyError:
         # The message can carry the host and the user, so it is never repeated.

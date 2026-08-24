@@ -1846,6 +1846,49 @@ class PredictionPipelineRepository:
         self.session.flush()
         return row
 
+    def create_operational_email_log(
+        self,
+        *,
+        recipient: str,
+        template_version: str,
+        subject: str,
+        idempotency_key: str,
+    ) -> EmailLog:
+        """Register a delivery that belongs to no prediction publication.
+
+        The after-close summary is the case this exists for. It reports the day
+        rather than a prediction set, and on a JPX holiday there is no set to
+        attach it to at all -- yet it is precisely the day a retried workflow
+        must not mail three times. ``idempotency_key`` carries the date and is
+        unique, so registering twice returns the first row instead of a second
+        delivery.
+        """
+
+        existing = self.session.scalar(
+            select(EmailLog).where(EmailLog.idempotency_key == idempotency_key)
+        )
+        if existing is not None:
+            if (existing.recipient, existing.template_version) != (
+                recipient,
+                template_version,
+            ):
+                raise ValueError("email idempotency key has conflicting identity")
+            return existing
+        row = EmailLog(
+            email_log_id=str(uuid4()),
+            prediction_set_id=None,
+            recipient=recipient,
+            template_version=template_version,
+            subject=subject,
+            status="PENDING",
+            attempt_count=0,
+            created_at=datetime.now(UTC),
+            idempotency_key=idempotency_key,
+        )
+        self.session.add(row)
+        self.session.flush()
+        return row
+
     def claim_email(self, idempotency_key: str) -> bool:
         """Atomically claim a delivery.
 

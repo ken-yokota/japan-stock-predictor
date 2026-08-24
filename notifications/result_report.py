@@ -24,15 +24,20 @@ from sqlalchemy.engine import Engine
 from notifications.report_layout import (
     BAND,
     DOWN,
+    FORECAST,
     GOOD_BG,
     MUTED,
     UP,
     cell,
+    diverging_bar,
     key_values,
+    legend,
+    ratio_bar,
     row,
     section,
     signed_percent,
     signed_yen,
+    stacked_bars,
     table,
 )
 
@@ -52,6 +57,76 @@ RESULT_QUERY = """
     WHERE ps.prediction_date = :day
     ORDER BY p.predicted_intraday_return DESC
 """
+
+
+HISTORY_QUERY = """
+    SELECT ps.prediction_date AS day,
+           count(*) FILTER (WHERE p.signal = 'BUY') AS buys,
+           count(*) FILTER (
+               WHERE p.signal = 'BUY'
+                 AND (p.predicted_intraday_return > 0)
+                     = (a.actual_intraday_return > 0)
+           ) AS buy_hits,
+           count(*) AS predicted,
+           count(*) FILTER (
+               WHERE (p.predicted_intraday_return > 0)
+                     = (a.actual_intraday_return > 0)
+           ) AS hits,
+           coalesce(
+               sum(t.net_profit_jpy) FILTER (WHERE p.signal = 'BUY'), 0
+           ) AS profit
+    FROM prediction_sets AS ps
+    JOIN predictions AS p ON p.prediction_set_id = ps.prediction_set_id
+    JOIN actual_results AS a ON a.prediction_id = p.prediction_id
+    LEFT JOIN simulated_trades AS t ON t.prediction_id = p.prediction_id
+    WHERE ps.prediction_date <= :day
+    GROUP BY ps.prediction_date
+    ORDER BY ps.prediction_date DESC
+    LIMIT :limit
+"""
+
+
+@dataclass(frozen=True, slots=True)
+class DaySummary:
+    """One settled day, reduced to the numbers a trend is drawn from."""
+
+    day: date
+    buys: int
+    buy_hits: int
+    predicted: int
+    hits: int
+    profit: float
+
+    @property
+    def hit_rate(self) -> float | None:
+        return self.hits / self.predicted if self.predicted else None
+
+
+def load_history(
+    engine: Engine, day: date, *, limit: int = 10
+) -> tuple[DaySummary, ...]:
+    """The settled days up to and including ``day``, oldest first.
+
+    One day says nothing, and the mail says so; a run of them at least shows
+    the direction. Read here rather than remembered, like everything else.
+    """
+
+    with engine.connect() as connection:
+        rows = connection.execute(
+            text(HISTORY_QUERY), {"day": day, "limit": limit}
+        ).mappings()
+        summaries = [
+            DaySummary(
+                day=item["day"],
+                buys=int(item["buys"]),
+                buy_hits=int(item["buy_hits"]),
+                predicted=int(item["predicted"]),
+                hits=int(item["hits"]),
+                profit=float(item["profit"] or 0),
+            )
+            for item in rows
+        ]
+    return tuple(reversed(summaries))
 
 
 def _correct(item: dict[str, Any]) -> bool:
@@ -311,10 +386,24 @@ def caveat_text(result: DayResult) -> str:
     return line + "意味のある判断には最低でも数十営業日の蓄積が必要です。"
 
 
-def result_sections(result: DayResult, names: dict[str, str]) -> list[str]:
-    """The day's answer-check: score, what was bought, what was not, the caveat."""
+def result_sections(
+    result: DayResult,
+    names: dict[str, str],
+    history: Sequence[DaySummary] = (),
+) -> list[str]:
+    """The day's answer-check: score, the figures, what was bought, the caveat."""
 
     blocks = [section("本日の成績", score_table(result))]
+    forecast = forecast_vs_actual_figure(result, names)
+    if forecast:
+        blocks.append(
+            section(
+                "図: 本日の予測と実績",
+                forecast,
+                "上段が予測、下段が実績です。同じ中心線・同じ目盛りなので、"
+                "2本の差がそのまま外し方の大きさになります。",
+            )
+        )
     traded = traded_table(result, names)
     if traded:
         blocks.append(
@@ -342,8 +431,184 @@ def result_sections(result: DayResult, names: dict[str, str]) -> list[str]:
                 key_values([("注記", item) for item in result.warnings]),
             )
         )
+    profit_figure = profit_history_figure(history)
+    if profit_figure:
+        blocks.append(
+            section(
+                f"図: 直近{len(history)}営業日の損益と累積",
+                profit_figure,
+                "棒は累積損益です。最下行が本日。"
+                "日次の損益は数字の列に出しています。",
+            )
+        )
+    rate_figure = hit_rate_figure(history)
+    if rate_figure:
+        blocks.append(
+            section(
+                "図: 方向的中率の推移（全銘柄・基準50%）",
+                rate_figure,
+                "全銘柄の方向が合っていた割合です。"
+                "50%はコイン投げで、それを下回る日は方向自体が逆でした。",
+            )
+        )
+    if history:
+        blocks.append(
+            section("この推移が示していないこと", "", history_caveat(history))
+        )
     blocks.append(section("この数字が示していないこと", "", caveat_text(result)))
     return blocks
+
+
+# --- Figures -------------------------------------------------------------
+
+
+def forecast_vs_actual_figure(result: DayResult, names: dict[str, str]) -> str:
+    """Where the model was wrong, at a glance.
+
+    The forecast sits directly above what happened, both measured from the same
+    centre rule and the same ruler, so the gap between the two bars is the
+    error. The forecast is slate rather than green or red: it is a claim, not
+    an outcome, and colouring it like an outcome invites reading it as one.
+    """
+
+    items = result.buys or result.items
+    if not items:
+        return ""
+    scale = max(
+        (
+            max(
+                abs(float(item["predicted_intraday_return"])),
+                abs(float(item["actual_intraday_return"])),
+            )
+            for item in items
+        ),
+        default=0.0,
+    )
+    rows = [
+        row(
+            [
+                cell(_label(item["ticker"], names)),
+                cell(
+                    signed_percent(float(item["predicted_intraday_return"])),
+                    align="right",
+                ),
+                cell(
+                    signed_percent(float(item["actual_intraday_return"])),
+                    align="right",
+                ),
+                cell(
+                    stacked_bars(
+                        [
+                            (float(item["predicted_intraday_return"]), FORECAST),
+                            (float(item["actual_intraday_return"]), None),
+                        ],
+                        scale,
+                    ),
+                    nowrap=False,
+                ),
+            ],
+            "#fff" if index % 2 == 0 else BAND,
+        )
+        for index, item in enumerate(
+            sorted(items, key=lambda entry: -float(entry["actual_intraday_return"]))
+        )
+    ]
+    key = legend([("予測", FORECAST), ("実績プラス", UP), ("実績マイナス", DOWN)])
+    return key + table(
+        [("銘柄", "left"), ("予測", "right"), ("実績", "right"), ("図", "left")],
+        rows,
+        min_width=520,
+    )
+
+
+def profit_history_figure(history: Sequence[DaySummary]) -> str:
+    """The day's loss beside every other settled day, and the running total."""
+
+    if not history:
+        return ""
+    running = 0.0
+    cumulative: list[float] = []
+    for item in history:
+        running += item.profit
+        cumulative.append(running)
+    scale = max((abs(value) for value in cumulative), default=0.0)
+    rows = [
+        row(
+            [
+                cell(f"{item.day:%m/%d}", align="center"),
+                cell(
+                    f"{item.buys}件" if item.buys else "—",
+                    align="right",
+                    muted=not item.buys,
+                ),
+                cell(signed_yen(item.profit), align="right"),
+                cell(signed_yen(total), align="right"),
+                cell(diverging_bar(total, scale), nowrap=False),
+            ],
+            GOOD_BG
+            if index == len(history) - 1
+            else ("#fff" if index % 2 == 0 else BAND),
+        )
+        for index, (item, total) in enumerate(zip(history, cumulative, strict=True))
+    ]
+    return legend([("累積プラス", UP), ("累積マイナス", DOWN)]) + table(
+        [
+            ("日付", "center"),
+            ("買い", "right"),
+            ("日次損益", "right"),
+            ("累積", "right"),
+            ("累積の図", "left"),
+        ],
+        rows,
+        min_width=580,
+    )
+
+
+def hit_rate_figure(history: Sequence[DaySummary]) -> str:
+    """Direction accuracy against the only threshold that means anything: 50%."""
+
+    if not history:
+        return ""
+    rows = [
+        row(
+            [
+                cell(f"{item.day:%m/%d}", align="center"),
+                cell(f"{item.hits}/{item.predicted}", align="right"),
+                cell(
+                    f"{item.hit_rate:.0%}" if item.hit_rate is not None else "—",
+                    align="right",
+                ),
+                cell(ratio_bar(item.hit_rate), nowrap=False),
+            ],
+            GOOD_BG
+            if index == len(history) - 1
+            else ("#fff" if index % 2 == 0 else BAND),
+        )
+        for index, item in enumerate(history)
+    ]
+    return legend([("50%以上", UP), ("50%未満", DOWN)]) + table(
+        [("日付", "center"), ("的中", "right"), ("的中率", "right"), ("図", "left")],
+        rows,
+        min_width=520,
+    )
+
+
+def history_caveat(history: Sequence[DaySummary]) -> str:
+    """What the trend does not establish, stated with the sample it rests on."""
+
+    if not history:
+        return "確定した日がまだありません。"
+    trades = sum(item.buys for item in history)
+    total = sum(item.profit for item in history)
+    predicted = sum(item.predicted for item in history)
+    hits = sum(item.hits for item in history)
+    rate = hits / predicted if predicted else 0.0
+    return (
+        f"{len(history)}営業日・買い{trades}取引の累積で {total:+,.0f}円、"
+        f"方向的中は{hits}/{predicted}（{rate:.0%}）です。"
+        f"{len(history)}日では相場の地合いとモデルの優劣を分離できません。"
+        "この図は方向を見るためのもので、優位性の証拠ではありません。"
+    )
 
 
 def subject(result: DayResult) -> str:

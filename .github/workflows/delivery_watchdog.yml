@@ -12,9 +12,10 @@ on:
     # 2026-08-12 neither the morning email cron nor this one did, so a single
     # tick would have lost the alarm along with the thing it watches.
     - cron: "10,30,50 0 * * 1-5"
-    # 17:40 / 18:00 JST - after the daily summary (17:00) and its snapshot.
-    - cron: "40 8 * * 1-5"
+    # 18:00 / 18:20 JST - after the last daily-summary attempt (17:40) and its
+    # snapshot, so the watchdog never judges a mail that is still retrying.
     - cron: "0 9 * * 1-5"
+    - cron: "20 9 * * 1-5"
   workflow_dispatch:
     inputs:
       window:

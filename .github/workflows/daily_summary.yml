@@ -2,9 +2,16 @@ name: Daily summary
 
 on:
   schedule:
-    # 17:00 JST Monday-Friday (JST has no daylight-saving time), which is after
-    # the 16:10 close-update run has written the day's actual results.
+    # 17:00 / 17:20 / 17:40 JST Monday-Friday (JST has no daylight-saving
+    # time), all after the 16:10 close-update run has written the day's actual
+    # results. Three ticks because GitHub does not guarantee that a scheduled
+    # run fires at all -- on 2026-08-12 the morning cron simply did not -- and
+    # this is the mail the operator asked to receive every single day. The send
+    # is keyed on the date in email_logs, so the second and third ticks find
+    # the first one's delivery and exit without mailing again.
     - cron: "0 8 * * 1-5"
+    - cron: "20 8 * * 1-5"
+    - cron: "40 8 * * 1-5"
   workflow_dispatch:
     inputs:
       for_date:
@@ -15,6 +22,11 @@ on:
         description: "Render and log without sending"
         required: false
         default: true
+        type: boolean
+      force:
+        description: "Send again even if this date was already delivered"
+        required: false
+        default: false
         type: boolean
 
 permissions:
@@ -43,6 +55,7 @@ jobs:
       TIMEZONE: Asia/Tokyo
       FOR_DATE: ${{ inputs.for_date }}
       DRY_RUN: ${{ inputs.dry_run || false }}
+      FORCE: ${{ inputs.force || false }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -52,6 +65,11 @@ jobs:
           cache-dependency-path: requirements.txt
       - name: Install application
         run: python -m pip install -e .
+      - name: Apply database migrations
+        # The delivery record this job writes needs 0004. The close update
+        # already migrates at 15:45, but this job must not depend on another
+        # workflow having fired to be able to record its own send.
+        run: python -m alembic upgrade head
       - name: Send the day's summary
         shell: bash
         run: |
@@ -61,5 +79,8 @@ jobs:
           fi
           if [[ "$DRY_RUN" == "true" ]]; then
             args+=(--dry-run)
+          fi
+          if [[ "$FORCE" == "true" ]]; then
+            args+=(--force)
           fi
           python -m cli daily-summary "${args[@]}"

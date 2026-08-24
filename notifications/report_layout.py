@@ -168,3 +168,119 @@ def page(title: str, lede: str, blocks: Sequence[str], footer: str) -> str:
         f"border-top:1px solid {LINE};padding-top:12px'>{footer}</p>"
         "</div></body></html>"
     )
+
+
+# --- Figures -------------------------------------------------------------
+#
+# Drawn as nested tables with background colours, not SVG and not images.
+# Gmail strips <svg> outright and blocks remote images by default, so a chart
+# built either of those ways arrives as a blank space -- which is worse than no
+# chart, because the row still claims one. Nested tables with bgcolor are the
+# one technique every client the operator reads mail on will render.
+
+FORECAST = "#64748b"  # the model's claim: deliberately not green or red
+TRACK = "#e5e7eb"  # the unfilled part of a proportion bar
+GRID = "#cbd5e1"  # the zero rule a diverging bar is measured from
+
+BAR_HEIGHT = 10
+
+
+def _bar(percent: float, colour: str, *, align: str = "left") -> str:
+    """One coloured bar occupying ``percent`` of its cell."""
+
+    percent = max(min(percent, 100.0), 0.0)
+    if percent <= 0:
+        return "&nbsp;"
+    return (
+        f"<table role='presentation' align='{align}' cellpadding='0' cellspacing='0' "
+        f"border='0' style='width:{percent:.4g}%;border-collapse:collapse'>"
+        f"<tr><td height='{BAR_HEIGHT}' style='height:{BAR_HEIGHT}px;"
+        f"background:{colour};border-radius:2px;font-size:0;line-height:0'>"
+        "&nbsp;</td></tr></table>"
+    )
+
+
+def diverging_bar(
+    value: float | None,
+    scale: float,
+    *,
+    colour: str | None = None,
+) -> str:
+    """A bar growing right for a gain and left for a loss, about a centre rule.
+
+    ``scale`` is the largest absolute value in the column, so every row in one
+    figure is measured against the same ruler. A figure whose rows use
+    different scales is a figure that lies.
+    """
+
+    if value is None or scale <= 0:
+        share = 0.0
+        value = value or 0.0
+    else:
+        share = min(abs(value) / scale, 1.0) * 100
+    tone = colour or (UP if value > 0 else DOWN if value < 0 else MUTED)
+    left = _bar(share, tone, align="right") if value < 0 else "&nbsp;"
+    right = _bar(share, tone, align="left") if value > 0 else "&nbsp;"
+    return (
+        "<table role='presentation' cellpadding='0' cellspacing='0' border='0' "
+        "style='width:100%;border-collapse:collapse'><tr>"
+        f"<td width='50%' style='padding:0;border-right:1px solid {GRID}'>{left}</td>"
+        f"<td width='50%' style='padding:0'>{right}</td>"
+        "</tr></table>"
+    )
+
+
+def stacked_bars(
+    rows: Sequence[tuple[float | None, str | None]], scale: float
+) -> str:
+    """Several diverging bars sharing one centre rule, stacked in one cell.
+
+    Used to put the forecast directly above what happened, so the gap between
+    them is the thing the eye lands on.
+    """
+
+    parts = [
+        f"<div style='padding:1px 0'>{diverging_bar(value, scale, colour=colour)}</div>"
+        for value, colour in rows
+    ]
+    return "".join(parts)
+
+
+def ratio_bar(value: float | None, *, reference: float = 0.5) -> str:
+    """A 0..1 proportion. Coloured by whether it clears ``reference``.
+
+    A reference line drawn inside the bar does not survive every client, so the
+    comparison is carried by the colour instead and the threshold is named in
+    the column heading.
+    """
+
+    if value is None:
+        return f"<span style='color:{MUTED}'>—</span>"
+    share = max(min(value, 1.0), 0.0) * 100
+    tone = UP if value >= reference else DOWN
+    return (
+        "<table role='presentation' cellpadding='0' cellspacing='0' border='0' "
+        "style='width:100%;border-collapse:collapse'><tr>"
+        f"<td width='{share:.4g}%' height='{BAR_HEIGHT}' style='height:{BAR_HEIGHT}px;"
+        f"background:{tone};border-radius:2px 0 0 2px;font-size:0;line-height:0'>"
+        "&nbsp;</td>"
+        f"<td height='{BAR_HEIGHT}' style='height:{BAR_HEIGHT}px;background:{TRACK};"
+        "border-radius:0 2px 2px 0;font-size:0;line-height:0'>&nbsp;</td>"
+        "</tr></table>"
+    )
+
+
+def legend(items: Sequence[tuple[str, str]]) -> str:
+    """Name every colour used in a figure. A colour nobody explains is decoration."""
+
+    parts = [
+        f"<span style='white-space:nowrap;margin-right:14px'>"
+        f"<span style='display:inline-block;width:10px;height:10px;background:{colour};"
+        f"border-radius:2px;vertical-align:middle'></span>"
+        f"<span style='color:{MUTED};font-size:12px;vertical-align:middle;"
+        f"margin-left:5px'>{html.escape(label)}</span></span>"
+        for label, colour in items
+    ]
+    return (
+        f"<p style='margin:0 0 8px;line-height:1.9'>{''.join(parts)}</p>"
+    )
