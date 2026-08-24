@@ -25,17 +25,53 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
 from data.env import EnvironmentSettings
-from notifications.report_layout import BAND, GOOD_BG, badge, cell, row, section
+from notifications.report_layout import (
+    BAND,
+    GOOD_BG,
+    badge,
+    cell,
+    row,
+    section,
+    table,
+)
 
 JST = ZoneInfo("Asia/Tokyo")
 DEFAULT_STALE_AFTER = 30
+
+# The first cron of each workflow, converted from UTC to JST, paired with the
+# workflow it belongs to. A time written here that no workflow fires at is
+# worse than no table -- the operator waits for a mail that was never
+# scheduled, which is exactly what "18:40" did for the evening summary.
+SCHEDULE: tuple[tuple[str, str, str, str], ...] = (
+    ("07:10", "履歴データの取得", "日足51系列と米国金利", "morning_prefetch.yml"),
+    (
+        "08:10",
+        "予測の計算と保存",
+        "実勢値12系列を取得して予測",
+        "morning_prediction.yml",
+    ),
+    ("08:45", "予測メールの配信", "買い候補と根拠", "morning_email.yml"),
+    (
+        "15:45",
+        "実績の確定と答え合わせ",
+        "始値・終値から成績を確定（失敗時 15:55 / 16:10 に再試行）",
+        "close_update.yml",
+    ),
+    (
+        "17:00",
+        "大引け後メールの配信",
+        "その日の答え合わせと運用状況",
+        "daily_summary.yml",
+    ),
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -187,8 +223,178 @@ def collect(environment: EnvironmentSettings) -> Snapshot:
     )
 
 
+def _note_section(notes: Sequence[str]) -> str:
+    """The sentences the tables cannot carry.
+
+    A reordered task list hides its own cost: "6/8 だった並列化は 7/9 に
+    後ろ倒し" is the line the operator needs, and no table produces it.
+    """
+
+    return section(
+        "この報告の要点",
+        table(
+            [("内容", "left")],
+            [
+                row([cell(note, nowrap=False)], "#fff" if index % 2 == 0 else BAND)
+                for index, note in enumerate(notes)
+            ],
+            min_width=420,
+        ),
+    )
+
+
+def _tasks(path: Path | None) -> list[dict[str, Any]]:
+    """The working note's task rows, or an empty list when there is no note."""
+
+    if path is None or not path.exists():
+        return []
+    try:
+        payload: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    return [item for item in payload.get("tasks", []) if isinstance(item, dict)]
+
+
+def _headline(path: Path | None) -> tuple[str, str]:
+    """Return the subject's ``n/m`` count and the step it belongs to.
+
+    The operator reads the subject on a phone and has to know how far along
+    their request is without opening anything, so the count is not optional.
+    It is taken from the step that is running; if nothing is running it falls
+    back to how many of the steps are finished, which is still a fraction.
+    """
+
+    tasks = _tasks(path)
+    if not tasks:
+        return "", ""
+    running = next(
+        (item for item in tasks if str(item.get("tone")) == "now"),
+        None,
+    )
+    if running is not None:
+        return str(running.get("step") or ""), str(running.get("title") or "")
+    done = sum(1 for item in tasks if str(item.get("tone")) == "done")
+    if done == len(tasks):
+        return f"{done}/{len(tasks)}", "全工程が完了しました"
+    return f"{done}/{len(tasks)}", "実行中の工程はありません"
+
+
+_ESTIMATE_UNITS = (
+    ("時間", 60.0),
+    ("h", 60.0),
+    ("分", 1.0),
+    ("m", 1.0),
+)
+
+
+def estimate_minutes(text_value: str) -> float | None:
+    """Read "40分", "1時間", "4〜8時間" as minutes; return None when it is not a span.
+
+    "完了" and "未定" are not durations, and turning them into zero would make
+    the remaining-time line quietly optimistic. They come back as None and the
+    note says how many steps could not be estimated.
+    """
+
+    cleaned = str(text_value).strip().replace("約", "")
+    if not cleaned or cleaned in {"完了", "未定", "—", "-"}:
+        return None
+    for separator in ("〜", "~", "-"):
+        if separator in cleaned:
+            # An "4〜8時間" span is reported at its upper bound: an estimate
+            # that is optimistic by default is the one that gets overtaken.
+            cleaned = cleaned.split(separator)[-1]
+    for suffix, scale in _ESTIMATE_UNITS:
+        if cleaned.endswith(suffix):
+            head = cleaned[: -len(suffix)].strip()
+            try:
+                return float(head) * scale
+            except ValueError:
+                return None
+    try:
+        return float(cleaned)
+    except ValueError:
+        return None
+
+
+def _elapsed_minutes(item: dict[str, Any]) -> float | None:
+    """How long this step has been running, from the stamp the note carries."""
+
+    raw = item.get("started_at")
+    if not raw:
+        return None
+    try:
+        started = datetime.fromisoformat(str(raw))
+    except ValueError:
+        return None
+    if started.tzinfo is None:
+        started = started.replace(tzinfo=JST)
+    return (datetime.now(JST) - started).total_seconds() / 60
+
+
+def _minutes_text(minutes: float | None) -> str:
+    if minutes is None:
+        return "—"
+    if minutes < 90:
+        return f"{minutes:.0f}分"
+    return f"{minutes / 60:.1f}時間"
+
+
+def _remaining_note(tasks: list[dict[str, Any]]) -> str:
+    """Remaining estimate and a projected finish, both required by the agreement.
+
+    "It is running" and "I know when to come back" are different reports, and
+    only the second one lets the operator stop watching.
+    """
+
+    outstanding = [item for item in tasks if str(item.get("tone")) != "done"]
+    if not outstanding:
+        return "全工程が完了しました。"
+    known = [estimate_minutes(str(item.get("estimate", ""))) for item in outstanding]
+    minutes = sum(value for value in known if value is not None)
+    unknown = sum(1 for value in known if value is None)
+    running = next((item for item in tasks if str(item.get("tone")) == "now"), None)
+    if running is not None:
+        # The running step's estimate is already partly spent; counting it in
+        # full would keep the projected finish sliding away from the clock.
+        elapsed = _elapsed_minutes(running)
+        running_estimate = estimate_minutes(str(running.get("estimate", "")))
+        if elapsed is not None and running_estimate is not None:
+            minutes = max(minutes - min(elapsed, running_estimate), 0.0)
+    finish = datetime.now(JST) + timedelta(minutes=minutes)
+    parts = [
+        f"残り{len(outstanding)}工程 / 残り想定 約{_minutes_text(minutes)} / "
+        f"完了予定 {finish:%H:%M}頃"
+    ]
+    if unknown:
+        parts.append(f"うち{unknown}工程は想定を出せていません。")
+    return "　".join(parts)
+
+
+def _overrun_note(tasks: list[dict[str, Any]]) -> str:
+    """Name an overrun rather than letting a silent one read as on schedule."""
+
+    running = next((item for item in tasks if str(item.get("tone")) == "now"), None)
+    if running is None:
+        return ""
+    elapsed = _elapsed_minutes(running)
+    estimate = estimate_minutes(str(running.get("estimate", "")))
+    if elapsed is None or estimate is None or elapsed <= estimate:
+        return ""
+    return (
+        f"⚠ {running.get('step', '')} は想定{_minutes_text(estimate)}に対し"
+        f"{_minutes_text(elapsed)}経過しています。失敗ではなく、まだ実行中です。"
+    )
+
+
 def _task_section(path: Path | None, stale_after: int) -> str:
-    """The working note, always stamped with its own age."""
+    """The working note: every column re-read from the file at send time.
+
+    The operator asked that a progress mail always carry the *current* picture.
+    Nothing here is remembered between sends -- the rows, the elapsed times and
+    the projected finish are all derived from the file as it is on disk now,
+    and the file's own age is printed so a note nobody updated cannot pass
+    itself off as current.
+    """
 
     if path is None or not path.exists():
         return section(
@@ -197,27 +403,26 @@ def _task_section(path: Path | None, stale_after: int) -> str:
             "作業中のタスクは登録されていません。定時の自動実行のみが動いています。",
         )
     age = (datetime.now(UTC).timestamp() - path.stat().st_mtime) / 60
-    payload: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+    tasks = _tasks(path)
     rows = []
-    for index, item in enumerate(payload.get("tasks", [])):
+    for index, item in enumerate(tasks):
+        tone = str(item.get("tone", "wait"))
+        elapsed = _elapsed_minutes(item) if tone == "now" else None
         rows.append(
             row(
                 [
                     cell(str(item.get("step", "")), align="center"),
                     cell(str(item.get("title", "")), nowrap=False),
                     cell(str(item.get("estimate", "—")), align="right"),
+                    cell(_minutes_text(elapsed), align="right", muted=elapsed is None),
                     cell(
-                        badge(
-                            str(item.get("state", "未着手")),
-                            str(item.get("tone", "wait")),
-                        ),
+                        badge(str(item.get("state", "未着手")), tone),
                         align="center",
                     ),
                 ],
-                "#fff" if index % 2 == 0 else BAND,
+                GOOD_BG if tone == "now" else ("#fff" if index % 2 == 0 else BAND),
             )
         )
-    from notifications.report_layout import table
 
     body = (
         table(
@@ -225,25 +430,34 @@ def _task_section(path: Path | None, stale_after: int) -> str:
                 ("工程", "center"),
                 ("内容", "left"),
                 ("想定", "right"),
+                ("経過", "right"),
                 ("状態", "center"),
             ],
             rows,
-            min_width=480,
+            min_width=540,
         )
         if rows
         else ""
     )
-    note = f"この記録は{age:.0f}分前に更新されました。"
+    lines = [_remaining_note(tasks)]
+    overrun = _overrun_note(tasks)
+    if overrun:
+        lines.insert(0, overrun)
     if age > stale_after:
-        note = (
+        lines.append(
             f"⚠ この記録は{age:.0f}分前のもので、{stale_after}分以上"
             "更新されていません。現在の作業を反映していない可能性があります。"
         )
-    return section("いま進めているタスク", body, note)
+    else:
+        lines.append(f"この記録は{age:.0f}分前に更新されたものです。")
+    return section("いま進めているタスク", body, "<br>".join(lines))
 
 
 def build_report(
-    snapshot: Snapshot, task_file: Path | None, stale_after: int
+    snapshot: Snapshot,
+    task_file: Path | None,
+    stale_after: int,
+    notes: Sequence[str] = (),
 ) -> dict[str, Any]:
     now = datetime.now(JST)
     published_rows = [
@@ -295,9 +509,8 @@ def build_report(
             )
         )
 
-    from notifications.report_layout import table
-
     sections = [
+        *( [_note_section(notes)] if notes else [] ),
         _task_section(task_file, stale_after),
         _upcoming_section(),
         section(
@@ -392,8 +605,11 @@ def build_report(
                 "取得できなかった項目は「—」ではなくここに理由を出しています。",
             )
         )
+    step, headline = _headline(task_file)
+    fraction = f" {step}" if step else ""
+    headline_text = f"{headline}／" if headline else ""
     return {
-        "subject": f"【進捗】定期報告 {now:%m/%d %H:%M}",
+        "subject": f"【進捗{fraction}】{headline_text}定期報告 {now:%m/%d %H:%M}",
         "title": f"定期進捗報告　{now:%Y-%m-%d %H:%M}",
         "lede": _lede(snapshot),
         "sections": sections,
@@ -410,18 +626,11 @@ def _upcoming_section() -> str:
     """
 
     from data.market_calendar import is_japan_business_day
-    from notifications.report_layout import table
 
     now = datetime.now(JST)
     today = now.date()
     upcoming: list[tuple[str, str, str]] = []
-    schedule = (
-        ("07:15", "履歴データの取得", "日足51系列と米国金利"),
-        ("08:20", "予測の計算と保存", "実勢値12系列を取得して予測"),
-        ("08:45", "予測メールの配信", "買い候補と根拠"),
-        ("16:10", "実績の確定と答え合わせ", "始値・終値から成績を確定"),
-        ("18:40", "日次サマリーの配信", "その日の運用状況"),
-    )
+    schedule = SCHEDULE
     day = today
     for _ in range(8):
         if is_japan_business_day(day):
@@ -432,7 +641,7 @@ def _upcoming_section() -> str:
                 if not upcoming
                 else f"{day:%m/%d}"
             )
-            for clock, name, detail in schedule:
+            for clock, name, detail, _workflow in schedule:
                 hour, minute = (int(part) for part in clock.split(":"))
                 when = datetime.combine(day, now.time()).replace(
                     hour=hour, minute=minute, second=0, microsecond=0, tzinfo=JST
@@ -469,7 +678,10 @@ def _upcoming_section() -> str:
             rows,
             min_width=480,
         ),
-        holiday_note or "すべて自動で実行されます。操作は不要です。",
+        holiday_note
+        or "すべて自動で実行されます。操作は不要です。"
+        "GitHub Actions のcronは定刻より30〜60分遅れて起動することがあり、"
+        "実測でもその範囲で遅れています。",
     )
 
 
@@ -490,6 +702,12 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--task", type=Path, default=None)
     parser.add_argument("--stale-after", type=int, default=DEFAULT_STALE_AFTER)
+    parser.add_argument(
+        "--note",
+        action="append",
+        default=None,
+        help="この報告で伝えたい一文。新しい依頼が何を後ろ倒しにしたか等。",
+    )
     parser.add_argument("--dry-run", action="store_true")
     return parser
 
@@ -537,7 +755,7 @@ def main() -> int:
     args = _parser().parse_args()
     environment = EnvironmentSettings()
     snapshot = collect(environment)
-    report = build_report(snapshot, args.task, args.stale_after)
+    report = build_report(snapshot, args.task, args.stale_after, args.note or ())
     html_body = render(report)
     text_body = plain_text(snapshot, report)
     if args.dry_run:

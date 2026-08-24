@@ -41,7 +41,7 @@ _HELP_TEXT = """使い方: python -m cli <command> [options]
   week-test          直近期間をDBなしでwalk-forward検証する: 研究用
   compare-features   予測要素の組を同一条件で比較し、採否を符号検定で判定する
   preview            予測と指標の採否をDBに保存せず算出する (研究用)
-  daily-summary      その日の実行状況と判定をメールで送る (17:00 JST)
+  daily-summary      大引け後にその日の結果・失敗・実行状況をメールで送る (17:00 JST)
   config-check       秘密情報なしでYAML/symbol構成を検証する (data.fetch)
   dashboard          Streamlit dashboardをローカル起動する
 
