@@ -61,74 +61,16 @@ EXPECTED_SECTORS = {
     "trading_company",
 }
 EXPECTED_EODHD_FALLBACK_SYMBOLS = {
-    "BDRY.US",
-    "BNO.US",
-    "CPER.US",
     "DIA.US",
-    "EWY.US",
-    "FXI.US",
-    "GLD.US",
-    "HMC.US",
-    "KRE.US",
-    "MCHI.US",
-    "MUFG.US",
-    "OIH.US",
-    "QQQ.US",
-    "SMFG.US",
-    "SPY.US",
-    "TM.US",
-    "UNG.US",
-    "UUP.US",
-    "USO.US",
-    "XLE.US",
-    "XLF.US",
-    "XLI.US",
 }
 EXPECTED_YAHOO_INDICATOR_SYMBOLS = {
-    "AUDJPY=X",
-    "BDRY",
-    "BZ=F",
-    "CL=F",
-    "DX-Y.NYB",
-    "ES=F",
-    "EURJPY=X",
-    "EWY",
-    "FXI",
-    "GC=F",
-    "HG=F",
-    "HMC",
-    "JPY=X",
-    "KRE",
-    "MCHI",
-    "MUFG",
-    "NG=F",
-    "NIY=F",
-    "NQ=F",
-    "OIH",
-    "SMFG",
-    "TM",
-    "XLE",
-    "XLF",
-    "XLI",
     "^DJI",
-    "^GSPC",
-    "^NDX",
     "^VIX",
 }
-EXPECTED_YAHOO_SNAPSHOT_MAX_AGE = {
-    "AUDJPY=X": 10,
-    "BZ=F": 40,
-    "CL=F": 40,
-    "DX-Y.NYB": 20,
-    "ES=F": 20,
-    "EURJPY=X": 10,
-    "GC=F": 40,
-    "HG=F": 40,
-    "JPY=X": 10,
-    "NG=F": 40,
-    "NIY=F": 20,
-    "NQ=F": 20,
-}
+# No snapshot series remain: the twelve FX and futures indicators that
+# needed the 08:20 window were cut, which is what removed the morning's
+# most fragile step entirely.
+EXPECTED_YAHOO_SNAPSHOT_MAX_AGE: dict[str, int] = {}
 
 
 def _yaml_mapping(filename: str) -> dict[str, Any]:
@@ -175,7 +117,9 @@ def test_indicator_config_has_common_and_all_five_sector_groups() -> None:
         assigned_ids.update(group.indicators)
 
     assert set(config.sectors) == EXPECTED_SECTORS
-    assert len(config.common) == 15
+    # The catalog was cut to the six series that measured highest across all
+    # 22 tickers; every sector now inherits exactly those and adds nothing.
+    assert len(config.common) == 6
     assert indicator_ids == assigned_ids
     assert config.sectors["trading_company"].indicators == []
     assert config.sectors["trading_company"].notes is not None
@@ -189,7 +133,7 @@ def test_indicator_sources_make_resolution_state_explicit() -> None:
         source.kind for indicator in config.indicators for source in indicator.sources
     }
 
-    assert source_kinds == {"direct", "proxy", "alternative", "derived"}
+    assert source_kinds == {"direct", "proxy", "derived"}
     for indicator in config.indicators:
         for source in indicator.sources:
             if source.status == "pending":
@@ -338,32 +282,25 @@ def test_eodhd_free_verified_fallback_is_eod_only() -> None:
     assert all(source.endpoint is None for source in unavailable_entitlements)
 
 
-def test_bdi_and_iron_ore_direct_routes_remain_unverified() -> None:
-    """Proxies do not silently promote unverified direct physical/index data."""
+def test_reduced_catalog_carries_no_unresolved_or_snapshot_routes() -> None:
+    """The cut removed every route that could not be relied on in the morning.
+
+    The catalog was reduced to the six series that measured highest across all
+    22 tickers. That happens to drop every snapshot source -- the twelve FX and
+    futures series that could only be captured inside a ten-minute window and
+    routinely were not -- so the morning no longer has that step at all.
+    """
 
     config = load_indicators_config()
-    factors = {
-        indicator.id: indicator
-        for indicator in config.indicators
-        if indicator.id in {"baltic_dry_index", "iron_ore"}
-    }
 
-    for indicator in factors.values():
-        direct_sources = [
-            source for source in indicator.sources if source.kind == "direct"
-        ]
-        assert direct_sources
-        assert all(source.status == "pending" for source in direct_sources)
-
-    bdi = factors["baltic_dry_index"]
-    assert any(
-        source.provider == "yahoo_finance"
-        and source.provider_symbol == "BDRY"
-        and source.kind == "proxy"
-        for source in bdi.sources
-    )
-    assert factors["iron_ore"].resolution_status == "pending"
-
+    assert len(config.indicators) == 6
+    for indicator in config.indicators:
+        assert indicator.required, indicator.id
+        for source in indicator.sources:
+            assert not source.snapshot_enabled, indicator.id
+            assert source.max_age_minutes is None, indicator.id
+            if source.status == "verified":
+                assert source.data_mode in {"eod", "yield_curve", "derived"}
 
 def test_snapshot_policy_is_independent_from_historical_data_mode() -> None:
     """A Yahoo EOD source may opt into snapshots without changing its session."""

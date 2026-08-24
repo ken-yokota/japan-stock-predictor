@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 
 from data.config import AppConfig
 
-FEATURE_VERSION = "pit-features-v1"
+FEATURE_VERSION = "pit-features-v2"
 MODEL_VERSION = "ridge-logistic-v1"
 STRATEGY_VERSION = "intraday-costed-v1"
 
