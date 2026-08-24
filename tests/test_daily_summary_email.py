@@ -282,7 +282,9 @@ def _postgres_engine() -> Engine | None:
     here. A green SQLite suite has already shipped a query PostgreSQL rejects.
     """
 
-    url = os.environ.get("TEST_POSTGRES_URL") or (
+    # Its own database, not the shared TEST_POSTGRES_URL. Two modules dropping
+    # and recreating one schema raced each other into an intermittent failure.
+    url = os.environ.get("TEST_SUMMARY_POSTGRES_URL") or (
         "postgresql+psycopg://yokotaken@localhost:5432/jsp_summary_test"
     )
     try:

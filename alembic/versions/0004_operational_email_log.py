@@ -27,22 +27,28 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
+# SQLite has no ALTER COLUMN, so the nullability change has to go through
+# batch mode, which copies the table. CI runs the migrations on SQLite as a
+# portability guard and PostgreSQL is what production uses; a plain
+# ``op.alter_column`` passes the second and fails the first.
 def upgrade() -> None:
-    op.alter_column(
-        "email_logs",
-        "prediction_set_id",
-        existing_type=sa.String(length=36),
-        nullable=True,
-    )
+    with op.batch_alter_table("email_logs") as batch:
+        batch.alter_column(
+            "prediction_set_id",
+            existing_type=sa.String(length=36),
+            existing_nullable=False,
+            nullable=True,
+        )
 
 
 def downgrade() -> None:
     # Rows with no prediction set cannot be represented by the old shape, and
     # silently deleting delivery history to fit it would be worse than failing.
     op.execute("DELETE FROM email_logs WHERE prediction_set_id IS NULL")
-    op.alter_column(
-        "email_logs",
-        "prediction_set_id",
-        existing_type=sa.String(length=36),
-        nullable=False,
-    )
+    with op.batch_alter_table("email_logs") as batch:
+        batch.alter_column(
+            "prediction_set_id",
+            existing_type=sa.String(length=36),
+            existing_nullable=True,
+            nullable=False,
+        )

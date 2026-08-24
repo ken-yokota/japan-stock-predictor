@@ -47,8 +47,10 @@ def test_the_delivery_key_is_one_per_date() -> None:
 
 
 def _engine() -> Engine | None:
-    url = os.environ.get("TEST_POSTGRES_URL") or (
-        "postgresql+psycopg://yokotaken@localhost:5432/jsp_summary_test"
+    # Its own database. Sharing one with another module means each fixture's
+    # drop_all runs against connections the other still holds.
+    url = os.environ.get("TEST_DELIVERY_POSTGRES_URL") or (
+        "postgresql+psycopg://yokotaken@localhost:5432/jsp_delivery_test"
     )
     try:
         engine = create_engine(url)
@@ -210,6 +212,39 @@ def test_the_fallback_never_repeats_the_exception_message() -> None:
 def test_the_watchdog_fails_when_the_summary_never_went_out() -> None:
     assert not summary_check(None).ok
     assert summary_check("2026-08-24T08:54:00").ok
+
+
+# --------------------------------------------------------------------------
+# The migration has to run on both engines
+
+
+def test_the_migrations_run_on_sqlite_as_well_as_postgresql(tmp_path: Path) -> None:
+    """CI verifies the migrations on SQLite, and 0004 failed there first.
+
+    PostgreSQL takes ``ALTER COLUMN ... DROP NOT NULL``; SQLite has no ALTER
+    COLUMN at all, so the change has to go through alembic's batch mode, which
+    copies the table. Verifying only on the engine production uses passed the
+    migration and broke the build. Running it here means the next one fails on
+    a laptop instead.
+    """
+
+    import subprocess
+    import sys
+
+    database = tmp_path / "migration.sqlite3"
+    environment = {
+        **os.environ,
+        "DATABASE_URL": f"sqlite+pysqlite:///{database}",
+    }
+    for command in (["upgrade", "head"], ["check"]):
+        result = subprocess.run(
+            [sys.executable, "-m", "alembic", *command],
+            capture_output=True,
+            text=True,
+            env=environment,
+            timeout=180,
+        )
+        assert result.returncode == 0, result.stderr[-2000:]
 
 
 # --------------------------------------------------------------------------
