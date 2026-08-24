@@ -45,4 +45,27 @@ fi
 dashboard_database="${JPSTOCK_DASHBOARD_DATABASE:-production}"
 if [[ "$dashboard_database" == "production" && -n "${NEON_DATABASE_URL:-}" ]]; then
   DATABASE_URL="$NEON_DATABASE_URL"
-  e
+  export DATABASE_URL
+fi
+
+if [[ -z "${DATABASE_URL:-}" ]]; then
+  echo "注意: DATABASE_URL が未設定です。画面は開きますが、各ページは PENDING を表示します。" >&2
+fi
+
+if ! python -c "import streamlit" >/dev/null 2>&1; then
+  echo "streamlit が見つかりません。python -m pip install -r requirements.txt を実行してください。" >&2
+  exit 1
+fi
+
+port="${DASHBOARD_PORT:-8501}"
+echo "Dashboard: http://localhost:${port}"
+if [[ "$address" == "0.0.0.0" ]]; then
+  echo "同一ネットワークからは http://$(ipconfig getifaddr en0 2>/dev/null || echo '<this-mac-ip>'):${port}"
+fi
+
+exec streamlit run app.py \
+  --server.address "$address" \
+  --server.port "$port" \
+  --server.headless true \
+  --browser.gatherUsageStats false \
+  "$@"
