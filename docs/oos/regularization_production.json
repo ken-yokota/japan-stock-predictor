@@ -1,0 +1,25 @@
+{
+  "feature_set": "production",
+  "top_k": null,
+  "sessions_per_ticker": 6,
+  "training_window": 120,
+  "fits": 132,
+  "median_features": 72,
+  "feature_row_ratio": 0.6,
+  "production_grid": {
+    "100.0": 132
+  },
+  "wide_grid": {
+    "100.0": 15,
+    "1000.0": 66,
+    "10000.0": 20,
+    "100000.0": 31
+  },
+  "wide_logistic_c": {
+    "0.0001": 29,
+    "0.001": 31,
+    "0.01": 72
+  },
+  "pinned_at_production_ceiling": 1.0,
+  "beyond_production_ceiling": 0.8863636363636364
+}
