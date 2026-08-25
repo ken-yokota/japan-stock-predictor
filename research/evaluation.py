@@ -531,3 +531,72 @@ def from_research_rows(
             )
         )
     return out
+
+
+@dataclass(frozen=True, slots=True)
+class GroupQuality:
+    """One ticker or one sector, scored on the layer that has the sample.
+
+    Direction accuracy comes with the count it rests on and a binomial z, so a
+    69.8% that is really 37 of 53 cannot be read as a settled fact. Splitting a
+    small sample by group multiplies the number of chances to find something,
+    which is exactly how noise gets adopted; the z here is unadjusted for that
+    and the caller is expected to say so.
+    """
+
+    name: str
+    count: int
+    sessions: int
+    direction_accuracy: float
+    direction_z: float | None
+    spearman: float | None
+    mae: float
+    predicted_mean: float
+    actual_mean: float
+    traded: int
+    net_jpy: float
+
+
+def _binomial_z(hits: int, count: int) -> float | None:
+    """How far a hit rate sits from a coin toss, in standard errors."""
+
+    if count < 5:
+        return None
+    expected = count * 0.5
+    deviation = math.sqrt(count * 0.25)
+    return float((hits - expected) / deviation) if deviation else None
+
+
+def group_quality(
+    predictions: Sequence[Prediction], *, by: str = "ticker"
+) -> list[GroupQuality]:
+    """Split by ticker or sector. Rows are returned worst-first by realised P&L."""
+
+    groups: dict[str, list[Prediction]] = {}
+    for item in predictions:
+        key = item.ticker if by == "ticker" else (item.sector or "—")
+        groups.setdefault(key, []).append(item)
+    rows = []
+    for name, items in groups.items():
+        hits = sum(1 for p in items if p.direction_correct)
+        predicted = np.array([p.predicted_return for p in items], dtype=float)
+        actual = np.array([p.actual_return for p in items], dtype=float)
+        traded = [p for p in items if p.signal == "BUY"]
+        rows.append(
+            GroupQuality(
+                name=name,
+                count=len(items),
+                sessions=len({p.date for p in items}),
+                direction_accuracy=hits / len(items),
+                direction_z=_binomial_z(hits, len(items)),
+                spearman=spearman(predicted, actual),
+                mae=float(np.abs(predicted - actual).mean()),
+                predicted_mean=float(predicted.mean()),
+                actual_mean=float(actual.mean()),
+                traded=len(traded),
+                net_jpy=float(
+                    sum(float(p.net_profit_jpy or 0.0) for p in traded)
+                ),
+            )
+        )
+    return sorted(rows, key=lambda r: r.net_jpy)

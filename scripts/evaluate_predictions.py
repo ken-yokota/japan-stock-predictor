@@ -25,9 +25,11 @@ from typing import Any
 
 from research.evaluation import (
     Evaluation,
+    GroupQuality,
     Prediction,
     evaluate,
     from_research_rows,
+    group_quality,
     quantile_is_monotonic,
 )
 from research.selection_rules import RuleResult, standard_rules
@@ -263,6 +265,38 @@ def render_rules(rules: Sequence[RuleResult]) -> str:
     return "\n".join(lines)
 
 
+def render_groups(rows: Sequence[GroupQuality], *, title: str) -> str:
+    """Where the signal is, if it is anywhere. Worst realised P&L first.
+
+    The z column is unadjusted for having split the sample: with five sectors,
+    one of them clearing |z| = 2 by chance is ordinary. Read it as a place to
+    look, not as a finding.
+    """
+
+    lines = [f"■ {title}"]
+    lines.append(
+        "  名前                 予測数 営業日  方向的中     z   Spearman"
+        "     MAE   平均予測   平均実績  取引  損益"
+    )
+    for row in rows:
+        lines.append(
+            f"  {row.name:<20} {row.count:>5} {row.sessions:>5}"
+            f"  {row.direction_accuracy:7.1%}"
+            f"  {_num(row.direction_z, 2):>6}"
+            f"  {_num(row.spearman, 3):>8}"
+            f"  {row.mae:6.2%}"
+            f"  {row.predicted_mean:+8.3%}"
+            f"  {row.actual_mean:+8.3%}"
+            f"  {row.traded:>4}"
+            f"  {row.net_jpy:+10,.0f}円"
+        )
+    lines.append(
+        "  ※ z は標本を分割したことを補正していません。5分割なら1つが |z|=2 を"
+        "超えるのは普通に起こります。"
+    )
+    return "\n".join(lines)
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     source = parser.add_mutually_exclusive_group(required=True)
@@ -272,6 +306,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--json", action="store_true", help="JSONで出力")
     parser.add_argument(
         "--rules", action="store_true", help="選別ルールの比較表も出す"
+    )
+    parser.add_argument(
+        "--groups", action="store_true", help="銘柄別・セクター別の内訳も出す"
     )
     parser.add_argument(
         "--cost",
@@ -304,6 +341,15 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(payload)
             return 0
     print(render(result))
+    if args.groups:
+        print()
+        print(
+            render_groups(
+                group_quality(predictions, by="sector"), title="セクター別"
+            )
+        )
+        print()
+        print(render_groups(group_quality(predictions, by="ticker"), title="銘柄別"))
     if args.rules:
         print()
         print(render_rules(standard_rules(predictions, cost_per_position=cost)))
