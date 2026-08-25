@@ -223,6 +223,64 @@ def collect(environment: EnvironmentSettings) -> Snapshot:
     )
 
 
+def _recent_commits(limit: int = 8) -> tuple[tuple[str, str, str], ...]:
+    """What was actually committed, whatever the working note says.
+
+    The note is written by hand and has already been left behind twice while
+    work carried on. Commits are not: they carry their own timestamp and they
+    cannot be forgotten. Printing them beside the note means a stale note is
+    visible as stale rather than read as current.
+    """
+
+    raw = _git("log", f"-{limit}", "--format=%h\x1f%cI\x1f%s")
+    rows: list[tuple[str, str, str]] = []
+    for line in raw.splitlines():
+        parts = line.split("\x1f")
+        if len(parts) != 3:
+            continue
+        digest, stamp, subject = parts
+        try:
+            when = datetime.fromisoformat(stamp).astimezone(JST)
+        except ValueError:
+            continue
+        rows.append((f"{when:%m/%d %H:%M}", digest, subject))
+    return tuple(rows)
+
+
+def _commits_since(moment: datetime) -> int:
+    """How many commits landed after the working note was last written."""
+
+    raw = _git("log", "--since", moment.isoformat(), "--format=%h")
+    return len([line for line in raw.splitlines() if line.strip()])
+
+
+def _commit_section(rows: Sequence[tuple[str, str, str]]) -> str:
+    if not rows:
+        return section(
+            "直近の作業（コミット）", "", "この期間のコミットはありません。"
+        )
+    return section(
+        "直近の作業（コミット）",
+        table(
+            [("時刻", "center"), ("SHA", "center"), ("内容", "left")],
+            [
+                row(
+                    [
+                        cell(when, align="center"),
+                        cell(digest, align="center", muted=True),
+                        cell(subject, nowrap=False),
+                    ],
+                    "#fff" if index % 2 == 0 else BAND,
+                )
+                for index, (when, digest, subject) in enumerate(rows)
+            ],
+            min_width=520,
+        ),
+        "この節は送信時に git から読み直しています。工程表と食い違う場合は"
+        "こちらが実際に起きたことです。",
+    )
+
+
 def _note_section(notes: Sequence[str]) -> str:
     """The sentences the tables cannot carry.
 
@@ -443,6 +501,16 @@ def _task_section(path: Path | None, stale_after: int) -> str:
     overrun = _overrun_note(tasks)
     if overrun:
         lines.insert(0, overrun)
+    written = datetime.fromtimestamp(path.stat().st_mtime, tz=JST)
+    newer = _commits_since(written)
+    if newer:
+        # The failure this catches: the note said 1/8 while three of the steps
+        # had already been committed. A count of commits the note has not seen
+        # is mechanical, so it cannot be forgotten the way the note itself was.
+        lines.append(
+            f"⚠ この工程表の更新後に {newer} 件のコミットがあります。"
+            "表より実際の進捗が進んでいます。下の「直近の作業」を参照してください。"
+        )
     if age > stale_after:
         lines.append(
             f"⚠ この記録は{age:.0f}分前のもので、{stale_after}分以上"
@@ -512,6 +580,7 @@ def build_report(
     sections = [
         *( [_note_section(notes)] if notes else [] ),
         _task_section(task_file, stale_after),
+        _commit_section(_recent_commits()),
         _upcoming_section(),
         section(
             "本番の最新状態",

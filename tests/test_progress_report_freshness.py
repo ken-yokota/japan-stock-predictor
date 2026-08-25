@@ -256,3 +256,65 @@ def test_every_scheduled_time_matches_its_workflows_first_cron() -> None:
             f"{name}: {filename} fires at {jst // 60:02d}:{jst % 60:02d} JST, "
             f"but the progress mail says {clock}"
         )
+
+
+# --------------------------------------------------------------------------
+# The note must not be able to pass off a stale picture as current
+#
+# This is the failure it exists to catch: the working note said "1/8 実行中"
+# while three of its steps had already been committed, and every mail sent in
+# that window described work that had moved on. A count of commits the note has
+# not seen is mechanical, so it cannot be forgotten the way the note was.
+
+
+def test_a_note_older_than_recent_commits_is_flagged(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import scripts.send_progress_report as module
+
+    file = _write(tmp_path, [_task("1/8", "now")])
+    monkeypatch.setattr(module, "_commits_since", lambda _moment: 3)
+
+    html = module._task_section(file, 30)
+
+    assert "3 件のコミット" in html
+    assert "実際の進捗が進んでいます" in html
+
+
+def test_a_note_with_no_commits_behind_it_is_not_flagged(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import scripts.send_progress_report as module
+
+    file = _write(tmp_path, [_task("1/8", "now")])
+    monkeypatch.setattr(module, "_commits_since", lambda _moment: 0)
+
+    html = module._task_section(file, 30)
+
+    assert "件のコミット" not in html
+
+
+def test_the_commit_section_lists_what_actually_landed() -> None:
+    import scripts.send_progress_report as module
+
+    html = module._commit_section(
+        (("08/25 10:29", "4803401", "Put the evaluation on the Test page"),)
+    )
+
+    assert "4803401" in html
+    assert "Put the evaluation on the Test page" in html
+    assert "工程表と食い違う場合は" in html
+
+
+def test_no_commits_says_so_rather_than_showing_an_empty_table() -> None:
+    import scripts.send_progress_report as module
+
+    assert "コミットはありません" in module._commit_section(())
+
+
+def test_the_report_carries_the_commit_section(tmp_path: Path) -> None:
+    file = _write(tmp_path, [_task("1/8", "now")])
+
+    report = build_report(Snapshot(), file, 30)
+
+    assert any("直近の作業（コミット）" in item for item in report["sections"])
