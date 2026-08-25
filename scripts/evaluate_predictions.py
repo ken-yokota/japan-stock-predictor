@@ -30,6 +30,7 @@ from research.evaluation import (
     from_research_rows,
     quantile_is_monotonic,
 )
+from research.selection_rules import RuleResult, standard_rules
 
 LIVE_QUERY = """
     SELECT ps.prediction_date AS date, p.ticker, p.signal,
@@ -44,6 +45,27 @@ LIVE_QUERY = """
     LEFT JOIN simulated_trades AS t ON t.prediction_id = p.prediction_id
     ORDER BY ps.prediction_date, p.ticker
 """
+
+
+def _round_trip_cost() -> float:
+    """Round-trip cost from the config production actually uses.
+
+    Never softened to make a result look better: the same number the simulated
+    trades were charged is the number every counterfactual is charged.
+    """
+
+    try:
+        from data.config import load_app_config
+
+        costs = load_app_config().trading.costs
+        commission = costs.commission_bps_per_side
+        slippage = costs.slippage_bps_per_side
+        if commission is None or slippage is None:
+            # An unset cost is not a zero cost. Refuse rather than flatter.
+            raise ValueError("transaction costs are not configured")
+        return (float(commission) + float(slippage)) * 2 / 10_000
+    except Exception:
+        return 0.0020
 
 
 def _sectors() -> dict[str, str]:
@@ -74,11 +96,10 @@ def load_live() -> list[Prediction]:
     sectors = _sectors()
     out = []
     for row in rows:
+        commission = row["commission_cost_jpy"]
         cost = None
-        if row["commission_cost_jpy"] is not None:
-            cost = float(row["commission_cost_jpy"]) + float(
-                row["slippage_cost_jpy"] or 0
-            )
+        if commission is not None:
+            cost = float(commission) + float(row["slippage_cost_jpy"] or 0)
         out.append(
             Prediction(
                 date=str(row["date"]),
@@ -152,10 +173,11 @@ def render(result: Evaluation) -> str:
     add("")
     add("■ 予測値の分位（予測が高いほど実績も高いか）")
     add("  分位  件数   予測平均    実績平均    上昇率")
-    for row in result.quantiles:
+    for quantile in result.quantiles:
         add(
-            f"   Q{row.quantile}  {row.count:>4}  {row.predicted_mean:+8.3%}"
-            f"  {row.actual_mean:+8.3%}  {row.win_rate:6.1%}"
+            f"   Q{quantile.quantile}  {quantile.count:>4}"
+            f"  {quantile.predicted_mean:+8.3%}"
+            f"  {quantile.actual_mean:+8.3%}  {quantile.win_rate:6.1%}"
         )
     add(f"  単調か: {'はい' if quantile_is_monotonic(result.quantiles) else 'いいえ'}")
     add("")
@@ -173,10 +195,10 @@ def render(result: Evaluation) -> str:
     add(f"  Brier    {_num(probability.brier)}   Log loss {_num(probability.log_loss)}")
     add(f"  実際の上昇率（全体） {probability.base_rate:.2%}")
     add("  確率帯        件数   平均予測確率   実際の上昇率")
-    for row in probability.bins:
+    for band in probability.bins:
         add(
-            f"  {row.low:5.0%}-{row.high:5.0%}  {row.count:>5}   "
-            f"{row.mean_predicted:11.1%}   {row.actual_up_rate:11.1%}"
+            f"  {band.low:5.0%}-{band.high:5.0%}  {band.count:>5}   "
+            f"{band.mean_predicted:11.1%}   {band.actual_up_rate:11.1%}"
         )
     add("")
     add(f"■ Trading Layer（取引 {trading.trades}件 / {trading.sessions}営業日）")
@@ -212,6 +234,35 @@ def as_dict(result: Evaluation) -> dict[str, Any]:
     }
 
 
+def render_rules(rules: Sequence[RuleResult]) -> str:
+    """The trading-layer comparison, control first.
+
+    This table is computed on the same sessions it reports, so picking its best
+    row is an in-sample choice. It is a diagnostic, not a recommendation.
+    """
+
+    lines = ["■ Trading Layer: 選別ルールの比較（コスト控除後・営業日単位）"]
+    lines.append(
+        "  ルール                              建玉  1建玉平均   日次平均"
+        "   日次t   累積      勝ち日/負け日  最大DD"
+    )
+    for rule in rules:
+        lines.append(
+            f"  {rule.name:<34} {rule.positions:>4}"
+            f"  {_pct(rule.mean_position_return, 3):>9}"
+            f"  {_pct(rule.daily_mean_return, 3):>9}"
+            f"  {_num(rule.daily_t, 2):>6}"
+            f"  {rule.total_return:+8.2%}"
+            f"  {rule.winning_sessions:>5}/{rule.losing_sessions:<5}"
+            f"  {rule.max_drawdown:+7.2%}"
+        )
+    lines.append(
+        "  ※ 同じ営業日の上で計算した表です。最良の行を選ぶのは in-sample な選択で、"
+        "推奨ではありません。"
+    )
+    return "\n".join(lines)
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     source = parser.add_mutually_exclusive_group(required=True)
@@ -219,6 +270,15 @@ def _parser() -> argparse.ArgumentParser:
     source.add_argument("--artifact", type=Path, help="walk-forward の出力JSON")
     parser.add_argument("--label", default=None)
     parser.add_argument("--json", action="store_true", help="JSONで出力")
+    parser.add_argument(
+        "--rules", action="store_true", help="選別ルールの比較表も出す"
+    )
+    parser.add_argument(
+        "--cost",
+        type=float,
+        default=None,
+        help="1建玉あたりの往復コスト。既定は config/trading.yaml から算出。",
+    )
     parser.add_argument("--output", type=Path, default=None)
     return parser
 
@@ -235,6 +295,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("採点できる予測がありません。")
         return 1
     result = evaluate(predictions, label=label)
+    cost = args.cost if args.cost is not None else _round_trip_cost()
     if args.json or args.output:
         payload = json.dumps(as_dict(result), ensure_ascii=False, indent=2)
         if args.output:
@@ -243,6 +304,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(payload)
             return 0
     print(render(result))
+    if args.rules:
+        print()
+        print(render_rules(standard_rules(predictions, cost_per_position=cost)))
     return 0
 
 
