@@ -1,0 +1,71 @@
+=== Indicator数 / Feature数 / 1系列あたりの変換数 ===
+                        Indicator   Feature       1系列あたり
+  本番                           22       236        10.7本
+  研究 production                28        74         2.6本
+  研究 production_compact         11        38         3.5本
+
+  --- 本番 (7203) の変換 ---
+    log_return_1d                22系列に適用
+    ma20_deviation               22系列に適用
+    return_1d                    22系列に適用
+    return_20d                   22系列に適用
+    return_2d                    22系列に適用
+    return_3d                    22系列に適用
+    return_5d                    22系列に適用
+    volatility_20d               22系列に適用
+    volatility_5d                22系列に適用
+    open_close_return            18系列に適用
+    high_low_range               16系列に適用
+    level                        4系列に適用
+
+  --- 研究 production (7203) の変換 ---
+    return_1d                    28系列に適用
+    return_5d                    27系列に適用
+    atr14_ratio                  1系列に適用
+    high_low_range               1系列に適用
+    ma20_deviation               1系列に適用
+    ma5_deviation                1系列に適用
+    ma60_deviation               1系列に適用
+    open_close_return            1系列に適用
+    overnight_gap                1系列に適用
+    return_20d                   1系列に適用
+    return_2d                    1系列に適用
+    return_3d                    1系列に適用
+    rsi14                        1系列に適用
+    us_10y_yield_change_1d       1系列に適用
+    us_10y_yield_change_5d       1系列に適用
+    us_30y_yield_change_1d       1系列に適用
+    us_30y_yield_change_5d       1系列に適用
+    volatility_20d               1系列に適用
+    volatility_5d                1系列に適用
+    volume_change_1d             1系列に適用
+    volume_ratio_20d             1系列に適用
+
+  --- 研究 production_compact (7203) の変換 ---
+    return_1d                    11系列に適用
+    return_5d                    10系列に適用
+    atr14_ratio                  1系列に適用
+    high_low_range               1系列に適用
+    ma20_deviation               1系列に適用
+    ma5_deviation                1系列に適用
+    ma60_deviation               1系列に適用
+    open_close_return            1系列に適用
+    overnight_gap                1系列に適用
+    return_20d                   1系列に適用
+    return_2d                    1系列に適用
+    return_3d                    1系列に適用
+    rsi14                        1系列に適用
+    us_10y_yield_change_1d       1系列に適用
+    us_10y_yield_change_5d       1系列に適用
+    volatility_20d               1系列に適用
+    volatility_5d                1系列に適用
+    volume_change_1d             1系列に適用
+    volume_ratio_20d             1系列に適用
+
+  --- 本番 で重複している変換の組 ---
+    return_1d と log_return_1d: 日次では log(1+x) ≈ x で、ほぼ同一
+    return_2d と return_3d: 重なる期間が2/3。独立な情報はごく一部
+    return_3d と return_5d: 重なる期間が3/5
+    volatility_5d と volatility_20d: 短い方が長い方に含まれる
+
+  Indicatorを減らす話とTransformationを減らす話は別です。1系列あたりの本数が大きいなら、削るべきは変換の側です。
