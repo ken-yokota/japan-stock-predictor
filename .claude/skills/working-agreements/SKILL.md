@@ -179,6 +179,40 @@ assemble the picture themselves.
 See `email-status-reports` for the send path, the subject-line conventions, the
 certificate trap, and the rule that silence is not success.
 
+## 2-1. Every work item runs all six stages
+
+The operator asked for this directly. **Every** piece of work, not only the ones
+that look like they need it, goes through:
+
+```
+調査 → 仮説 → 設計 → 実装 → テスト → 修正
+```
+
+Name the stage in the progress mail and in the final write-up, so a skipped
+stage is visible rather than silent.
+
+| 段階 | 何をするか | 飛ばすとどうなるか |
+|---|---|---|
+| 調査 | 症状ではなく現状を測る。コード・DB・履歴・実測 | 直感で当たりを付けて外す |
+| 仮説 | **反証可能な形で先に書く。** 「何を測れば否定できるか」まで | 実装が仮説になり、結果が出た後で理屈が付く |
+| 設計 | 変更範囲・計測方法・比較対象（対照）を決める | 対照のない測定になり、良し悪しが判定できない |
+| 実装 | 決めた範囲で作る | — |
+| テスト | 手計算できるケースと、壊れ方の再現 | 通ることだけ確認して、壊れ方を確認しない |
+| 修正 | テストが見つけたものと、それへの対処 | 「テストは通りました」で終わる |
+
+`仮説` は実装の**前**に書く。「特徴量が多すぎる」は、どの測定で否定できるか
+を書いて初めて仮説になる。
+
+`修正` は独立した段階として報告する。テストが何を見つけ、何を直したか。
+「テストが通った」はその代わりにならない。
+
+この取り決めが要る理由は、ここで実際に価値のあった発見が全部 `調査` と `仮説`
+から出ているため。確率ゲートが最良の取引を弾いていたこと、ダッシュボード起動
+スクリプトが途中で切れて commit されていたこと、UTC/JST の日付比較が毎日誤報を
+出していたこと — いずれも `実装` に直行しては出てこない。逆に `テスト`/`修正`
+を飛ばした結果が、PostgreSQLが受け付けてSQLiteが拒否するマイグレーションを
+CI緑のまま出したこと。
+
 ## 3. Enumerate the failure modes, then exercise them
 
 Before calling anything ready, list every way it can fail, decide what each

@@ -318,3 +318,57 @@ def test_the_report_carries_the_commit_section(tmp_path: Path) -> None:
     report = build_report(Snapshot(), file, 30)
 
     assert any("直近の作業（コミット）" in item for item in report["sections"])
+
+
+# --------------------------------------------------------------------------
+# Every work item runs all six stages, and a skipped one must be visible
+
+
+def test_the_stage_cell_shows_the_whole_sequence_not_just_the_current_one() -> None:
+    """"実装" alone says nothing about whether 調査 and 仮説 happened."""
+
+    from scripts.send_progress_report import STAGES, _stage_cell
+
+    html = _stage_cell("実装")
+
+    for stage in STAGES:
+        assert stage in html
+
+
+def test_the_current_stage_is_marked_and_the_finished_ones_are_behind_it() -> None:
+    from notifications.report_layout import UP
+    from scripts.send_progress_report import _stage_cell
+
+    html = _stage_cell("テスト")
+    before, _, after = html.partition("テスト")
+
+    assert UP in before  # 調査..実装 are drawn as passed
+    assert "#cbd5e1" in after  # 修正 is still ahead
+
+
+def test_a_missing_stage_renders_as_a_dash_rather_than_a_guess() -> None:
+    from scripts.send_progress_report import _stage_cell
+
+    assert "—" in _stage_cell("")
+
+
+def test_an_unknown_stage_is_shown_verbatim_not_dropped() -> None:
+    from scripts.send_progress_report import _stage_cell
+
+    assert "待機中" in _stage_cell("待機中")
+
+
+def test_the_task_table_carries_the_stage_column(tmp_path: Path) -> None:
+    from scripts.send_progress_report import _task_section
+
+    entry = _task("2/9", "now")
+    entry["stage"] = "テスト"
+    file = tmp_path / "tasks.json"
+    file.write_text(
+        json.dumps({"tasks": [entry]}, ensure_ascii=False), encoding="utf-8"
+    )
+
+    html = _task_section(file, 30)
+
+    assert "段階" in html
+    assert "テスト" in html

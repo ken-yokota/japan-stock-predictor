@@ -36,6 +36,8 @@ from data.env import EnvironmentSettings
 from notifications.report_layout import (
     BAND,
     GOOD_BG,
+    MUTED,
+    UP,
     badge,
     cell,
     row,
@@ -221,6 +223,39 @@ def collect(environment: EnvironmentSettings) -> Snapshot:
         last_commit=_git("log", "-1", "--format=%h %s") or None,
         errors=tuple(errors),
     )
+
+
+# The six stages every work item runs through. Kept in order so the mail can
+# say which one is current, and so a step that never reached テスト is visible
+# rather than quietly skipped.
+STAGES: tuple[str, ...] = ("調査", "仮説", "設計", "実装", "テスト", "修正")
+
+
+def _stage_cell(stage: str) -> str:
+    """The stage, with the ones already passed shown behind it.
+
+    "実装" alone says nothing about whether 調査 and 仮説 happened. Drawing the
+    whole sequence with the current one marked makes a skipped stage something
+    you can see instead of something you have to ask about.
+    """
+
+    if not stage:
+        return f"<span style='color:{MUTED};font-size:12px'>—</span>"
+    if stage not in STAGES:
+        return f"<span style='font-size:12px'>{stage}</span>"
+    position = STAGES.index(stage)
+    parts = []
+    for index, name in enumerate(STAGES):
+        if index < position:
+            parts.append(f"<span style='color:{UP};font-size:11px'>{name}</span>")
+        elif index == position:
+            parts.append(
+                f"<span style='color:#1d4ed8;font-weight:700;font-size:12px'>"
+                f"{name}</span>"
+            )
+        else:
+            parts.append(f"<span style='color:#cbd5e1;font-size:11px'>{name}</span>")
+    return "<span style='white-space:nowrap'>" + " &rsaquo; ".join(parts) + "</span>"
 
 
 def _recent_commits(limit: int = 8) -> tuple[tuple[str, str, str], ...]:
@@ -471,7 +506,7 @@ def _task_section(path: Path | None, stale_after: int) -> str:
                 [
                     cell(str(item.get("step", "")), align="center"),
                     cell(str(item.get("title", "")), nowrap=False),
-                    cell(str(item.get("estimate", "—")), align="right"),
+                    cell(_stage_cell(str(item.get("stage", ""))), align="center"),
                     cell(_minutes_text(elapsed), align="right", muted=elapsed is None),
                     cell(
                         badge(str(item.get("state", "未着手")), tone),
@@ -487,12 +522,12 @@ def _task_section(path: Path | None, stale_after: int) -> str:
             [
                 ("工程", "center"),
                 ("内容", "left"),
-                ("想定", "right"),
+                ("段階", "center"),
                 ("経過", "right"),
                 ("状態", "center"),
             ],
             rows,
-            min_width=540,
+            min_width=620,
         )
         if rows
         else ""
