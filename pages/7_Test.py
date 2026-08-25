@@ -20,6 +20,7 @@ from typing import Any
 
 import streamlit as st
 
+from dashboard.oos_view import load_evaluations, render_evaluation
 from dashboard.presenters import format_number, format_percent, format_yen
 from dashboard.report_view import render_report
 from dashboard.research_artifacts import (
@@ -126,6 +127,39 @@ def _render_comparison_section() -> None:
     st.divider()
 
 
+def _render_oos_section() -> None:
+    """The three-layer evaluation, one tab per saved run.
+
+    Kept apart from the week-test tabs below because it answers a different
+    question. Those report one window's trading result; this reports whether
+    the predictions carried information at all, and separates that from whether
+    a rule built on them made money -- the two have already disagreed here.
+    """
+
+    evaluations = load_evaluations()
+    st.subheader("OOS 3層評価")
+    if not evaluations:
+        st.info(
+            "PENDING: `docs/oos/` に評価結果がありません。"
+            "`python -m scripts.evaluate_predictions --live "
+            "--output docs/oos/xxx.json` などで生成してください。"
+        )
+        st.divider()
+        return
+    st.caption(
+        "Model（予測が当たっているか）・Selection（その日の銘柄を並べられるか）"
+        "・Probability（確率が確率か）・Trading（ルールを通していくらか）を"
+        "分けて出しています。層ごとに標本の大きさが違うので、"
+        "モデルの採否は最も標本の大きい Model / Selection で判定します。"
+    )
+    for tab, (_, evaluation) in zip(
+        st.tabs([label for label, _ in evaluations]), evaluations, strict=True
+    ):
+        with tab:
+            render_evaluation(evaluation)
+    st.divider()
+
+
 def main() -> None:
     configure_page("テスト", "🧪")
     render_header(
@@ -133,6 +167,7 @@ def main() -> None:
         "過去の教師データで学習したモデルを、直近の期間で検証した結果です。",
     )
 
+    _render_oos_section()
     _render_comparison_section()
 
     windows = labelled_runs(WEEK_TEST_DIRECTORY)

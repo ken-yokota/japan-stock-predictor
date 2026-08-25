@@ -303,6 +303,12 @@ def _parser() -> argparse.ArgumentParser:
     source.add_argument("--live", action="store_true", help="本番DBの確定済み予測")
     source.add_argument("--artifact", type=Path, help="walk-forward の出力JSON")
     parser.add_argument("--label", default=None)
+    parser.add_argument(
+        "--from-date", default=None, help="この日以降の予測だけを採点する (YYYY-MM-DD)"
+    )
+    parser.add_argument(
+        "--to-date", default=None, help="この日以前の予測だけを採点する (YYYY-MM-DD)"
+    )
     parser.add_argument("--json", action="store_true", help="JSONで出力")
     parser.add_argument(
         "--rules", action="store_true", help="選別ルールの比較表も出す"
@@ -328,6 +334,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         predictions = load_artifact(args.artifact)
         label = args.label or f"OOS {args.artifact.name}"
+    if args.from_date:
+        predictions = [p for p in predictions if p.date >= args.from_date]
+    if args.to_date:
+        predictions = [p for p in predictions if p.date <= args.to_date]
     if not predictions:
         print("採点できる予測がありません。")
         return 1
