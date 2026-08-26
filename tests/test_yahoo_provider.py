@@ -315,3 +315,42 @@ def test_last_eod_rejections_resets_between_calls() -> None:
     provider.fetch_eod(_eod_request())
 
     assert provider.last_eod_rejections == ()
+
+
+def test_the_snapshot_window_spans_the_session_boundary() -> None:
+    """A one-day window is the wrong window at the hour the morning run fetches.
+
+    Yahoo counts each symbol's "1d" from its own session start: 23:00 UTC for
+    the FX pairs, 04:00 UTC for the futures and the dollar index. The morning
+    fetch runs at 23:06-23:12 UTC, so a 04:00-based window is the day that
+    already ended and its newest bar is two hours old, while a 23:00-based
+    window is six minutes into existence. Seven series failed the freshness gate
+    on that alone, with fresh bars sitting just outside the window asked for.
+    """
+
+    captured: dict[str, object] = {}
+
+    class _Backend:
+        def history(self, symbol: str, **kwargs: object):
+            captured.update(kwargs)
+            captured["symbol"] = symbol
+            index = pd.to_datetime(["2026-08-26T08:19:00+09:00"])
+            return pd.DataFrame(
+                {"Open": [150.0], "High": [150.5], "Low": [149.5],
+                 "Close": [150.2], "Volume": [0]},
+                index=index,
+            )
+
+    provider = YahooFinanceProvider(backend=_Backend())
+    provider.fetch_snapshot(
+        SnapshotRequest(
+            canonical_symbol="usdjpy",
+            provider_symbol="JPY=X",
+            market="FOREX",
+            market_timezone="Europe/London",
+        )
+    )
+
+    assert captured["period"] == "2d"
+    assert captured["interval"] == "1m"
+    assert captured["prepost"] is True

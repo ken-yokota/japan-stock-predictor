@@ -290,9 +290,18 @@ class YahooFinanceProvider(MarketDataProvider):
 
     def fetch_snapshot(self, request: SnapshotRequest) -> MarketBar:
         symbol = self._safe_symbol(request.provider_symbol)
+        # Two days, not one. Yahoo counts a symbol's "1d" from its own session
+        # start -- 23:00 UTC for the FX pairs, 04:00 UTC for the futures and the
+        # dollar index -- and the morning fetch runs at 23:06-23:12 UTC. At that
+        # moment a 04:00-based window is the day that already ended, so the
+        # newest bar it can offer is two hours old, and a 23:00-based window has
+        # existed for six minutes. Every futures and FX snapshot failed the
+        # freshness gate on that alone, with fresh bars sitting just outside the
+        # window that was asked for. A two-day window always spans the boundary
+        # and returns the same final bar a seven-day window does.
         frame = self._history(
             symbol,
-            period="1d",
+            period="2d",
             interval="1m",
             auto_adjust=False,
             actions=False,
