@@ -37,6 +37,12 @@ class FreshnessAssessment:
         return self.status is FreshnessStatus.FRESH
 
 
+def _minutes(value: timedelta) -> str:
+    """A duration a person can compare against a configured limit."""
+
+    return f"{value.total_seconds() / 60:.1f}分"
+
+
 def assess_snapshot(
     row: MarketBar | None,
     *,
@@ -86,17 +92,24 @@ def assess_snapshot(
         )
     age = cutoff_at - row.market_timestamp
     if age > max_age:
+        # The measured age, not just the limit it broke. Seven series were
+        # failing this gate every morning and the record said only "exceeds
+        # 0:10:00", which cannot tell you whether the limit is slightly tight
+        # or the data is hours old -- and so cannot tell you what to change.
         return FreshnessAssessment(
             FreshnessStatus.STALE,
             cutoff_at,
             row.market_timestamp,
             age,
-            f"snapshot age exceeds {max_age}",
+            f"snapshot age {_minutes(age)} exceeds {_minutes(max_age)}"
+            f" (bar {row.market_timestamp.isoformat()}, cutoff"
+            f" {cutoff_at.isoformat()})",
         )
     return FreshnessAssessment(
         FreshnessStatus.FRESH,
         cutoff_at,
         row.market_timestamp,
         age,
-        "snapshot passed PIT and freshness gates",
+        f"snapshot passed PIT and freshness gates (age {_minutes(age)}"
+        f" within {_minutes(max_age)})",
     )

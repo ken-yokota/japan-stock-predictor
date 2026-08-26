@@ -229,13 +229,29 @@ def _store(
     )
 
 
+# Which exchange calendar defines "the sessions this series should have".
+#
+# Everything that was not JP used to be checked against NYSE, and FX is not a
+# US equity: the global FX market is shut on Easter Monday while NYSE trades.
+# One such day inside the required window put usdjpy, eurjpy and audjpy at
+# 377/378 coverage against a gate that demands 1.0, so all three were rejected
+# on every run and never stored a single row. Measured over two years of Yahoo
+# bars, XLON leaves no gap in any of the three, which is also the timezone the
+# FX sources are configured with.
+_MARKET_CALENDARS: dict[str, str] = {
+    "JP": "XTKS",
+    "FOREX": "XLON",
+}
+_DEFAULT_CALENDAR = "XNYS"
+
+
 def _sessions(
     start_date: date,
     end_date: date,
     *,
     market: str,
 ) -> tuple[date, ...]:
-    calendar_name = "XTKS" if market == "JP" else "XNYS"
+    calendar_name = _MARKET_CALENDARS.get(market, _DEFAULT_CALENDAR)
     try:
         calendar = xcals.get_calendar(calendar_name)
         sessions = calendar.sessions_in_range(start_date, end_date)

@@ -622,3 +622,94 @@ def test_treasury_overlap_emits_new_one_three_and_five_observation_changes(
     }
     assert target_changes == expected_changes
     assert report.status == "SUCCESS"
+
+
+# --------------------------------------------------------------------------
+# FX is not a US equity, and was being checked against a US equity calendar
+
+
+def test_forex_uses_the_london_calendar_and_equities_still_use_new_york() -> None:
+    """Easter Monday is the day that cost usdjpy every row it never stored.
+
+    NYSE trades that day and the global FX market does not, so one session
+    inside the required window put coverage at 377/378 against a gate that
+    demands 1.0, and all three FX pairs were rejected on every single run.
+    """
+
+    from data.fetch import _sessions
+
+    easter_monday = date(2025, 4, 21)
+    window = (date(2025, 4, 14), date(2025, 4, 25))
+
+    equities = _sessions(*window, market="US_INDEX")
+    forex = _sessions(*window, market="FOREX")
+    tokyo = _sessions(*window, market="JP")
+
+    assert easter_monday in equities  # NYSE trades it
+    assert easter_monday not in forex  # the reason usdjpy stored nothing
+    assert easter_monday in tokyo  # Japan does not observe Easter
+
+
+def test_each_market_keeps_its_own_easter() -> None:
+    """Good Friday separates the three calendars the other way round.
+
+    Tokyo trades it, New York and the FX market do not. Getting this backwards
+    would swap one wrong required-session set for another.
+    """
+
+    from data.fetch import _sessions
+
+    good_friday = date(2025, 4, 18)
+    window = (date(2025, 4, 14), date(2025, 4, 25))
+
+    assert good_friday not in _sessions(*window, market="US_INDEX")
+    assert good_friday not in _sessions(*window, market="FOREX")
+    assert good_friday in _sessions(*window, market="JP")
+
+
+def test_an_unknown_market_still_falls_back_to_new_york() -> None:
+    from data.fetch import _sessions
+
+    window = (date(2025, 4, 14), date(2025, 4, 25))
+
+    assert _sessions(*window, market="COMMODITY") == _sessions(
+        *window, market="US_INDEX"
+    )
+
+
+def test_a_stale_snapshot_records_how_stale_it_was(make_bar) -> None:
+    """"exceeds 0:10:00" cannot tell you whether to move the limit or the fetch.
+
+    Seven series failed this gate every morning and the only record kept was
+    the limit they broke, so nothing said whether they were a minute late or
+    three hours late.
+    """
+
+    from datetime import timedelta
+
+    from data.schemas import DataQuality
+    from data.snapshot import assess_snapshot
+
+    cutoff = datetime(2026, 8, 26, 23, 20, tzinfo=UTC)
+    stale_at = cutoff - timedelta(minutes=47)
+    bar = make_bar(
+        canonical_symbol="usdjpy",
+        timestamp=stale_at,
+        available_timestamp=stale_at,
+        first_observed_at=stale_at,
+        retrieved_at=stale_at,
+        data_quality=DataQuality.DELAYED,
+        is_delayed=True,
+    )
+
+    assessment = assess_snapshot(
+        bar,
+        cutoff_at=cutoff,
+        max_age=timedelta(minutes=10),
+        acceptable_qualities={DataQuality.DELAYED},
+    )
+
+    assert assessment.status.name == "STALE"
+    assert "47.0分" in assessment.reason
+    assert "10.0分" in assessment.reason
+    assert assessment.age == timedelta(minutes=47)
