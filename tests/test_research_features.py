@@ -156,6 +156,62 @@ def test_every_predictor_reads_only_sessions_before_the_predicted_one(
     )
 
 
+def test_rewriting_the_predicted_session_changes_no_predictor_at_all(
+    offline_download: dict[str, pd.DataFrame],
+) -> None:
+    """The exhaustive version: every column, not the two that were thought of.
+
+    The two tests above name ``overnight_gap`` and one overseas series, which
+    is what a reviewer checks by hand. A predictor added later without the lag
+    passes both of them. So this rewrites the whole OHLCV row of the session
+    being predicted -- and every session after it -- and requires that not one
+    of the fitted columns moves. Only ``intraday_return``, which is the target,
+    is allowed to.
+    """
+
+    stock = _bars(60)
+    offline_download["9101.T"] = stock
+    for spec in feature_sets.PRODUCTION.indicators:
+        offline_download[spec.symbol] = _bars(60, base=50.0, step=0.25)
+
+    def _build(bars: pd.DataFrame):
+        offline_download["9101.T"] = bars
+        indicators = build_indicator_frame(
+            feature_sets.PRODUCTION.indicators,
+            bars["market_date"].iloc[0],
+            date(2026, 12, 31),
+        )
+        return build_stock_frame(
+            "9101",
+            "9101.T",
+            bars["market_date"].iloc[0],
+            date(2026, 12, 31),
+            feature_set=feature_sets.PRODUCTION,
+            indicators=indicators,
+        )
+
+    position = 50
+    before = _build(stock)
+
+    tampered = stock.copy()
+    for column in ("open", "high", "low", "close", "volume"):
+        tampered.loc[position:, column] = tampered.loc[position:, column] * -7.0
+    after = _build(tampered)
+
+    assert before.feature_names == after.feature_names
+    assert before.feature_names
+    for name in before.feature_names:
+        assert before.frame[name].iloc[position] == pytest.approx(
+            after.frame[name].iloc[position], nan_ok=True
+        ), f"{name} moved when the predicted session was rewritten"
+
+    # And the target must move, or the perturbation did nothing and the test
+    # above is vacuous.
+    assert before.frame["intraday_return"].iloc[position] != pytest.approx(
+        after.frame["intraday_return"].iloc[position]
+    )
+
+
 def test_only_the_target_uses_the_predicted_session(
     offline_download: dict[str, pd.DataFrame],
 ) -> None:
