@@ -26,6 +26,7 @@ from pathlib import Path
 
 from research.evaluation import Prediction, from_research_rows
 from research.universe import (
+    BUY_RULE_POOLS,
     BUY_RULES,
     UNIVERSE_RULES,
     AdaptiveBuy,
@@ -34,6 +35,7 @@ from research.universe import (
     backtest,
     backtest_adaptive,
     buy_production,
+    random_filter_control,
     round_trip_cost,
 )
 
@@ -99,6 +101,44 @@ def study(predictions: Sequence[Prediction]) -> list[str]:
         lines.append(
             _row(backtest(predictions, name=name, universe=all_tickers, buy=rule))
         )
+
+    # The control every rule above needs. With a 0.20% round trip, any rule
+    # that trades less improves the record on its own, so "beats trading
+    # everything" is not evidence. A coin discarding the same number of
+    # positions is.
+    lines += [
+        "",
+        "【無作為フィルタとの比較】同じ建玉数だけ無作為に残したら累積は何%になるか",
+        "  " + _pad("", 34) + _pad("建玉", 7, right=True)
+        + _pad("実績", 11, right=True) + _pad("無作為5%", 12, right=True)
+        + _pad("無作為中央", 13, right=True) + _pad("無作為95%", 12, right=True),
+        "  " + "-" * 88,
+    ]
+    for name, rule in BUY_RULES.items():
+        result = backtest(predictions, name=name, universe=all_tickers, buy=rule)
+        pool_rule = BUY_RULE_POOLS.get(name)
+        if pool_rule is None:
+            # No probability filter, so there is nothing for a coin to replace.
+            cells = _pad("（確率を使わないルール）", 37, right=True)
+        else:
+            pool = [row for row in predictions if pool_rule(row)]
+            low, mid, high = random_filter_control(pool, keep=result.positions)
+            cells = (
+                _pad(f"{low * 100:+.2f}%", 12, right=True)
+                + _pad(f"{mid * 100:+.2f}%", 13, right=True)
+                + _pad(f"{high * 100:+.2f}%", 12, right=True)
+            )
+        lines.append(
+            "  "
+            + _pad(name, 34)
+            + _pad(f"{result.positions}", 7, right=True)
+            + _pad(f"{result.total_return * 100:+.2f}%", 11, right=True)
+            + cells
+        )
+    lines.append(
+        "  実績が無作為の95%点を超えていなければ、"
+        "そのルールは「取引を減らした」以上のことをしていません。"
+    )
 
     lines += _header("【閾値の選び方】同じ候補、選ぶ時点だけが違う")
     best = max(

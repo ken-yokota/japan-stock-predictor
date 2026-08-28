@@ -31,7 +31,7 @@ from typing import Any
 
 import numpy as np
 
-from research.universe import round_trip_cost
+from research.universe import random_filter_control, round_trip_cost
 
 # The pairs the runner fits. Named here so a missing level is an error rather
 # than a silently narrower report.
@@ -260,6 +260,94 @@ def probability_sources(
     return out
 
 
+@dataclass(frozen=True, slots=True)
+class Swap:
+    """The production forecast, with only the probability source changed."""
+
+    name: str
+    positions: int
+    sessions: int
+    mean_net: float
+    total_net: float
+    win_rate: float
+
+
+def swap_probability(
+    regression_rows: Sequence[dict[str, Any]],
+    quantile_rows: Sequence[dict[str, Any]],
+    *,
+    return_threshold: float = 0.003,
+    probability_threshold: float = 0.60,
+) -> list[Swap]:
+    """Change one thing: where P(up) comes from.
+
+    The quantile arm beats the logistic on Brier, log loss and accuracy, but it
+    also produces a different point forecast, so its trading result cannot be
+    attributed to the probability alone. This holds the production regression
+    fixed and swaps only the number the buy rule thresholds on.
+
+    Both inputs are already out of sample and are matched on (date, ticker), so
+    nothing here sees a session before it happens. It is still an arm chosen
+    after looking at the others, which makes it a discovery and not a rule.
+    """
+
+    cost = round_trip_cost()
+    quantile_probability = {
+        (str(row["date"]), str(row["ticker"])): row.get("probability_up")
+        for row in quantile_rows
+    }
+
+    def _score_rule(name: str, taken: Sequence[dict[str, Any]]) -> Swap:
+        if not taken:
+            return Swap(name, 0, 0, 0.0, 0.0, 0.0)
+        net = np.array(
+            [float(row["actual_return"]) - cost for row in taken], dtype=float
+        )
+        by_day: dict[str, list[float]] = {}
+        for row, value in zip(taken, net, strict=True):
+            by_day.setdefault(str(row["date"]), []).append(float(value))
+        return Swap(
+            name=name,
+            positions=len(taken),
+            sessions=len(by_day),
+            mean_net=float(net.mean()),
+            total_net=float(sum(np.mean(v) for v in by_day.values())),
+            win_rate=float((net > 0).mean()),
+        )
+
+    usable = [
+        row
+        for row in regression_rows
+        if row.get("actual_return") is not None
+        and (str(row["date"]), str(row["ticker"])) in quantile_probability
+    ]
+    above = [
+        row for row in usable if float(row["predicted_return"]) > return_threshold
+    ]
+    return [
+        _score_rule("対照 予測>0.3% のみ（確率を使わない）", above),
+        _score_rule(
+            f"現行 ロジスティック P(up)>={probability_threshold:.2f}",
+            [
+                row
+                for row in above
+                if float(row.get("probability_up") or 0.0) >= probability_threshold
+            ],
+        ),
+        _score_rule(
+            f"差し替え 分位点由来 P(up)>={probability_threshold:.2f}",
+            [
+                row
+                for row in above
+                if float(
+                    quantile_probability[(str(row["date"]), str(row["ticker"]))] or 0.0
+                )
+                >= probability_threshold
+            ],
+        ),
+    ]
+
+
 def report(
     quantile_rows: Sequence[dict[str, Any]],
     logistic_rows: Sequence[dict[str, Any]] | None = None,
@@ -306,6 +394,56 @@ def report(
                 f"  {source.name:<24}{source.count:>8}{source.brier:>9.4f}"
                 f"{source.log_loss:>10.4f}{source.accuracy_at_half:>8.2%}"
             )
+        lines += [
+            "",
+            "【P(up)だけ差し替えたら】回帰は本番のまま、閾値を通す数字だけ変える",
+            "",
+            f"  {'条件':<38}{'建玉':>7}{'取引日':>7}{'平均純':>9}"
+            f"{'累積純':>10}{'勝率':>8}",
+            "  " + "-" * 80,
+        ]
+        for swap in swap_probability(logistic_rows, quantile_rows):
+            lines.append(
+                f"  {swap.name:<38}{swap.positions:>7}{swap.sessions:>7}"
+                f"{swap.mean_net * 100:>+9.4f}%{swap.total_net * 100:>+10.2f}%"
+                f"{swap.win_rate:>8.1%}"
+            )
+        lines.append(
+            "  これは他のアームを見たあとに作った組み合わせです。"
+            "発見であって、事前に決めたルールではありません。"
+        )
+
+        # The control that matters: with a 0.20% round trip, any filter that
+        # trades less looks better. The question is whether it beats a coin
+        # that discards the same number of positions.
+        swaps = swap_probability(logistic_rows, quantile_rows)
+        candidates = [
+            row
+            for row in logistic_rows
+            if row.get("actual_return") is not None
+            and float(row.get("predicted_return") or 0.0) > 0.003
+        ]
+        lines += [
+            "",
+            "【無作為フィルタとの比較】同じ件数だけ無作為に残したら何%になるか",
+            "",
+            f"  {'条件':<38}{'実績':>10}{'無作為5%':>11}"
+            f"{'無作為中央':>12}{'無作為95%':>11}",
+            "  " + "-" * 82,
+        ]
+        from research.evaluation import from_research_rows
+
+        pool = from_research_rows(candidates)
+        for swap in swaps[1:]:
+            low, mid, high = random_filter_control(pool, keep=swap.positions)
+            lines.append(
+                f"  {swap.name:<38}{swap.total_net * 100:>+10.2f}%"
+                f"{low * 100:>+11.2f}%{mid * 100:>+12.2f}%{high * 100:>+11.2f}%"
+            )
+        lines.append(
+            "  実績が無作為の95%点を超えていなければ、"
+            "そのフィルタは「取引を減らした」以上のことをしていません。"
+        )
     return lines
 
 
@@ -313,8 +451,10 @@ __all__ = [
     "Coverage",
     "ProbabilitySource",
     "RuleResult",
+    "Swap",
     "buy_rules",
     "coverage",
     "probability_sources",
     "report",
+    "swap_probability",
 ]

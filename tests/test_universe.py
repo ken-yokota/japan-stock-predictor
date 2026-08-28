@@ -340,3 +340,62 @@ def test_an_empty_tally_answers_zero_rather_than_dividing_by_nothing() -> None:
     assert record.predictions == 0
     assert record.accuracy == 0.0
     assert record.breakeven == 1.0
+
+
+# --------------------------------------------------------------------------
+# Trading less is not a finding
+
+
+def test_a_coin_keeping_the_same_number_is_the_control() -> None:
+    """With a 0.20% round trip, any rule that trades less improves the record.
+
+    "Beats trading everything" is therefore not evidence about a rule. The
+    control has to keep the same number of positions and choose them without
+    skill, and it has to come back as a band, because one draw of 130 from
+    1,141 is itself noisy.
+    """
+
+    from research.universe import random_filter_control
+
+    rows = _series("A", 80, correct=True) + _series("B", 80, correct=False)
+
+    low, mid, high = random_filter_control(rows, keep=40, samples=300)
+
+    assert low <= mid <= high
+    assert low < high
+
+
+def test_asking_to_keep_more_than_exists_returns_no_band() -> None:
+    from research.universe import random_filter_control
+
+    low, mid, high = random_filter_control(_series("A", 10, correct=True), keep=99)
+
+    assert low != low and mid != mid and high != high  # nan
+
+
+def test_the_control_pays_the_same_cost_the_rule_pays() -> None:
+    """A free control would make every costed rule look bad by construction."""
+
+    from research.universe import random_filter_control, round_trip_cost
+
+    rows = _series("A", 60, correct=True)
+
+    costed = random_filter_control(rows, keep=20, samples=200)
+    free = random_filter_control(rows, keep=20, samples=200, cost_per_position=0.0)
+
+    assert free[1] > costed[1]
+    assert round_trip_cost() > 0
+
+
+def test_every_buy_rule_names_the_pool_its_control_draws_from() -> None:
+    """A control drawn from the wrong set measures the wrong thing.
+
+    The probability rules all share a regression threshold; drawing their
+    control from every prediction would credit the regression's work to the
+    probability filter.
+    """
+
+    from research.universe import BUY_RULE_POOLS, BUY_RULES
+
+    assert set(BUY_RULE_POOLS) == set(BUY_RULES)
+    assert BUY_RULE_POOLS["B 回帰のみ(予測>0.3%)"] is None

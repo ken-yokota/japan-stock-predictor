@@ -247,6 +247,51 @@ def buy_agreement() -> BuyRule:
     return rule
 
 
+RANDOM_CONTROL_SAMPLES = 2000
+RANDOM_CONTROL_STATE = 7
+
+
+def random_filter_control(
+    candidates: Sequence[Prediction],
+    *,
+    keep: int,
+    samples: int = RANDOM_CONTROL_SAMPLES,
+    cost_per_position: float | None = None,
+) -> tuple[float, float, float]:
+    """What a filter with no skill, keeping the same number, would have returned.
+
+    Every rule in this module trades less than the control, and with a 0.20%
+    round trip that alone improves the record. So "beats trading everything" is
+    not evidence about the rule. The question is whether it beats a coin that
+    discards the same number of positions, and the answer has to come with a
+    band rather than a point, because one draw of 130 from 1,141 is itself
+    noisy.
+
+    Returns the 5th, 50th and 95th percentiles of the cumulative return, on the
+    same equally-weighted-days convention the backtests use.
+    """
+
+    cost = round_trip_cost() if cost_per_position is None else cost_per_position
+    rows = list(candidates)
+    if not rows or keep <= 0 or keep > len(rows):
+        return (float("nan"), float("nan"), float("nan"))
+    rng = np.random.default_rng(RANDOM_CONTROL_STATE)
+    dates = np.array([row.date for row in rows])
+    net = np.array([row.actual_return - cost for row in rows], dtype=float)
+    totals = np.empty(samples, dtype=float)
+    for index in range(samples):
+        drawn = rng.choice(len(rows), size=keep, replace=False)
+        by_day: dict[str, list[float]] = {}
+        for position in drawn:
+            by_day.setdefault(str(dates[position]), []).append(float(net[position]))
+        totals[index] = float(sum(np.mean(values) for values in by_day.values()))
+    return (
+        float(np.percentile(totals, 5)),
+        float(np.percentile(totals, 50)),
+        float(np.percentile(totals, 95)),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class BacktestResult:
     """One (universe rule, buy rule) pair, scored at session level."""
@@ -346,6 +391,25 @@ UNIVERSE_RULES: dict[str, UniverseRule] = {
     "C 過去z>=1.5": z_at_least(1.5),
     "D 過去z>=2.0": z_at_least(2.0),
     "E 過去上位5銘柄": top_by_accuracy(5),
+}
+
+def _always(_row: Prediction) -> bool:
+    return True
+
+
+# What each rule could have chosen from, once its *regression* condition is
+# granted. The random control draws from this, so it measures the probability
+# filter alone rather than re-measuring the regression threshold that every
+# variant shares. A rule with no probability filter has no pool distinct from
+# itself and is marked None.
+BUY_RULE_POOLS: dict[str, BuyRule | None] = {
+    "A 現行(予測>0.3% かつ 確率>=0.60)": buy_regression_only(),
+    "B 回帰のみ(予測>0.3%)": None,
+    "C 確率のみ(確率>=0.60)": _always,
+    "D 一致(予測>0 かつ 確率>0.5)": buy_regression_only(0.0),
+    "E 現行だが確率>=0.50": buy_regression_only(),
+    "F 現行だが確率>=0.55": buy_regression_only(),
+    "G 現行だが確率>=0.65": buy_regression_only(),
 }
 
 BUY_RULES: dict[str, BuyRule] = {
