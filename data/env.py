@@ -86,6 +86,16 @@ class EnvironmentSettings(BaseSettings):
         should make.
         """
 
+        # An explicitly exported DATABASE_URL wins. A caller that sets it --
+        # a test harness pointing at a scratch database, a workflow naming its
+        # own environment -- has stated where to look, and silently redirecting
+        # that to the hosted database because a second variable exists in .env
+        # would send test writes to production.
+        import os
+
+        explicit = os.environ.get("DATABASE_URL", "").strip()
+        if explicit:
+            return explicit
         if self.neon_database_url and self.neon_database_url.get_secret_value():
             return self.neon_database_url.get_secret_value()
         return self.require_database_url()

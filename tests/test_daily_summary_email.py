@@ -244,9 +244,16 @@ def test_text_alternative_leads_with_the_failures() -> None:
 def test_missing_database_url_is_a_finding_not_a_crash(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The evening report is more useful arriving incomplete than not arriving."""
+    """The evening report is more useful arriving incomplete than not arriving.
+
+    Both variables have to be cleared. Reporting reads the hosted URL when one
+    is configured, so blanking only DATABASE_URL on a machine that has
+    NEON_DATABASE_URL in its .env would quietly connect to production and this
+    test would pass for the wrong reason.
+    """
 
     monkeypatch.setenv("DATABASE_URL", "")
+    monkeypatch.setenv("NEON_DATABASE_URL", "")
 
     day = collect(date(2026, 8, 24), config_dir=None)  # type: ignore[arg-type]
 

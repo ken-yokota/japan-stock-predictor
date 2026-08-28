@@ -443,3 +443,28 @@ def test_a_database_with_no_published_prediction_is_reported_as_a_failure() -> N
     assert "MB" not in _lede(snapshot)
     assert _lede(snapshot) == "本番状態を取得できませんでした"
     assert "1件もありません" in " ".join(snapshot.errors)
+
+
+def test_an_explicit_database_url_is_not_redirected_to_the_hosted_one() -> None:
+    """A caller that exports DATABASE_URL has said where to look.
+
+    Silently preferring NEON_DATABASE_URL over it would send a test harness
+    pointed at a scratch database straight to production.
+    """
+
+    import os
+    from unittest.mock import patch
+
+    from pydantic import SecretStr
+
+    from data.env import EnvironmentSettings
+
+    settings = EnvironmentSettings(
+        database_url=SecretStr("postgresql://u@localhost:5432/scratch"),
+        neon_database_url=SecretStr("postgresql://u@hosted.example/prod"),
+    )
+
+    with patch.dict(
+        os.environ, {"DATABASE_URL": "postgresql://u@localhost:5432/scratch"}
+    ):
+        assert settings.reporting_database_url().endswith("/scratch")

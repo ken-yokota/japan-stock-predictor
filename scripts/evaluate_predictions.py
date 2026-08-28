@@ -86,9 +86,17 @@ def load_live() -> list[Prediction]:
 
     from database.connection import create_database_engine
 
-    url = os.environ.get("DATABASE_URL", "").strip()
+    # Same reason send_daily_summary reads it this way: DATABASE_URL on the
+    # operator's machine is a schema-only local copy, so scoring "live" against
+    # it silently returns nothing at all.
+    try:
+        from data.env import EnvironmentSettings
+
+        url = EnvironmentSettings().reporting_database_url().strip()
+    except Exception:
+        url = os.environ.get("DATABASE_URL", "").strip()
     if not url:
-        raise SystemExit("DATABASE_URL が未設定です。")
+        raise SystemExit("DATABASE_URL / NEON_DATABASE_URL が未設定です。")
     engine = create_database_engine(url)
     try:
         with engine.connect() as connection:
