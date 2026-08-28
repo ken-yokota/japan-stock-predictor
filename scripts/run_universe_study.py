@@ -38,15 +38,30 @@ from research.universe import (
 )
 
 
+# Japanese characters occupy two columns in a monospace mail, which is where
+# these tables are read. Padding by character count leaves every header adrift
+# from its column, so width is counted the way the terminal counts it.
+def _width(text: str) -> int:
+    from unicodedata import east_asian_width
+
+    return sum(2 if east_asian_width(ch) in "WF" else 1 for ch in text)
+
+
+def _pad(text: str, width: int, *, right: bool = False) -> str:
+    fill = " " * max(0, width - _width(text))
+    return fill + text if right else text + fill
+
+
 def _row(result: BacktestResult) -> str:
     return (
-        f"  {result.name:<34}"
-        f"{result.positions:>6}建玉"
-        f"{result.traded_sessions:>6}日"
-        f"{(result.mean_daily or 0.0) * 100:>+9.4f}%"
-        f"{result.daily_t or 0.0:>+8.2f}"
-        f"{result.total_return * 100:>+9.2f}%"
-        f"{result.max_drawdown * 100:>+9.2f}%"
+        "  "
+        + _pad(result.name, 34)
+        + _pad(f"{result.positions}", 7, right=True)
+        + _pad(f"{result.traded_sessions}", 8, right=True)
+        + _pad(f"{(result.mean_daily or 0.0) * 100:+.4f}%", 11, right=True)
+        + _pad(f"{result.daily_t or 0.0:+.2f}", 8, right=True)
+        + _pad(f"{result.total_return * 100:+.2f}%", 10, right=True)
+        + _pad(f"{result.max_drawdown * 100:+.2f}%", 10, right=True)
     )
 
 
@@ -54,9 +69,15 @@ def _header(title: str) -> list[str]:
     return [
         "",
         title,
-        f"  {'':<34}{'建玉':>8}{'取引日':>7}{'日次平均':>9}"
-        f"{'t値':>8}{'累積':>10}{'最大DD':>10}",
-        "  " + "-" * 76,
+        "  "
+        + _pad("", 34)
+        + _pad("建玉", 7, right=True)
+        + _pad("取引日", 8, right=True)
+        + _pad("日次平均", 11, right=True)
+        + _pad("t値", 8, right=True)
+        + _pad("累積", 10, right=True)
+        + _pad("最大DD", 10, right=True),
+        "  " + "-" * 88,
     ]
 
 

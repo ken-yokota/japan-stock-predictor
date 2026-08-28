@@ -299,3 +299,44 @@ def test_a_window_that_never_moves_admits_nothing() -> None:
     from research.universe import breakeven_accuracy
 
     assert breakeven_accuracy([_row("2026-01-01", "A", 0.0, 0.0)]) == 1.0
+
+
+# --------------------------------------------------------------------------
+# The fast path must agree with the slow one
+
+
+def test_the_running_tally_matches_a_full_rescan() -> None:
+    """The optimisation is only allowed if it changes nothing.
+
+    Rebuilding every record from the whole history on every session made the
+    backtest quadratic and cost 16 minutes of CPU for one study. Accumulating
+    instead is the same arithmetic in a different order, and this is what says
+    so.
+    """
+
+    from research.universe import _record, _Tally
+
+    rows = _series("A", 57, correct=True) + _series("A", 13, correct=False)
+
+    tally = _Tally("A")
+    for row in rows:
+        tally.add(row)
+
+    fast, slow = tally.record(), _record("A", rows)
+
+    assert fast.predictions == slow.predictions
+    assert fast.accuracy == pytest.approx(slow.accuracy)
+    assert fast.z == pytest.approx(slow.z)
+    assert fast.net == pytest.approx(slow.net)
+    assert fast.expectancy == pytest.approx(slow.expectancy)
+    assert fast.mean_abs_move == pytest.approx(slow.mean_abs_move)
+
+
+def test_an_empty_tally_answers_zero_rather_than_dividing_by_nothing() -> None:
+    from research.universe import _Tally
+
+    record = _Tally("A").record()
+
+    assert record.predictions == 0
+    assert record.accuracy == 0.0
+    assert record.breakeven == 1.0

@@ -21,6 +21,7 @@ from __future__ import annotations
 import math
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
+from functools import lru_cache
 
 import numpy as np
 
@@ -31,9 +32,52 @@ from research.evaluation import Prediction, _t_statistic
 # session and any threshold is reading noise.
 MINIMUM_HISTORY = 40
 
-# Direction accuracy at which a round trip breaks even, given the average
-# absolute open-to-close move of 1.327% and a 0.165% cost. Measured, not chosen.
-BREAKEVEN_ACCURACY = 0.562
+
+def round_trip_cost() -> float:
+    """The cost a position actually pays, read from the trading config.
+
+    Hard-coded here first as 0.165%, which was wrong and wrong in the direction
+    that flatters every rule below: the config charges 5 bps commission and 5
+    bps slippage per side, so a round trip is 0.20%. The simulated trades in the
+    walk-forward artifacts come out at 0.2002% of notional, which is the same
+    number arrived at from the other end.
+
+    Read rather than restated, so a change to the config cannot leave a research
+    result quoting a cost the system does not charge.
+    """
+
+    return _cached_round_trip_cost()
+
+
+@lru_cache(maxsize=1)
+def _cached_round_trip_cost() -> float:
+    from data.config import load_app_config
+
+    costs = load_app_config().trading.costs
+    per_side = float(costs.commission_bps_per_side) + float(
+        costs.slippage_bps_per_side
+    )
+    return 2.0 * per_side / 10_000.0
+
+
+def breakeven_accuracy(
+    predictions: Sequence[Prediction], *, cost: float | None = None
+) -> float:
+    """The direction accuracy at which a coin-flip-sized edge covers the cost.
+
+    Derived from the window being scored rather than carried between windows.
+    The first version of this used 1.327%, the average absolute move over the
+    thirteen live sessions, against a 250-session record whose average is
+    1.1893% -- a smaller move makes the same cost a higher hurdle, so the bar
+    was understated at 56.2% when it is 58.4%.
+    """
+
+    moves = [abs(row.actual_return) for row in predictions]
+    average = float(np.mean(moves)) if moves else 0.0
+    if average <= 0.0:
+        return 1.0
+    return 0.5 + (round_trip_cost() if cost is None else cost) / (2.0 * average)
+
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,6 +90,57 @@ class TickerRecord:
     z: float
     net: float
     expectancy: float
+    # This ticker's own average absolute open-to-close move, over its own
+    # history so far. The breakeven bar depends on it, and a quiet name needs a
+    # higher accuracy than a volatile one to cover the same fixed cost.
+    mean_abs_move: float = 0.0
+
+    @property
+    def breakeven(self) -> float:
+        if self.mean_abs_move <= 0.0:
+            return 1.0
+        return 0.5 + round_trip_cost() / (2.0 * self.mean_abs_move)
+
+
+@dataclass(slots=True)
+class _Tally:
+    """One ticker's history, accumulated rather than rescanned.
+
+    Rebuilding every record from the full history on every session made the
+    backtest quadratic: 250 sessions x 22 tickers x a growing list, four passes
+    each. Measured at 16 minutes of CPU for one study. Nothing about the result
+    changes -- the same rows are counted in the same order -- but a rule can now
+    be scored in seconds, which is what makes running the study per arm
+    affordable.
+    """
+
+    ticker: str
+    predictions: int = 0
+    hits: int = 0
+    traded: int = 0
+    net: float = 0.0
+    abs_move_total: float = 0.0
+
+    def add(self, row: Prediction) -> None:
+        self.predictions += 1
+        self.hits += int(row.direction_correct)
+        self.abs_move_total += abs(row.actual_return)
+        if row.signal == "BUY":
+            self.traded += 1
+            self.net += float(row.net_profit_jpy or 0.0)
+
+    def record(self) -> TickerRecord:
+        total = self.predictions
+        deviation = math.sqrt(total * 0.25)
+        return TickerRecord(
+            ticker=self.ticker,
+            predictions=total,
+            accuracy=self.hits / total if total else 0.0,
+            z=(self.hits - total * 0.5) / deviation if deviation else 0.0,
+            net=self.net,
+            expectancy=self.net / self.traded if self.traded else 0.0,
+            mean_abs_move=self.abs_move_total / total if total else 0.0,
+        )
 
 
 def _record(ticker: str, rows: Sequence[Prediction]) -> TickerRecord:
@@ -54,6 +149,7 @@ def _record(ticker: str, rows: Sequence[Prediction]) -> TickerRecord:
     deviation = math.sqrt(total * 0.25)
     traded = [row for row in rows if row.signal == "BUY"]
     net = sum(float(row.net_profit_jpy or 0.0) for row in traded)
+    moves = [abs(row.actual_return) for row in rows]
     return TickerRecord(
         ticker=ticker,
         predictions=total,
@@ -61,6 +157,7 @@ def _record(ticker: str, rows: Sequence[Prediction]) -> TickerRecord:
         z=(hits - total * 0.5) / deviation if deviation else 0.0,
         net=net,
         expectancy=net / len(traded) if traded else 0.0,
+        mean_abs_move=float(np.mean(moves)) if moves else 0.0,
     )
 
 
@@ -78,7 +175,15 @@ def _eligible(records: Sequence[TickerRecord]) -> list[TickerRecord]:
 
 
 def above_breakeven(records: Sequence[TickerRecord]) -> set[str]:
-    return {r.ticker for r in _eligible(records) if r.accuracy > BREAKEVEN_ACCURACY}
+    """Each ticker against its own bar, computed from its own history.
+
+    Not one bar for everyone: the hurdle is cost divided by the size of the move
+    it has to cover, and a name that moves 0.8% a day needs a much better hit
+    rate than one that moves 1.6% to pay the same 0.20%. Using the whole
+    period's average would also read the sessions being traded.
+    """
+
+    return {r.ticker for r in _eligible(records) if r.accuracy > r.breakeven}
 
 
 def z_at_least(threshold: float) -> UniverseRule:
@@ -191,21 +296,22 @@ def backtest(
     name: str,
     universe: UniverseRule,
     buy: BuyRule,
-    cost_per_position: float = 0.00165,
+    cost_per_position: float | None = None,
 ) -> BacktestResult:
     """Walk forward: pick the universe from the past, then trade the present."""
 
+    cost = round_trip_cost() if cost_per_position is None else cost_per_position
     by_date: dict[str, list[Prediction]] = {}
     for row in predictions:
         by_date.setdefault(row.date, []).append(row)
     order = sorted(by_date)
 
-    history: dict[str, list[Prediction]] = {}
+    history: dict[str, _Tally] = {}
     daily: list[float] = []
     positions = 0
     traded_sessions = 0
     for day in order:
-        records = [_record(ticker, rows) for ticker, rows in history.items()]
+        records = [tally.record() for tally in history.values()]
         allowed = universe(records) if records else set()
         chosen = [
             row
@@ -217,13 +323,13 @@ def backtest(
             positions += len(chosen)
             daily.append(
                 float(
-                    np.mean([row.actual_return - cost_per_position for row in chosen])
+                    np.mean([row.actual_return - cost for row in chosen])
                 )
             )
         else:
             daily.append(0.0)
         for row in by_date[day]:
-            history.setdefault(row.ticker, []).append(row)
+            history.setdefault(row.ticker, _Tally(row.ticker)).add(row)
 
     return BacktestResult(
         name=name,
@@ -236,7 +342,7 @@ def backtest(
 
 UNIVERSE_RULES: dict[str, UniverseRule] = {
     "A 全22銘柄": all_tickers,
-    "B 過去的中率>56.2%": above_breakeven,
+    "B 銘柄ごとの損益分岐超え": above_breakeven,
     "C 過去z>=1.5": z_at_least(1.5),
     "D 過去z>=2.0": z_at_least(2.0),
     "E 過去上位5銘柄": top_by_accuracy(5),
@@ -267,7 +373,7 @@ class AdaptiveBuy:
     candidates: tuple[float, ...] = (0.50, 0.55, 0.60, 0.65)
     return_threshold: float = 0.003
     minimum_history: int = MINIMUM_HISTORY
-    cost_per_position: float = 0.00165
+    cost_per_position: float = field(default_factory=round_trip_cost)
 
     def choose(self, history: Sequence[Prediction]) -> float:
         """The threshold with the best realised net return so far."""
@@ -307,14 +413,14 @@ def backtest_adaptive(
         by_date.setdefault(row.date, []).append(row)
     order = sorted(by_date)
 
-    history: dict[str, list[Prediction]] = {}
+    history: dict[str, _Tally] = {}
     flat: list[Prediction] = []
     daily: list[float] = []
     chosen_thresholds: list[float] = []
     positions = 0
     traded_sessions = 0
     for day in order:
-        records = [_record(ticker, rows) for ticker, rows in history.items()]
+        records = [tally.record() for tally in history.values()]
         allowed = universe(records) if records else set()
         threshold = adaptive.choose(flat)
         chosen_thresholds.append(threshold)
@@ -336,7 +442,7 @@ def backtest_adaptive(
         else:
             daily.append(0.0)
         for row in by_date[day]:
-            history.setdefault(row.ticker, []).append(row)
+            history.setdefault(row.ticker, _Tally(row.ticker)).add(row)
             flat.append(row)
 
     return (
