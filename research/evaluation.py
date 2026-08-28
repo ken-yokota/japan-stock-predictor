@@ -129,6 +129,24 @@ class ModelQuality:
 
 
 def model_quality(predictions: Sequence[Prediction]) -> ModelQuality:
+    if not predictions:
+        # numpy will happily average nothing and hand back nan with a warning.
+        # A nan MAE printed in a comparison table reads as a measurement, so
+        # the empty case answers with zeros and a count of zero instead -- the
+        # count is what the caller must look at.
+        return ModelQuality(
+            count=0,
+            mae=0.0,
+            rmse=0.0,
+            pearson=None,
+            spearman=None,
+            bias=0.0,
+            calibration_slope=None,
+            calibration_intercept=None,
+            direction_accuracy=0.0,
+            predicted_mean=0.0,
+            actual_mean=0.0,
+        )
     predicted = np.array([p.predicted_return for p in predictions], dtype=float)
     actual = np.array([p.actual_return for p in predictions], dtype=float)
     error = predicted - actual
