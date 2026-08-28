@@ -376,8 +376,29 @@ def _choose_by_cv(
     return min(scored)[1]
 
 
+class WideQuantileEstimator(QuantileEstimator):
+    """The quantile arm with a grid that can reach past its own ceiling.
+
+    The narrow grid picked its largest alpha, 0.1, in all 5,500 fits. A grid
+    whose top value is chosen every single time has not been chosen from -- the
+    cross-validation was asking for more shrinkage than it could express, and
+    the arm's out-of-sample numbers are those of a fit that was never allowed to
+    be as regularised as its own validation wanted.
+
+    Whether that helps is a separate question and the ridge answered it the
+    other way: widening the ridge grid made direction accuracy worse, not
+    better. So this is a measurement, not an improvement.
+    """
+
+    name = "quantile_wide"
+
+    def __init__(self) -> None:
+        super().__init__(alphas=(0.01, 0.1, 1.0, 10.0, 100.0))
+
+
 ESTIMATORS: dict[str, Any] = {
     "quantile": QuantileEstimator,
+    "quantile_wide": WideQuantileEstimator,
     "tree": TreeEstimator,
     "forest": ForestEstimator,
 }

@@ -227,3 +227,22 @@ def test_a_deeper_tree_fits_its_own_window_better_than_a_shallow_one() -> None:
     deep = TreeEstimator(depths=(4,)).fit_predict(features, target, latest)
 
     assert deep.train_mae <= shallow.train_mae
+
+
+def test_the_wide_quantile_grid_can_reach_past_the_narrow_one() -> None:
+    """The narrow grid picked its largest alpha in all 5,500 fits.
+
+    A top value chosen every single time was not chosen; it was the ceiling.
+    This arm exists to measure what happens when the ceiling is lifted -- not
+    because lifting it is expected to help. The ridge answered that question the
+    other way round.
+    """
+
+    from research.estimators import WideQuantileEstimator
+
+    narrow = QuantileEstimator()
+    wide = WideQuantileEstimator()
+
+    assert max(wide.alphas) > max(narrow.alphas)
+    assert wide.name == "quantile_wide"
+    assert wide.quantiles == narrow.quantiles

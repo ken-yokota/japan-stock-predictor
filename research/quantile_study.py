@@ -69,6 +69,12 @@ class RuleResult:
     win_rate: float
     direction_accuracy: float
 
+    # ``total_net`` is the sum of equally weighted daily returns, the same
+    # convention research/universe.py uses. Summing per position instead makes a
+    # rule that opens 2,724 positions read as -455%, which is not a portfolio
+    # anyone could have held, and it cannot be compared with the universe table
+    # in the same report.
+
 
 def coverage(rows: Sequence[dict[str, Any]]) -> list[Coverage]:
     """Observed against nominal, for each fitted interval."""
@@ -101,6 +107,13 @@ def coverage(rows: Sequence[dict[str, Any]]) -> list[Coverage]:
 
 
 def _score(name: str, taken: Sequence[dict[str, Any]], cost: float) -> RuleResult:
+    """One rule, scored per position and accumulated per session.
+
+    Days the rule sat out contribute nothing rather than being dropped, so a
+    rule that trades twice in 250 sessions cannot post a large cumulative from
+    two good days.
+    """
+
     if not taken:
         return RuleResult(name, 0, 0, 0.0, 0.0, 0.0, 0.0)
     net = np.array(
@@ -110,12 +123,16 @@ def _score(name: str, taken: Sequence[dict[str, Any]], cost: float) -> RuleResul
         (float(row["predicted_return"]) > 0) == (float(row["actual_return"]) > 0)
         for row in taken
     ]
+    by_day: dict[str, list[float]] = {}
+    for row, value in zip(taken, net, strict=True):
+        by_day.setdefault(str(row["date"]), []).append(float(value))
+    daily = [float(np.mean(values)) for values in by_day.values()]
     return RuleResult(
         name=name,
         positions=len(taken),
-        sessions=len({row["date"] for row in taken}),
+        sessions=len(by_day),
         mean_net=float(net.mean()),
-        total_net=float(net.sum()),
+        total_net=float(np.sum(daily)),
         win_rate=float((net > 0).mean()),
         direction_accuracy=float(np.mean(correct)),
     )
