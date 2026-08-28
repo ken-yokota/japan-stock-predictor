@@ -18,6 +18,7 @@ import pandas as pd
 from models.base import InsufficientTrainingData, ModelTrainingConfig
 from models.training import train_ticker_model
 from research.dataset import build_indicator_frame, build_stock_frame
+from research.estimators import Estimator
 from research.feature_selection import FeatureSelector
 from research.feature_sets import FeatureSet
 from research.history import DEFAULT_CACHE_DIR
@@ -40,6 +41,14 @@ class WindowResult:
             for name in names:
                 seen.setdefault(name, None)
         return list(seen)
+
+
+@dataclass(frozen=True, slots=True)
+class _EstimatorPrediction:
+    """The two numbers the loop needs, from an estimator that has no alpha."""
+
+    predicted_return: float
+    probability_up: float
 
 
 def default_history_start(from_date: date, training_window: int) -> date:
@@ -452,6 +461,7 @@ def run_window(
     execution_config: ExecutionConfig,
     cache_dir: Path | None = DEFAULT_CACHE_DIR,
     select_features: FeatureSelector | None = None,
+    estimator: Estimator | None = None,
 ) -> WindowResult:
     """Predict every enabled ticker on every session in ``[from_date, to_date]``.
 
@@ -463,6 +473,10 @@ def run_window(
     else, once per ticker per session. Choosing columns from the whole
     out-of-sample period and then scoring on it would make the score
     meaningless, so the selector never sees a row at or after ``target_date``.
+
+    ``estimator`` replaces the ridge-and-logistic pair with another model over
+    identical rows, features and boundaries, so a difference between two arms
+    is a difference between models rather than between setups.
     """
 
     indicators = build_indicator_frame(
@@ -522,20 +536,36 @@ def run_window(
                 )
                 if chosen:
                     fit_names = tuple(chosen)
-            try:
-                model = train_ticker_model(
-                    stock.ticker,
-                    usable.loc[:, list(fit_names)],
-                    usable["intraday_return"],
-                    feature_names=fit_names,
-                    config=training_config,
-                )
-            except InsufficientTrainingData as error:
-                result.failures.setdefault(stock.ticker, str(error)[:160])
-                continue
-
             current = frame.iloc[[position]]
-            prediction = model.predict_one(current.loc[:, list(fit_names)])
+            if estimator is not None:
+                window = usable.tail(training_config.window_size)
+                try:
+                    answer = estimator.fit_predict(
+                        window.loc[:, list(fit_names)],
+                        window["intraday_return"].to_numpy(dtype=float),
+                        current.loc[:, list(fit_names)],
+                    )
+                except (ValueError, RuntimeError) as error:
+                    result.failures.setdefault(stock.ticker, str(error)[:160])
+                    continue
+                prediction: Any = _EstimatorPrediction(
+                    answer.predicted_return, answer.probability_up
+                )
+                training_sessions = len(window)
+            else:
+                try:
+                    model = train_ticker_model(
+                        stock.ticker,
+                        usable.loc[:, list(fit_names)],
+                        usable["intraday_return"],
+                        feature_names=fit_names,
+                        config=training_config,
+                    )
+                except InsufficientTrainingData as error:
+                    result.failures.setdefault(stock.ticker, str(error)[:160])
+                    continue
+                prediction = model.predict_one(current.loc[:, list(fit_names)])
+                training_sessions = model.training_sessions
             actual_open = float(current.iloc[0]["open"])
             actual_close = float(current.iloc[0]["close"])
             previous_close = current.iloc[0]["prev_close"]
@@ -554,10 +584,10 @@ def run_window(
                     "ticker": stock.ticker,
                     "predicted_return": prediction.predicted_return,
                     "probability_up": prediction.probability_up,
-                    "training_sessions": model.training_sessions,
+                    "training_sessions": training_sessions,
                     "feature_count": len(fit_names),
-                    "ridge_alpha": prediction.ridge_alpha,
-                    "logistic_c": prediction.logistic_c,
+                    "ridge_alpha": getattr(prediction, "ridge_alpha", None),
+                    "logistic_c": getattr(prediction, "logistic_c", None),
                     # Morning view: the Open is unknown, so the reference is the
                     # previous close. Post-open view uses the realized Open.
                     "reference_close": previous_close,
