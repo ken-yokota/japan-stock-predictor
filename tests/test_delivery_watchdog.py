@@ -204,3 +204,60 @@ def test_a_window_starts_before_it_is_due() -> None:
         assert opened == datetime.combine(TODAY, start, JST).astimezone(UTC)
         assert not window_is_due(window, datetime.combine(TODAY, start, JST))
         assert window_is_due(window, datetime.combine(TODAY, due, JST))
+
+
+# --------------------------------------------------------------------------
+# A mail sent before the close is not an after-close report
+
+
+def test_a_summary_sent_before_the_close_does_not_satisfy_the_check() -> None:
+    """2026-08-28: a delayed run sent that date's summary at 04:00 JST.
+
+    It said the result had not settled -- about a session that had not opened --
+    and this check passed it, because the key existed and the status was SENT.
+    The operator got no real result mail and nothing alerted.
+    """
+
+    from datetime import datetime
+
+    from scripts.verify_daily_delivery import JST, summary_check, window_start
+
+    since = window_start("evening", date(2026, 8, 28))
+    too_early = datetime(2026, 8, 28, 4, 0, tzinfo=JST)
+
+    check = summary_check(too_early, since)
+
+    assert check.ok is False
+    assert "引け前" in check.detail
+
+
+def test_a_summary_sent_after_the_close_passes() -> None:
+    from datetime import datetime
+
+    from scripts.verify_daily_delivery import JST, summary_check, window_start
+
+    since = window_start("evening", date(2026, 8, 28))
+    on_time = datetime(2026, 8, 28, 17, 50, tzinfo=JST)
+
+    assert summary_check(on_time, since).ok is True
+
+
+def test_a_missing_summary_is_still_the_first_thing_reported() -> None:
+    from scripts.verify_daily_delivery import summary_check, window_start
+
+    since = window_start("evening", date(2026, 8, 28))
+
+    check = summary_check(None, since)
+
+    assert check.ok is False
+    assert "SENT記録がありません" in check.detail
+
+
+def test_without_a_window_the_check_keeps_its_old_behaviour() -> None:
+    """The timing rule must not fire where no window was supplied."""
+
+    from datetime import datetime
+
+    from scripts.verify_daily_delivery import JST, summary_check
+
+    assert summary_check(datetime(2026, 8, 28, 4, 0, tzinfo=JST)).ok is True

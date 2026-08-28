@@ -148,16 +148,32 @@ def email_check(sent: list[dict[str, object]]) -> Check:
     return Check("email", True, f"sent_at={sent[0]['sent_at']}")
 
 
-def summary_check(sent_at: object | None) -> Check:
+def summary_check(sent_at: object | None, since: datetime | None = None) -> Check:
     """The after-close mail is the one the operator reads every day.
 
-    It has its own delivery record now, keyed on the date rather than on a
+    It has its own delivery record, keyed on the date rather than on a
     prediction set, so a day it never went out is visible here instead of being
     noticed only by its absence from an inbox.
+
+    Checking that a record exists is not enough, and 2026-08-28 is why. A
+    delayed run sent that date's summary at 04:00 JST, before the session had
+    opened, saying the result had not settled -- and satisfied this check,
+    because the key was there and the status was SENT. A mail sent eleven hours
+    before the close is not an after-close report, so the send has to land
+    inside the window it claims to be reporting on.
     """
 
     if sent_at is None:
         return Check("summary", False, "大引け後メールのSENT記録がありません")
+    if since is not None and isinstance(sent_at, datetime):
+        moment = sent_at if sent_at.tzinfo else sent_at.replace(tzinfo=UTC)
+        if moment < since:
+            local = moment.astimezone(JST)
+            return Check(
+                "summary",
+                False,
+                f"大引け後メールが引け前に送られています（{local:%m-%d %H:%M} JST）",
+            )
     return Check("summary", True, f"sent_at={sent_at}")
 
 
@@ -436,7 +452,7 @@ def verify(
                     Check("actuals", settled > 0, f"確定 {settled} 銘柄")
                 )
                 outcome.checks.append(
-                    summary_check(_summary_sent_at(connection, for_date))
+                    summary_check(_summary_sent_at(connection, for_date), since)
                 )
     except SQLAlchemyError:
         # The message can carry the host and the user, so it is never repeated.
