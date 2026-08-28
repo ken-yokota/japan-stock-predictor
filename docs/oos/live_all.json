@@ -1,114 +1,114 @@
 {
-  "label": "Live 全期間 (2026-08-10〜08-24・本番の確定済み予測)",
+  "label": "Live 全期間 (2026-08-10〜08-25・本番の確定済み予測)",
   "model": {
-    "count": 223,
-    "mae": 0.014105268348721974,
-    "rmse": 0.0184574569564891,
-    "pearson": 0.033989626925333555,
-    "spearman": 0.06168876052469273,
-    "bias": -0.00129802972029148,
-    "calibration_slope": 0.06930399756608133,
-    "calibration_intercept": 0.0008167207847620517,
-    "direction_accuracy": 0.5605381165919282,
-    "predicted_mean": -0.0005171494604798207,
-    "actual_mean": 0.0007808802598116592
+    "count": 245,
+    "mae": 0.013718781329379592,
+    "rmse": 0.01803409963858412,
+    "pearson": 0.03578464494642141,
+    "spearman": 0.06489880841030593,
+    "bias": -0.00045412634825306105,
+    "calibration_slope": 0.07258105764217325,
+    "calibration_intercept": 0.0002636389048109152,
+    "direction_accuracy": 0.5591836734693878,
+    "predicted_mean": -0.00020539524775918376,
+    "actual_mean": 0.0002487311004938773
   },
   "quantiles": [
     {
       "quantile": 1,
-      "count": 45,
-      "predicted_mean": -0.011496131125844444,
-      "actual_mean": 0.00012996199931111118,
-      "win_rate": 0.4
+      "count": 49,
+      "predicted_mean": -0.01123334279020408,
+      "actual_mean": -0.00014403058869387762,
+      "win_rate": 0.3877551020408163
     },
     {
       "quantile": 2,
-      "count": 45,
-      "predicted_mean": -0.004459869904466666,
-      "actual_mean": 0.0009445911290444445,
-      "win_rate": 0.4666666666666667
+      "count": 49,
+      "predicted_mean": -0.004178077950632653,
+      "actual_mean": -0.0007032175792448983,
+      "win_rate": 0.4489795918367347
     },
     {
       "quantile": 3,
-      "count": 45,
-      "predicted_mean": -0.0010501110419555556,
-      "actual_mean": 0.0010719170129111118,
-      "win_rate": 0.4666666666666667
+      "count": 49,
+      "predicted_mean": -0.0007187702325306123,
+      "actual_mean": 0.00043113166208163286,
+      "win_rate": 0.46938775510204084
     },
     {
       "quantile": 4,
-      "count": 44,
-      "predicted_mean": 0.003034382132318181,
-      "actual_mean": 3.5733040613635906e-05,
-      "win_rate": 0.5909090909090909
+      "count": 49,
+      "predicted_mean": 0.003620293582795918,
+      "actual_mean": 0.0010493297019387752,
+      "win_rate": 0.5714285714285714
     },
     {
       "quantile": 5,
-      "count": 44,
-      "predicted_mean": 0.01173722499415909,
-      "actual_mean": 0.0017266565407727268,
-      "win_rate": 0.6136363636363636
+      "count": 49,
+      "predicted_mean": 0.011482921151775509,
+      "actual_mean": 0.000610442306387755,
+      "win_rate": 0.5918367346938775
     }
   ],
   "selection": {
-    "sessions": 10,
-    "rank_ic_mean": -0.059161872205350484,
-    "rank_ic_sd": 0.3147180281709055,
-    "rank_ic_t": -0.5944567837312468,
-    "top1_alpha": -0.0033960018424347275,
-    "top3_alpha": -0.0037193111449013937,
-    "top5_alpha": -0.001428690313994727,
-    "top5_alpha_t": -0.6572346406521429,
-    "top_bottom_spread": -0.0010260937523399994,
-    "universe_mean": 0.0006649987768347267
+    "sessions": 11,
+    "rank_ic_mean": -0.025807543594104868,
+    "rank_ic_sd": 0.31840275931339085,
+    "rank_ic_t": -0.2688228552006337,
+    "top1_alpha": -0.0016548872419282648,
+    "top3_alpha": -0.0027170836472312945,
+    "top5_alpha": -0.0014180855756555368,
+    "top5_alpha_t": -0.7211964101430006,
+    "top_bottom_spread": -0.0003788245847272721,
+    "universe_mean": 0.0001367874073828095
   },
   "probability": {
-    "count": 223,
-    "brier": 0.2559186490191774,
-    "log_loss": 0.7065730036247295,
-    "base_rate": 0.5067264573991032,
+    "count": 245,
+    "brier": 0.25799741180396674,
+    "log_loss": 0.7106983581313123,
+    "base_rate": 0.49387755102040815,
     "bins": [
       {
         "low": 0.0,
         "high": 0.5,
-        "count": 105,
-        "mean_predicted": 0.4010171355050762,
-        "actual_up_rate": 0.4857142857142857
+        "count": 108,
+        "mean_predicted": 0.40281962879757416,
+        "actual_up_rate": 0.48148148148148145
       },
       {
         "low": 0.5,
         "high": 0.55,
-        "count": 31,
-        "mean_predicted": 0.5246698557326128,
-        "actual_up_rate": 0.4838709677419355
+        "count": 35,
+        "mean_predicted": 0.5244939116896856,
+        "actual_up_rate": 0.45714285714285713
       },
       {
         "low": 0.55,
         "high": 0.6,
-        "count": 22,
-        "mean_predicted": 0.5696179820162274,
-        "actual_up_rate": 0.5
+        "count": 27,
+        "mean_predicted": 0.5701445379056296,
+        "actual_up_rate": 0.5185185185185185
       },
       {
         "low": 0.6,
         "high": 0.65,
-        "count": 23,
-        "mean_predicted": 0.624440066009,
-        "actual_up_rate": 0.43478260869565216
+        "count": 27,
+        "mean_predicted": 0.6232877519230741,
+        "actual_up_rate": 0.37037037037037035
       },
       {
         "low": 0.65,
         "high": 0.7,
-        "count": 28,
-        "mean_predicted": 0.6745715653736427,
-        "actual_up_rate": 0.6071428571428571
+        "count": 33,
+        "mean_predicted": 0.6741394864475456,
+        "actual_up_rate": 0.5757575757575758
       },
       {
         "low": 0.7,
         "high": 0.8,
-        "count": 12,
-        "mean_predicted": 0.7327202550970832,
-        "actual_up_rate": 0.5833333333333334
+        "count": 13,
+        "mean_predicted": 0.7319582894896153,
+        "actual_up_rate": 0.6153846153846154
       },
       {
         "low": 0.8,
@@ -120,21 +120,21 @@
     ]
   },
   "trading": {
-    "trades": 46,
-    "sessions": 10,
-    "gross_jpy": 11050.0366,
-    "cost_jpy": 75868.1479,
-    "net_jpy": -64818.1097,
-    "win_rate": 0.5652173913043478,
-    "payoff_ratio": 0.5856826673744211,
-    "profit_factor": 0.7613874675867474,
-    "expectancy_jpy": -1409.089341304348,
+    "trades": 55,
+    "sessions": 11,
+    "gross_jpy": -10749.9634,
+    "cost_jpy": 91154.35350000001,
+    "net_jpy": -101904.31500000002,
+    "win_rate": 0.509090909090909,
+    "payoff_ratio": 0.6602035524995835,
+    "profit_factor": 0.684655535925494,
+    "expectancy_jpy": -1852.8057272727276,
     "winning_days": 4,
-    "losing_days": 4,
-    "daily_mean_jpy": -6481.810969999998,
-    "daily_sd_jpy": 69145.81618184267,
-    "daily_sharpe": -0.09374118822972383,
-    "daily_sortino": -0.08813768249553344,
+    "losing_days": 5,
+    "daily_mean_jpy": -9264.028636363633,
+    "daily_sd_jpy": 66243.32111602757,
+    "daily_sharpe": -0.13984849310524985,
+    "daily_sortino": -0.14354896224210217,
     "max_drawdown_jpy": -191631.5557,
     "worst_day_jpy": -168115.8523,
     "best_day_jpy": 96080.78170000002
@@ -249,6 +249,17 @@
       "top5": -0.005513687261000001,
       "bottom3": 0.0034574416736666666,
       "bottom5": 0.0019557195054000004
+    },
+    {
+      "date": "2026-08-25",
+      "universe": 22,
+      "rank_ic": 0.3077357425183513,
+      "universe_mean": -0.005145326287136363,
+      "top1": 0.010610932476,
+      "top3": 0.0021598650423333334,
+      "top5": -0.006457364479399999,
+      "bottom3": -0.012543228826333333,
+      "bottom5": -0.0125512315708
     }
   ]
 }

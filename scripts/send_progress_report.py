@@ -156,7 +156,11 @@ def collect(environment: EnvironmentSettings) -> Snapshot:
         from dashboard.query_service import DashboardQueryService
         from database.connection import create_database_engine
 
-        engine = create_database_engine(environment.require_database_url())
+        # Reporting reads the hosted database. Reading DATABASE_URL here once
+        # produced a mail whose production table was all em-dashes beside a
+        # confident "DB 187 MB": the local copy has the schema and none of the
+        # rows, so every query succeeded and every answer was empty.
+        engine = create_database_engine(environment.reporting_database_url())
         try:
             service = DashboardQueryService(engine)
             published = service.latest_prediction_set()
@@ -205,6 +209,14 @@ def collect(environment: EnvironmentSettings) -> Snapshot:
                         )
                     ).scalar()
                 )
+            if prediction_date is None:
+                # An empty answer from a database that connected is the failure
+                # that looks like success. Say so rather than printing a size.
+                errors.append(
+                    "本番DBに公開済み予測が1件もありません"
+                    "（参照先が本番でない可能性があります）"
+                )
+                database_size = None
         finally:
             engine.dispose()
     except Exception as exc:

@@ -20,6 +20,13 @@ class EnvironmentSettings(BaseSettings):
 
     eodhd_api_key: SecretStr | None = None
     database_url: SecretStr | None = None
+    # The hosted database. On the operator's machine DATABASE_URL points at a
+    # local copy that has the schema and none of the rows, so a report that
+    # reads DATABASE_URL there shows an empty production and a size in MB, both
+    # of which look like answers. In GitHub Actions only DATABASE_URL is set
+    # and it is the hosted one, so preferring this when present is correct in
+    # both places.
+    neon_database_url: SecretStr | None = None
     resend_api_key: SecretStr | None = None
     email_provider: str = "gmail_smtp"
     smtp_host: str = "smtp.gmail.com"
@@ -69,6 +76,19 @@ class EnvironmentSettings(BaseSettings):
         if self.database_url is None or not self.database_url.get_secret_value():
             raise ValueError("DATABASE_URL is required for database operations")
         return self.database_url.get_secret_value()
+
+    def reporting_database_url(self) -> str:
+        """The database to *read* when reporting on production.
+
+        Deliberately separate from ``require_database_url``: that one feeds the
+        write path, and silently redirecting writes to the hosted database
+        because a second variable happened to be set is not a change a report
+        should make.
+        """
+
+        if self.neon_database_url and self.neon_database_url.get_secret_value():
+            return self.neon_database_url.get_secret_value()
+        return self.require_database_url()
 
     def require_email_addresses(self) -> tuple[str, str]:
         """Return sender/recipient addresses for a real or dry-run message."""

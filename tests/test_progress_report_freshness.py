@@ -372,3 +372,74 @@ def test_the_task_table_carries_the_stage_column(tmp_path: Path) -> None:
 
     assert "段階" in html
     assert "テスト" in html
+
+
+# --------------------------------------------------------------------------
+# The report reads production, and says so when it did not
+
+
+def test_reporting_prefers_the_hosted_url_over_the_local_one() -> None:
+    """DATABASE_URL on this machine is a schema-only copy with no rows.
+
+    Reading it produced a mail whose production table was every field em-dashed
+    beside a confident "DB 187 MB". Every query succeeded, so nothing raised and
+    nothing was flagged -- the report simply described an empty database as
+    though it were the live one.
+    """
+
+    from pydantic import SecretStr
+
+    from data.env import EnvironmentSettings
+
+    settings = EnvironmentSettings(
+        database_url=SecretStr("postgresql://u@localhost:5432/local"),
+        neon_database_url=SecretStr("postgresql://u@hosted.example/prod"),
+    )
+
+    assert settings.reporting_database_url().endswith("/prod")
+
+
+def test_reporting_falls_back_when_only_one_url_exists() -> None:
+    """GitHub Actions sets DATABASE_URL alone, and there it is the hosted one."""
+
+    from pydantic import SecretStr
+
+    from data.env import EnvironmentSettings
+
+    settings = EnvironmentSettings(
+        database_url=SecretStr("postgresql://u@hosted.example/prod"),
+        neon_database_url=None,
+    )
+
+    assert settings.reporting_database_url().endswith("/prod")
+
+
+def test_the_write_path_is_not_redirected_by_the_reporting_url() -> None:
+    """A report deciding where writes go is not a change a report may make."""
+
+    from pydantic import SecretStr
+
+    from data.env import EnvironmentSettings
+
+    settings = EnvironmentSettings(
+        database_url=SecretStr("postgresql://u@localhost:5432/local"),
+        neon_database_url=SecretStr("postgresql://u@hosted.example/prod"),
+    )
+
+    assert settings.require_database_url().endswith("/local")
+
+
+def test_a_database_with_no_published_prediction_is_reported_as_a_failure() -> None:
+    """The size must not be shown beside it; a size reads as a healthy answer."""
+
+    from scripts.send_progress_report import _lede
+
+    snapshot = Snapshot(
+        prediction_date=None,
+        database_size=None,
+        errors=("本番DBに公開済み予測が1件もありません",),
+    )
+
+    assert "MB" not in _lede(snapshot)
+    assert _lede(snapshot) == "本番状態を取得できませんでした"
+    assert "1件もありません" in " ".join(snapshot.errors)
