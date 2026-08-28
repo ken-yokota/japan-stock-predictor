@@ -192,3 +192,38 @@ def test_the_chosen_depth_does_not_depend_on_rows_after_the_window() -> None:
 
     assert first.parameters == second.parameters
     assert first.predicted_return == pytest.approx(second.predicted_return)
+
+
+# --------------------------------------------------------------------------
+# The window's own score is recorded, because it cannot be recovered later
+
+
+@pytest.mark.parametrize(
+    "estimator", [QuantileEstimator(), TreeEstimator(), ForestEstimator(trees=60)]
+)
+def test_every_arm_reports_how_well_it_fitted_its_own_window(estimator) -> None:
+    """Without this the train-versus-out-of-sample gap cannot be measured.
+
+    The fitted model is discarded once the session is scored, so a score taken
+    afterwards would need a refit -- on 5,500 sessions, hours of work to recover
+    a number that was free at fit time.
+    """
+
+    features, target, latest, _ = _linear(noise=0.02, seed=7)
+
+    fitted = estimator.fit_predict(features, target, latest)
+
+    assert fitted.train_mae is not None and fitted.train_mae >= 0.0
+    assert fitted.train_direction is not None
+    assert 0.0 <= fitted.train_direction <= 1.0
+
+
+def test_a_deeper_tree_fits_its_own_window_better_than_a_shallow_one() -> None:
+    """The direction the gap is expected to run, pinned so a bug reverses it."""
+
+    features, target, latest, _ = _linear(noise=0.02, seed=9)
+
+    shallow = TreeEstimator(depths=(2,)).fit_predict(features, target, latest)
+    deep = TreeEstimator(depths=(4,)).fit_predict(features, target, latest)
+
+    assert deep.train_mae <= shallow.train_mae

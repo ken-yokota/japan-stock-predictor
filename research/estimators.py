@@ -65,6 +65,14 @@ class Fitted:
     probability_up: float
     parameters: dict[str, Any]
     quantiles: dict[str, float] | None = None
+    # The same two scores the out-of-sample side is judged on, measured on the
+    # window the fit just saw. Alone they mean nothing -- a tree can reach 100%
+    # on its own training rows and still be worthless. The gap between these
+    # and the out-of-sample numbers is the overfitting measurement, and it
+    # cannot be taken later because the fitted model does not survive the
+    # session.
+    train_mae: float | None = None
+    train_direction: float | None = None
 
 
 class Estimator(ABC):
@@ -123,6 +131,14 @@ def _probability_from_spread(point: float, spread: float) -> float:
     return float(min(max(probability, 0.02), 0.98))
 
 
+def _in_sample(target: np.ndarray, fitted_values: np.ndarray) -> tuple[float, float]:
+    """MAE and direction accuracy on the rows the model was fitted on."""
+
+    mae = float(np.mean(np.abs(target - fitted_values)))
+    direction = float(np.mean((fitted_values > 0.0) == (target > 0.0)))
+    return mae, direction
+
+
 class QuantileEstimator(Estimator):
     """Fit several conditional quantiles; the median is the forecast.
 
@@ -169,21 +185,27 @@ class QuantileEstimator(Estimator):
         x, x_latest = _prepared(features, latest)
         alpha = self._choose_alpha(x, target)
         predicted: dict[str, float] = {}
+        in_window = np.zeros(len(target), dtype=float)
         for q in self.quantiles:
             model = QuantileRegressor(quantile=q, alpha=alpha, solver="highs")
             model.fit(x, target)
             predicted[f"q{q:g}"] = float(model.predict(x_latest)[0])
+            if q == 0.5:
+                in_window = np.asarray(model.predict(x), dtype=float)
         # Quantile regressions are fitted independently and can cross; sorting
         # restores the ordering a distribution must have. Reporting a crossed
         # pair as-is would put a 90th percentile below a 10th.
         ordered = sorted(predicted.values())
         levels = dict(zip(self.quantiles, ordered, strict=True))
         median = levels[0.5]
+        train_mae, train_direction = _in_sample(target, in_window)
         return Fitted(
             predicted_return=median,
             probability_up=_probability_at_zero(self.quantiles, ordered),
             parameters={"alpha": alpha, "quantiles": list(self.quantiles)},
             quantiles={f"q{q:g}": value for q, value in levels.items()},
+            train_mae=train_mae,
+            train_direction=train_direction,
         )
 
 
@@ -245,11 +267,15 @@ class TreeEstimator(Estimator):
         )
         model.fit(x, target)
         point = float(model.predict(x_latest)[0])
-        residual = float(np.std(target - model.predict(x), ddof=1))
+        in_window = np.asarray(model.predict(x), dtype=float)
+        residual = float(np.std(target - in_window, ddof=1))
+        train_mae, train_direction = _in_sample(target, in_window)
         return Fitted(
             predicted_return=point,
             probability_up=_probability_from_spread(point, residual),
             parameters={"max_depth": depth},
+            train_mae=train_mae,
+            train_direction=train_direction,
         )
 
 
@@ -314,10 +340,15 @@ class ForestEstimator(Estimator):
             [tree.predict(x_latest)[0] for tree in model.estimators_], dtype=float
         )
         share = float((votes > 0).mean())
+        train_mae, train_direction = _in_sample(
+            target, np.asarray(model.predict(x), dtype=float)
+        )
         return Fitted(
             predicted_return=point,
             probability_up=float(min(max(share, 0.02), 0.98)),
             parameters={"max_depth": depth, "n_estimators": self.trees},
+            train_mae=train_mae,
+            train_direction=train_direction,
         )
 
 

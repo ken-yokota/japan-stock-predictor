@@ -552,6 +552,12 @@ def run_window(
                     answer.predicted_return, answer.probability_up
                 )
                 training_sessions = len(window)
+                extra = {
+                    "quantiles": answer.quantiles,
+                    "estimator_parameters": answer.parameters,
+                    "train_mae": answer.train_mae,
+                    "train_direction": answer.train_direction,
+                }
             else:
                 try:
                     model = train_ticker_model(
@@ -566,6 +572,7 @@ def run_window(
                     continue
                 prediction = model.predict_one(current.loc[:, list(fit_names)])
                 training_sessions = model.training_sessions
+                extra = {}
             actual_open = float(current.iloc[0]["open"])
             actual_close = float(current.iloc[0]["close"])
             previous_close = current.iloc[0]["prev_close"]
@@ -614,15 +621,27 @@ def run_window(
                     "gross_profit_jpy": trade.gross_profit,
                     "cost_jpy": trade.commission_cost + trade.slippage_cost,
                     "net_profit_jpy": trade.net_profit,
+                    # Empty for the linear arm. The estimator arms carry their
+                    # fitted quantiles, the hyperparameters the window chose,
+                    # and how well the fit did on the window itself -- none of
+                    # which can be recovered afterwards, because the model is
+                    # discarded once the session is scored.
+                    **extra,
                 }
             )
-            for feature_name, value in model.regression_coefficients().items():
-                result.coefficients.append(
-                    {
-                        "date": target_date.isoformat(),
-                        "ticker": stock.ticker,
-                        "feature": feature_name,
-                        "coefficient": value,
-                    }
-                )
+            if estimator is None:
+                # Only the linear arm has coefficients to record. A tree has
+                # importances and a forest has an average of them, which are a
+                # different quantity and would be misleading under the same
+                # name; the columns that reached each fit are recorded either
+                # way by "feature_count".
+                for feature_name, value in model.regression_coefficients().items():
+                    result.coefficients.append(
+                        {
+                            "date": target_date.isoformat(),
+                            "ticker": stock.ticker,
+                            "feature": feature_name,
+                            "coefficient": value,
+                        }
+                    )
     return result
