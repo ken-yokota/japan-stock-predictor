@@ -116,9 +116,12 @@ class Setting:
     def pinned_at_an_edge(self) -> bool:
         """Whether the grid never really chose.
 
-        A setting taken in over 95% of fits was not selected by the data; it was
-        the only option the grid could reach. That is a statement about the grid,
-        and it stays invisible if only the out-of-sample score is reported.
+        A setting taken in over 95% of fits was not selected by the data. Which
+        of the two reasons applies -- the grid could not reach further, or the
+        value was never searched at all -- cannot be told apart from the counts,
+        so the report says both rather than guessing. Either way it is a
+        statement about the search, and it stays invisible if only the
+        out-of-sample score is reported.
         """
 
         return self.dominant[1] > 0.95
@@ -193,7 +196,11 @@ def report(arms: Sequence[tuple[str, Sequence[dict[str, Any]]]]) -> list[str]:
                     setting.counts.items(), key=lambda item: -item[1]
                 )
             )
-            note = "  ← グリッドが選んでいません" if setting.pinned_at_an_edge else ""
+            note = (
+                "  ← 1値のみ（グリッドの天井か、そもそも固定）"
+                if setting.pinned_at_an_edge
+                else ""
+            )
             lines.append(f"    {setting.name:<16}{spread}{note}")
         lines.append("")
     lines.append(
