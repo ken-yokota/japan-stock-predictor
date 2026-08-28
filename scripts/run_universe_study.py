@@ -30,10 +30,12 @@ from research.universe import (
     BUY_RULES,
     UNIVERSE_RULES,
     AdaptiveBuy,
+    AdaptiveReturnThreshold,
     BacktestResult,
     all_tickers,
     backtest,
     backtest_adaptive,
+    backtest_adaptive_return,
     buy_production,
     random_filter_control,
     round_trip_cost,
@@ -205,6 +207,41 @@ def study(predictions: Sequence[Prediction]) -> list[str]:
     )
     for result in (best, adaptive, current):
         lines.append(_row(result))
+
+    lines += _header("【予測閾値の選び方】確率フィルタを外し、閾値だけを毎日選び直す")
+    grids = {
+        "後から選んだ4候補 (0.3/0.5/0.8/1.0)": (0.003, 0.005, 0.008, 0.010),
+        "0.1%刻み 0.1〜2.0% の20候補": tuple(
+            round(0.001 * step, 4) for step in range(1, 21)
+        ),
+        "粗い5候補 (0.0/0.5/1.0/1.5/2.0)": (0.0, 0.005, 0.010, 0.015, 0.020),
+    }
+    grid_results = []
+    for label, candidates in grids.items():
+        result, _ = backtest_adaptive_return(
+            predictions,
+            name=label,
+            adaptive=AdaptiveReturnThreshold(candidates=candidates),
+        )
+        grid_results.append(result)
+        lines.append(_row(result))
+    lines += [
+        "",
+        "  候補の並び自体を後から選べば、それも後知恵です。"
+        "上の3行は同じ手順で候補だけを変えたもので、",
+        "  結果が大きく動きます。動かないのは無作為対照との差の方です:",
+        "",
+    ]
+    for result in grid_results:
+        low, mid, high = random_filter_control(predictions, keep=result.positions)
+        verdict = "有意" if result.total_return > high else "帯の中"
+        lines.append(
+            "  "
+            + _pad(result.name, 40)
+            + _pad(f"{result.total_return * 100:+.2f}%", 10, right=True)
+            + _pad(f"無作為95% {high * 100:+.2f}%", 20, right=True)
+            + _pad(verdict, 8, right=True)
+        )
 
     counts: dict[float, int] = {}
     for value in chosen:

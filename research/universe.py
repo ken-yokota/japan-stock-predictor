@@ -463,6 +463,88 @@ class AdaptiveBuy:
         return max(scored)[1] if scored else self.candidates[0]
 
 
+@dataclass(frozen=True, slots=True)
+class AdaptiveReturnThreshold:
+    """Pick the forecast threshold from history, the way AdaptiveBuy picks 0.65.
+
+    Raising the forecast cut from 0.3% to 0.8% turns -12.42% into +20.59% over
+    the 250 sessions. Adopting 0.8% on that basis would be choosing a parameter
+    by looking at the period it is scored on, which is the one thing this study
+    is not allowed to do. So the same candidates are offered to a rule that sees
+    only the sessions before each one, and the gap between the two is the
+    hindsight.
+    """
+
+    candidates: tuple[float, ...] = (0.003, 0.005, 0.008, 0.010)
+    minimum_history: int = MINIMUM_HISTORY
+    cost_per_position: float = field(default_factory=round_trip_cost)
+
+    def choose(self, history: Sequence[Prediction]) -> float:
+        if len(history) < self.minimum_history:
+            return self.candidates[0]
+        scored: list[tuple[float, float]] = []
+        for candidate in self.candidates:
+            taken = [row for row in history if row.predicted_return > candidate]
+            if not taken:
+                continue
+            net = float(
+                np.mean([r.actual_return - self.cost_per_position for r in taken])
+            )
+            scored.append((net, candidate))
+        return max(scored)[1] if scored else self.candidates[0]
+
+
+def backtest_adaptive_return(
+    predictions: Sequence[Prediction],
+    *,
+    name: str,
+    adaptive: AdaptiveReturnThreshold,
+) -> tuple[BacktestResult, list[float]]:
+    """As ``backtest``, but the forecast threshold is re-chosen each session."""
+
+    by_date: dict[str, list[Prediction]] = {}
+    for row in predictions:
+        by_date.setdefault(row.date, []).append(row)
+    order = sorted(by_date)
+
+    flat: list[Prediction] = []
+    daily: list[float] = []
+    chosen: list[float] = []
+    positions = 0
+    traded_sessions = 0
+    for day in order:
+        threshold = adaptive.choose(flat)
+        chosen.append(threshold)
+        taken = [row for row in by_date[day] if row.predicted_return > threshold]
+        if taken:
+            traded_sessions += 1
+            positions += len(taken)
+            daily.append(
+                float(
+                    np.mean(
+                        [
+                            row.actual_return - adaptive.cost_per_position
+                            for row in taken
+                        ]
+                    )
+                )
+            )
+        else:
+            daily.append(0.0)
+        flat.extend(by_date[day])
+
+    return (
+        BacktestResult(
+            name=name,
+            sessions=len(order),
+            traded_sessions=traded_sessions,
+            positions=positions,
+            daily_returns=daily,
+        ),
+        chosen,
+    )
+
+
 def backtest_adaptive(
     predictions: Sequence[Prediction],
     *,

@@ -399,3 +399,76 @@ def test_every_buy_rule_names_the_pool_its_control_draws_from() -> None:
 
     assert set(BUY_RULE_POOLS) == set(BUY_RULES)
     assert BUY_RULE_POOLS["B 回帰のみ(予測>0.3%)"] is None
+
+
+# --------------------------------------------------------------------------
+# The forecast threshold, chosen the same way the probability threshold is
+
+
+def test_the_return_threshold_is_chosen_from_history_not_the_period() -> None:
+    """Raising 0.3% to 0.8% turns -12.42% into +20.59% on the scored period.
+
+    Adopting 0.8% on that basis is choosing a parameter by looking at the
+    sessions it will be scored on, which is the one thing this study may not do.
+    """
+
+    from research.universe import AdaptiveReturnThreshold
+
+    history = [
+        _row(f"2026-01-{i:02d}", "A", 0.02, 0.03) for i in range(1, 15)
+    ] + [_row(f"2026-02-{i:02d}", "B", 0.004, -0.03) for i in range(1, 15)] * 2
+
+    chosen = AdaptiveReturnThreshold().choose(history)
+
+    # The big forecasts were the profitable ones, so a high cut wins.
+    assert chosen >= 0.008
+
+
+def test_before_there_is_history_the_loosest_candidate_is_used() -> None:
+    from research.universe import AdaptiveReturnThreshold
+
+    adaptive = AdaptiveReturnThreshold()
+
+    assert adaptive.choose([]) == adaptive.candidates[0]
+
+
+def test_the_adaptive_return_backtest_reports_what_it_chose_each_session() -> None:
+    from research.universe import AdaptiveReturnThreshold, backtest_adaptive_return
+
+    rows = _series("A", 80, correct=True)
+
+    result, chosen = backtest_adaptive_return(
+        rows, name="a", adaptive=AdaptiveReturnThreshold()
+    )
+
+    assert len(chosen) == result.sessions
+    assert set(chosen) <= set(AdaptiveReturnThreshold().candidates)
+
+
+def test_the_candidate_grid_changes_the_answer_and_that_is_the_point() -> None:
+    """A grid picked after seeing the period is hindsight the walk-forward misses.
+
+    Measured on the real artifacts, the same rule returns +17.03% on a grid of
+    four values chosen after 0.8% was seen to work, and -4.02% on a twenty-value
+    grid covering the same range. The walk-forward removes hindsight about
+    *which value*; it does not remove hindsight about *which values were on
+    offer*, so the grid has to be reported alongside the result.
+    """
+
+    from research.universe import AdaptiveReturnThreshold, backtest_adaptive_return
+
+    rows = _series("A", 60, correct=True) + _series("B", 60, correct=False)
+
+    _, narrow = backtest_adaptive_return(
+        rows, name="n", adaptive=AdaptiveReturnThreshold(candidates=(0.003, 0.02))
+    )
+    _, wide = backtest_adaptive_return(
+        rows,
+        name="w",
+        adaptive=AdaptiveReturnThreshold(
+            candidates=tuple(round(0.001 * i, 4) for i in range(1, 21))
+        ),
+    )
+
+    assert set(narrow) <= {0.003, 0.02}
+    assert set(wide) - {0.003, 0.02}
