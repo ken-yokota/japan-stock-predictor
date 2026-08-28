@@ -96,6 +96,44 @@ def study(predictions: Sequence[Prediction]) -> list[str]:
             _row(backtest(predictions, name=name, universe=rule, buy=buy_production()))
         )
 
+    # Same critique, same control. B and D keep 41 and 43 of the control's 325
+    # positions and come out positive; a coin keeping 41 of 325 has to be beaten
+    # before that means the universe rule picked well.
+    control = backtest(
+        predictions, name="全22", universe=all_tickers, buy=buy_production()
+    )
+    taken = [row for row in predictions if buy_production()(row)]
+    lines += [
+        "",
+        "【無作為フィルタとの比較】全22銘柄の建玉から同数を無作為に残した場合",
+        "  " + _pad("", 34) + _pad("建玉", 7, right=True)
+        + _pad("実績", 11, right=True) + _pad("無作為5%", 12, right=True)
+        + _pad("無作為中央", 13, right=True) + _pad("無作為95%", 12, right=True),
+        "  " + "-" * 88,
+    ]
+    for name, rule in UNIVERSE_RULES.items():
+        result = backtest(predictions, name=name, universe=rule, buy=buy_production())
+        if result.positions >= control.positions:
+            cells = _pad("（対照そのもの）", 37, right=True)
+        else:
+            low, mid, high = random_filter_control(taken, keep=result.positions)
+            cells = (
+                _pad(f"{low * 100:+.2f}%", 12, right=True)
+                + _pad(f"{mid * 100:+.2f}%", 13, right=True)
+                + _pad(f"{high * 100:+.2f}%", 12, right=True)
+            )
+        lines.append(
+            "  "
+            + _pad(name, 34)
+            + _pad(f"{result.positions}", 7, right=True)
+            + _pad(f"{result.total_return * 100:+.2f}%", 11, right=True)
+            + cells
+        )
+    lines.append(
+        "  銘柄を絞ると建玉が減り、それだけで累積は改善します。"
+        "無作為の95%点を超えて初めて、選び方に意味があったと言えます。"
+    )
+
     lines += _header("【BUY条件】銘柄は全22で固定")
     for name, rule in BUY_RULES.items():
         lines.append(
