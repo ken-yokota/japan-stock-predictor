@@ -301,3 +301,82 @@ def test_the_summary_workflow_migrates_before_it_records_a_delivery() -> None:
 
     assert "alembic upgrade head" in source
     assert source.index("alembic upgrade head") < source.index("cli daily-summary")
+
+
+# --------------------------------------------------------------------------
+# A late run must report on the session an on-time run would have
+
+
+def test_a_run_before_the_close_reports_on_the_previous_session() -> None:
+    """The failure this exists for, dated.
+
+    On 2026-08-28 a delayed run landed at 04:00 JST, read "today" from the
+    clock, and mailed 実績が確定していません about a session that had not opened.
+    Worse, the delivery key is per date, so it consumed 08-28's key and the real
+    17:00 summary was suppressed as already sent. No result mail that day.
+    """
+
+    from datetime import datetime
+
+    from scripts.send_daily_summary import JST, latest_settled_session
+
+    early = datetime(2026, 8, 28, 4, 0, tzinfo=JST)
+
+    assert latest_settled_session(early) == date(2026, 8, 27)
+
+
+def test_a_run_after_the_close_reports_on_that_session() -> None:
+    from datetime import datetime
+
+    from scripts.send_daily_summary import JST, latest_settled_session
+
+    assert latest_settled_session(
+        datetime(2026, 8, 28, 17, 0, tzinfo=JST)
+    ) == date(2026, 8, 28)
+
+
+def test_one_minute_before_the_close_is_not_yet_that_session() -> None:
+    from datetime import datetime
+
+    from scripts.send_daily_summary import JST, latest_settled_session
+
+    assert latest_settled_session(
+        datetime(2026, 8, 28, 14, 59, tzinfo=JST)
+    ) == date(2026, 8, 27)
+
+
+def test_a_weekend_run_reports_on_friday_rather_than_on_saturday() -> None:
+    from datetime import datetime
+
+    from scripts.send_daily_summary import JST, latest_settled_session
+
+    assert latest_settled_session(
+        datetime(2026, 8, 30, 20, 0, tzinfo=JST)
+    ) == date(2026, 8, 28)
+
+
+def test_a_correction_gets_its_own_key_so_the_first_send_is_still_recorded() -> None:
+    """Reusing the key would hide that a wrong mail was ever delivered."""
+
+    day = date(2026, 8, 28)
+
+    assert summary_idempotency_key(day) == "daily-summary-2026-08-28"
+    assert summary_idempotency_key(day, "late-run") != summary_idempotency_key(day)
+    assert "late-run" in summary_idempotency_key(day, "late-run")
+
+
+def test_a_correction_is_not_blocked_by_the_original_send(postgres: Engine) -> None:
+    day = date(2026, 8, 28)
+    _register(postgres, day)
+    with Session(postgres) as session:
+        repository = PredictionPipelineRepository(session)
+        repository.claim_email(summary_idempotency_key(day))
+        repository.mark_email_sent(
+            summary_idempotency_key(day),
+            provider_message_id="msg-1",
+            sent_at=datetime.now(UTC),
+        )
+        session.commit()
+
+    assert already_delivered(postgres, day) is True
+    assert already_delivered(postgres, day, "correction") is False

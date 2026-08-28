@@ -8,6 +8,7 @@ import json
 from dataclasses import asdict
 from datetime import date, datetime
 from pathlib import Path
+from typing import Any
 
 from pipeline.close import ClosePipeline
 from scripts.runtime import load_runtime
@@ -24,10 +25,31 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _settled_session(config: Any) -> date:
+    """The last JPX session whose close has passed, or today as a last resort."""
+
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    try:
+        from data.market_calendar import latest_settled_session
+
+        return latest_settled_session(
+            datetime.now(ZoneInfo(config.application.timezone))
+        )
+    except Exception:
+        return today_in_application_timezone(config)
+
+
 def main() -> int:
     args = _parser().parse_args()
     config, environment, engine, factory = load_runtime(args.config_dir)
-    prediction_date = args.prediction_date or today_in_application_timezone(config)
+    # Not "today": a delayed run reads a different date from the same clock.
+    # On 2026-08-28 three close updates fired eleven hours late, at 02:53, 02:55
+    # and 03:16 JST, took the date to be 08-28, found nothing to settle for a
+    # session that had not opened, and returned SKIPPED. 08-27 went unsettled
+    # until it was run by hand.
+    prediction_date = args.prediction_date or _settled_session(config)
     try:
         if args.dry_run:
             print(

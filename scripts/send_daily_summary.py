@@ -25,7 +25,7 @@ import argparse
 import json
 import os
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -71,8 +71,17 @@ HISTORY_SESSIONS = 10
 SUMMARY_TEMPLATE = "daily-summary-v2"
 
 
-def summary_idempotency_key(target: date) -> str:
-    return f"daily-summary-{target.isoformat()}"
+def summary_idempotency_key(target: date, suffix: str = "") -> str:
+    """One key per date, so a retried workflow cannot mail twice.
+
+    The suffix exists for the one case that is not a retry: a mail that was
+    sent and was wrong. Reusing the key would either be refused or would
+    overwrite the record of what was actually delivered, and neither leaves the
+    operator able to see that a correction happened.
+    """
+
+    tail = f"-{suffix}" if suffix else ""
+    return f"daily-summary-{target.isoformat()}{tail}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,6 +139,15 @@ def _parse_arguments() -> argparse.Namespace:
         help="既に送信済みでも送る。重複送信の記録は残る。",
     )
     parser.add_argument(
+        "--resend",
+        default="",
+        metavar="理由",
+        help=(
+            "誤った内容を送ってしまった日に、訂正版を別の配信キーで送る。"
+            "理由はキーに残るので、何を訂正したのかが記録される。"
+        ),
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=None,
@@ -178,6 +196,31 @@ _RUN_LABELS = {
 }
 
 
+def latest_settled_session(now: datetime) -> date:
+    """The most recent JPX session whose close has already happened.
+
+    Delegates to the exchange calendar rather than assuming 15:00: JPX moved
+    the close to 15:30 in November 2024, and half-days close earlier still.
+
+    The summary used to take ``datetime.now(JST).date()``, which is correct
+    exactly when the job runs on time. On 2026-08-28 a delayed run landed at
+    04:00 JST, took "today" to mean 08-28, mailed 実績が確定していません about a
+    session that had not opened, and -- because the delivery key is per date --
+    consumed 08-28's key, so the real evening summary was suppressed as already
+    sent. The operator got no result mail for the day.
+    """
+
+    try:
+        from data.market_calendar import latest_settled_session as settled
+
+        return settled(now)
+    except Exception:
+        # Without a calendar, yesterday is a better guess than today: it is
+        # wrong only on a day the market was closed, and that day has no
+        # result to report either way.
+        return now.date() - timedelta(days=1)
+
+
 def _is_trading_day(target: date) -> bool:
     """Whether JPX had a session. A closed market is not a failed pipeline.
 
@@ -210,12 +253,12 @@ def collect(target: date, config_dir: Path) -> Day:
     reason = ""
     trading_day = _is_trading_day(target)
 
-    url = os.environ.get("DATABASE_URL", "").strip()
+    url = _database_url()
     if not url:
         findings.append(
             Finding(
                 "本番DBを読めませんでした",
-                "DATABASE_URL が未設定",
+                "DATABASE_URL も NEON_DATABASE_URL も未設定",
                 "DBに依存しない節だけで組み立てて送信",
                 "本日の成績・実行状況・健全性はすべて不明のままです",
             )
@@ -223,7 +266,7 @@ def collect(target: date, config_dir: Path) -> Day:
         return Day(
             target=target,
             trading_day=_is_trading_day(target),
-            no_result_reason="DATABASE_URL が未設定のため確認できません",
+            no_result_reason="DBの接続先が未設定のため確認できません",
             findings=_dedupe(findings),
             research=tuple(_research_rows()),
         )
@@ -865,6 +908,25 @@ def build_report(
     return subject_for(day), build_text(day, names), build_html(day, names)
 
 
+def _database_url() -> str:
+    """Where to read production from.
+
+    The environment variable alone is right in GitHub Actions, where
+    DATABASE_URL is the hosted database and nothing else is set. On the
+    operator's machine DATABASE_URL is a local copy carrying the schema and no
+    rows, so a summary run there reads an empty production and reports it as
+    fact. EnvironmentSettings prefers the hosted URL when one is configured and
+    falls back to DATABASE_URL when it is not, which is correct in both places.
+    """
+
+    try:
+        from data.env import EnvironmentSettings
+
+        return EnvironmentSettings().reporting_database_url()
+    except Exception:
+        return os.environ.get("DATABASE_URL", "").strip()
+
+
 def _engine_or_none() -> Any:
     """A connection for the delivery record, or None when there cannot be one.
 
@@ -874,7 +936,7 @@ def _engine_or_none() -> Any:
     from the system.
     """
 
-    url = os.environ.get("DATABASE_URL", "").strip()
+    url = _database_url()
     if not url:
         return None
     try:
@@ -885,7 +947,7 @@ def _engine_or_none() -> Any:
         return None
 
 
-def already_delivered(engine: Any, target: date) -> bool:
+def already_delivered(engine: Any, target: date, suffix: str = "") -> bool:
     """Whether this date's summary has already been sent."""
 
     if engine is None:
@@ -898,14 +960,16 @@ def already_delivered(engine: Any, target: date) -> bool:
                 text(
                     "select status from email_logs where idempotency_key = :key"
                 ),
-                {"key": summary_idempotency_key(target)},
+                {"key": summary_idempotency_key(target, suffix)},
             )
         return str(status) == "SENT"
     except Exception:
         return False
 
 
-def _record(engine: Any, target: date, subject: str, recipient: str) -> Any:
+def _record(
+    engine: Any, target: date, subject: str, recipient: str, suffix: str = ""
+) -> Any:
     """Register and claim the delivery, or return None if that is impossible."""
 
     if engine is None:
@@ -921,10 +985,10 @@ def _record(engine: Any, target: date, subject: str, recipient: str) -> Any:
             recipient=recipient,
             template_version=SUMMARY_TEMPLATE,
             subject=subject[:255],
-            idempotency_key=summary_idempotency_key(target),
+            idempotency_key=summary_idempotency_key(target, suffix),
         )
         session.commit()
-        if not repository.claim_email(summary_idempotency_key(target)):
+        if not repository.claim_email(summary_idempotency_key(target, suffix)):
             session.close()
             return None
         session.commit()
@@ -1007,7 +1071,8 @@ def _fallback_report(target: date, error: BaseException) -> tuple[str, str, str]
 
 def main() -> int:
     arguments = _parse_arguments()
-    target = arguments.for_date or datetime.now(JST).date()
+    target = arguments.for_date or latest_settled_session(datetime.now(JST))
+    suffix = str(arguments.resend or "")
     try:
         subject, text_body, html_body = build_report(target, arguments.config_dir)
         built = True
@@ -1033,10 +1098,10 @@ def main() -> int:
 
     engine = _engine_or_none()
     try:
-        if not arguments.force and already_delivered(engine, target):
+        if not arguments.force and already_delivered(engine, target, suffix):
             print(f"送信済みのためスキップしました: {target}", flush=True)
             return 0
-        session = _record(engine, target, subject, recipient)
+        session = _record(engine, target, subject, recipient, suffix)
         try:
             delivery = _build_sender().send(
                 RenderedEmail(
@@ -1046,7 +1111,7 @@ def main() -> int:
                     sender=os.environ.get("EMAIL_FROM") or os.environ["SMTP_USERNAME"],
                     recipient=recipient,
                     # One report per day: a retried workflow must not mail twice.
-                    idempotency_key=summary_idempotency_key(target),
+                    idempotency_key=summary_idempotency_key(target, suffix),
                 )
             )
         except Exception as error:
@@ -1054,7 +1119,8 @@ def main() -> int:
                 from database.repository import PredictionPipelineRepository
 
                 PredictionPipelineRepository(session).mark_email_failed(
-                    summary_idempotency_key(target), error=type(error).__name__
+                    summary_idempotency_key(target, suffix),
+                    error=type(error).__name__,
                 )
                 session.commit()
                 session.close()
@@ -1063,7 +1129,7 @@ def main() -> int:
             from database.repository import PredictionPipelineRepository
 
             PredictionPipelineRepository(session).mark_email_sent(
-                summary_idempotency_key(target),
+                summary_idempotency_key(target, suffix),
                 provider_message_id=delivery.message_id,
                 sent_at=delivery.sent_at,
             )

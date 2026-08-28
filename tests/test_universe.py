@@ -226,3 +226,76 @@ def test_adaptive_reports_which_threshold_it_used_each_session() -> None:
 
     assert len(thresholds) == result.sessions
     assert set(thresholds) <= set(AdaptiveBuy().candidates)
+
+
+# --------------------------------------------------------------------------
+# The cost is the one the system charges, not a friendlier one
+
+
+def test_the_round_trip_cost_comes_from_the_trading_config() -> None:
+    """Hard-coding it once put 0.165% against a config that charges 0.200%.
+
+    Every rule in this module is a filter on when to pay that cost, so a cost
+    understated by a fifth flatters all of them at once, and flatters the
+    heaviest traders most.
+    """
+
+    from data.config import load_app_config
+    from research.universe import round_trip_cost
+
+    costs = load_app_config().trading.costs
+    expected = (
+        2.0
+        * (
+            float(costs.commission_bps_per_side)
+            + float(costs.slippage_bps_per_side)
+        )
+        / 10_000.0
+    )
+
+    assert round_trip_cost() == pytest.approx(expected)
+    assert round_trip_cost() > 0.0
+
+
+def test_the_backtest_charges_the_config_cost_when_none_is_given() -> None:
+    from research.universe import round_trip_cost
+
+    rows = _series("A", 60, correct=True)
+
+    default = backtest(rows, name="d", universe=all_tickers, buy=buy_production())
+    explicit = backtest(
+        rows,
+        name="e",
+        universe=all_tickers,
+        buy=buy_production(),
+        cost_per_position=round_trip_cost(),
+    )
+
+    assert default.total_return == pytest.approx(explicit.total_return)
+
+
+def test_the_breakeven_bar_is_taken_from_the_window_being_scored() -> None:
+    """A bar carried over from a different window is a bar for that window.
+
+    Thirteen live sessions averaged 1.327% absolute; the 250-session record
+    averages 1.1893%. The same cost against a smaller move is a higher hurdle,
+    so importing the first number understated the bar by more than two points.
+    """
+
+    from research.universe import breakeven_accuracy, round_trip_cost
+
+    big = [_row("2026-01-01", "A", 0.01, 0.02) for _ in range(50)]
+    small = [_row("2026-01-01", "A", 0.01, 0.005) for _ in range(50)]
+
+    assert breakeven_accuracy(small) > breakeven_accuracy(big)
+    assert breakeven_accuracy(big) == pytest.approx(
+        0.5 + round_trip_cost() / (2 * 0.02)
+    )
+
+
+def test_a_window_that_never_moves_admits_nothing() -> None:
+    """No move means no edge can cover any cost; the bar is not 50%."""
+
+    from research.universe import breakeven_accuracy
+
+    assert breakeven_accuracy([_row("2026-01-01", "A", 0.0, 0.0)]) == 1.0

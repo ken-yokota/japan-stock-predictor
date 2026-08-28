@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from functools import lru_cache
 from typing import Any, cast
 
@@ -113,3 +113,42 @@ def japan_session_open(value: date) -> datetime:
         if isinstance(exc, MarketCalendarError):
             raise
         raise MarketCalendarError(f"session-open lookup failed for {value}") from exc
+
+
+# How far back to look for a session before giving up. Long enough to clear the
+# longest JPX closure (the New Year break plus a weekend) and short enough that
+# a broken calendar fails rather than scanning a decade.
+_SEARCH_DAYS = 21
+
+
+def latest_settled_session(now: datetime) -> date:
+    """The most recent JPX session whose official close has already passed.
+
+    Scheduled work must not take its target from the calendar date. A job that
+    fires on time and one that fires eleven hours late read different dates from
+    the same clock, and on 2026-08-28 that difference cost the operator a
+    result mail: a delayed evening summary landed at 04:00 JST, read "today" as
+    08-28, reported that a session which had not opened had not settled, and
+    consumed 08-28's per-date delivery key so the real 17:00 run was skipped as
+    already sent. The delayed close updates the same morning skipped for the
+    same reason.
+
+    Asking which session has actually closed makes a late run do what an on-time
+    run would have done. The close comes from the exchange calendar rather than
+    a fixed 15:00, so a half-day settles at its own close.
+    """
+
+    if now.tzinfo is None or now.utcoffset() is None:
+        raise ValueError("now must be timezone-aware")
+    moment = now.astimezone(UTC)
+    candidate = now.astimezone(_calendar().tz).date()
+    for _ in range(_SEARCH_DAYS):
+        settled = is_japan_business_day(candidate) and (
+            japan_session_close(candidate) <= moment
+        )
+        if settled:
+            return candidate
+        candidate = candidate - timedelta(days=1)
+    raise MarketCalendarError(
+        f"no settled JPX session in the {_SEARCH_DAYS} days before {now}"
+    )
