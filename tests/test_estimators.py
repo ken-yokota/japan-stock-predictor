@@ -101,7 +101,8 @@ def test_the_fitted_quantiles_never_cross() -> None:
     fitted = QuantileEstimator().fit_predict(features, target, latest)
 
     assert fitted.quantiles is not None
-    values = [fitted.quantiles[key] for key in ("q0.1", "q0.25", "q0.5", "q0.75", "q0.9")]
+    keys = ("q0.1", "q0.25", "q0.5", "q0.75", "q0.9")
+    values = [fitted.quantiles[key] for key in keys]
     assert values == sorted(values)
 
 

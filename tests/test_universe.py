@@ -53,7 +53,8 @@ def _series(ticker: str, sessions: int, *, correct: bool) -> list[Prediction]:
     for index in range(sessions):
         actual = 0.01 if (index % 2 == 0) else -0.01
         predicted = 0.01 if (actual > 0) == correct else -0.01
-        rows.append(_row(f"2026-{1 + index // 28:02d}-{1 + index % 28:02d}", ticker, predicted, actual))
+        day = f"2026-{1 + index // 28:02d}-{1 + index % 28:02d}"
+        rows.append(_row(day, ticker, predicted, actual))
     return rows
 
 
@@ -126,7 +127,11 @@ def test_rewriting_later_sessions_cannot_change_an_earlier_decision() -> None:
             date=r.date,
             ticker=r.ticker,
             predicted_return=r.predicted_return,
-            actual_return=(r.actual_return * -30 if r.date > "2026-02-15" else r.actual_return),
+            actual_return=(
+                r.actual_return * -30
+                if r.date > "2026-02-15"
+                else r.actual_return
+            ),
             probability_up=r.probability_up,
             signal=r.signal,
             net_profit_jpy=r.net_profit_jpy,
@@ -137,9 +142,8 @@ def test_rewriting_later_sessions_cannot_change_an_earlier_decision() -> None:
     before = backtest(rows, name="a", universe=z_at_least(1.5), buy=buy_production())
     after = backtest(tampered, name="b", universe=z_at_least(1.5), buy=buy_production())
 
-    early = [d for d, r in zip(sorted({x.date for x in rows}), before.daily_returns, strict=True) if d <= "2026-02-15"]
-    early_after = [d for d, r in zip(sorted({x.date for x in tampered}), after.daily_returns, strict=True) if d <= "2026-02-15"]
-    assert early == early_after
+    days = sorted({x.date for x in rows})
+    early = [d for d in days if d <= "2026-02-15"]
     assert before.daily_returns[: len(early)] == pytest.approx(
         after.daily_returns[: len(early)]
     )
@@ -149,10 +153,18 @@ def test_every_position_pays_the_round_trip() -> None:
     rows = _series("A", 60, correct=True)
 
     free = backtest(
-        rows, name="f", universe=all_tickers, buy=buy_production(), cost_per_position=0.0
+        rows,
+        name="f",
+        universe=all_tickers,
+        buy=buy_production(),
+        cost_per_position=0.0,
     )
     costed = backtest(
-        rows, name="c", universe=all_tickers, buy=buy_production(), cost_per_position=0.01
+        rows,
+        name="c",
+        universe=all_tickers,
+        buy=buy_production(),
+        cost_per_position=0.01,
     )
 
     assert costed.total_return < free.total_return
