@@ -505,3 +505,47 @@ def test_an_all_zero_weight_vector_is_rejected_rather_than_dividing_by_zero() ->
             np.array([0.1, 0.2, 0.3]),
             np.zeros(3),
         )
+
+
+# --- ablation and incremental arms -------------------------------------------
+
+
+def test_each_ablation_removes_exactly_one_group_and_keeps_the_rest() -> None:
+    """An arm that removed two groups would attribute both losses to one name."""
+
+    compact = feature_sets.PRODUCTION_COMPACT
+    keys = {spec.key for spec in compact.indicators}
+
+    for key in keys:
+        arm = feature_sets.FEATURE_SETS[f"compact_no_{key}"]
+        assert {spec.key for spec in arm.indicators} == keys - {key}
+        assert arm.extra_price_features == compact.extra_price_features
+
+
+def test_each_incremental_arm_is_the_price_columns_plus_exactly_one_group() -> None:
+    compact = feature_sets.PRODUCTION_COMPACT
+
+    for spec in compact.indicators:
+        arm = feature_sets.FEATURE_SETS[f"price_plus_{spec.key}"]
+        assert {item.key for item in arm.indicators} == {spec.key}
+        assert arm.extra_price_features == compact.extra_price_features
+
+
+def test_the_two_controls_are_the_ends_of_both_ladders() -> None:
+    """Without them a change has nothing to be a change from."""
+
+    assert feature_sets.PRICE_ONLY.indicators == ()
+    assert feature_sets.PRICE_ONLY.extra_price_features
+    assert feature_sets.NO_PRICE.extra_price_features == ()
+    compact = feature_sets.PRODUCTION_COMPACT
+    assert feature_sets.NO_PRICE.indicators == compact.indicators
+
+
+def test_no_ablation_arm_accidentally_equals_the_set_it_came_from() -> None:
+    """A typo'd key would silently produce a duplicate of compact."""
+
+    compact_keys = {spec.key for spec in feature_sets.PRODUCTION_COMPACT.indicators}
+
+    for name, arm in feature_sets.FEATURE_SETS.items():
+        if name.startswith("compact_no_") and name != "compact_no_price":
+            assert {spec.key for spec in arm.indicators} != compact_keys

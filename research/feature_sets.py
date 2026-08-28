@@ -423,6 +423,61 @@ PRODUCTION_COMPACT = FeatureSet(
 )
 
 
+# --- Ablation and incremental-value arms -------------------------------------
+#
+# How often a column is selected says nothing about whether it earns its place:
+# a feature that always survives a filter can still be worth zero out of sample.
+# The two questions that do mean something are asked here, each as its own
+# walk-forward run over the same 250 sessions:
+#
+#   ablation           remove one group from compact. If the record does not get
+#                      worse, that group was carrying nothing.
+#   incremental value  add one group to the own-price columns alone. If the
+#                      record does not get better, the group adds nothing.
+#
+# They are not the same question and can disagree -- a group can be redundant
+# with another (ablation says nothing lost) while still carrying real signal on
+# its own (incremental says something gained). Both are reported.
+
+PRICE_ONLY = FeatureSet(
+    name="price_only",
+    label="自銘柄の価格特徴量のみ（海外指標なし）",
+    indicators=(),
+    extra_price_features=_EXTRA_PRICE_FEATURES,
+)
+
+NO_PRICE = FeatureSet(
+    name="compact_no_price",
+    label="機序10グループのみ（自銘柄テクニカルなし）",
+    indicators=PRODUCTION_COMPACT.indicators,
+    extra_price_features=(),
+)
+
+
+def _only(base: FeatureSet, key: str, name: str, label: str) -> FeatureSet:
+    return FeatureSet(
+        name=name,
+        label=label,
+        indicators=tuple(s for s in base.indicators if s.key == key),
+        extra_price_features=_EXTRA_PRICE_FEATURES,
+    )
+
+
+_ABLATIONS: dict[str, FeatureSet] = {
+    f"compact_no_{key}": _drop(
+        PRODUCTION_COMPACT, {key}, f"compact_no_{key}", f"機序10グループから{key}を削除"
+    )
+    for key in sorted(_COMPACT_KEYS)
+}
+
+_INCREMENTS: dict[str, FeatureSet] = {
+    f"price_plus_{key}": _only(
+        PRODUCTION_COMPACT, key, f"price_plus_{key}", f"自銘柄の価格特徴量 + {key} のみ"
+    )
+    for key in sorted(_COMPACT_KEYS)
+}
+
+
 FEATURE_SETS: dict[str, FeatureSet] = {
     set_.name: set_
     for set_ in (
@@ -436,8 +491,12 @@ FEATURE_SETS: dict[str, FeatureSet] = {
         PRODUCTION_NO_CASH,
         PRODUCTION_LEAN,
         PRODUCTION_COMPACT,
+        PRICE_ONLY,
+        NO_PRICE,
     )
 }
+FEATURE_SETS.update(_ABLATIONS)
+FEATURE_SETS.update(_INCREMENTS)
 
 DEFAULT_FEATURE_SET = BASELINE.name
 
