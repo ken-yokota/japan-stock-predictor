@@ -270,18 +270,22 @@ def random_filter_control(
     Returns the 5th, 50th and 95th percentiles of the cumulative return, on the
     same equally-weighted-days convention the backtests use.
 
-    **This control is only unbiased at zero cost.** Days are equally weighted
-    and cost is charged per position then averaged within the day, so a day's
-    cost is the round trip regardless of how many names were held that day. A
-    rule concentrated on 117 trading days therefore pays it 117 times while a
-    random draw of the same *number of positions* spreads over 250 days and pays
-    it 250 times, and the rule wins on arithmetic that has nothing to do with
-    selection.
+    **Calibrated at zero cost, badly broken with costs on.** Measured on the
+    production hold-out by feeding it a rule with no skill at all -- a random
+    draw concentrated on 117 of 267 sessions, exactly as many positions and days
+    as the real rule:
 
-    It mattered: under a 0.20% round trip the production hold-out cleared this
-    control on all three grids, and at zero cost it clears none of them. The
-    same numbers. Matching positions was not enough; the day structure had to
-    match too.
+        cost 0.000%   clears the 95th percentile  4.8% of the time  (want 5%)
+        cost 0.200%   clears the 95th percentile  62.5% of the time
+
+    A day's cost is one round trip however many names are held, so a rule
+    concentrated on few days simply pays it fewer times. At zero cost that
+    disappears and the control is sound: the concentrated draw does sit higher
+    than the spread-out one, but the control's own spread widens to match and
+    the false-positive rate comes out right.
+
+    This is why the costed hold-out's "three of three passes" was discarded. The
+    control it passed was wrong twelve times over.
     """
 
     cost = round_trip_cost() if cost_per_position is None else cost_per_position

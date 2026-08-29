@@ -514,3 +514,88 @@ def test_asking_for_more_sessions_than_exist_returns_no_band() -> None:
     low, mid, high = day_matched_control(rows, keep=5, sessions=999)
 
     assert low != low and mid != mid and high != high  # nan
+
+
+# --------------------------------------------------------------------------
+# The control has to be calibrated, and that is measurable
+
+
+def _draw(rows, rng, *, keep, sessions=None, cost=0.0):
+    """One draw with no skill at all, optionally concentrated on some sessions."""
+
+    import numpy as np
+
+    by_day: dict[str, list] = {}
+    for row in rows:
+        by_day.setdefault(row.date, []).append(row)
+    days = sorted(by_day)
+    if sessions is not None:
+        picked = rng.choice(len(days), size=sessions, replace=False)
+        pool = [row for index in picked for row in by_day[days[index]]]
+    else:
+        pool = [row for day in days for row in by_day[day]]
+    index = rng.choice(len(pool), size=min(keep, len(pool)), replace=False)
+    daily: dict[str, list[float]] = {}
+    for position in index:
+        row = pool[position]
+        daily.setdefault(row.date, []).append(row.actual_return - cost)
+    return float(sum(np.mean(values) for values in daily.values()))
+
+
+def test_the_position_matched_control_is_calibrated_only_at_zero_cost() -> None:
+    """The measurement that settles which control to trust.
+
+    A rule with no skill must clear the 95th percentile about 5% of the time. On
+    the production hold-out, a purely random rule concentrated on 117 of 267
+    sessions clears the position-matched control 4.6% of the time at zero cost
+    and 62.5% of the time under a 0.20% round trip.
+
+    That is why the costed hold-out's "3 of 3 passes" was discarded: the control
+    it passed was wrong twelve times over, because a day's cost is one round
+    trip however many names are held and the concentrated rule simply pays it
+    fewer times.
+    """
+
+    import numpy as np
+
+    rows = _series("A", 120, correct=True) + _series("B", 120, correct=False)
+    keep, sessions, draws = 40, 20, 400
+
+    for cost, expected_max in ((0.0, 0.20), (0.02, 1.01)):
+        rng = np.random.default_rng(3)
+        null = np.array(
+            [_draw(rows, rng, keep=keep, cost=cost) for _ in range(draws)]
+        )
+        high = float(np.percentile(null, 95))
+        rng = np.random.default_rng(9)
+        concentrated = np.array(
+            [
+                _draw(rows, rng, keep=keep, sessions=sessions, cost=cost)
+                for _ in range(draws)
+            ]
+        )
+        rate = float((concentrated > high).mean())
+        assert rate <= expected_max, (
+            f"cost={cost}: 無作為なルールが {rate:.1%} で95%点を超えた"
+        )
+
+
+def test_the_day_matched_control_is_calibrated() -> None:
+    """A skill-free rule must clear it about 5% of the time, not more."""
+
+    import numpy as np
+
+    rows = _series("A", 120, correct=True) + _series("B", 120, correct=False)
+    keep, sessions, draws = 40, 20, 400
+
+    rng = np.random.default_rng(3)
+    null = np.array(
+        [_draw(rows, rng, keep=keep, sessions=sessions) for _ in range(draws)]
+    )
+    high = float(np.percentile(null, 95))
+    rng = np.random.default_rng(9)
+    trials = np.array(
+        [_draw(rows, rng, keep=keep, sessions=sessions) for _ in range(draws)]
+    )
+
+    assert float((trials > high).mean()) <= 0.20
