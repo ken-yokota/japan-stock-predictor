@@ -45,6 +45,23 @@ from notifications.report_layout import (
 # floor the dashboard and the comparison runner use.
 MINIMUM_TRADES_FOR_EVIDENCE = 20
 
+# A corrected close writes a *new* actual_results row rather than editing the
+# old one, and a new simulated_trades row is valued against it. Joining both on
+# prediction_id alone therefore returns two results times two trades -- four
+# rows for one prediction -- and the day's P&L is counted four times.
+#
+# It happened: 2026-08-20's after-close mail reported +96,081 JPY for a day that
+# actually made +86,170, because 8053 was corrected. So both queries take the
+# current result -- the one no other row supersedes -- and the trade valued
+# against that same result.
+CURRENT_RESULT = """
+          AND NOT EXISTS (
+              SELECT 1 FROM actual_results AS superseding
+              WHERE superseding.supersedes_actual_result_id = a.actual_result_id
+          )
+"""
+
+
 RESULT_QUERY = """
     SELECT p.ticker, p.signal, p.predicted_intraday_return, p.probability_up,
            p.return_threshold, p.probability_threshold,
@@ -53,8 +70,9 @@ RESULT_QUERY = """
     FROM predictions AS p
     JOIN prediction_sets AS ps ON ps.prediction_set_id = p.prediction_set_id
     JOIN actual_results AS a ON a.prediction_id = p.prediction_id
-    LEFT JOIN simulated_trades AS t ON t.prediction_id = p.prediction_id
+    LEFT JOIN simulated_trades AS t ON t.actual_result_id = a.actual_result_id
     WHERE ps.prediction_date = :day
+""" + CURRENT_RESULT + """
     ORDER BY p.predicted_intraday_return DESC
 """
 
@@ -78,8 +96,9 @@ HISTORY_QUERY = """
     FROM prediction_sets AS ps
     JOIN predictions AS p ON p.prediction_set_id = ps.prediction_set_id
     JOIN actual_results AS a ON a.prediction_id = p.prediction_id
-    LEFT JOIN simulated_trades AS t ON t.prediction_id = p.prediction_id
+    LEFT JOIN simulated_trades AS t ON t.actual_result_id = a.actual_result_id
     WHERE ps.prediction_date <= :day
+""" + CURRENT_RESULT + """
     GROUP BY ps.prediction_date
     ORDER BY ps.prediction_date DESC
     LIMIT :limit

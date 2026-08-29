@@ -30,6 +30,7 @@ from notifications.result_report import (
     history_caveat,
     hit_rate_figure,
     load_day_result,
+    load_history,
     profit_history_figure,
     result_sections,
     skip_reason,
@@ -815,3 +816,117 @@ def test_the_figures_use_nothing_gmail_would_strip() -> None:
     assert "図: 本日の予測と実績" in html
     assert "図: 直近1営業日の損益と累積" in html
     assert "図: 方向的中率の推移" in html
+
+
+# --------------------------------------------------------------------------
+# A corrected close must not be counted twice
+
+
+def _correct_one_result(engine: Engine, day: date, ticker: str, profit: float) -> None:
+    """Supersede one prediction's result, the way a re-run close does.
+
+    A correction writes a new actual_results row and a new simulated_trades row
+    valued against it. It does not edit the old ones -- that is the point of the
+    audit trail -- so anything joining both tables on prediction_id alone gets
+    two results times two trades.
+    """
+
+    with engine.begin() as connection:
+        original = connection.execute(
+            text(
+                "select a.actual_result_id, a.prediction_id"
+                " from actual_results a"
+                " join predictions p on p.prediction_id = a.prediction_id"
+                " join prediction_sets ps"
+                "   on ps.prediction_set_id = p.prediction_set_id"
+                " where ps.prediction_date = :day and p.ticker = :ticker"
+            ),
+            {"day": day, "ticker": ticker},
+        ).one()
+        corrected = uuid.uuid4()
+        connection.execute(
+            text(
+                "insert into actual_results (actual_result_id, prediction_id,"
+                " supersedes_actual_result_id, result_version, status,"
+                " actual_open, actual_close, actual_intraday_return,"
+                " actual_price_difference, observed_at, finalized_at,"
+                " created_at, idempotency_key)"
+                " values (:id, :prediction, :supersedes, 2, 'CORRECTED',"
+                " 1000, 1010, 0.01, 10, now(), now(), now(), :key)"
+            ),
+            {
+                "id": corrected,
+                "prediction": original.prediction_id,
+                "supersedes": original.actual_result_id,
+                "key": f"a2/{ticker}/{day}",
+            },
+        )
+        connection.execute(
+            text(
+                "insert into simulated_trades (trade_id, prediction_id,"
+                " actual_result_id, status, is_simulated, capital_jpy, shares,"
+                " net_profit_jpy, strategy_version, created_at,"
+                " idempotency_key)"
+                " values (:id, :prediction, :actual, 'FINAL', true, 1000000,"
+                " 100, :profit, 's-v1', now(), :key)"
+            ),
+            {
+                "id": uuid.uuid4(),
+                "prediction": original.prediction_id,
+                "actual": corrected,
+                "profit": profit,
+                "key": f"t2/{ticker}/{day}",
+            },
+        )
+
+
+def test_a_corrected_close_is_counted_once_not_four_times(postgres: Engine) -> None:
+    """2026-08-20 was mailed as +96,081 JPY when the day made +86,170.
+
+    One prediction had been corrected, so it carried two results and two trades,
+    and the join produced four rows for it.
+    """
+
+    day = date(2026, 8, 24)
+    _seed(postgres, day)
+    before = load_day_result(postgres, day)
+    assert before is not None
+
+    _correct_one_result(postgres, day, "7203", profit=5000.0)
+    after = load_day_result(postgres, day)
+
+    assert after is not None
+    assert len(after.items) == len(before.items)
+    assert sum(1 for row in after.items if row["ticker"] == "7203") == 1
+
+
+def test_the_corrected_value_replaces_the_original_rather_than_adding_to_it(
+    postgres: Engine,
+) -> None:
+    day = date(2026, 8, 25)
+    _seed(postgres, day)
+    original = next(
+        row for row in load_day_result(postgres, day).items if row["ticker"] == "7203"
+    )
+
+    _correct_one_result(postgres, day, "7203", profit=5000.0)
+    corrected = next(
+        row for row in load_day_result(postgres, day).items if row["ticker"] == "7203"
+    )
+
+    assert float(corrected["net_profit_jpy"]) == pytest.approx(5000.0)
+    assert corrected["net_profit_jpy"] != original["net_profit_jpy"]
+
+
+def test_the_history_table_does_not_multiply_a_corrected_day(
+    postgres: Engine,
+) -> None:
+    day = date(2026, 8, 26)
+    _seed(postgres, day)
+    before = {item.day: item for item in load_history(postgres, day, limit=5)}[day]
+
+    _correct_one_result(postgres, day, "7203", profit=5000.0)
+    after = {item.day: item for item in load_history(postgres, day, limit=5)}[day]
+
+    assert after.predicted == before.predicted
+    assert after.buys == before.buys
