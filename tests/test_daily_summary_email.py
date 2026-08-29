@@ -48,6 +48,7 @@ from scripts.send_daily_summary import (
     collect,
     subject_for,
 )
+from services.versioning import STRATEGY_VERSION
 
 NAMES = {"9101": "日本郵船", "8306": "三菱UFJ", "7203": "トヨタ自動車"}
 
@@ -494,7 +495,7 @@ def _seed(
                     " net_profit_jpy, strategy_version, created_at,"
                     " idempotency_key)"
                     " values (:id, :prediction, :actual, 'FINAL', true, 1000000,"
-                    " 100, :profit, 's-v1', :now, :key)"
+                    " 100, :profit, :strategy, :now, :key)"
                 ),
                 {
                     "id": uuid.uuid4(),
@@ -502,6 +503,7 @@ def _seed(
                     "actual": actual_id,
                     "profit": profit,
                     "now": started,
+                    "strategy": STRATEGY_VERSION,
                     "key": f"t/{ticker}",
                 },
             )
@@ -868,13 +870,14 @@ def _correct_one_result(engine: Engine, day: date, ticker: str, profit: float) -
                 " net_profit_jpy, strategy_version, created_at,"
                 " idempotency_key)"
                 " values (:id, :prediction, :actual, 'FINAL', true, 1000000,"
-                " 100, :profit, 's-v1', now(), :key)"
+                " 100, :profit, :strategy, now(), :key)"
             ),
             {
                 "id": uuid.uuid4(),
                 "prediction": original.prediction_id,
                 "actual": corrected,
                 "profit": profit,
+                "strategy": STRATEGY_VERSION,
                 "key": f"t2/{ticker}/{day}",
             },
         )

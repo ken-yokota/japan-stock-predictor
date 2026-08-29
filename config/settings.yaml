@@ -42,12 +42,13 @@ data_quality:
   threshold_status: confirmed
   insufficient_data_prediction_status: INSUFFICIENT_DATA
 
-# Conservative provider-neutral paper-trading defaults, expressed per side.
-# These simulation assumptions are not broker quotes.
+# Zero per the operator's instruction on 2026-08-29: no orders are being
+# placed, so there is nothing to charge. See config/trading.yaml for what this
+# means for reading any P&L the system reports.
 backtest:
   capital_per_stock_jpy: 1000000
-  commission_bps_per_side: 5.0
-  slippage_bps_per_side: 5.0
+  commission_bps_per_side: 0.0
+  slippage_bps_per_side: 0.0
   cost_assumptions_status: confirmed
   quantity_method: floor_capital_div_open
   carry_overnight: false

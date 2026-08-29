@@ -16,9 +16,15 @@ position:
   carry_overnight: false
 
 costs:
-  # Conservative paper-trading defaults; each value is per side.
-  commission_bps_per_side: 5.0
-  slippage_bps_per_side: 5.0
+  # Zero, by the operator's instruction on 2026-08-29: this is a paper test and
+  # no order is being placed, so there is no commission and no slippage to
+  # model. Every P&L figure the system produces is therefore a *gross* figure.
+  #
+  # If real trading starts, these must go back to the broker's actual rates
+  # before any number here is read as a result. At 5 + 5 bps per side the round
+  # trip was 0.20%, and it was about four fifths of the recorded loss.
+  commission_bps_per_side: 0.0
+  slippage_bps_per_side: 0.0
   assumptions_status: confirmed
 
 prediction_price:

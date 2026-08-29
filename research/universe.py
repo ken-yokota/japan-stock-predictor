@@ -269,6 +269,19 @@ def random_filter_control(
 
     Returns the 5th, 50th and 95th percentiles of the cumulative return, on the
     same equally-weighted-days convention the backtests use.
+
+    **This control is only unbiased at zero cost.** Days are equally weighted
+    and cost is charged per position then averaged within the day, so a day's
+    cost is the round trip regardless of how many names were held that day. A
+    rule concentrated on 117 trading days therefore pays it 117 times while a
+    random draw of the same *number of positions* spreads over 250 days and pays
+    it 250 times, and the rule wins on arithmetic that has nothing to do with
+    selection.
+
+    It mattered: under a 0.20% round trip the production hold-out cleared this
+    control on all three grids, and at zero cost it clears none of them. The
+    same numbers. Matching positions was not enough; the day structure had to
+    match too.
     """
 
     cost = round_trip_cost() if cost_per_position is None else cost_per_position

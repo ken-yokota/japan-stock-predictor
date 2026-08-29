@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 import numpy as np
@@ -508,6 +508,35 @@ def evaluate(predictions: Sequence[Prediction], *, label: str = "") -> Evaluatio
         probability=probability_quality(predictions),
         trading=trading_quality(predictions),
     )
+
+
+def without_costs(predictions: Sequence[Prediction]) -> list[Prediction]:
+    """The same predictions valued as if no commission and no slippage were paid.
+
+    Exact, not an approximation. Slippage worsens both fills, so the recorded
+    gross is already net of it and the recorded cost adds the commission on top;
+    removing both gives ``net + cost``. Checked against the production database,
+    where re-valuing every settled prediction from its raw open and close came
+    to the same -24,700 JPY that this arithmetic gives.
+
+    Needed because a walk-forward artifact fixes its yen figures at the cost in
+    force when it ran. Costs went to zero on 2026-08-29 and re-running every arm
+    to change a multiplication would take days.
+    """
+
+    out: list[Prediction] = []
+    for row in predictions:
+        cost = float(row.cost_jpy or 0.0)
+        net = float(row.net_profit_jpy or 0.0) + cost
+        out.append(
+            replace(
+                row,
+                net_profit_jpy=None if row.net_profit_jpy is None else net,
+                gross_profit_jpy=None if row.net_profit_jpy is None else net,
+                cost_jpy=None if row.cost_jpy is None else 0.0,
+            )
+        )
+    return out
 
 
 def from_research_rows(

@@ -544,9 +544,36 @@ def test_open_pipeline_uses_first_observed_one_minute_bar(
         assert stock.timestamp <= stock.available_timestamp
 
 
+def _with_costs(config: AppConfig, *, commission: float, slippage: float) -> AppConfig:
+    """The same config with explicit costs, whatever the file currently says.
+
+    Production charges nothing since 2026-08-29 because no orders are placed.
+    The cost arithmetic still has to be right -- it is one edit away from being
+    live again, and it was four fifths of the recorded loss when it was on -- so
+    the path is exercised here with costs stated in the test rather than read
+    from a file that has since been zeroed.
+    """
+
+    return config.model_copy(
+        update={
+            "trading": config.trading.model_copy(
+                update={
+                    "costs": config.trading.costs.model_copy(
+                        update={
+                            "commission_bps_per_side": commission,
+                            "slippage_bps_per_side": slippage,
+                        }
+                    )
+                }
+            )
+        }
+    )
+
+
 def test_close_retry_finalizes_costed_board_lot_and_is_revision_idempotent(
     sqlite_factory: sessionmaker[Session], app_config: AppConfig
 ) -> None:
+    app_config = _with_costs(app_config, commission=5.0, slippage=5.0)
     _seed_prediction_set(sqlite_factory, app_config, with_buy=True)
     at_1545 = datetime(2026, 8, 12, 6, 45, tzinfo=UTC)
     at_1555 = datetime(2026, 8, 12, 6, 55, tzinfo=UTC)
@@ -1022,3 +1049,44 @@ def test_backfill_persists_lineage_the_operational_path_would_reject(
                 source_row_id=raw.id,
                 observed_by_cutoff=False,
             )
+
+
+def test_the_zero_cost_configuration_charges_nothing(
+    sqlite_factory: sessionmaker[Session], app_config: AppConfig
+) -> None:
+    """What production does now: gross equals net, because nothing is charged.
+
+    The companion to the costed test above. Both have to hold -- one describes
+    the configuration in force, the other the arithmetic that comes back the day
+    real orders are placed.
+    """
+
+    app_config = _with_costs(app_config, commission=0.0, slippage=0.0)
+    _seed_prediction_set(sqlite_factory, app_config, with_buy=True)
+    at_1545 = datetime(2026, 8, 12, 6, 45, tzinfo=UTC)
+    at_1555 = datetime(2026, 8, 12, 6, 55, tzinfo=UTC)
+    with sqlite_factory() as session:
+        session.add(
+            _stock_revision(close="6060", raw_hash="1" * 64, first_observed_at=at_1545)
+        )
+        session.commit()
+
+    pipeline = ClosePipeline(sqlite_factory, app_config, _environment())
+    pipeline.run(PREDICTION_DATE, observed_at=at_1545, fetch_data=False)
+    with sqlite_factory() as session:
+        stock = session.scalar(
+            select(StockPrice).where(StockPrice.raw_hash == "1" * 64)
+        )
+        assert stock is not None
+        stock.last_seen_at = at_1555
+        session.commit()
+    pipeline.run(PREDICTION_DATE, observed_at=at_1555, fetch_data=False)
+
+    with sqlite_factory() as session:
+        trade = session.scalar(select(SimulatedTrade))
+        assert trade is not None
+        assert float(trade.commission_cost_jpy or 0) == pytest.approx(0.0)
+        assert float(trade.slippage_cost_jpy or 0) == pytest.approx(0.0)
+        assert float(trade.net_profit_jpy or 0) == pytest.approx(
+            float(trade.gross_profit_jpy or 0)
+        )

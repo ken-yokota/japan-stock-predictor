@@ -31,7 +31,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from research.evaluation import Evaluation, Prediction, evaluate, from_research_rows
+from research.evaluation import (
+    Evaluation,
+    Prediction,
+    evaluate,
+    from_research_rows,
+    without_costs,
+)
+from research.universe import round_trip_cost
 
 # Below this the overlap is not a comparison, it is a different experiment.
 MINIMUM_COMMON_PAIRS = 1000
@@ -53,10 +60,23 @@ class Arm:
 
 
 def load_arm(path: Path, *, label: str | None = None) -> Arm:
-    """Read one artifact produced by the walk-forward runner."""
+    """Read one artifact produced by the walk-forward runner.
+
+    An artifact fixes its yen figures at the cost in force when it ran. Costs
+    went to zero on 2026-08-29, so an arm generated before that would report a
+    costed trading layer beside a universe study that charges nothing, and the
+    two tables in one report would not be on the same basis.
+
+    Zeroing is exact -- see ``research.evaluation.without_costs`` -- so it is
+    applied when the configuration charges nothing. Any other change of rate is
+    not exact, and rather than approximate one, the artifact's own figures are
+    kept and the caller is left to re-run the arm.
+    """
 
     payload: dict[str, Any] = json.loads(Path(path).read_text(encoding="utf-8"))
     rows = from_research_rows(payload.get("predictions", []))
+    if round_trip_cost() == 0.0:
+        rows = without_costs(rows)
     feature_set = payload.get("feature_set")
     estimator = payload.get("estimator") or None
     default = feature_set or Path(path).stem

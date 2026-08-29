@@ -10,7 +10,11 @@ from data.config import AppConfig
 
 FEATURE_VERSION = "pit-features-v1"
 MODEL_VERSION = "ridge-logistic-v1"
-STRATEGY_VERSION = "intraday-costed-v1"
+# Renamed when costs went to zero on 2026-08-29. The label is part of the
+# uniqueness of a valuation, so a zero-cost re-valuation of an already-scored
+# prediction lands beside the costed one instead of colliding with it, and the
+# costed history stays readable.
+STRATEGY_VERSION = "intraday-zerocost-v1"
 
 
 def sha256_json(value: object) -> str:

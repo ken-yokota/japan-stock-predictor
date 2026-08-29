@@ -40,6 +40,7 @@ from notifications.report_layout import (
     stacked_bars,
     table,
 )
+from services.versioning import STRATEGY_VERSION
 
 # Below this many trades a win rate is a coin-count, not evidence. The same
 # floor the dashboard and the comparison runner use.
@@ -54,11 +55,25 @@ MINIMUM_TRADES_FOR_EVIDENCE = 20
 # actually made +86,170, because 8053 was corrected. So both queries take the
 # current result -- the one no other row supersedes -- and the trade valued
 # against that same result.
+# A re-valuation under a new strategy label also lands beside the old one -- see
+# scripts/revalue_trades.py -- so the trade has to be pinned to the running
+# label as well, or zeroing the costs would double every figure the same way a
+# correction did.
 CURRENT_RESULT = """
           AND NOT EXISTS (
               SELECT 1 FROM actual_results AS superseding
               WHERE superseding.supersedes_actual_result_id = a.actual_result_id
           )
+"""
+
+# The strategy label belongs in the JOIN, not the WHERE. In the WHERE it drops
+# the prediction entirely when its only trade carries an older label, instead of
+# showing the prediction with no trade against it -- which silently hides rows
+# rather than showing them unvalued.
+TRADE_JOIN = """
+    LEFT JOIN simulated_trades AS t
+      ON t.actual_result_id = a.actual_result_id
+     AND t.strategy_version = :strategy
 """
 
 
@@ -70,7 +85,7 @@ RESULT_QUERY = """
     FROM predictions AS p
     JOIN prediction_sets AS ps ON ps.prediction_set_id = p.prediction_set_id
     JOIN actual_results AS a ON a.prediction_id = p.prediction_id
-    LEFT JOIN simulated_trades AS t ON t.actual_result_id = a.actual_result_id
+""" + TRADE_JOIN + """
     WHERE ps.prediction_date = :day
 """ + CURRENT_RESULT + """
     ORDER BY p.predicted_intraday_return DESC
@@ -96,7 +111,7 @@ HISTORY_QUERY = """
     FROM prediction_sets AS ps
     JOIN predictions AS p ON p.prediction_set_id = ps.prediction_set_id
     JOIN actual_results AS a ON a.prediction_id = p.prediction_id
-    LEFT JOIN simulated_trades AS t ON t.actual_result_id = a.actual_result_id
+""" + TRADE_JOIN + """
     WHERE ps.prediction_date <= :day
 """ + CURRENT_RESULT + """
     GROUP BY ps.prediction_date
@@ -132,7 +147,8 @@ def load_history(
 
     with engine.connect() as connection:
         rows = connection.execute(
-            text(HISTORY_QUERY), {"day": day, "limit": limit}
+            text(HISTORY_QUERY),
+            {"day": day, "limit": limit, "strategy": STRATEGY_VERSION},
         ).mappings()
         summaries = [
             DaySummary(
@@ -212,7 +228,10 @@ def load_day_result(engine: Engine, day: date) -> DayResult | None:
     with engine.connect() as connection:
         rows = [
             dict(item)
-            for item in connection.execute(text(RESULT_QUERY), {"day": day}).mappings()
+            for item in connection.execute(
+                text(RESULT_QUERY),
+                {"day": day, "strategy": STRATEGY_VERSION},
+            ).mappings()
         ]
     return DayResult(day, tuple(rows)) if rows else None
 

@@ -44,7 +44,13 @@ LIVE_QUERY = """
     FROM prediction_sets AS ps
     JOIN predictions AS p ON p.prediction_set_id = ps.prediction_set_id
     JOIN actual_results AS a ON a.prediction_id = p.prediction_id
-    LEFT JOIN simulated_trades AS t ON t.prediction_id = p.prediction_id
+    LEFT JOIN simulated_trades AS t
+      ON t.actual_result_id = a.actual_result_id
+     AND t.strategy_version = :strategy
+    WHERE NOT EXISTS (
+        SELECT 1 FROM actual_results AS superseding
+        WHERE superseding.supersedes_actual_result_id = a.actual_result_id
+    )
     ORDER BY ps.prediction_date, p.ticker
 """
 
@@ -85,6 +91,7 @@ def load_live() -> list[Prediction]:
     from sqlalchemy import text
 
     from database.connection import create_database_engine
+    from services.versioning import STRATEGY_VERSION
 
     # Same reason send_daily_summary reads it this way: DATABASE_URL on the
     # operator's machine is a schema-only local copy, so scoring "live" against
@@ -100,7 +107,12 @@ def load_live() -> list[Prediction]:
     engine = create_database_engine(url)
     try:
         with engine.connect() as connection:
-            rows = [dict(r) for r in connection.execute(text(LIVE_QUERY)).mappings()]
+            rows = [
+                dict(r)
+                for r in connection.execute(
+                    text(LIVE_QUERY), {"strategy": STRATEGY_VERSION}
+                ).mappings()
+            ]
     finally:
         engine.dispose()
     sectors = _sectors()

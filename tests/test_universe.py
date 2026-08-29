@@ -254,7 +254,7 @@ def test_the_round_trip_cost_comes_from_the_trading_config() -> None:
     )
 
     assert round_trip_cost() == pytest.approx(expected)
-    assert round_trip_cost() > 0.0
+    assert round_trip_cost() >= 0.0
 
 
 def test_the_backtest_charges_the_config_cost_when_none_is_given() -> None:
@@ -282,15 +282,17 @@ def test_the_breakeven_bar_is_taken_from_the_window_being_scored() -> None:
     so importing the first number understated the bar by more than two points.
     """
 
-    from research.universe import breakeven_accuracy, round_trip_cost
+    from research.universe import breakeven_accuracy
 
     big = [_row("2026-01-01", "A", 0.01, 0.02) for _ in range(50)]
     small = [_row("2026-01-01", "A", 0.01, 0.005) for _ in range(50)]
 
-    assert breakeven_accuracy(small) > breakeven_accuracy(big)
-    assert breakeven_accuracy(big) == pytest.approx(
-        0.5 + round_trip_cost() / (2 * 0.02)
-    )
+    # Stated here rather than read from the config, which is zero since
+    # 2026-08-29: at no cost every bar collapses to 50% and the relationship
+    # this test is about disappears.
+    cost = 0.002
+    assert breakeven_accuracy(small, cost=cost) > breakeven_accuracy(big, cost=cost)
+    assert breakeven_accuracy(big, cost=cost) == pytest.approx(0.5 + cost / (2 * 0.02))
 
 
 def test_a_window_that_never_moves_admits_nothing() -> None:
@@ -376,15 +378,14 @@ def test_asking_to_keep_more_than_exists_returns_no_band() -> None:
 def test_the_control_pays_the_same_cost_the_rule_pays() -> None:
     """A free control would make every costed rule look bad by construction."""
 
-    from research.universe import random_filter_control, round_trip_cost
+    from research.universe import random_filter_control
 
     rows = _series("A", 60, correct=True)
 
-    costed = random_filter_control(rows, keep=20, samples=200)
+    costed = random_filter_control(rows, keep=20, samples=200, cost_per_position=0.002)
     free = random_filter_control(rows, keep=20, samples=200, cost_per_position=0.0)
 
     assert free[1] > costed[1]
-    assert round_trip_cost() > 0
 
 
 def test_every_buy_rule_names_the_pool_its_control_draws_from() -> None:

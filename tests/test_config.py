@@ -419,8 +419,11 @@ def test_settings_match_specified_phase_one_defaults() -> None:
     assert config.signal.probability_up_threshold == pytest.approx(0.60)
     assert config.data_quality.max_feature_missing_ratio == pytest.approx(0.20)
     assert config.data_quality.threshold_status == "confirmed"
-    assert config.backtest.commission_bps_per_side == pytest.approx(5.0)
-    assert config.backtest.slippage_bps_per_side == pytest.approx(5.0)
+    # Zero since 2026-08-29, by the operator's instruction: no orders are
+    # placed, so there is nothing to charge. Pinned rather than left free --
+    # the value must be a stated decision, not a default that drifted.
+    assert config.backtest.commission_bps_per_side == pytest.approx(0.0)
+    assert config.backtest.slippage_bps_per_side == pytest.approx(0.0)
     assert config.backtest.cost_assumptions_status == "confirmed"
 
 
@@ -442,8 +445,8 @@ def test_model_and_trading_configs_make_safe_defaults_explicit() -> None:
     assert isinstance(trading, TradingConfig)
     assert trading.position.lot_size == 100
     assert trading.position.lot_size_status == "confirmed"
-    assert trading.costs.commission_bps_per_side == pytest.approx(5.0)
-    assert trading.costs.slippage_bps_per_side == pytest.approx(5.0)
+    assert trading.costs.commission_bps_per_side == pytest.approx(0.0)
+    assert trading.costs.slippage_bps_per_side == pytest.approx(0.0)
     assert trading.costs.assumptions_status == "confirmed"
 
 
