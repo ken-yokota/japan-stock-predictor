@@ -70,10 +70,10 @@ def _execution_config(config_dir: Path | None) -> ExecutionConfig:
     costs = config.trading.costs
     position = config.trading.position
     return ExecutionConfig(
-        capital_per_stock=float(position.capital_per_stock_jpy),
-        lot_size=int(position.lot_size),
-        commission_bps=float(costs.commission_bps_per_side),
-        slippage_bps=float(costs.slippage_bps_per_side),
+        capital_per_stock=float(position.capital_per_stock_jpy or 0.0),
+        lot_size=int(position.lot_size or 0),
+        commission_bps=float(costs.commission_bps_per_side or 0.0),
+        slippage_bps=float(costs.slippage_bps_per_side or 0.0),
     )
 
 

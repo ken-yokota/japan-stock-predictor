@@ -138,9 +138,9 @@ def study(predictions: Sequence[Prediction]) -> list[str]:
     )
 
     lines += _header("【BUY条件】銘柄は全22で固定")
-    for name, rule in BUY_RULES.items():
+    for name, buy_rule in BUY_RULES.items():
         lines.append(
-            _row(backtest(predictions, name=name, universe=all_tickers, buy=rule))
+            _row(backtest(predictions, name=name, universe=all_tickers, buy=buy_rule))
         )
 
     # The control every rule above needs. With a 0.20% round trip, any rule
@@ -155,8 +155,8 @@ def study(predictions: Sequence[Prediction]) -> list[str]:
         + _pad("無作為中央", 13, right=True) + _pad("無作為95%", 12, right=True),
         "  " + "-" * 88,
     ]
-    for name, rule in BUY_RULES.items():
-        result = backtest(predictions, name=name, universe=all_tickers, buy=rule)
+    for name, buy_rule in BUY_RULES.items():
+        result = backtest(predictions, name=name, universe=all_tickers, buy=buy_rule)
         pool_rule = BUY_RULE_POOLS.get(name)
         if pool_rule is None:
             # No probability filter, so there is nothing for a coin to replace.

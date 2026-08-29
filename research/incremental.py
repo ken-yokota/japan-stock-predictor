@@ -200,7 +200,9 @@ def report(ablations: Sequence[Change], increments: Sequence[Change]) -> list[st
     if family:
         from research.multiple_testing import benjamini_hochberg
 
-        adjusted = benjamini_hochberg([item.paired_p for item in family])
+        adjusted = benjamini_hochberg(
+            [item.paired_p for item in family if item.paired_p is not None]
+        )
         survivors = [
             (item, q)
             for item, q in zip(family, adjusted, strict=True)

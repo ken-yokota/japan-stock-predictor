@@ -12,13 +12,13 @@ import json
 from collections.abc import Sequence
 from pathlib import Path
 
-from research.evaluation import from_research_rows
+from research.evaluation import Prediction, from_research_rows
 from research.incremental import compare, report
 
 SUFFIX = "_2025-08-05_2026-08-14_w120.json"
 
 
-def _load(directory: Path, name: str):
+def _load(directory: Path, name: str) -> list[Prediction] | None:
     path = directory / f"{name}{SUFFIX}"
     if not path.exists():
         return None

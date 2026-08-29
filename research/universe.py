@@ -54,8 +54,8 @@ def _cached_round_trip_cost() -> float:
     from data.config import load_app_config
 
     costs = load_app_config().trading.costs
-    per_side = float(costs.commission_bps_per_side) + float(
-        costs.slippage_bps_per_side
+    per_side = float(costs.commission_bps_per_side or 0.0) + float(
+        costs.slippage_bps_per_side or 0.0
     )
     return 2.0 * per_side / 10_000.0
 

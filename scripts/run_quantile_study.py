@@ -12,11 +12,12 @@ import argparse
 import json
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 from research.quantile_study import report
 
 
-def _rows(path: Path) -> list[dict]:
+def _rows(path: Path) -> list[dict[str, Any]]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     return list(payload.get("predictions", []))
 
