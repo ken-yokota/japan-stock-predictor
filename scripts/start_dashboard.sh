@@ -21,12 +21,18 @@ if [[ "${1:-}" == "--lan" ]]; then
   shift
 fi
 
-local_python312_venv="${JPSTOCK_VENV:-${HOME}/.venvs/japan-stock-predictor-python312}"
-if [[ -x "${local_python312_venv}/bin/python" ]]; then
+# Everything runs Python 3.14 as of 2026-08-29, including Streamlit Community
+# Cloud. The 3.12 path is still tried second so an environment that has not been
+# rebuilt yet still starts rather than failing at import.
+local_venv="${JPSTOCK_VENV:-${HOME}/.venvs/japan-stock-predictor-python314}"
+if [[ ! -x "${local_venv}/bin/python" ]]; then
+  local_venv="${HOME}/.venvs/japan-stock-predictor-python312"
+fi
+if [[ -x "${local_venv}/bin/python" ]]; then
   # Keep the runtime outside Desktop/iCloud: dataless package files there can
   # make Streamlit's startup scan stall for several minutes.
   # shellcheck disable=SC1091
-  source "${local_python312_venv}/bin/activate"
+  source "${local_venv}/bin/activate"
 elif [[ -d .venv ]]; then
   # shellcheck disable=SC1091
   source .venv/bin/activate

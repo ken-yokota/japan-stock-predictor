@@ -7,7 +7,7 @@ name = "japan-stock-predictor"
 version = "0.1.0"
 description = "Point-in-time-safe Japanese stock intraday prediction application"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 license = {text = "Private"}
 dependencies = [
   "alembic>=1.13,<2",
@@ -75,7 +75,7 @@ select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 allowed-confusables = ["（", "）", "／", "：", "，", "－"]
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.14"
 strict = true
 warn_unused_ignores = true
 

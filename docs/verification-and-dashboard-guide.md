@@ -8,7 +8,7 @@
 
 ```bash
 cd /Users/yokotaken/Desktop/japan-stock-predictor
-python3.12 -m venv .venv
+python3.14 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements-dev.txt
 cp .env.example .env
@@ -21,7 +21,7 @@ mypy data database
 streamlit run app.py
 ```
 
-Python 3.12以上が必要です。既存`.venv`が3.11なら作り直すか、Python 3.12のGitHub CI結果を使います。`.env`の実値はcommitしません。
+Python 3.14以上が必要です。2026-08-29に全環境を3.14へ揃えました（ローカル・CI 14本・Streamlit Cloud）。`.env`の実値はcommitしません。
 
 ## 2. Providerと無料データを確認
 

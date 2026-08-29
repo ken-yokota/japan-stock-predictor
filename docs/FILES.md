@@ -10,7 +10,7 @@
 |---|---|---|---|---|---|---|---|---|---|
 | `README.md` | 概要、Quick Start、運用入口 | — | repository実装 | 利用手順 | docs | 利用者 | CIでlinkは未検査 | 変数名のみ | 実secretを記載しない |
 | `.env.example` | 環境変数template | — | 利用者copy | `.env` | pydantic-settings | local runtime | `test_config.py`, `test_email.py` | `DATABASE_URL`, `EODHD_API_KEY`, `SMTP_*`, `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_TO`, `APP_URL` | 値はdummy/blankのみ |
-| `pyproject.toml` | package/dependency/tool設定 | project metadata | pip/pytest/ruff/mypy | build/test設定 | setuptools | CI/local | CI install | — | Python >=3.12 |
+| `pyproject.toml` | package/dependency/tool設定 | project metadata | pip/pytest/ruff/mypy | build/test設定 | setuptools | CI/local | CI install | — | Python >=3.14 |
 | `requirements.txt`, `requirements-dev.txt` | pinned範囲のinstall入口 | — | pip | runtime/dev環境 | PyPI | Actions/local | CI | — | `pyproject.toml`と同期する |
 | `config/stocks.yaml` | 22対象株とProvider symbol | stock entries | YAML | `StocksConfig` | `data.config` | fetch/pipeline/dashboard catalog | `test_config.py` | — | Yahoo `.T`; EODHD JPはnull |
 | `config/indicators.yaml` | 37指標、source、PIT、sector対応 | indicator/source/group entries | YAML | `IndicatorsConfig` | `data.config` | fetch plan/dataset | `test_config.py`, provider tests | — | proxy/directを区別。Iron Ore未解決 |
@@ -132,7 +132,7 @@
 | `scripts/update_open.py` | Open観測CLI | `main` | date/observed-at | JSON + PENDING actual | `pipeline.open` | user/future Action | indirect | DB | optional。Predictionを上書きしない |
 | `scripts/run_close_update.py` | close pipeline CLI | `main` | date/observed-at/skip fetch | JSON + DB | `pipeline.close` | close Action/user | metric/trading tests | DB | raw未確定はPENDING |
 | `scripts/run_walk_forward.py` | DB raw履歴のestimated-PIT OOS batch | `main` | date/ticker/output dir | 銘柄CSV + summary JSON | dataset/backtest/trading/metrics | user | `test_walk_forward.py`（pure core） | `DATABASE_URL` | 既定`artifacts/backtest`; DB metricへ保存しない |
-| `.github/workflows/ci.yml` | pytest/Ruff/mypy/migration | Actions job | push/PR/manual | CI status | GitHub Actions | GitHub | itself | test `DATABASE_URL` only | Python 3.12 |
+| `.github/workflows/ci.yml` | pytest/Ruff/mypy/migration | Actions job | push/PR/manual | CI status | GitHub Actions | GitHub | itself | test `DATABASE_URL` only | Python 3.14 |
 | `.github/workflows/morning_prediction.yml` | 08:20 JST予測（23:20 UTC） | scheduled/manual job | secrets/input date | DB publication | scripts | GitHub scheduler | manual dry-run/E2E pending | `DATABASE_URL`, optional `EODHD_API_KEY` | `AUTOMATION_ENABLED` gate。scheduler遅延あり |
 | `.github/workflows/morning_email.yml` | 08:45/50/55 JST（前日23時UTC）email retry | scheduled/manual job | DB/email secrets | email log/delivery | scripts | GitHub scheduler | manual dry-run/E2E pending | DB/SMTP/Resend/email variables | Gmail exactly-onceは保証不可 |
 | `.github/workflows/close_update.yml` | 15:45/55/16:10 actual更新 | scheduled/manual job | DB/date | actual/trade/metric | scripts | GitHub scheduler | E2E pending | `DATABASE_URL` | publication lagならPENDING |

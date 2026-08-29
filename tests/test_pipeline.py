@@ -692,6 +692,16 @@ def test_email_payload_and_database_claim_allow_exactly_one_send(
         assert log.provider_message_id == "fake-message-1"
 
 
+def _pinned_python() -> str:
+    """The interpreter the repository has declared, as one source of truth."""
+
+    return (
+        (Path(__file__).resolve().parents[1] / ".python-version")
+        .read_text(encoding="utf-8")
+        .strip()
+    )
+
+
 def test_scheduled_workflows_use_jst_equivalent_utc_crons_and_safety_gate() -> None:
     workflow_dir = Path(__file__).parents[1] / ".github" / "workflows"
     # UTC, with the JST time each one lands at. Prediction retries are
@@ -715,7 +725,10 @@ def test_scheduled_workflows_use_jst_equivalent_utc_crons_and_safety_gate() -> N
         parsed = yaml.load(text, Loader=yaml.BaseLoader)
         assert [item["cron"] for item in parsed["on"]["schedule"]] == crons
         assert "vars.AUTOMATION_ENABLED == 'true'" in text
-        assert 'python-version: "3.12"' in text
+        # Read from .python-version rather than repeated here. Pinning the
+        # literal meant every interpreter bump had to be made in two places,
+        # and the workflows are the half that decides what production runs on.
+        assert f'python-version: "{_pinned_python()}"' in text
 
 
 def test_morning_command_exposes_partial_or_empty_publication_as_failure() -> None:
@@ -1090,3 +1103,37 @@ def test_the_zero_cost_configuration_charges_nothing(
         assert float(trade.net_profit_jpy or 0) == pytest.approx(
             float(trade.gross_profit_jpy or 0)
         )
+
+
+def test_every_workflow_runs_the_interpreter_the_repository_declares() -> None:
+    """All fourteen, not just the scheduled ones.
+
+    Before 2026-08-29 this repository ran four interpreters at once: 3.11 in the
+    local venv, 3.12 in the dashboard venv and in CI, and 3.14 on Streamlit
+    Community Cloud -- so the deployed dashboard was the one build the suite
+    never touched, and a test failed locally that passed in CI purely on syntax
+    the older interpreter could not parse.
+    """
+
+    import re
+
+    pinned = _pinned_python()
+    root = Path(__file__).resolve().parents[1]
+    workflows = sorted((root / ".github" / "workflows").glob("*.yml"))
+    assert workflows
+
+    for path in workflows:
+        text = path.read_text(encoding="utf-8")
+        for version in re.findall(r'python-version:\s*"([0-9.]+)"', text):
+            assert version == pinned, f"{path.name} は Python {version}"
+
+
+def test_the_declared_interpreter_matches_the_packaging_metadata() -> None:
+    import tomllib
+
+    root = Path(__file__).resolve().parents[1]
+    pinned = _pinned_python()
+    config = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
+
+    assert config["project"]["requires-python"] == f">={pinned}"
+    assert config["tool"]["mypy"]["python_version"] == pinned

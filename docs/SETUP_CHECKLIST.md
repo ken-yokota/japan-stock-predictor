@@ -109,7 +109,7 @@ EMAIL_TO=＜スマホで受信したいアドレス＞
    | Repository | `ken-yokota/japan-stock-predictor` |
    | Branch | `main` |
    | Main file path | `app.py` |
-   | Python version | `3.12` |
+   | Python version | `3.14` |
 
 4. **Advanced settings → Secrets** に、`DATABASE_URL` の1行だけを貼る。
 

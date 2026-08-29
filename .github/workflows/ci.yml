@@ -24,7 +24,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           cache: pip
           cache-dependency-path: |
             requirements.txt
@@ -55,12 +55,11 @@ jobs:
           python -m alembic check
 
   streamlit-runtime:
-    # Streamlit Community Cloud serves the dashboard on Python 3.14 while the
-    # rest of CI runs 3.12, so the deployed app is the one build nobody tests.
-    # Both dashboard failures on 2026-08-12 were only visible there. This job
-    # runs the dashboard contract on that interpreter; it is deliberately the
-    # cheap part of the suite, so a 3.14 wheel that is not published yet
-    # cannot take the whole of CI down with it.
+    # Kept after everything moved to 3.14 on 2026-08-29, when this job stopped
+    # being about a version gap. It is now the isolation check: the dashboard
+    # contract run with --noconftest and only SQLAlchemy installed, which fails
+    # the moment the read path grows an import of the training stack. The whole
+    # suite would not catch that, because there everything is installed.
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -110,7 +109,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           cache: pip
           cache-dependency-path: requirements.txt
 

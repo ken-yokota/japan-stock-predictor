@@ -75,7 +75,7 @@ cd ~/Desktop/japan-stock-predictor
    | Repository | `ken-yokota/japan-stock-predictor` |
    | Branch | `main` |
    | Main file path | `app.py` |
-   | Python version | `3.12` |
+   | Python version | `3.14` |
 
 4. **Deploy** を押す
 5. `https://なにか.streamlit.app` というURLが出る

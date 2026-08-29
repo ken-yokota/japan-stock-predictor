@@ -66,7 +66,7 @@ GitHub scheduled Actionsは指定時刻ちょうどの開始を保証しない�
 ## 4. Streamlit Community Cloud
 
 1. private GitHub repositoryをStreamlitへ接続する。
-2. entry pointを`app.py`、Pythonを3.12へ設定する。
+2. entry pointを`app.py`、Pythonを3.14へ設定する。
 3. Streamlit Secretsへ`DATABASE_URL`だけを登録する。DashboardはProvider keyやSMTP secretを必要としない。
 4. deployし、DB health、System Status、Todayを確認する。
 5. URLをGitHubの`APP_URL` secretへ入れる。
@@ -80,7 +80,7 @@ DashboardはDB read-only queryで、ページを開いてもProvider取得、モ
 ## ローカル確認
 
 ```bash
-python3.12 -m venv .venv
+python3.14 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements-dev.txt
 cp .env.example .env

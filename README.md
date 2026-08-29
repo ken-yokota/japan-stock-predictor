@@ -36,11 +36,11 @@ EODHDはPrimaryではなく、`EODHD_API_KEY`も任意です。Provider具体実
 
 ## Quick Start
 
-Python 3.12以上を使います。
+Python 3.14以上を使います。
 
 ```bash
 cd /Users/yokotaken/Desktop/japan-stock-predictor
-python3.12 -m venv .venv
+python3.14 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements-dev.txt
 cp .env.example .env
