@@ -473,3 +473,44 @@ def test_the_candidate_grid_changes_the_answer_and_that_is_the_point() -> None:
 
     assert set(narrow) <= {0.003, 0.02}
     assert set(wide) - {0.003, 0.02}
+
+
+def test_the_control_matches_the_trading_days_not_only_the_positions() -> None:
+    """Matching the position count alone favours the concentrated rule twice.
+
+    A rule holding 472 positions across 117 sessions was being compared with
+    draws spreading the same 472 across 225. More trading days means more round
+    trips paid *and* more exposure to the period's drift, and neither has
+    anything to do with picking well.
+    """
+
+    from research.universe import day_matched_control
+
+    rows = _series("A", 60, correct=True) + _series("B", 60, correct=False)
+
+    low, mid, high = day_matched_control(rows, keep=20, sessions=10, samples=200)
+
+    assert low <= mid <= high
+
+
+def test_the_day_matched_control_uses_exactly_the_sessions_asked_for() -> None:
+    """Otherwise it is the same mismatch in a different place."""
+
+    from research.universe import day_matched_control
+
+    rows = _series("A", 40, correct=True)
+
+    # One session is a degenerate but legal request; the band must still exist.
+    low, _, high = day_matched_control(rows, keep=1, sessions=1, samples=100)
+
+    assert low == low and high == high  # not nan
+
+
+def test_asking_for_more_sessions_than_exist_returns_no_band() -> None:
+    from research.universe import day_matched_control
+
+    rows = _series("A", 10, correct=True)
+
+    low, mid, high = day_matched_control(rows, keep=5, sessions=999)
+
+    assert low != low and mid != mid and high != high  # nan

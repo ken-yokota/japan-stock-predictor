@@ -305,6 +305,61 @@ def random_filter_control(
     )
 
 
+def day_matched_control(
+    candidates: Sequence[Prediction],
+    *,
+    keep: int,
+    sessions: int,
+    samples: int = RANDOM_CONTROL_SAMPLES,
+    cost_per_position: float | None = None,
+) -> tuple[float, float, float]:
+    """A control that matches the trading days as well as the position count.
+
+    ``random_filter_control`` matches only how many positions were opened, and
+    that is not enough. Measured on the production hold-out, a rule holding 472
+    positions across 117 sessions was being compared with draws that spread the
+    same 472 across 225 -- nearly twice the days.
+
+    Day count matters twice over. Every trading day pays one round trip however
+    many names are held, so more days means more cost; and every trading day is
+    also one more day of exposure to whatever the period's drift was. Both
+    effects favour the concentrated rule, and neither has anything to do with
+    picking well.
+
+    So this draws the same number of sessions first, then the positions within
+    them, and only then asks whether the rule beat the draw.
+    """
+
+    cost = round_trip_cost() if cost_per_position is None else cost_per_position
+    by_day: dict[str, list[Prediction]] = {}
+    for row in candidates:
+        by_day.setdefault(row.date, []).append(row)
+    days = sorted(by_day)
+    if not days or keep <= 0 or sessions <= 0 or sessions > len(days):
+        return (float("nan"), float("nan"), float("nan"))
+
+    rng = np.random.default_rng(RANDOM_CONTROL_STATE)
+    totals = np.empty(samples, dtype=float)
+    for index in range(samples):
+        picked_days = rng.choice(len(days), size=sessions, replace=False)
+        chosen_days = [days[i] for i in picked_days]
+        pool = [row for day in chosen_days for row in by_day[day]]
+        if len(pool) <= keep:
+            drawn = pool
+        else:
+            picked = rng.choice(len(pool), size=keep, replace=False)
+            drawn = [pool[i] for i in picked]
+        daily: dict[str, list[float]] = {}
+        for row in drawn:
+            daily.setdefault(row.date, []).append(row.actual_return - cost)
+        totals[index] = float(sum(np.mean(v) for v in daily.values()))
+    return (
+        float(np.percentile(totals, 5)),
+        float(np.percentile(totals, 50)),
+        float(np.percentile(totals, 95)),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class BacktestResult:
     """One (universe rule, buy rule) pair, scored at session level."""

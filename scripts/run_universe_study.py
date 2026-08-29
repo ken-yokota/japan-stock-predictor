@@ -37,7 +37,7 @@ from research.universe import (
     backtest_adaptive,
     backtest_adaptive_return,
     buy_production,
-    random_filter_control,
+    day_matched_control,
     round_trip_cost,
 )
 
@@ -118,7 +118,8 @@ def study(predictions: Sequence[Prediction]) -> list[str]:
         if result.positions >= control.positions:
             cells = _pad("（対照そのもの）", 37, right=True)
         else:
-            low, mid, high = random_filter_control(taken, keep=result.positions)
+            low, mid, high = day_matched_control(taken, keep=result.positions,
+                                        sessions=result.traded_sessions)
             cells = (
                 _pad(f"{low * 100:+.2f}%", 12, right=True)
                 + _pad(f"{mid * 100:+.2f}%", 13, right=True)
@@ -162,7 +163,9 @@ def study(predictions: Sequence[Prediction]) -> list[str]:
             cells = _pad("（確率を使わないルール）", 37, right=True)
         else:
             pool = [row for row in predictions if pool_rule(row)]
-            low, mid, high = random_filter_control(pool, keep=result.positions)
+            low, mid, high = day_matched_control(
+                pool, keep=result.positions, sessions=result.traded_sessions
+            )
             cells = (
                 _pad(f"{low * 100:+.2f}%", 12, right=True)
                 + _pad(f"{mid * 100:+.2f}%", 13, right=True)
@@ -179,12 +182,13 @@ def study(predictions: Sequence[Prediction]) -> list[str]:
         "  実績が無作為の95%点を超えていなければ、"
         "そのルールは「取引を減らした」以上のことをしていません。"
     )
-    if cost > 0:
-        lines.append(
-            "  ※ コストが0でないため、この対照は取引日数の少ないルールに有利に"
-            "偏っています。日ごとの費用は建玉数によらず往復1回分なので、"
-            "少ない日数に集中したルールほど支払回数が少なくなります。"
-        )
+    lines.append(
+        "  対照は建玉数と取引日数の両方を揃えています。日数を揃えないと、"
+        "少ない日数に集中したルールが有利になります"
+    )
+    lines.append(
+        "  （費用の支払回数が少なく、相場のドリフトへの露出も少ないため）。"
+    )
 
     lines += _header("【閾値の選び方】同じ候補、選ぶ時点だけが違う")
     best = max(
@@ -239,7 +243,9 @@ def study(predictions: Sequence[Prediction]) -> list[str]:
         "",
     ]
     for result in grid_results:
-        low, mid, high = random_filter_control(predictions, keep=result.positions)
+        low, mid, high = day_matched_control(
+            predictions, keep=result.positions, sessions=result.traded_sessions
+        )
         verdict = "有意" if result.total_return > high else "帯の中"
         lines.append(
             "  "

@@ -35,7 +35,7 @@ from research.universe import (
     backtest,
     backtest_adaptive_return,
     buy_production,
-    random_filter_control,
+    day_matched_control,
     round_trip_cost,
 )
 
@@ -58,6 +58,8 @@ def _lines(path: Path) -> list[str]:
 
     out = [
         "事前登録した判定: 候補グリッド3種すべてで無作為対照の95%点を超えれば PASS",
+        "対照は建玉数と取引日数の両方を揃えたもの（日数を揃えないと、",
+        "少ない日数に集中したルールが選別の巧拙と無関係に有利になる）",
         f"対象: {path.name}",
         f"  {payload.get('feature_set')} / {payload.get('from_date')}"
         f" 〜 {payload.get('to_date')} / {len(predictions)}予測 / {days}営業日",
@@ -80,9 +82,9 @@ def _lines(path: Path) -> list[str]:
         f"  {current.positions}建玉  t={current.daily_t or 0:+.2f}",
         "",
         "【主要主張】",
-        f"  {'グリッド':<36}{'建玉':>6}{'累積':>10}{'t値':>7}"
+        f"  {'グリッド':<36}{'建玉':>6}{'取引日':>7}{'累積':>10}{'t値':>7}"
         f"{'無作為中央':>12}{'無作為95%':>11}{'判定':>7}",
-        "  " + "-" * 82,
+        "  " + "-" * 90,
     ]
 
     passes = 0
@@ -92,11 +94,14 @@ def _lines(path: Path) -> list[str]:
             name=name,
             adaptive=AdaptiveReturnThreshold(candidates=candidates),
         )
-        _, mid, high = random_filter_control(predictions, keep=result.positions)
+        _, mid, high = day_matched_control(
+            predictions, keep=result.positions, sessions=result.traded_sessions
+        )
         passed = result.total_return > high
         passes += passed
         out.append(
-            f"  {name:<36}{result.positions:>6}{result.total_return * 100:>+10.2f}"
+            f"  {name:<36}{result.positions:>6}{result.traded_sessions:>7}"
+            f"{result.total_return * 100:>+10.2f}"
             f"{result.daily_t or 0:>+7.2f}{mid * 100:>+12.2f}{high * 100:>+11.2f}"
             f"{('PASS' if passed else 'FAIL'):>7}"
         )
