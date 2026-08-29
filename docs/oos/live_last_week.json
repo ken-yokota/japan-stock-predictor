@@ -1,5 +1,5 @@
 {
-  "label": "Live 直近1週間 (2026-08-24〜08-28)",
+  "label": "Live 直近1週間 (2026-08-24〜08-28・コスト0)",
   "model": {
     "count": 110,
     "mae": 0.010859151379999998,
@@ -116,21 +116,21 @@
     "trades": 23,
     "sessions": 5,
     "gross_jpy": -50950.0,
-    "cost_jpy": 37460.663,
-    "net_jpy": -88410.6625,
-    "win_rate": 0.21739130434782608,
-    "payoff_ratio": 1.0990771238954653,
-    "profit_factor": 0.3052992010820737,
-    "expectancy_jpy": -3843.9418478260873,
+    "cost_jpy": 0.0,
+    "net_jpy": -50950.0,
+    "win_rate": 0.30434782608695654,
+    "payoff_ratio": 1.1217248518597844,
+    "profit_factor": 0.49075462268865566,
+    "expectancy_jpy": -2215.217391304348,
     "winning_days": 1,
     "losing_days": 4,
-    "daily_mean_jpy": -17682.1325,
-    "daily_sd_jpy": 18835.575054472527,
-    "daily_sharpe": -0.9387625516536252,
-    "daily_sortino": -0.9748631023308827,
-    "max_drawdown_jpy": -49500.655000000006,
-    "worst_day_jpy": -38910.0075,
-    "best_day_jpy": 911.3524000000011
+    "daily_mean_jpy": -10190.0,
+    "daily_sd_jpy": 15716.249552612735,
+    "daily_sharpe": -0.6483735172241505,
+    "daily_sortino": -0.7772740086389941,
+    "max_drawdown_jpy": -21800.0,
+    "worst_day_jpy": -30200.0,
+    "best_day_jpy": 9250.0
   },
   "sessions": [
     {

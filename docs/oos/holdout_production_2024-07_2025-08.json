@@ -1,5 +1,5 @@
 {
-  "label": "★未使用期間 2024-07〜2025-08 / 本番構成72列（事前登録・3/3 PASS）",
+  "label": "★未使用期間 2024-07〜2025-08 / 本番構成72列（事前登録・0/3 FAIL）",
   "model": {
     "count": 5874,
     "mae": 0.012322976045073432,
@@ -123,21 +123,21 @@
     "trades": 575,
     "sessions": 267,
     "gross_jpy": 950114.3402099616,
-    "cost_jpy": 998290.9717700677,
-    "net_jpy": -48176.63156010618,
-    "win_rate": 0.46956521739130436,
-    "payoff_ratio": 1.113445517894175,
-    "profit_factor": 0.9856730814145155,
-    "expectancy_jpy": -83.78544619148902,
-    "winning_days": 62,
-    "losing_days": 80,
-    "daily_mean_jpy": -180.4368223224943,
-    "daily_sd_jpy": 44526.60420475274,
-    "daily_sharpe": -0.004052337373242458,
-    "daily_sortino": -0.0038748072816284854,
-    "max_drawdown_jpy": -499883.0480200085,
-    "worst_day_jpy": -293453.31241627946,
-    "best_day_jpy": 202889.75385944892
+    "cost_jpy": 0.0,
+    "net_jpy": 950114.3402099616,
+    "win_rate": 0.52,
+    "payoff_ratio": 1.22876299983547,
+    "profit_factor": 1.331159916488426,
+    "expectancy_jpy": 1652.372765582542,
+    "winning_days": 70,
+    "losing_days": 72,
+    "daily_mean_jpy": 3558.480674943676,
+    "daily_sd_jpy": 45251.82312301462,
+    "daily_sharpe": 0.07863728860758029,
+    "daily_sortino": 0.08204033197734542,
+    "max_drawdown_jpy": -379059.85717773426,
+    "worst_day_jpy": -264460.04638671875,
+    "best_day_jpy": 213679.98046875015
   },
   "sessions": [
     {
