@@ -1105,6 +1105,36 @@ def test_the_zero_cost_configuration_charges_nothing(
         )
 
 
+def test_the_dev_container_runs_the_interpreter_the_repository_declares() -> None:
+    """The workflow guard never looked here, and the drift landed here first.
+
+    A dev container on 3.11 does not fail loudly: most of this code parses and
+    runs there, so someone would work in it for a while before ``pip install
+    -e .`` refused on requires-python, or worse, before something behaved
+    differently from CI. That is the same shape as the problem commit 7aaa794
+    fixed -- four interpreters at once, with the deployed dashboard the one
+    build no test had touched.
+    """
+
+    import json
+    import re
+
+    root = Path(__file__).resolve().parents[1]
+    config = root / ".devcontainer" / "devcontainer.json"
+    if not config.exists():
+        pytest.skip("no dev container is defined")
+
+    text = config.read_text(encoding="utf-8")
+    # devcontainer.json is JSONC; the // comments are not valid JSON.
+    document = json.loads(re.sub(r"^\s*//.*$", "", text, flags=re.M))
+    image = str(document.get("image", ""))
+    pinned = _pinned_python()
+    assert pinned in image, (
+        f".devcontainer は {image!r} を使っています。"
+        f"このリポジトリは Python {pinned} に統一されています。"
+    )
+
+
 def test_every_workflow_runs_the_interpreter_the_repository_declares() -> None:
     """All fourteen, not just the scheduled ones.
 
