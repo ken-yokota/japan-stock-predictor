@@ -210,3 +210,89 @@ def test_the_report_says_this_is_a_replay_and_too_small_to_conclude_from() -> No
     assert "Pxx別の精度" in text
     assert "手法ごとの閾値" in text
     assert "選んだことによる下駄" in text
+
+
+# --- topping up a run that lost a block ---------------------------------
+
+
+def test_a_top_up_run_replaces_the_failed_pairs_rather_than_doubling_them(
+    tmp_path,
+) -> None:
+    """A dropped connection removes a contiguous block, not a random sample.
+
+    Tasks are submitted date by date, so a thirty-second outage takes out most
+    of one session and leaves it represented by whichever tickers happened to
+    fall outside the window. Reporting that is worse than reporting nothing for
+    the day, so the failures are re-run and merged.
+    """
+
+    import json
+
+    from scripts.report_all_method_backtest import _combined
+
+    main = tmp_path / "main.json"
+    main.write_text(
+        json.dumps(
+            {
+                "from": "2026-08-07",
+                "to": "2026-08-28",
+                "sessions": ["2026-08-07", "2026-08-21"],
+                "tickers": ["9101", "9104"],
+                "levels": [0.1, 0.5, 0.9],
+                "rows": [
+                    _row("2026-08-07", "9101", median=0.001),
+                    _row("2026-08-21", "9101", median=0.002),
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    topup = tmp_path / "topup.json"
+    topup.write_text(
+        json.dumps(
+            {
+                "from": "2026-08-21",
+                "to": "2026-08-21",
+                "sessions": ["2026-08-21"],
+                "tickers": ["9104"],
+                "levels": [0.1, 0.5, 0.9],
+                "rows": [
+                    # The pair that failed the first time.
+                    _row("2026-08-21", "9104", median=0.009),
+                    # And a re-run of one that already succeeded.
+                    _row("2026-08-21", "9101", median=0.007),
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    merged = _combined([main, topup])
+    keys = {(r["date"], r["ticker"]) for r in merged["rows"]}
+    assert keys == {
+        ("2026-08-07", "9101"),
+        ("2026-08-21", "9101"),
+        ("2026-08-21", "9104"),
+    }
+    # The later file wins, so a re-run replaces rather than duplicates.
+    rerun = next(
+        r for r in merged["rows"] if (r["date"], r["ticker"]) == ("2026-08-21", "9101")
+    )
+    assert rerun["quantiles"]["q0.5"] == pytest.approx(0.007)
+    assert merged["sessions"] == ["2026-08-07", "2026-08-21"]
+    assert merged["tickers"] == ["9101", "9104"]
+    assert len(merged["sources"]) == 2
+
+
+def test_reading_one_artifact_still_works_unchanged(tmp_path) -> None:
+    import json
+
+    from scripts.report_all_method_backtest import _combined
+
+    path = tmp_path / "only.json"
+    path.write_text(
+        json.dumps(_payload([_row("2026-08-07", "9101")])), encoding="utf-8"
+    )
+    merged = _combined([path])
+    assert len(merged["rows"]) == 1
+    assert merged["from"] == "2026-08-07"

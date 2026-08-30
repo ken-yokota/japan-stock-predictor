@@ -41,6 +41,7 @@ from pathlib import Path
 from typing import Any
 
 from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
 
 from data.config import load_app_config
 from data.market_calendar import is_japan_business_day
@@ -116,14 +117,25 @@ def _init(config_dir: str, database_url: str) -> None:
     _STATE["factory"] = create_session_factory(engine)
 
 
-def _one(day: str, ticker: str) -> list[dict[str, Any]]:
-    config = _STATE["config"]
-    factory = _STATE["factory"]
-    target_day = date.fromisoformat(day)
-    with factory() as session:
-        builder = PointInTimeDatasetBuilder(session, config)
+# A hosted database drops connections under load, and this run holds three of
+# them for hours. On 2026-08-30 a transient spike cost twelve tasks in a row --
+# all on one date, because tasks are submitted day by day, so a thirty-second
+# blip removes a contiguous block and leaves that session half-covered. Half a
+# session is worse than none: it biases the day's sample toward whichever
+# tickers happened to be scheduled outside the blip.
+_DATASET_ATTEMPTS = 3
+_RETRY_SECONDS = 5.0
+
+
+def _build_with_retry(
+    builder: PointInTimeDatasetBuilder, ticker: str, target_day: date, config: Any
+) -> Any:
+    """Read one window, retrying a dropped connection but not a bad query."""
+
+    last: Exception | None = None
+    for attempt in range(_DATASET_ATTEMPTS):
         try:
-            dataset = builder.build(
+            return builder.build(
                 ticker,
                 target_day,
                 training_sessions=config.model.training.window_jpx_sessions,
@@ -131,6 +143,24 @@ def _one(day: str, ticker: str) -> list[dict[str, Any]]:
                 - (config.model.features.max_missing_ratio or 0.2),
                 operational=False,
             )
+        except OperationalError as error:
+            # Only connection-level faults are retried. A ValueError from the
+            # point-in-time guards means this window genuinely cannot be built,
+            # and repeating it would just be slower.
+            last = error
+            if attempt + 1 < _DATASET_ATTEMPTS:
+                time.sleep(_RETRY_SECONDS * (attempt + 1))
+    raise last if last is not None else RuntimeError("unreachable")
+
+
+def _one(day: str, ticker: str) -> list[dict[str, Any]]:
+    config = _STATE["config"]
+    factory = _STATE["factory"]
+    target_day = date.fromisoformat(day)
+    with factory() as session:
+        builder = PointInTimeDatasetBuilder(session, config)
+        try:
+            dataset = _build_with_retry(builder, ticker, target_day, config)
         except Exception as error:
             return [
                 {

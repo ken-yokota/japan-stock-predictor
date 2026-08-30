@@ -479,15 +479,50 @@ def render(payload: dict[str, Any], threshold: float) -> list[str]:
     return lines
 
 
+def _combined(paths: Sequence[Path]) -> dict[str, Any]:
+    """Read one or more fitting artifacts as a single window.
+
+    A run that loses a block of tasks to a dropped connection has to be topped
+    up rather than reported with the gap in it: the losses arrive in a
+    contiguous run, so a session ends up represented by whichever tickers
+    happened to fall outside the outage, which is a biased sample rather than a
+    smaller one.
+
+    Later files win on a duplicate (date, ticker, arm), so a re-run of the
+    failed pairs replaces rather than doubles them.
+    """
+
+    merged: dict[tuple[str, str, str], dict[str, Any]] = {}
+    sessions: set[str] = set()
+    tickers: set[str] = set()
+    first: dict[str, Any] = {}
+    for path in paths:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        first = first or payload
+        sessions.update(str(day) for day in payload.get("sessions", []))
+        tickers.update(str(t) for t in payload.get("tickers", []))
+        for row in payload.get("rows", []):
+            merged[(str(row["date"]), str(row["ticker"]), str(row["arm"]))] = row
+    return {
+        "from": min((p["from"] for p in [first]), default="?"),
+        "to": first.get("to", "?"),
+        "sessions": sorted(sessions),
+        "tickers": sorted(tickers),
+        "levels": first.get("levels", []),
+        "rows": list(merged.values()),
+        "sources": [str(path) for path in paths],
+    }
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("artifact", type=Path)
+    parser.add_argument("artifact", type=Path, nargs="+")
     parser.add_argument("--threshold", type=float, default=0.003)
     parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--json-out", type=Path, default=None)
     args = parser.parse_args(argv)
 
-    payload = json.loads(args.artifact.read_text(encoding="utf-8"))
+    payload = _combined(args.artifact)
     text = "\n".join(render(payload, args.threshold))
     print(text)
     if args.out:
