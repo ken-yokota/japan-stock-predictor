@@ -219,6 +219,55 @@ def density_sparklines(values: Sequence[object], *, columns: int = 21) -> list[s
     ]
 
 
+def arm_agreement(value: object) -> str:
+    """How many model families point the same way, out of those that answered.
+
+    A compact stand-in for the full comparison, which belongs in the mail
+    rather than in a column: what a reader wants at a glance is whether the
+    families agree, because eight models nodding together and eight models
+    split down the middle are very different mornings even when the production
+    forecast is identical.
+
+    Families that estimate no return -- the classifier -- are not counted, and
+    neither are the ones that failed. The denominator is what actually voted.
+    """
+
+    if not isinstance(value, list):
+        return "—"
+    votes = [
+        number
+        for arm in value
+        if isinstance(arm, dict)
+        and arm.get("status") == "OK"
+        and (number := as_number(arm.get("predicted_return"))) is not None
+    ]
+    if not votes:
+        return "—"
+    up = sum(1 for number in votes if number > 0)
+    return f"{up}/{len(votes)} 上"
+
+
+def arm_median(value: object) -> str:
+    """The middle family's point forecast, which no single family can skew."""
+
+    if not isinstance(value, list):
+        return "—"
+    votes = sorted(
+        number
+        for arm in value
+        if isinstance(arm, dict)
+        and arm.get("status") == "OK"
+        and (number := as_number(arm.get("predicted_return"))) is not None
+    )
+    if not votes:
+        return "—"
+    middle = len(votes) // 2
+    centre = (
+        votes[middle] if len(votes) % 2 else (votes[middle - 1] + votes[middle]) / 2.0
+    )
+    return format_percent(centre)
+
+
 def format_number(value: object, *, digits: int = 2) -> str:
     number = as_number(value)
     return "—" if number is None else f"{number:,.{digits}f}"
@@ -440,6 +489,8 @@ def today_table_rows(
                 "銘柄": stock_label(ticker),
                 "業種": sector_label(ticker),
                 "状態": safe_text(prediction.get("status", "—")),
+                "系統一致": arm_agreement(prediction.get("arm_predictions")),
+                "系統中央値": arm_median(prediction.get("arm_predictions")),
                 "確率密度": sparklines[index],
                 "10%": distribution_quantile(
                     prediction.get("return_distribution"), 0.10

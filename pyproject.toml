@@ -13,6 +13,7 @@ dependencies = [
   "alembic>=1.13,<2",
   "exchange-calendars>=4.6,<5",
   "httpx>=0.27,<1",
+  "lightgbm>=4.5,<5",
   "numpy>=2.0,<3",
   "pandas>=2.2,<3",
   "plotly>=5.22,<7",
@@ -25,6 +26,7 @@ dependencies = [
   "SQLAlchemy>=2.0.31,<3",
   "statsmodels>=0.14,<1",
   "streamlit>=1.36,<2",
+  "xgboost>=2.1,<4",
   "yfinance>=1.5,<2",
 ]
 

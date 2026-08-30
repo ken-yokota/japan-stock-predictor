@@ -29,6 +29,9 @@ models:
   classification_candidates:
     - logistic_regression
   scaler: standard_scaler
+  # Every family is fitted and recorded each morning. None of them decide a
+  # trade: regression_primary and classification_primary still do that.
+  run_all_arms: true
 
 cross_validation:
   strategy: time_series_split

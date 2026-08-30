@@ -747,6 +747,13 @@ class Prediction(Base):
     # would make changing it a migration. ``NULL`` on rows written before the
     # distribution existed, and on any row whose quantile fit could not be made.
     return_distribution: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    # Every model family's answer for this ticker-session: the point, the
+    # probability, the distribution and how its spread was arrived at. One
+    # document rather than a table because nothing here decides a trade --
+    # these are measurements kept beside the decision, and the set of
+    # families will change. Promote to its own table if one ever becomes a
+    # decision input, because then it needs to be joinable and scored.
+    arm_predictions: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON)
     feature_coverage: Mapped[float | None] = mapped_column(Float)
     warnings: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(

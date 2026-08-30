@@ -17,6 +17,7 @@ from notifications.report_layout import (
     INK,
     MEDIAN_MARK,
     MUTED,
+    badge,
     cell,
     density_axis,
     density_chart,
@@ -735,6 +736,13 @@ def render_morning_email(
                 "  なく、その判定がどれだけ不確かかを示すものです。",
                 "",
                 "",
+                "■ 全モデル系統の予測",
+                "",
+                _arms_text(selected),
+                "",
+                f"  {ARM_NOTE}",
+                "",
+                "",
                 "■ なぜその予測になったか",
                 "",
                 _reasons_text(selected),
@@ -766,6 +774,11 @@ def render_morning_email(
                 _decision_rows_html(selected),
                 "買い判定はこの2つの数値で行っています。分布は判定そのものでは"
                 "なく、その判定がどれだけ不確かかを示すものです。",
+            )
+            + section(
+                "全モデル系統の予測",
+                _arms_html(selected),
+                ARM_NOTE,
             )
             + section(
                 "なぜその予測になったか",
@@ -843,3 +856,142 @@ def render_morning_email(
     recipient_hash = hashlib.sha256(recipient.strip().lower().encode()).hexdigest()[:16]
     key = f"morning/{date_text}/{recipient_hash}"
     return RenderedEmail(subject, text, html_text, sender, recipient, key)
+
+
+# How a family arrived at its spread, in the operator's words. The distinction
+# is the point: a width that reacts to today's inputs and one that cannot are
+# not the same claim, and a single "区間" column would hide that.
+SPREAD_LABEL = {
+    "conditional": "当日の入力で変わる",
+    "ensemble": "木の意見の割れ",
+    "residual": "過去の誤差幅（一定）",
+}
+
+ARM_NOTE = (
+    "毎朝この全系統を同じ行・同じ特徴量で学習させて記録しています。"
+    "ただし売買の判定は従来どおりRidgeの点予測とロジスティックの確率だけで行っており、"
+    "ここの系統は判定に一切関与していません。"
+    "どれかを採用するかどうかは、実績が溜まってから別途ご判断いただく話です。"
+)
+
+
+def _arm_rows(item: EmailCandidate) -> list[dict[str, object]]:
+    return [dict(arm) for arm in item.arms]
+
+
+def _arm_number(value: object, kind: str = "percent") -> str:
+    if not isinstance(value, int | float):
+        return "—"
+    return f"{float(value):+.2%}" if kind == "percent" else f"{float(value):.2f}"
+
+
+def _arm_band(arm: dict[str, object]) -> str:
+    payload = arm.get("distribution")
+    if not isinstance(payload, dict):
+        return "—"
+    rows = payload.get("levels")
+    if not isinstance(rows, list):
+        return "—"
+    levels = {
+        round(float(r["quantile"]), 6): float(r["return"])
+        for r in rows
+        if isinstance(r, dict) and "quantile" in r and "return" in r
+    }
+    low, high = levels.get(0.10), levels.get(0.90)
+    if low is None or high is None:
+        return "—"
+    return f"{low:+.2%} 〜 {high:+.2%}"
+
+
+def _armtable(item: EmailCandidate) -> str:
+    """Every family's answer for one ticker, side by side."""
+
+    rows = _arm_rows(item)
+    if not rows:
+        return "  （この銘柄では全系統の記録がありません）"
+    header = (
+        "  系統                      状態        点予測   P(上昇)  80%区間"
+        "               幅の作り方\n"
+        "  ------------------------  --------  --------  --------  "
+        "--------------------  --------------------"
+    )
+    lines = []
+    for arm in rows:
+        label = str(arm.get("label") or arm.get("name") or "—")
+        status = str(arm.get("status") or "—")
+        spread = SPREAD_LABEL.get(str(arm.get("spread_kind")), "—")
+        detail = str(arm.get("detail") or "")
+        lines.append(
+            f"  {_pad(label, 24)}  {status:<8}"
+            f"  {_arm_number(arm.get('predicted_return')):>8}"
+            f"  {_arm_number(arm.get('probability_up'), 'plain'):>8}"
+            f"  {_pad(_arm_band(arm), 20)}  {spread}"
+            + (f"\n      {detail}" if detail else "")
+        )
+    return "\n".join([header, *lines])
+
+
+def _arms_text(items: Sequence[EmailCandidate]) -> str:
+    blocks = []
+    for item in items:
+        blocks.append(f"  ▼ {item.ticker} {item.company}\n\n{_armtable(item)}")
+    return "\n\n".join(blocks) if blocks else "  （買い候補がありません）"
+
+
+def _arm_rows_html(item: EmailCandidate) -> str:
+    rows = []
+    for index, arm in enumerate(_arm_rows(item)):
+        status = str(arm.get("status") or "—")
+        tone = (
+            "done" if status == "OK" else "warn" if status == "UNAVAILABLE" else "fail"
+        )
+        predicted = arm.get("predicted_return")
+        rows.append(
+            f"<tr style='background:{'#fff' if index % 2 == 0 else BAND}'>"
+            + cell(html.escape(str(arm.get("label") or arm.get("name") or "—")))
+            + cell(badge(status, tone), align="center")
+            + cell(
+                signed_percent(
+                    predicted if isinstance(predicted, int | float) else None
+                ),
+                align="right",
+            )
+            + cell(
+                _arm_number(arm.get("probability_up"), "plain"),
+                align="right",
+                muted=True,
+            )
+            + cell(html.escape(_arm_band(arm)), align="right", muted=True)
+            + cell(
+                html.escape(SPREAD_LABEL.get(str(arm.get("spread_kind")), "—")),
+                muted=True,
+                nowrap=False,
+            )
+            + "</tr>"
+        )
+    if not rows:
+        return (
+            "<p style='margin:0;padding:14px;background:#f9fafb;border-radius:8px'>"
+            "この銘柄では全系統の記録がありません。</p>"
+        )
+    return table(
+        [
+            ("系統", "left"),
+            ("状態", "center"),
+            ("点予測", "right"),
+            ("P(上昇)", "right"),
+            ("80%区間", "right"),
+            ("幅の作り方", "left"),
+        ],
+        rows,
+    )
+
+
+def _arms_html(items: Sequence[EmailCandidate]) -> str:
+    blocks = []
+    for item in items:
+        blocks.append(
+            f"<p style='margin:16px 0 6px;font-size:14px;color:{INK}'>"
+            f"{_name_html(item)}</p>" + _arm_rows_html(item)
+        )
+    return "".join(blocks)

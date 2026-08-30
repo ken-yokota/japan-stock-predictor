@@ -217,6 +217,7 @@ def load_morning_email_payload(
                 distribution_median=(
                     distribution.median if distribution is not None else None
                 ),
+                arms=tuple(row.arm_predictions or ()),
                 density=density,
                 density_scale=scale if density else None,
                 positive_factors=positive,

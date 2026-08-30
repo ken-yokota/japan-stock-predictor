@@ -91,6 +91,7 @@ PREDICTION_FIELDS = (
     "prediction_interval_low",
     "prediction_interval_high",
     "return_distribution",
+    "arm_predictions",
     "probability_up",
     "reference_price",
     "reference_basis",

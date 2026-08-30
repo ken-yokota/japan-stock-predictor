@@ -770,6 +770,11 @@ class ModelFamilyConfig(_StrictModel):
     classification_primary: Literal["logistic_regression"]
     classification_candidates: Annotated[list[ClassificationModel], Field(min_length=1)]
     scaler: Literal["standard_scaler"]
+    # Run every model family each morning and record all of their answers.
+    # The families do not decide anything -- the buy rule still reads the
+    # primary regressor and classifier above -- but they are measured on the
+    # same rows, which is the only basis on which one could ever replace it.
+    run_all_arms: bool = True
 
     @model_validator(mode="after")
     def validate_primary_candidates(self) -> Self:

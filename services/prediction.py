@@ -15,6 +15,7 @@ from models import (
     TickerModelBundle,
     train_ticker_model,
 )
+from models.arms import ArmForecast, run_arms
 from models.distribution import ReturnDistribution
 from scoring.confidence import calculate_confidence_score
 from services.dataset import ModelDataset, PointInTimeDatasetBuilder
@@ -41,6 +42,9 @@ class PredictionResult:
     # spread is read off this; the point fields remain because the trading
     # rule and the entire scored history are defined against them.
     distribution: ReturnDistribution | None = None
+    # Every other model family's answer for the same row. Recorded, never
+    # consulted by the trading rule: the point fields above still decide.
+    arm_forecasts: tuple[ArmForecast, ...] = field(default_factory=tuple)
     reference_price: float | None = None
     predicted_difference: float | None = None
     predicted_close: float | None = None
@@ -271,6 +275,19 @@ class PredictionService:
                 probability_threshold=signal_settings.probability_up_threshold,
             ),
         )
+        # Every family, on exactly the rows the production model just used, so
+        # the comparison is like-for-like. Failures are collected as results
+        # rather than raised: a family that cannot fit is a fact to report, not
+        # a reason to lose the morning.
+        arm_forecasts: tuple[ArmForecast, ...] = ()
+        if self._config.model.models.run_all_arms:
+            arm_forecasts = run_arms(
+                dataset.training_frame.loc[:, list(dataset.feature_names)],
+                dataset.training_target.to_numpy(dtype=float),
+                dataset.current_frame.loc[:, list(dataset.feature_names)],
+                levels=tuple(self._config.model.hyperparameters.quantile_levels),
+                n_splits=self._config.model.cross_validation.n_splits,
+            )
         coefficients = model.regression_coefficients()
         positive, negative = _drivers(model, dataset, coefficients)
         reference = dataset.current_sample.reference_price
@@ -320,6 +337,7 @@ class PredictionService:
                 prediction_interval_high=interval_high,
                 prediction_interval_coverage=interval_coverage,
                 distribution=distribution,
+                arm_forecasts=arm_forecasts,
                 reference_price=reference,
                 predicted_difference=difference,
                 predicted_close=predicted_close,

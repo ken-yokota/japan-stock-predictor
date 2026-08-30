@@ -568,6 +568,11 @@ def persist_prediction_computation(
             if result.distribution is not None
             else None
         ),
+        arm_predictions=(
+            [arm.to_payload() for arm in result.arm_forecasts]
+            if result.arm_forecasts
+            else None
+        ),
         positive_factors=list(result.positive_factors),
         negative_factors=list(result.negative_factors),
         feature_coverage=result.feature_coverage,

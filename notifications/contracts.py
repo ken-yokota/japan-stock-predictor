@@ -47,6 +47,10 @@ class EmailCandidate:
     # terms. Carried with the samples so a row can never be drawn against
     # a ruler it was not measured on.
     density_scale: float | None = None
+    # Every model family's answer for this ticker, as plain records. The
+    # keys are fixed by ``ArmForecast.to_payload``; the notification layer
+    # reads them and never imports the model package.
+    arms: tuple[dict[str, object], ...] = field(default_factory=tuple)
     positive_factors: tuple[str, ...] = field(default_factory=tuple)
     negative_factors: tuple[str, ...] = field(default_factory=tuple)
     warnings: tuple[str, ...] = field(default_factory=tuple)

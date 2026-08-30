@@ -196,8 +196,7 @@ def _render_probability(probability: dict[str, Any]) -> None:
         [
             {
                 "確率帯": (
-                    f"{float(row.get('low', 0)):.0%}"
-                    f"-{float(row.get('high', 0)):.0%}"
+                    f"{float(row.get('low', 0)):.0%}-{float(row.get('high', 0)):.0%}"
                 ),
                 "件数": f"{row.get('count', 0):,}",
                 "平均予測確率": f"{float(row.get('mean_predicted', 0)):.1%}",
