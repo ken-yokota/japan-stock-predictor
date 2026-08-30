@@ -10,9 +10,11 @@ on:
     # evaluated against the fixed 08:30 cutoff. A delayed snapshot is excluded
     # by the PIT gate rather than used after its allowed age.
     #
-    # The optimized build target is under 15 minutes (about 08:35 completion).
-    # Its step-level 20-minute stop leaves five minutes before the first 08:45
-    # email attempt to make a failure visible.
+    # Ten model families per ticker, fitted three at a time: the target is
+    # about 12 minutes from the 08:20 snapshot, so roughly 08:32, which leaves
+    # 13 minutes before the first 08:45 email attempt. Serially the same work
+    # took 30 minutes and would have finished after the last email attempt had
+    # already reported "no prediction".
     - cron: "10,20,30 23 * * 0-4"
   workflow_dispatch:
     inputs:
@@ -56,6 +58,19 @@ jobs:
       DRY_RUN: ${{ inputs.dry_run || false }}
       SKIP_INGESTION: ${{ inputs.skip_ingestion || false }}
       FORCE_NON_BUSINESS_DAY: ${{ inputs.force_non_business_day || false }}
+      # The prediction now fits three tickers at once, and each of those also
+      # runs a torch subprocess. Every numerical library defaults to one thread
+      # per core, so without these the runner would carry roughly thirty
+      # compute threads on four vCPUs. Measured on a four-core machine that
+      # took the load average past 800 and completed nothing at all -- it does
+      # not fail, it simply stops progressing, which is the worst shape for a
+      # job with a deadline.
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      NUMEXPR_NUM_THREADS: "1"
+      VECLIB_MAXIMUM_THREADS: "1"
+      TORCH_NUM_THREADS: "1"
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -91,10 +106,23 @@ jobs:
           set -euo pipefail
           "$NEURAL_PYTHON" -m venv .venv-neural
           .venv-neural/bin/python -m pip install --quiet --upgrade pip
-          # numpy is held below 2 because torch 2.x on this runner is built
-          # against the 1.x ABI.
-          .venv-neural/bin/python -m pip install --quiet "torch" "numpy<2"
+          # The CPU index, explicitly. On Linux the default torch wheel bundles
+          # CUDA and is about 2.5 GB; this runner has no GPU, so that download
+          # would be pure cost and could not finish inside this step's budget.
+          # The CPU build is roughly a tenth of the size.
+          .venv-neural/bin/python -m pip install --quiet \
+            --index-url https://download.pytorch.org/whl/cpu "torch>=2.2,<3"
+          # numpy comes from PyPI, and is held below 2 because torch 2.x is
+          # built against the 1.x ABI.
+          .venv-neural/bin/python -m pip install --quiet "numpy<2"
           .venv-neural/bin/python -c "import torch; print('torch', torch.__version__)"
+          # Prove it is the CPU build, so a silent switch back to the CUDA
+          # wheel shows up here rather than as a slow morning nobody explains.
+          .venv-neural/bin/python -c "
+          import torch
+          assert not torch.version.cuda, f'expected the CPU build, got CUDA {torch.version.cuda}'
+          print('CPU build confirmed')
+          "
       - name: Confirm the interpreters are the right way round
         shell: bash
         run: |

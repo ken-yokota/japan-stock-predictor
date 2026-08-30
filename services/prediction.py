@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from datetime import date
+from typing import Protocol
 
 import numpy as np
 
@@ -18,8 +19,29 @@ from models import (
 from models.arms import ArmForecast, run_arms
 from models.distribution import ReturnDistribution
 from scoring.confidence import calculate_confidence_score
-from services.dataset import ModelDataset, PointInTimeDatasetBuilder
+from services.dataset import ModelDataset
 from trading.strategy import BuySignalConfig, is_buy_signal
+
+
+class DatasetSource(Protocol):
+    """Whatever can produce one ticker's point-in-time window.
+
+    A protocol rather than the concrete builder so a caller that has already
+    read its windows can pass a stand-in that refuses to touch a database. The
+    fitting needs no connection, and typing it against the real builder would
+    force a session into places that must not have one.
+    """
+
+    def build(
+        self,
+        ticker: str,
+        prediction_date: date,
+        *,
+        training_sessions: int,
+        minimum_feature_coverage: float,
+        operational: bool,
+    ) -> ModelDataset:
+        """Return the window ending before ``prediction_date``."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -138,7 +160,7 @@ class PredictionService:
 
     def __init__(
         self,
-        dataset_builder: PointInTimeDatasetBuilder,
+        dataset_builder: DatasetSource,
         config: AppConfig,
     ) -> None:
         self._datasets = dataset_builder
@@ -175,6 +197,33 @@ class PredictionService:
             warnings=warnings,
         )
 
+    def build_dataset(
+        self,
+        ticker: str,
+        prediction_date: date,
+        *,
+        operational: bool = True,
+    ) -> ModelDataset:
+        """Read one ticker's point-in-time window. The only part that touches the DB.
+
+        Separated from the fitting so a caller can do all the reading on one
+        session and then fit several tickers at once. A SQLAlchemy session is
+        not safe to share between workers, and the fitting needs no database at
+        all, so the split is what makes the morning parallelisable without
+        putting a connection anywhere near a worker.
+        """
+
+        missing_limit = self._config.model.features.max_missing_ratio
+        if missing_limit is None:
+            raise ValueError("feature missing threshold is not confirmed")
+        return self._datasets.build(
+            ticker,
+            prediction_date,
+            training_sessions=self._config.model.training.window_jpx_sessions,
+            minimum_feature_coverage=1.0 - missing_limit,
+            operational=operational,
+        )
+
     def compute(
         self,
         ticker: str,
@@ -182,19 +231,21 @@ class PredictionService:
         *,
         readability_score: float = 0.0,
         operational: bool = True,
+        dataset: ModelDataset | None = None,
     ) -> PredictionComputation:
-        """Compute one result while retaining reproducibility artifacts."""
+        """Compute one result while retaining reproducibility artifacts.
+
+        ``dataset`` lets a caller supply a window it has already read, so this
+        method performs no I/O and can run in a worker process.
+        """
 
         missing_limit = self._config.model.features.max_missing_ratio
         if missing_limit is None:
             raise ValueError("feature missing threshold is not confirmed")
-        dataset = self._datasets.build(
-            ticker,
-            prediction_date,
-            training_sessions=self._config.model.training.window_jpx_sessions,
-            minimum_feature_coverage=1.0 - missing_limit,
-            operational=operational,
-        )
+        if dataset is None:
+            dataset = self.build_dataset(
+                ticker, prediction_date, operational=operational
+            )
         minimum_rows = self._config.model.training.minimum_complete_rows
         if len(dataset.training_frame) < minimum_rows:
             return PredictionComputation(

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import date, timedelta
 
@@ -14,7 +16,7 @@ from data.env import EnvironmentSettings
 from data.market_calendar import is_japan_business_day, japan_sessions_before
 from database.models import DailyRun, PredictionSet
 from database.repository import MarketDataRepository, PredictionPipelineRepository
-from services.dataset import PointInTimeDatasetBuilder
+from services.dataset import ModelDataset, PointInTimeDatasetBuilder
 from services.ingestion import IngestionOutcome, ingest_free_morning_data
 from services.persistence import (
     persist_failed_prediction,
@@ -70,6 +72,69 @@ def _safe_error(exc: Exception) -> str:
 # came to carry three BUYs in the production record.
 LIVE_RUN_TYPE = "MORNING"
 REFERENCE_RUN_TYPE = "REFERENCE"
+
+# How many tickers are fitted at once. Ten model families per ticker took the
+# run from about 13 minutes to 30, which does not fit between the 08:20 PIT
+# snapshot and the 08:45 first email attempt -- the mail would have started
+# reporting "no prediction" while the prediction was still being computed.
+# Three workers on a four-core runner restores the margin without leaving the
+# machine oversubscribed.
+#
+# Only the fitting is parallel. Every database read happens first, on one
+# session, and every write happens afterwards on the same one: a SQLAlchemy
+# session cannot be shared between workers, and nothing here needs it to be.
+DEFAULT_FIT_WORKERS = 3
+
+
+def _fit_workers() -> int:
+    """Worker count, overridable for a constrained runner or a debug run."""
+
+    raw = os.environ.get("MORNING_FIT_WORKERS", "").strip()
+    if not raw:
+        return DEFAULT_FIT_WORKERS
+    try:
+        value = int(raw)
+    except ValueError:
+        return DEFAULT_FIT_WORKERS
+    return max(1, min(value, 8))
+
+
+def _fit_one(
+    payload: tuple[str, date, ModelDataset, AppConfig, bool],
+) -> PredictionComputation:
+    """Fit one ticker in a worker. No database handle crosses this boundary."""
+
+    ticker, prediction_date, dataset, config, operational = payload
+    service = PredictionService(_NoDatasetBuilder(), config)
+    return service.compute(
+        ticker,
+        prediction_date,
+        operational=operational,
+        dataset=dataset,
+    )
+
+
+class _NoDatasetBuilder:
+    """Stands in for the builder in a worker, and refuses to be used.
+
+    ``compute`` is handed a dataset that was already read, so it must never
+    reach the builder. If a future edit makes it try, this raises in the worker
+    instead of silently opening a database connection there.
+    """
+
+    def build(
+        self,
+        ticker: str,
+        prediction_date: date,
+        *,
+        training_sessions: int,
+        minimum_feature_coverage: float,
+        operational: bool,
+    ) -> ModelDataset:
+        raise RuntimeError(
+            "a fitting worker must not read the database; "
+            "the dataset is supplied by the caller"
+        )
 
 
 def morning_run_type(*, is_business_day: bool) -> str:
@@ -279,13 +344,52 @@ class MorningPipeline:
             prediction_service = PredictionService(
                 PointInTimeDatasetBuilder(session, self._config), self._config
             )
+            # Phase one: read every window on this session, serially. The
+            # database is the one thing that cannot be shared with a worker.
+            datasets: dict[str, ModelDataset] = {}
             for ticker in tickers:
                 try:
-                    computations[ticker] = prediction_service.compute(
+                    datasets[ticker] = prediction_service.build_dataset(
                         ticker, prediction_date, operational=not backfill
                     )
                 except Exception as exc:
                     failures[ticker] = _safe_error(exc)
+
+            # Phase two: fit them in parallel. No I/O, so a worker failing is
+            # one ticker lost rather than a transaction in an unknown state.
+            workers = min(_fit_workers(), max(len(datasets), 1))
+            if workers > 1 and len(datasets) > 1:
+                with ProcessPoolExecutor(max_workers=workers) as pool:
+                    futures = {
+                        pool.submit(
+                            _fit_one,
+                            (
+                                ticker,
+                                prediction_date,
+                                dataset,
+                                self._config,
+                                not backfill,
+                            ),
+                        ): ticker
+                        for ticker, dataset in datasets.items()
+                    }
+                    for future in as_completed(futures):
+                        ticker = futures[future]
+                        try:
+                            computations[ticker] = future.result()
+                        except Exception as exc:
+                            failures[ticker] = _safe_error(exc)
+            else:
+                for ticker, dataset in datasets.items():
+                    try:
+                        computations[ticker] = prediction_service.compute(
+                            ticker,
+                            prediction_date,
+                            operational=not backfill,
+                            dataset=dataset,
+                        )
+                    except Exception as exc:
+                        failures[ticker] = _safe_error(exc)
 
             ranked = sorted(
                 (
