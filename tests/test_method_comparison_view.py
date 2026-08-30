@@ -112,3 +112,105 @@ def test_only_scored_artifacts_are_offered_as_tabs(tmp_path: Path) -> None:
     (tmp_path / "broken.json").write_text("{ not json", encoding="utf-8")
     loaded = load_reports(tmp_path)
     assert [label for label, _ in loaded] == ["2026-08-07 〜 2026-08-28"]
+
+
+# --- the two sections the operator's request centres on ------------------
+
+
+def _calibrated() -> dict[str, Any]:
+    return {
+        "label": "Ridge回帰",
+        "arm": "ridge",
+        "mean_absolute_error": 0.06,
+        "worst_level": "P90",
+        "worst_error": -0.18,
+        "levels": [
+            {
+                "label": "P90",
+                "level": 0.10,
+                "nominal_exceeded": 0.90,
+                "observed_exceeded": 0.72,
+                "error": -0.18,
+                "samples": 330,
+                "mean_predicted": -0.021,
+            },
+            {
+                "label": "P50",
+                "level": 0.50,
+                "nominal_exceeded": 0.50,
+                "observed_exceeded": 0.51,
+                "error": 0.01,
+                "samples": 330,
+                "mean_predicted": 0.001,
+            },
+            {
+                "label": "P75",
+                "level": 0.25,
+                "nominal_exceeded": 0.75,
+                "observed_exceeded": 0.83,
+                "error": 0.08,
+                "samples": 330,
+                "mean_predicted": -0.008,
+            },
+        ],
+    }
+
+
+def test_a_level_that_overstates_itself_is_called_out_as_such() -> None:
+    """P90 claiming nine sessions in ten but delivering seven is the finding."""
+
+    from dashboard.method_comparison import _calibration_rows
+
+    rows = {row["水準"]: row for row in _calibration_rows(_calibrated())}
+    assert rows["P90"]["読み"] == "高めに出ている（外れる）"
+    assert rows["P50"]["読み"] == "おおむね一致"
+    assert rows["P75"]["読み"] == "低めに出ている（慎重）"
+
+
+def test_the_threshold_table_keeps_both_halves_apart() -> None:
+    """One combined number would hide the advantage of having chosen."""
+
+    from dashboard.method_comparison import _threshold_rows
+
+    payload = {
+        "thresholds": [
+            {
+                "arm": "xgboost",
+                "label": "XGBoost",
+                "threshold": 0.003,
+                "selection_positions": 31,
+                "selection_mean_return": 0.0076,
+                "evaluation_positions": 42,
+                "evaluation_mean_return": -0.0014,
+                "evaluation_win_rate": 0.43,
+            },
+            {
+                "arm": "lstm",
+                "label": "LSTM",
+                "threshold": 0.008,
+                "selection_positions": 9,
+                "selection_mean_return": 0.0095,
+                "evaluation_positions": 4,
+                "evaluation_mean_return": 0.0154,
+                "evaluation_win_rate": 1.0,
+            },
+        ]
+    }
+    rows = {row["手法"]: row for row in _threshold_rows(payload)}
+    # The selection half looked good and the evaluation half did not; both
+    # must be visible side by side.
+    assert rows["XGBoost"]["選定期 平均"] == "0.76%"
+    assert rows["XGBoost"]["評価期 平均"] == "-0.14%"
+    assert rows["XGBoost"]["根拠"] == "十分"
+    # A 100% win rate over four trades must be labelled, not celebrated.
+    assert rows["LSTM"]["評価期 勝率"] == "100.00%"
+    assert rows["LSTM"]["根拠"] == "不足"
+
+
+def test_a_family_with_no_hurdle_shows_a_dash_not_a_zero() -> None:
+    from dashboard.method_comparison import _threshold_rows
+
+    rows = _threshold_rows(
+        {"thresholds": [{"arm": "logistic", "label": "ロジ", "threshold": None}]}
+    )
+    assert rows[0]["閾値"] == "—"

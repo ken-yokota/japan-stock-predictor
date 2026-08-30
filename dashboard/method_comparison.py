@@ -20,6 +20,7 @@ import streamlit as st
 
 from dashboard.presenters import format_percent
 from dashboard.ui import display_rows
+from notifications.risk_levels import CONVENTION_NOTE
 
 ALL_METHODS_DIRECTORY = Path("docs/all_methods")
 
@@ -106,6 +107,70 @@ def _rule_rows(payload: dict[str, Any], rule: str) -> list[dict[str, object]]:
     return sorted(rows, key=lambda row: -_positions(row))
 
 
+def _calibration_rows(entry: dict[str, Any]) -> list[dict[str, object]]:
+    """One family's levels: what each Pxx claimed, and what actually happened."""
+
+    rows = []
+    for level in entry.get("levels", []):
+        observed = level.get("observed_exceeded")
+        nominal = level.get("nominal_exceeded")
+        error = level.get("error")
+        rows.append(
+            {
+                "水準": level.get("label", "—"),
+                "予測の平均": format_percent(level.get("mean_predicted")),
+                "本来これ以上になる割合": format_percent(nominal),
+                "実測": format_percent(observed),
+                "差": format_percent(error),
+                "標本": level.get("samples", 0),
+                "読み": (
+                    "—"
+                    if error is None
+                    else "低めに出ている（慎重）"
+                    if error > 0.05
+                    else "高めに出ている（外れる）"
+                    if error < -0.05
+                    else "おおむね一致"
+                ),
+            }
+        )
+    return rows
+
+
+def _threshold_rows(payload: dict[str, Any]) -> list[dict[str, object]]:
+    """Each family's hurdle, with the selection and evaluation halves apart.
+
+    Both halves are shown because the gap between them is the only honest
+    measure of how much the hurdle owes to having been chosen after the fact.
+    """
+
+    rows = []
+    for entry in payload.get("thresholds", []):
+        threshold = entry.get("threshold")
+        rows.append(
+            {
+                "手法": entry.get("label", entry.get("arm", "—")),
+                "閾値": format_percent(threshold) if threshold is not None else "—",
+                "選定期 建玉": entry.get("selection_positions", 0),
+                "選定期 平均": format_percent(entry.get("selection_mean_return")),
+                "評価期 建玉": entry.get("evaluation_positions", 0),
+                "評価期 平均": format_percent(entry.get("evaluation_mean_return")),
+                "評価期 勝率": (
+                    format_percent(entry["evaluation_win_rate"])
+                    if entry.get("evaluation_win_rate") is not None
+                    else "—"
+                ),
+                "根拠": (
+                    "十分"
+                    if int(entry.get("evaluation_positions") or 0)
+                    >= MINIMUM_POSITIONS_FOR_EVIDENCE
+                    else "不足"
+                ),
+            }
+        )
+    return rows
+
+
 def render_report(payload: dict[str, Any]) -> None:
     """One window's comparison across every model family."""
 
@@ -128,6 +193,34 @@ def render_report(payload: dict[str, Any]) -> None:
         "下の買いルールの成績は、この表を見たうえで読んでください。"
     )
     display_rows(_coverage_rows(payload), height=380)
+
+    st.subheader("Pxx別の精度")
+    st.caption(CONVENTION_NOTE)
+    calibration = payload.get("calibration", [])
+    if not calibration:
+        st.info("PENDING: 水準ごとの精度がまだ計算されていません。")
+    else:
+        labels = [str(e.get("label", e.get("arm", "—"))) for e in calibration]
+        for entry, tab in zip(calibration, st.tabs(labels), strict=True):
+            with tab:
+                st.caption(
+                    f"平均誤差 {format_percent(entry.get('mean_absolute_error'))}"
+                    f"　最悪 {entry.get('worst_level', '—')} "
+                    f"{format_percent(entry.get('worst_error'))}"
+                )
+                display_rows(_calibration_rows(entry), height=300)
+
+    st.subheader("手法ごとの閾値")
+    st.caption(
+        "閾値は前半の営業日だけで選び、後半では触っていません。"
+        "選定期と評価期の差が、そのまま『選んだことによる下駄』の大きさです。"
+        "評価期の建玉が少ない行の勝率は読まないでください。"
+    )
+    thresholds = _threshold_rows(payload)
+    if thresholds:
+        display_rows(thresholds, height=380)
+    else:
+        st.info("PENDING: 閾値がまだ導出されていません。")
 
     st.subheader("買いルール別の成績")
     rules = list(dict.fromkeys(entry.get("rule") for entry in payload.get("rules", [])))
