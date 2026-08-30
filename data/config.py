@@ -805,9 +805,26 @@ class HyperparameterConfig(_StrictModel):
         list[Annotated[float, Field(gt=0.0, le=1.0)]], Field(min_length=1)
     ]
     logistic_c: Annotated[list[Annotated[float, Field(gt=0.0)]], Field(min_length=1)]
+    # The L1 penalties the conditional-quantile curve is fitted under. One
+    # penalty is chosen for the whole curve, by median pinball loss.
+    quantile_alpha: Annotated[
+        list[Annotated[float, Field(gt=0.0)]], Field(min_length=1)
+    ] = [0.001, 0.01, 0.1]
+    # The percentiles the daily forecast distribution is reported at.
+    quantile_levels: Annotated[
+        list[Annotated[float, Field(gt=0.0, lt=1.0)]], Field(min_length=2)
+    ] = [
+        0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
+        0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95,
+    ]
 
     @field_validator(
-        "ridge_alpha", "elastic_net_alpha", "elastic_net_l1_ratio", "logistic_c"
+        "ridge_alpha",
+        "elastic_net_alpha",
+        "elastic_net_l1_ratio",
+        "logistic_c",
+        "quantile_alpha",
+        "quantile_levels",
     )
     @classmethod
     def validate_unique_grid(cls, value: list[float]) -> list[float]:

@@ -15,6 +15,7 @@ from models import (
     TickerModelBundle,
     train_ticker_model,
 )
+from models.distribution import ReturnDistribution
 from scoring.confidence import calculate_confidence_score
 from services.dataset import ModelDataset, PointInTimeDatasetBuilder
 from trading.strategy import BuySignalConfig, is_buy_signal
@@ -31,6 +32,15 @@ class PredictionResult:
     probability_up: float | None = None
     prediction_interval_low: float | None = None
     prediction_interval_high: float | None = None
+    # The nominal coverage the two bounds above claim. Recorded because it
+    # changed: the bounds used to be a 95% normal band around the point
+    # forecast, and are now the 5th and 95th percentiles of the fitted
+    # distribution, which is a 90% band and a different construction.
+    prediction_interval_coverage: float | None = None
+    # The whole forecast distribution. Everything above that describes
+    # spread is read off this; the point fields remain because the trading
+    # rule and the entire scored history are defined against them.
+    distribution: ReturnDistribution | None = None
     reference_price: float | None = None
     predicted_difference: float | None = None
     predicted_close: float | None = None
@@ -138,6 +148,8 @@ class PredictionService:
             time_series_splits=model.cross_validation.n_splits,
             ridge_alphas=tuple(model.hyperparameters.ridge_alpha),
             logistic_cs=tuple(model.hyperparameters.logistic_c),
+            distribution_quantiles=tuple(model.hyperparameters.quantile_levels),
+            quantile_alphas=tuple(model.hyperparameters.quantile_alpha),
             random_state=model.reproducibility.random_seed,
         )
 
@@ -226,11 +238,30 @@ class PredictionService:
                 self._insufficient(ticker, prediction_date, dataset, str(exc)),
             )
         predicted = model.predict_one(dataset.current_frame)
-        training_prediction = model.predict_returns(dataset.training_frame)
-        residual = dataset.training_target.to_numpy(dtype=float) - training_prediction
-        residual_sigma = float(np.std(residual, ddof=1)) if len(residual) > 1 else 0.0
-        interval_low = predicted.predicted_return - 1.96 * residual_sigma
-        interval_high = predicted.predicted_return + 1.96 * residual_sigma
+        distribution = predicted.distribution
+        # The interval now comes off the fitted quantile curve when there is
+        # one. The old construction -- 1.96 standard deviations of the training
+        # residuals -- assumed the errors were normal and used the very rows
+        # the fit had already minimised against, so it was both the wrong shape
+        # for a return distribution and narrower than the outcomes. It stays as
+        # the fallback for a ticker whose quantile fit could not be made, and
+        # the coverage it claims is recorded either way so the two are never
+        # read as the same number.
+        bounds = None if distribution is None else distribution.interval(0.90)
+        if bounds is not None:
+            interval_low, interval_high = bounds
+            interval_coverage = 0.90
+        else:
+            training_prediction = model.predict_returns(dataset.training_frame)
+            residual = (
+                dataset.training_target.to_numpy(dtype=float) - training_prediction
+            )
+            residual_sigma = (
+                float(np.std(residual, ddof=1)) if len(residual) > 1 else 0.0
+            )
+            interval_low = predicted.predicted_return - 1.96 * residual_sigma
+            interval_high = predicted.predicted_return + 1.96 * residual_sigma
+            interval_coverage = 0.95
         signal_settings = self._config.trading.signal
         buy = is_buy_signal(
             predicted.predicted_return,
@@ -287,6 +318,8 @@ class PredictionService:
                 probability_up=predicted.probability_up,
                 prediction_interval_low=interval_low,
                 prediction_interval_high=interval_high,
+                prediction_interval_coverage=interval_coverage,
+                distribution=distribution,
                 reference_price=reference,
                 predicted_difference=difference,
                 predicted_close=predicted_close,

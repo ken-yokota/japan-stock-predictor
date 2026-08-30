@@ -247,6 +247,14 @@ def test_stock_and_sector_presenters_cover_configured_universe() -> None:
             "confidence_score": 80,
             "prediction_interval_low": 0.002,
             "prediction_interval_high": 0.022,
+            "return_distribution": {
+                "method": "quantile_regression_l1",
+                "levels": [
+                    {"quantile": 0.10, "return": 0.001},
+                    {"quantile": 0.50, "return": 0.011},
+                    {"quantile": 0.90, "return": 0.021},
+                ],
+            },
             "feature_coverage": 0.95,
             "positive_factors": ["USDJPY"],
             "negative_factors": [],
@@ -280,8 +288,14 @@ def test_stock_and_sector_presenters_cover_configured_universe() -> None:
     sectors = sector_rows(predictions, metrics)
 
     assert table[0]["銘柄"].startswith("7203 ")
-    assert table[0]["予測リターン"] == "1.20%"
+    # The distribution leads; the point forecast is kept and named as a point.
+    assert table[0]["中央値"] == "1.10%"
+    assert table[0]["80%区間"] == "[0.10%, 2.10%]"
+    assert table[0]["予測リターン(点)"] == "1.20%"
     assert table[0]["予測区間"] == "[0.20%, 2.20%]"
+    # A row written before the distribution existed shows a dash, not a blank.
+    assert table[1]["中央値"] == "—"
+    assert table[1]["80%区間"] == "—"
     assert table[0]["Feature Coverage"] == "95.0%"
     assert table[0]["Positive Factors"] == "USDJPY"
     assert table[1]["Sample"] == "PENDING"

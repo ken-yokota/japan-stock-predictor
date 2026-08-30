@@ -740,6 +740,13 @@ class Prediction(Base):
     negative_factors: Mapped[list[str]] = mapped_column(
         JSON, nullable=False, default=list
     )
+    # The whole forecast distribution, not just the two bounds above: the
+    # fitted quantile curve, the penalty it was fitted under, and the measured
+    # coverage of that method. Stored as one JSON document because the set of
+    # levels is a modelling choice that will change, and a column per level
+    # would make changing it a migration. ``NULL`` on rows written before the
+    # distribution existed, and on any row whose quantile fit could not be made.
+    return_distribution: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     feature_coverage: Mapped[float | None] = mapped_column(Float)
     warnings: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(

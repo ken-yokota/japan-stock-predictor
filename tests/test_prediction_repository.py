@@ -391,6 +391,16 @@ def test_pipeline_artifacts_are_pit_linked_and_idempotent(make_bar) -> None:
             confidence_score=Decimal("75"),
             prediction_interval_low=Decimal("-0.002"),
             prediction_interval_high=Decimal("0.010"),
+            return_distribution={
+                "method": "quantile_regression_l1",
+                "alpha": 0.01,
+                "training_sessions": 120,
+                "levels": [
+                    {"quantile": 0.1, "return": -0.002},
+                    {"quantile": 0.5, "return": 0.004},
+                    {"quantile": 0.9, "return": 0.010},
+                ],
+            },
             positive_factors=["sp500_return_1d"],
             negative_factors=[],
             feature_coverage=1.0,
@@ -487,6 +497,12 @@ def test_pipeline_artifacts_are_pit_linked_and_idempotent(make_bar) -> None:
 
         assert feature_set.max_retrieved_at is not None
         assert prediction.prediction_interval_low == Decimal("-0.002")
+        # The whole curve survives the round trip, not just the two bounds:
+        # this is the column the morning mail now reads its tables from.
+        stored = prediction.return_distribution
+        assert stored is not None
+        assert stored["method"] == "quantile_regression_l1"
+        assert [row["quantile"] for row in stored["levels"]] == [0.1, 0.5, 0.9]
         assert prediction.positive_factors == ["sp500_return_1d"]
         assert prediction.feature_coverage == pytest.approx(1.0)
         assert session.scalar(select(func.count()).select_from(Prediction)) == 1

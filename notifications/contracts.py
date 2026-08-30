@@ -25,6 +25,28 @@ class EmailCandidate:
     readability_score: float | None = None
     profit_factor: float | None = None
     expectancy_jpy: float | None = None
+    # The forecast distribution, as ``(quantile, return)`` pairs in ascending
+    # order. Plain tuples rather than the model type on purpose: this module
+    # is the notification domain and must not drag scikit-learn into the mail
+    # path. Empty when the day's prediction has no distribution, which the
+    # template says out loud rather than rendering as a blank row.
+    distribution: tuple[tuple[float, float], ...] = field(default_factory=tuple)
+    # ``quantile_regression_l1`` for a fitted curve, ``residual_quantiles`` for
+    # the constant-width fallback. Named in the mail because the two are not
+    # equally trustworthy and must never look alike.
+    distribution_method: str | None = None
+    # Read off the curve at zero, and distinct from ``probability_up`` above,
+    # which is the logistic classifier's answer and the one the buy rule uses.
+    distribution_probability_up: float | None = None
+    distribution_median: float | None = None
+    # Probability mass per equal-width column of a shared axis, ready to
+    # draw. Resampled in the service layer so the template never has to do
+    # arithmetic on a distribution it is only supposed to display.
+    density: tuple[float, ...] = field(default_factory=tuple)
+    # The half-width of the axis ``density`` was sampled on, in return
+    # terms. Carried with the samples so a row can never be drawn against
+    # a ruler it was not measured on.
+    density_scale: float | None = None
     positive_factors: tuple[str, ...] = field(default_factory=tuple)
     negative_factors: tuple[str, ...] = field(default_factory=tuple)
     warnings: tuple[str, ...] = field(default_factory=tuple)

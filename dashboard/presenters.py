@@ -98,6 +98,127 @@ def format_percent_range(low: object, high: object) -> str:
     return f"[{format_percent(lower)}, {format_percent(upper)}]"
 
 
+def distribution_levels(value: object) -> dict[float, float]:
+    """The persisted quantile curve as ``{level: return}``, or empty.
+
+    Tolerant on purpose: a row written before the distribution existed has
+    ``None`` here, and a partially written document is a reason to show a dash
+    rather than to fail the page a whole morning is read from.
+    """
+
+    if not isinstance(value, dict):
+        return {}
+    rows = value.get("levels")
+    if not isinstance(rows, list):
+        return {}
+    levels: dict[float, float] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        quantile, predicted = (
+            as_number(row.get("quantile")),
+            as_number(row.get("return")),
+        )
+        if quantile is not None and predicted is not None:
+            levels[round(quantile, 6)] = predicted
+    return levels
+
+
+def format_distribution_median(value: object) -> str:
+    return format_percent(distribution_levels(value).get(0.5))
+
+
+def format_distribution_band(value: object, coverage: float = 0.80) -> str:
+    """The central band at ``coverage``, or a dash when it was not fitted."""
+
+    levels = distribution_levels(value)
+    tail = round((1.0 - coverage) / 2.0, 6)
+    low, high = levels.get(tail), levels.get(round(1.0 - tail, 6))
+    if low is None or high is None:
+        return "—"
+    return f"[{format_percent(low)}, {format_percent(high)}]"
+
+
+def distribution_quantile(value: object, level: float) -> str:
+    """One named percentile of the stored curve, formatted for a table cell."""
+
+    return format_percent(distribution_levels(value).get(round(level, 6)))
+
+
+def _cumulative(points: list[tuple[float, float]], x: float) -> float:
+    """P(return <= x) from a stored curve, pinned outside the fitted range."""
+
+    if x <= points[0][1]:
+        return points[0][0]
+    if x >= points[-1][1]:
+        return points[-1][0]
+    for index in range(len(points) - 1):
+        (p0, x0), (p1, x1) = points[index], points[index + 1]
+        if x0 <= x <= x1:
+            return p0 if x1 == x0 else p0 + (x - x0) / (x1 - x0) * (p1 - p0)
+    return 0.5
+
+
+_BLOCKS = " ▁▂▃▄▅▆▇█"
+
+
+def density_sparklines(values: Sequence[object], *, columns: int = 21) -> list[str]:
+    """Density sparklines for a set of rows, on one shared axis and scale.
+
+    Sharing both matters, and sharing only one of them is worse than sharing
+    neither. Normalising each row to its own fitted range makes every
+    distribution the same width, so a confident forecast and an unreadable one
+    draw the identical shape -- which is exactly the comparison the column
+    exists to support. One axis and one peak across the rows keeps a flat row
+    genuinely meaning "this one is less certain".
+    """
+
+    curves: list[list[tuple[float, float]] | None] = []
+    for value in values:
+        levels = distribution_levels(value)
+        curves.append(sorted(levels.items()) if len(levels) >= 3 else None)
+    scale = max(
+        (
+            max(abs(points[0][1]), abs(points[-1][1]))
+            for points in curves
+            if points is not None
+        ),
+        default=0.0,
+    )
+    if scale <= 0:
+        return ["—" for _ in curves]
+    edges = [-scale + 2 * scale * index / columns for index in range(columns + 1)]
+    masses: list[list[float] | None] = []
+    for points in curves:
+        if points is None:
+            masses.append(None)
+            continue
+        masses.append(
+            [
+                max(
+                    _cumulative(points, edges[i + 1]) - _cumulative(points, edges[i]),
+                    0.0,
+                )
+                for i in range(columns)
+            ]
+        )
+    peak = max(
+        (max(row) for row in masses if row is not None),
+        default=0.0,
+    )
+    if peak <= 0:
+        return ["—" for _ in curves]
+    return [
+        "—"
+        if row is None
+        else "".join(
+            _BLOCKS[min(round(mass / peak * (len(_BLOCKS) - 1)), len(_BLOCKS) - 1)]
+            for mass in row
+        )
+        for row in masses
+    ]
+
+
 def format_number(value: object, *, digits: int = 2) -> str:
     number = as_number(value)
     return "—" if number is None else f"{number:,.{digits}f}"
@@ -305,8 +426,12 @@ def today_table_rows(
     metrics: Iterable[Mapping[str, Any]],
 ) -> list[dict[str, object]]:
     latest_metrics = latest_by(metrics, identity="ticker")
+    # Materialised because the density column needs one axis across every row,
+    # which cannot be known while streaming them one at a time.
+    rows = list(predictions)
+    sparklines = density_sparklines([row.get("return_distribution") for row in rows])
     output: list[dict[str, object]] = []
-    for prediction in predictions:
+    for index, prediction in enumerate(rows):
         ticker = str(prediction.get("ticker", ""))
         metric = latest_metrics.get(ticker, {})
         output.append(
@@ -315,7 +440,26 @@ def today_table_rows(
                 "銘柄": stock_label(ticker),
                 "業種": sector_label(ticker),
                 "状態": safe_text(prediction.get("status", "—")),
-                "予測リターン": format_percent(
+                "確率密度": sparklines[index],
+                "10%": distribution_quantile(
+                    prediction.get("return_distribution"), 0.10
+                ),
+                "25%": distribution_quantile(
+                    prediction.get("return_distribution"), 0.25
+                ),
+                "中央値": format_distribution_median(
+                    prediction.get("return_distribution")
+                ),
+                "75%": distribution_quantile(
+                    prediction.get("return_distribution"), 0.75
+                ),
+                "90%": distribution_quantile(
+                    prediction.get("return_distribution"), 0.90
+                ),
+                "80%区間": format_distribution_band(
+                    prediction.get("return_distribution")
+                ),
+                "予測リターン(点)": format_percent(
                     prediction.get("predicted_intraday_return")
                 ),
                 "予測区間": format_percent_range(

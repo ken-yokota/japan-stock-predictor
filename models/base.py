@@ -3,11 +3,34 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, Protocol, TypeAlias
+from typing import TYPE_CHECKING, Literal, Protocol, TypeAlias
 
 import pandas as pd
 
+if TYPE_CHECKING:  # pragma: no cover - import cycle broken for typing only
+    from models.distribution import ReturnDistribution
+
 DEFAULT_RANDOM_STATE = 42
+
+# The quantile curve every prediction now carries: 5% steps from the 5th to
+# the 95th percentile. Even spacing is what makes the curve a density rather
+# than just a set of landmarks -- every adjacent pair brackets exactly 5% of
+# the probability, so the width of a gap is the whole story and its reciprocal
+# is the density there. Nothing has to be assumed about the shape.
+#
+# The range stops at 5 and 95 on purpose. A 120-session window has six
+# observations beyond each of those, which is not enough to place a tail, so
+# the outer 10% of the mass is left undrawn rather than invented.
+DEFAULT_QUANTILE_LEVELS: tuple[float, ...] = tuple(
+    round(0.05 + 0.05 * step, 2) for step in range(19)
+)
+
+# The landmark levels every report names out loud. They are a subset of the
+# grid above, so naming them costs no extra fit.
+REPORTED_QUANTILE_LEVELS: tuple[float, ...] = (0.10, 0.25, 0.50, 0.75, 0.90)
+
+# The L1 penalties the quantile fit chooses among, by median pinball loss.
+DEFAULT_QUANTILE_ALPHAS: tuple[float, ...] = (0.001, 0.01, 0.1)
 
 RegressionCandidate: TypeAlias = Literal[  # noqa: UP040
     "ridge", "elastic_net", "ols", "lasso"
@@ -37,6 +60,11 @@ class ModelTrainingConfig:
     # weights every session in the window equally, which is what the
     # production pipeline has always done.
     recency_half_life_sessions: int | None = None
+    # The conditional quantiles fitted alongside the point models. An empty
+    # tuple turns the distribution off, which candidate-comparison runs use
+    # so they pay only for the estimator they are comparing.
+    distribution_quantiles: tuple[float, ...] = DEFAULT_QUANTILE_LEVELS
+    quantile_alphas: tuple[float, ...] = DEFAULT_QUANTILE_ALPHAS
     random_state: int = DEFAULT_RANDOM_STATE
 
     def __post_init__(self) -> None:
@@ -67,6 +95,21 @@ class ModelTrainingConfig:
             and self.recency_half_life_sessions <= 0
         ):
             raise ValueError("recency_half_life_sessions must be positive")
+        if self.distribution_quantiles:
+            if len(self.distribution_quantiles) < 2:
+                raise ValueError(
+                    "distribution_quantiles must be empty or hold at least two levels"
+                )
+            if any(not 0.0 < value < 1.0 for value in self.distribution_quantiles):
+                raise ValueError("distribution_quantiles must be between 0 and 1")
+            if len(set(self.distribution_quantiles)) != len(
+                self.distribution_quantiles
+            ):
+                raise ValueError("distribution_quantiles must be unique")
+        if not self.quantile_alphas or any(
+            value <= 0 for value in self.quantile_alphas
+        ):
+            raise ValueError("quantile_alphas must contain only positive values")
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,6 +122,10 @@ class TickerPrediction:
     training_sessions: int
     ridge_alpha: float
     logistic_c: float | None
+    # The forecast distribution for this session. ``None`` only when the
+    # quantile fit was disabled or could not be made; every other caller
+    # should treat its absence as a degraded answer, not a normal one.
+    distribution: ReturnDistribution | None = None
 
     def __post_init__(self) -> None:
         if not self.ticker.strip():

@@ -9,6 +9,9 @@ from dashboard.catalog import stock_label
 from dashboard.outcomes import buy_hit_ratio, outcome_table_rows
 from dashboard.presenters import (
     as_number,
+    density_sparklines,
+    format_distribution_band,
+    format_distribution_median,
     format_jst,
     format_number,
     format_percent,
@@ -94,9 +97,15 @@ def main() -> None:
 
     chart_rows: list[dict[str, object]] = []
     table_rows: list[dict[str, object]] = []
+    # One axis across every session shown, so a day whose forecast was wider
+    # draws a flatter curve than a day whose forecast was tight. Scaling each
+    # day to itself would erase exactly that comparison.
+    sparklines = density_sparklines(
+        [row.get("return_distribution") for row in selected]
+    )
     # Oldest first. The chart reads left to right in time; the table below is
     # reversed at render so the newest day is on top.
-    for prediction in selected:
+    for index, prediction in enumerate(selected):
         prediction_id = str(prediction["prediction_id"])
         actual = latest_actual.get(prediction_id, {})
         predicted = as_number(prediction.get("predicted_intraday_return"))
@@ -115,7 +124,14 @@ def main() -> None:
                 "日付": str(prediction.get("prediction_date")),
                 "Cutoff": format_jst(prediction.get("cutoff_at")),
                 "予測状態": safe_text(prediction.get("status", "—")),
-                "予測リターン": format_percent(predicted),
+                "確率密度": sparklines[index],
+                "中央値": format_distribution_median(
+                    prediction.get("return_distribution")
+                ),
+                "80%区間": format_distribution_band(
+                    prediction.get("return_distribution")
+                ),
+                "予測リターン(点)": format_percent(predicted),
                 "実績リターン": (
                     format_percent(observed) if observed is not None else "—"
                 ),
@@ -145,9 +161,7 @@ def main() -> None:
     if any(row["実績リターン(%)"] is not None for row in chart_rows):
         frame = pd.DataFrame(chart_rows).set_index("日付")
         st.line_chart(frame, use_container_width=True)
-        st.caption(
-            "縦軸は%。実績が未確定の日は線が途切れます（0として描きません）。"
-        )
+        st.caption("縦軸は%。実績が未確定の日は線が途切れます（0として描きません）。")
     else:
         st.info("PENDING: 確定した実績リターンがまだありません。")
     display_rows(list(reversed(table_rows)), height=420)

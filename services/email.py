@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import UTC, date
 
 from sqlalchemy import select
@@ -17,6 +18,7 @@ from database.models import (
     PredictionSet,
 )
 from database.repository import PredictionPipelineRepository
+from models.distribution import ReturnDistribution
 from notifications.contracts import EmailCandidate, EmailDelivery, MorningEmailPayload
 from notifications.senders import (
     DryRunSender,
@@ -24,9 +26,44 @@ from notifications.senders import (
     NotificationError,
     ResendSender,
 )
-from notifications.templates import render_morning_email
+from notifications.templates import DENSITY_COLUMNS, render_morning_email
 
-TEMPLATE_VERSION = "morning-v1"
+# Bumped when the mail stopped leading with a point forecast and started
+# leading with the distribution. The version is part of the delivery record,
+# so a reader of email_logs can tell which shape of mail actually went out.
+TEMPLATE_VERSION = "morning-v2-distribution"
+
+
+def _distribution(row: Prediction) -> ReturnDistribution | None:
+    """Rebuild a persisted curve, or ``None`` for a row that has none.
+
+    Never raises: a malformed or partial document is a reason to send the
+    mail without a distribution for that ticker -- which the template says
+    out loud -- not a reason to send no mail at all.
+    """
+
+    payload = row.return_distribution
+    if not payload:
+        return None
+    try:
+        return ReturnDistribution.from_payload(payload)
+    except Exception:
+        return None
+
+
+def _density_scale(curves: Sequence[ReturnDistribution]) -> float:
+    """One axis half-width for the whole message, from the widest forecast.
+
+    Every density in a mail is sampled on this same axis. Sampling each ticker
+    on its own axis would silently rescale the picture per row, so a forecast
+    twice as uncertain as another would be drawn the same width -- which is
+    exactly the comparison the operator is looking at the figure to make.
+    """
+
+    widest = [
+        abs(value) for curve in curves for value in (curve.values[0], curve.values[-1])
+    ]
+    return max(widest) if widest else 0.0
 
 
 def _trim_warnings(
@@ -116,10 +153,16 @@ def load_morning_email_payload(
             .order_by(Prediction.rank.asc().nulls_last(), Prediction.ticker)
         )
     )
+    curves = {row.ticker: _distribution(row) for row in rows}
+    scale = _density_scale([c for c in curves.values() if c is not None])
     candidates: list[EmailCandidate] = []
     for row in rows:
         metric = _latest_metric(session, row.ticker, prediction_set.prediction_date)
         positive, negative = _factors(session, row.regression_model_run_id)
+        distribution = curves[row.ticker]
+        density: tuple[float, ...] = ()
+        if distribution is not None and scale > 0.0:
+            density = distribution.density_profile(-scale, scale, DENSITY_COLUMNS)
         candidates.append(
             EmailCandidate(
                 ticker=row.ticker,
@@ -162,6 +205,20 @@ def load_morning_email_payload(
                     if metric is not None and metric.expectancy_jpy is not None
                     else None
                 ),
+                distribution=(distribution.pairs() if distribution is not None else ()),
+                distribution_method=(
+                    distribution.method if distribution is not None else None
+                ),
+                distribution_probability_up=(
+                    distribution.probability_above(0.0)
+                    if distribution is not None
+                    else None
+                ),
+                distribution_median=(
+                    distribution.median if distribution is not None else None
+                ),
+                density=density,
+                density_scale=scale if density else None,
                 positive_factors=positive,
                 negative_factors=negative,
                 warnings=_trim_warnings(row.warnings, limit=3),

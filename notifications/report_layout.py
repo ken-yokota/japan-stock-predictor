@@ -230,9 +230,7 @@ def diverging_bar(
     )
 
 
-def stacked_bars(
-    rows: Sequence[tuple[float | None, str | None]], scale: float
-) -> str:
+def stacked_bars(rows: Sequence[tuple[float | None, str | None]], scale: float) -> str:
     """Several diverging bars sharing one centre rule, stacked in one cell.
 
     Used to put the forecast directly above what happened, so the gap between
@@ -281,6 +279,193 @@ def legend(items: Sequence[tuple[str, str]]) -> str:
         f"margin-left:5px'>{html.escape(label)}</span></span>"
         for label, colour in items
     ]
+    return f"<p style='margin:0 0 8px;line-height:1.9'>{''.join(parts)}</p>"
+
+
+# The forecast distribution's two bands. Deliberately one hue in two weights
+# rather than two hues: they are the same claim at two confidence levels, and
+# a second colour would read as a second kind of thing.
+BAND_OUTER = "#c7d2fe"
+BAND_INNER = "#4f46e5"
+MEDIAN_MARK = "#111827"
+
+
+def _segment(share: float, colour: str | None) -> str:
+    if share <= 0:
+        return ""
+    background = colour or TRACK
     return (
-        f"<p style='margin:0 0 8px;line-height:1.9'>{''.join(parts)}</p>"
+        f"<td width='{share:.4g}%' height='{BAR_HEIGHT}' "
+        f"style='width:{share:.4g}%;height:{BAR_HEIGHT}px;background:{background};"
+        "font-size:0;line-height:0;padding:0'>&nbsp;</td>"
+    )
+
+
+def _half(segments: Sequence[tuple[float, float, str]], low: float, high: float) -> str:
+    """Render the part of a distribution that falls in one half of the ruler."""
+
+    span = high - low
+    if span <= 0:
+        return "&nbsp;"
+    cells: list[str] = []
+    cursor = low
+    for start, end, colour in segments:
+        left, right = max(start, low), min(end, high)
+        if right <= left:
+            continue
+        if left > cursor:
+            cells.append(_segment((left - cursor) / span * 100, None))
+        cells.append(_segment((right - left) / span * 100, colour))
+        cursor = right
+    if cursor < high:
+        cells.append(_segment((high - cursor) / span * 100, None))
+    return (
+        "<table role='presentation' cellpadding='0' cellspacing='0' border='0' "
+        "style='width:100%;border-collapse:collapse'><tr>"
+        + "".join(cells)
+        + "</tr></table>"
+    )
+
+
+def distribution_bar(
+    low: float,
+    lower_quartile: float,
+    median: float,
+    upper_quartile: float,
+    high: float,
+    scale: float,
+) -> str:
+    """One forecast distribution drawn against a shared, zero-centred ruler.
+
+    The inner block is the 50% band and the outer the 80%; the dark rule is the
+    median and the thin grey rule down the centre is zero, so whether the mass
+    sits above or below break-even is the first thing the eye resolves.
+
+    ``scale`` is the half-width of the ruler and is the same for every row in
+    one table. A figure whose rows use different scales is a figure that lies,
+    and for a distribution that would be worse than for a point: it would make
+    a wide, uncertain forecast look identical to a tight, confident one.
+    """
+
+    if scale <= 0:
+        return "&nbsp;"
+    marker = scale * 0.015
+    base = [
+        (low, lower_quartile, BAND_OUTER),
+        (lower_quartile, upper_quartile, BAND_INNER),
+        (upper_quartile, high, BAND_OUTER),
+    ]
+    segments: list[tuple[float, float, str]] = []
+    for start, end, colour in base:
+        if end <= median - marker or start >= median + marker:
+            segments.append((start, end, colour))
+            continue
+        if start < median - marker:
+            segments.append((start, median - marker, colour))
+        if end > median + marker:
+            segments.append((median + marker, end, colour))
+    segments.append((median - marker, median + marker, MEDIAN_MARK))
+    segments.sort()
+    return (
+        "<table role='presentation' cellpadding='0' cellspacing='0' border='0' "
+        "style='width:100%;min-width:150px;border-collapse:collapse'><tr>"
+        f"<td width='50%' style='padding:0;border-right:1px solid {GRID}'>"
+        f"{_half(segments, -scale, 0.0)}</td>"
+        f"<td width='50%' style='padding:0'>{_half(segments, 0.0, scale)}</td>"
+        "</tr></table>"
+    )
+
+
+DENSITY_FILL = "#4f46e5"
+DENSITY_HEIGHT = 44
+
+# Eight heights of block, plus a space for a column the fit puts no mass in.
+# A space rather than a dot: the empty columns are the 5% tails the window
+# cannot place, and drawing a mark there would suggest it had placed them.
+_BLOCKS = " ▁▂▃▄▅▆▇█"
+
+
+def density_row(profile: Sequence[float], peak: float) -> str:
+    """One forecast density as block characters, on a caller-shared scale.
+
+    ``peak`` is the tallest column across every row of the same figure, so two
+    tickers drawn together can be compared: a flatter row really is a less
+    certain forecast, not just a differently scaled one.
+    """
+
+    if peak <= 0:
+        return " " * len(profile)
+    return "".join(
+        _BLOCKS[min(round(value / peak * (len(_BLOCKS) - 1)), len(_BLOCKS) - 1)]
+        if value > 0
+        else _BLOCKS[0]
+        for value in profile
+    )
+
+
+def density_axis(scale: float, columns: int) -> tuple[str, str]:
+    """A ruler for a density row: the tick line, and the labels under it.
+
+    Three labels only. A denser ruler collides with itself at the widths a
+    phone renders, and two overlapping percentages are worse than none.
+    """
+
+    centre = columns // 2
+    ticks = ["-"] * columns
+    ticks[centre] = "|"
+    ticks[0] = "|"
+    ticks[columns - 1] = "|"
+    labels = [" "] * columns
+    for position, text, align in (
+        (0, f"{-scale:+.1%}", "left"),
+        (centre, "0", "centre"),
+        (columns - 1, f"{scale:+.1%}", "right"),
+    ):
+        if align == "left":
+            start = 0
+        elif align == "right":
+            start = columns - len(text)
+        else:
+            start = position - len(text) // 2
+        start = min(max(start, 0), columns - len(text))
+        labels[start : start + len(text)] = list(text)
+    return "".join(ticks), "".join(labels)
+
+
+def density_chart(profile: Sequence[float], peak: float) -> str:
+    """The same density as an email-safe bar chart, zero ruled down the centre.
+
+    Bars are bottom-aligned cells rather than positioned elements: Gmail strips
+    ``position``, and a chart that collapses in the one client the operator
+    actually reads is not a chart.
+    """
+
+    if not profile:
+        return "&nbsp;"
+    centre = len(profile) // 2
+    width = 100.0 / len(profile)
+    cells: list[str] = []
+    for index, value in enumerate(profile):
+        height = 0 if peak <= 0 else round(value / peak * DENSITY_HEIGHT)
+        bar = (
+            "&nbsp;"
+            if height <= 0
+            else (
+                "<table role='presentation' cellpadding='0' cellspacing='0' "
+                "border='0' style='width:100%;border-collapse:collapse'><tr>"
+                f"<td height='{height}' style='height:{height}px;"
+                f"background:{DENSITY_FILL};font-size:0;line-height:0'>&nbsp;</td>"
+                "</tr></table>"
+            )
+        )
+        rule = f"border-left:1px solid {GRID};" if index == centre else ""
+        cells.append(
+            f"<td valign='bottom' width='{width:.4g}%' "
+            f"style='width:{width:.4g}%;height:{DENSITY_HEIGHT}px;padding:0;{rule}'>"
+            f"{bar}</td>"
+        )
+    return (
+        "<table role='presentation' cellpadding='0' cellspacing='0' border='0' "
+        f"style='width:100%;min-width:180px;height:{DENSITY_HEIGHT}px;"
+        "border-collapse:collapse'><tr>" + "".join(cells) + "</tr></table>"
     )

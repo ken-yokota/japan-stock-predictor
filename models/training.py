@@ -16,6 +16,12 @@ from models.base import (
     TickerPrediction,
 )
 from models.classifier import build_logistic_pipeline
+from models.distribution import (
+    QuantileEnsemble,
+    ReturnDistribution,
+    empirical_distribution,
+    fit_quantile_ensemble,
+)
 from models.optimization import (
     fit_with_weights,
     select_logistic_c,
@@ -88,6 +94,11 @@ class TickerModelBundle:
     training_sessions: int
     ridge_alpha: float
     logistic_c: float | None
+    # The fitted conditional-quantile curve. ``None`` when the caller
+    # disabled it or the solver failed, in which case ``residual_quantiles``
+    # below stands in and says so under its own method name.
+    quantiles: QuantileEnsemble | None = None
+    residual_quantiles: tuple[float, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.ticker.strip():
@@ -115,6 +126,32 @@ class TickerModelBundle:
         probabilities = np.asarray(self.classifier.predict_proba(numeric), dtype=float)
         return cast("NDArray[np.float64]", np.clip(probabilities[:, 1], 0.0, 1.0))
 
+    def predict_distribution(
+        self, features: pd.DataFrame, centre: float
+    ) -> ReturnDistribution | None:
+        """Return this row's forecast distribution, or the fallback, or None.
+
+        A solver failure on one ticker must not cost the morning its other
+        twenty-one, so the fitted curve degrades to residual quantiles
+        around the point forecast rather than raising. The fallback records
+        its own method name, so a reader is never shown a constant-width
+        band in the belief that it varied with the inputs.
+        """
+
+        if self.quantiles is not None:
+            numeric = _numeric_feature_frame(features, self.feature_names)
+            try:
+                return self.quantiles.predict_distribution(numeric)
+            except Exception:
+                pass
+        if self.residual_quantiles:
+            return empirical_distribution(
+                centre,
+                np.asarray(self.residual_quantiles, dtype=float),
+                training_sessions=self.training_sessions,
+            )
+        return None
+
     def predict_one(self, features: pd.DataFrame) -> TickerPrediction:
         """Predict exactly one out-of-sample session."""
 
@@ -129,6 +166,7 @@ class TickerModelBundle:
             training_sessions=self.training_sessions,
             ridge_alpha=self.ridge_alpha,
             logistic_c=self.logistic_c,
+            distribution=self.predict_distribution(features, predicted_return),
         )
 
     def regression_coefficients(self) -> CoefficientMap:
@@ -257,6 +295,26 @@ def train_ticker_model(
         )
         fit_with_weights(classifier, numeric, direction_targets, weights)
 
+    # The forecast distribution. Fitted after the point models and never
+    # allowed to take the morning down with it: a quantile fit is a linear
+    # program, and an LP that fails to converge on one ticker is not a reason
+    # to publish nothing for the other twenty-one. What survives a failure is
+    # the residual fallback below, recorded under its own method name.
+    quantiles: QuantileEnsemble | None = None
+    if settings.distribution_quantiles:
+        try:
+            quantiles = fit_quantile_ensemble(
+                numeric,
+                targets,
+                levels=settings.distribution_quantiles,
+                alphas=settings.quantile_alphas,
+                n_splits=settings.time_series_splits,
+                sample_weight=weights,
+            )
+        except Exception:
+            quantiles = None
+    residuals = targets - np.asarray(regressor.predict(numeric), dtype=float)
+
     return TickerModelBundle(
         ticker=ticker,
         feature_names=names,
@@ -266,6 +324,8 @@ def train_ticker_model(
         training_sessions=len(targets),
         ridge_alpha=ridge_alpha,
         logistic_c=logistic_c,
+        quantiles=quantiles,
+        residual_quantiles=tuple(float(value) for value in residuals),
     )
 
 

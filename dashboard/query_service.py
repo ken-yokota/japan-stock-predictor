@@ -210,7 +210,7 @@ class DashboardQueryService:
                         "published_at",
                         "warnings",
                     }
-                )
+                ),
             },
             statement="""
                 SELECT
@@ -280,6 +280,7 @@ class DashboardQueryService:
                         "predicted_intraday_return",
                         "prediction_interval_low",
                         "prediction_interval_high",
+                        "return_distribution",
                         "probability_up",
                         "reference_price",
                         "reference_basis",
@@ -311,7 +312,8 @@ class DashboardQueryService:
                 SELECT
                     p.prediction_id, p.ticker, p.status,
                     p.predicted_intraday_return, p.prediction_interval_low,
-                    p.prediction_interval_high, p.probability_up,
+                    p.prediction_interval_high, p.return_distribution,
+                    p.probability_up,
                     p.reference_price, p.reference_basis,
                     p.predicted_price_difference, p.predicted_close,
                     p.signal, p.rank, p.return_threshold,
@@ -385,6 +387,7 @@ class DashboardQueryService:
                         "predicted_intraday_return",
                         "prediction_interval_low",
                         "prediction_interval_high",
+                        "return_distribution",
                         "probability_up",
                         "reference_price",
                         "predicted_close",
@@ -402,7 +405,8 @@ class DashboardQueryService:
                 SELECT
                     p.prediction_id, p.ticker, p.status,
                     p.predicted_intraday_return, p.prediction_interval_low,
-                    p.prediction_interval_high, p.probability_up,
+                    p.prediction_interval_high, p.return_distribution,
+                    p.probability_up,
                     p.reference_price, p.predicted_close, p.signal, p.rank,
                     p.confidence_score, p.positive_factors,
                     p.negative_factors, p.feature_coverage, p.warnings,

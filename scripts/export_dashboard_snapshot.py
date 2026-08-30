@@ -90,6 +90,7 @@ PREDICTION_FIELDS = (
     "predicted_intraday_return",
     "prediction_interval_low",
     "prediction_interval_high",
+    "return_distribution",
     "probability_up",
     "reference_price",
     "reference_basis",

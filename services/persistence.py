@@ -563,6 +563,11 @@ def persist_prediction_computation(
         confidence_score=_decimal(result.confidence_score) if success else None,
         prediction_interval_low=_decimal(result.prediction_interval_low),
         prediction_interval_high=_decimal(result.prediction_interval_high),
+        return_distribution=(
+            result.distribution.to_payload()
+            if result.distribution is not None
+            else None
+        ),
         positive_factors=list(result.positive_factors),
         negative_factors=list(result.negative_factors),
         feature_coverage=result.feature_coverage,
