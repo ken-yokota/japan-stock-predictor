@@ -1113,9 +1113,18 @@ def test_every_workflow_runs_the_interpreter_the_repository_declares() -> None:
     Community Cloud -- so the deployed dashboard was the one build the suite
     never touched, and a test failed locally that passed in CI purely on syntax
     the older interpreter could not parse.
+
+    One exception is allowed and it is checked rather than assumed: a step may
+    install another version *only* with ``update-environment: false``, which
+    keeps it off PATH. torch publishes no 3.14 wheel, so the sequence models
+    need a 3.12 toolchain built into their own venv; what must never happen
+    again is a second interpreter becoming the one that runs application code.
+    Written the first time without that flag, the 3.12 step silently made every
+    later step -- the migrations, the prediction itself -- run on the wrong
+    interpreter.
     """
 
-    import re
+    import yaml as _yaml
 
     pinned = _pinned_python()
     root = Path(__file__).resolve().parents[1]
@@ -1123,9 +1132,26 @@ def test_every_workflow_runs_the_interpreter_the_repository_declares() -> None:
     assert workflows
 
     for path in workflows:
-        text = path.read_text(encoding="utf-8")
-        for version in re.findall(r'python-version:\s*"([0-9.]+)"', text):
-            assert version == pinned, f"{path.name} は Python {version}"
+        document = _yaml.load(path.read_text(encoding="utf-8"), Loader=_yaml.BaseLoader)
+        for job in (document.get("jobs") or {}).values():
+            for step in job.get("steps") or []:
+                options = step.get("with") or {}
+                version = options.get("python-version")
+                if version is None or version == pinned:
+                    continue
+                if "${{" in version:
+                    # A dispatch input with a default. The old regex skipped
+                    # these entirely, so the default was never checked at all;
+                    # what matters is that the fallback is the pinned version.
+                    assert pinned in version, (
+                        f"{path.name} の python-version 式が {pinned} を"
+                        f"既定にしていません: {version}"
+                    )
+                    continue
+                assert options.get("update-environment") == "false", (
+                    f"{path.name} は Python {version} をPATHに載せています。"
+                    "本体と別の版を入れる場合は update-environment: false が必須です。"
+                )
 
 
 def test_the_declared_interpreter_matches_the_packaging_metadata() -> None:

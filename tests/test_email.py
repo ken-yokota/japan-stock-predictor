@@ -530,7 +530,26 @@ def test_workflows_keep_retries_and_fail_only_required_close_attempt() -> None:
         for step in prediction_steps
         if step.get("name") == "Build morning predictions"
     )
-    assert build_step["timeout-minutes"] == "20"
+    # Raised from 20 on 2026-08-30, when the operator asked for every model
+    # family in the morning mail. The two sequence models add about 19 minutes
+    # across the universe to a run that took roughly 13, so the old ceiling
+    # would have killed the step every morning. The 90-minute job budget is
+    # what actually bounds this.
+    assert build_step["timeout-minutes"] == "60"
+    neural_step = next(
+        step
+        for step in prediction_steps
+        if step.get("name") == "Build the sequence-model environment"
+    )
+    assert neural_step["timeout-minutes"] == "15"
+    # The interpreter that runs application code must stay 3.14; the 3.12 one
+    # exists only to build .venv-neural and must never reach PATH.
+    neural_setup = next(
+        step
+        for step in prediction_steps
+        if (step.get("with") or {}).get("python-version") == "3.12"
+    )
+    assert neural_setup["with"]["update-environment"] == "false"
     assert "args+=(--skip-ingestion)" in build_step["run"]
 
     close_text = (workflow_dir / "close_update.yml").read_text(encoding="utf-8")

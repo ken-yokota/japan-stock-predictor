@@ -33,9 +33,14 @@ models:
   # trade: regression_primary and classification_primary still do that.
   run_all_arms: true
   # LSTM and Transformer. They need .venv-neural (Python 3.12 + torch);
-  # see scripts/setup_neural_env.sh. Off by default: about 19 minutes per
-  # morning, and nothing has yet measured that they are worth it.
-  include_sequence_arms: false
+  # see scripts/setup_neural_env.sh, and the morning workflow builds it.
+  #
+  # On by the operator's instruction of 2026-08-30, after being shown the
+  # measurement that argued against it: their 80% bands came out at 0.26x
+  # and 0.31x the width a zero-skill forecast needs, which is the window
+  # being memorised rather than skill. They are reported, never traded on,
+  # and the mail prints those ratios beside them.
+  include_sequence_arms: true
 
 cross_validation:
   strategy: time_series_split

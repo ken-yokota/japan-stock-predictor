@@ -65,6 +65,58 @@ jobs:
           cache-dependency-path: requirements.txt
       - name: Install application
         run: python -m pip install -e .
+      # torch publishes no Python 3.14 wheel, and this project runs 3.14 by
+      # deliberate choice. The sequence arms therefore get their own
+      # interpreter and talk to the main process over a JSON document. Set up
+      # before the prediction step so a failure here is attributed to the
+      # environment rather than to the model.
+      # update-environment: false is load-bearing. setup-python prepends to
+      # PATH, so a second call without it would leave `python` pointing at
+      # 3.12 for every later step -- the migrations and the prediction itself
+      # would silently run on the wrong interpreter against a dependency set
+      # that was never installed there. The path is taken from the step output
+      # instead and used only to build the sibling environment.
+      - name: Set up Python 3.12 for the sequence models
+        id: neural-python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          update-environment: false
+      - name: Build the sequence-model environment
+        shell: bash
+        timeout-minutes: 15
+        env:
+          NEURAL_PYTHON: ${{ steps.neural-python.outputs.python-path }}
+        run: |
+          set -euo pipefail
+          "$NEURAL_PYTHON" -m venv .venv-neural
+          .venv-neural/bin/python -m pip install --quiet --upgrade pip
+          # numpy is held below 2 because torch 2.x on this runner is built
+          # against the 1.x ABI.
+          .venv-neural/bin/python -m pip install --quiet "torch" "numpy<2"
+          .venv-neural/bin/python -c "import torch; print('torch', torch.__version__)"
+      - name: Confirm the interpreters are the right way round
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The main interpreter must still be 3.14. If a future edit reorders
+          # the setup steps this fails here, loudly, rather than at 08:10 on a
+          # weekday with a wrong-interpreter traceback.
+          python - <<'PY'
+          import sys
+          version = f"{sys.version_info.major}.{sys.version_info.minor}"
+          print("main interpreter:", version)
+          if version != "3.14":
+              raise SystemExit(f"expected the main interpreter to be 3.14, got {version}")
+          PY
+          # A smoke test rather than a trust exercise. If this reports the
+          # environment missing, the arms come back UNAVAILABLE and the morning
+          # still publishes -- but the log says so instead of the rows quietly
+          # going missing.
+          python -c "
+          from models.sequence import neural_environment_status
+          print('sequence environment:', neural_environment_status())
+          "
       - name: Apply database migrations
         run: python -m alembic upgrade head
       - name: Wait for the 08:20 JST snapshot window
@@ -97,7 +149,7 @@ jobs:
           PY
       - name: Build morning predictions
         shell: bash
-        timeout-minutes: 20
+        timeout-minutes: 60
         run: |
           set -eo pipefail
           args=()

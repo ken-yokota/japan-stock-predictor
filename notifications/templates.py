@@ -884,12 +884,15 @@ ARM_NOTE = (
 # will be. Printed because a reader comparing two 80% columns has no other way
 # to know that one of them is four times too confident.
 ARM_WIDTH_NOTE = (
-    "区間の広さの注意: 2026-08-30に8銘柄で実測したところ、"
+    "区間の広さの注意: 2026-08-30に8銘柄で実測しました。"
     "予測力ゼロなら妥当な幅を1.00倍として、"
-    "Ridge 1.33倍 / Lasso・ElasticNet・MLP 約0.94倍 / XGBoost 0.65倍 / "
-    "LightGBM 0.56倍 / ランダムフォレスト 0.53倍 でした。"
-    "1を大きく下回る系統は区間が狭すぎます。"
-    "木系・ブースティング系の80%区間は、額面より実際は外れやすいと読んでください。"
+    "LSTM 0.26倍 / Transformer 0.31倍 / ランダムフォレスト 0.53倍 / "
+    "LightGBM 0.56倍 / XGBoost 0.65倍 / Lasso・ElasticNet・MLP 約0.94倍 / "
+    "Ridge 1.33倍。"
+    "1を大きく下回る系統は区間が狭すぎ、額面より実際は外れます。"
+    "特にLSTMとTransformerは妥当な幅の4分の1程度しかなく、"
+    "学習窓120営業日を丸暗記した結果と見るべきです。"
+    "この2つの狭い区間と高い上昇確率は、自信ではなく過学習の兆候です。"
 )
 
 
