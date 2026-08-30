@@ -467,3 +467,12 @@ def test_the_dashboard_handles_an_empty_page() -> None:
 
     assert density_sparklines([]) == []
     assert density_sparklines([None, None]) == ["—", "—"]
+
+
+def test_the_mail_warns_that_the_bumps_are_noise_not_modes() -> None:
+    """18 bins from 120 sessions is ~6 observations each; the wiggles are sampling
+    error, and a reader who takes them for real structure is reading too much."""
+
+    message = _render((_candidate("9101", "日本郵船", curve=_normal(0.006, 0.010)),))
+    assert "120営業日" in message.text
+    assert "推定のばらつき" in message.text
