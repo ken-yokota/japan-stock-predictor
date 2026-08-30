@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 .venv/
+# The separate Python 3.12 environment the sequence models run in. torch
+# has no 3.14 distribution, so LSTM/Transformer cannot share the main one.
+.venv-neural/
 __pycache__/
 *.py[cod]
 *.egg-info/

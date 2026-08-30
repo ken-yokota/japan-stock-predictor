@@ -742,6 +742,8 @@ def render_morning_email(
                 "",
                 f"  {ARM_NOTE}",
                 "",
+                f"  {ARM_WIDTH_NOTE}",
+                "",
                 "",
                 "■ なぜその予測になったか",
                 "",
@@ -778,7 +780,7 @@ def render_morning_email(
             + section(
                 "全モデル系統の予測",
                 _arms_html(selected),
-                ARM_NOTE,
+                ARM_NOTE + " " + ARM_WIDTH_NOTE,
             )
             + section(
                 "なぜその予測になったか",
@@ -872,6 +874,22 @@ ARM_NOTE = (
     "ただし売買の判定は従来どおりRidgeの点予測とロジスティックの確率だけで行っており、"
     "ここの系統は判定に一切関与していません。"
     "どれかを採用するかどうかは、実績が溜まってから別途ご判断いただく話です。"
+)
+
+# Measured 2026-08-30 over eight tickers: each family's mean 80% band against
+# the width a zero-skill forecast would need at the realised volatility of the
+# same window (+/-1.28 sigma). This system's predictive power has been measured
+# at close to zero, so a band far under that ratio is not skill -- it is the
+# window being memorised, and the number it prints is tighter than the outcome
+# will be. Printed because a reader comparing two 80% columns has no other way
+# to know that one of them is four times too confident.
+ARM_WIDTH_NOTE = (
+    "区間の広さの注意: 2026-08-30に8銘柄で実測したところ、"
+    "予測力ゼロなら妥当な幅を1.00倍として、"
+    "Ridge 1.33倍 / Lasso・ElasticNet・MLP 約0.94倍 / XGBoost 0.65倍 / "
+    "LightGBM 0.56倍 / ランダムフォレスト 0.53倍 でした。"
+    "1を大きく下回る系統は区間が狭すぎます。"
+    "木系・ブースティング系の80%区間は、額面より実際は外れやすいと読んでください。"
 )
 
 

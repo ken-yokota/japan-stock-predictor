@@ -287,6 +287,7 @@ class PredictionService:
                 dataset.current_frame.loc[:, list(dataset.feature_names)],
                 levels=tuple(self._config.model.hyperparameters.quantile_levels),
                 n_splits=self._config.model.cross_validation.n_splits,
+                include_sequence=self._config.model.models.include_sequence_arms,
             )
         coefficients = model.regression_coefficients()
         positive, negative = _drivers(model, dataset, coefficients)

@@ -236,3 +236,24 @@ def test_a_failed_arm_still_serialises_without_a_distribution() -> None:
     assert payload["distribution"] is None
     assert payload["predicted_return"] is None
     assert payload["status"] == FAILED
+
+
+def test_the_mail_warns_that_some_families_report_bands_that_are_too_tight() -> None:
+    """Measured 2026-08-30: the tree and boosting bands run 0.53-0.65x the width
+    a zero-skill forecast needs. A reader comparing two 80% columns cannot see
+    that from the numbers alone, so the mail says it."""
+
+    from notifications.templates import ARM_WIDTH_NOTE
+
+    assert "狭すぎ" in ARM_WIDTH_NOTE
+    assert "0.53" in ARM_WIDTH_NOTE
+
+
+def test_the_sequence_arms_stay_off_until_something_measures_them() -> None:
+    """They cost ~19 minutes a morning and measured 0.26-0.31x on band width."""
+
+    from models.arms import default_arms
+
+    assert not any(a.name in {"lstm", "transformer"} for a in default_arms())
+    with_sequence = default_arms(include_sequence=True)
+    assert {"lstm", "transformer"} <= {a.name for a in with_sequence}

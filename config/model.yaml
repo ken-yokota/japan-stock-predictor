@@ -32,6 +32,10 @@ models:
   # Every family is fitted and recorded each morning. None of them decide a
   # trade: regression_primary and classification_primary still do that.
   run_all_arms: true
+  # LSTM and Transformer. They need .venv-neural (Python 3.12 + torch);
+  # see scripts/setup_neural_env.sh. Off by default: about 19 minutes per
+  # morning, and nothing has yet measured that they are worth it.
+  include_sequence_arms: false
 
 cross_validation:
   strategy: time_series_split

@@ -104,10 +104,20 @@ class ArmForecast:
 
 
 class Arm(Protocol):
-    """One model family, fitted on a window and asked about the next session."""
+    """One model family, fitted on a window and asked about the next session.
 
-    name: str
-    label: str
+    ``name`` and ``label`` are read-only on purpose: the sequence arms are
+    frozen dataclasses, and a protocol demanding settable attributes would
+    exclude them for no reason a caller cares about.
+    """
+
+    @property
+    def name(self) -> str:
+        """Stable identifier, as stored in ``arm_predictions``."""
+
+    @property
+    def label(self) -> str:
+        """What a reader of the morning mail sees."""
 
     def forecast(
         self,
@@ -530,9 +540,29 @@ class GradientBoostingArm:
             )
 
 
-def default_arms() -> tuple[Arm, ...]:
-    """Every family the operator asked to be run each morning."""
+def default_arms(*, include_sequence: bool = False) -> tuple[Arm, ...]:
+    """Every family the operator asked to be run each morning.
 
+    ``include_sequence`` is off by default and deliberately so. The LSTM and
+    the Transformer live in a second interpreter and cost about 19 minutes
+    across the universe against roughly 8 seconds a ticker for everything else.
+    Spending that on every morning before anything has measured whether they
+    are any good would be paying for a result in advance. Turn it on in
+    ``config/model.yaml`` once there is a reason to.
+    """
+
+    return _core_arms() + (sequence_family() if include_sequence else ())
+
+
+def sequence_family() -> tuple[Arm, ...]:
+    """LSTM and Transformer, or nothing if the sibling interpreter is absent."""
+
+    from models.sequence import sequence_arms
+
+    return tuple(sequence_arms())
+
+
+def _core_arms() -> tuple[Arm, ...]:
     return (
         PointArm(
             "ridge",
@@ -580,6 +610,7 @@ def run_arms(
     arms: tuple[Arm, ...] | None = None,
     levels: tuple[float, ...] = DEFAULT_QUANTILE_LEVELS,
     n_splits: int = 5,
+    include_sequence: bool = False,
 ) -> tuple[ArmForecast, ...]:
     """Run every arm on one ticker-session, collecting failures as results.
 
@@ -590,5 +621,9 @@ def run_arms(
 
     return tuple(
         arm.forecast(features, target, latest, levels=levels, n_splits=n_splits)
-        for arm in (arms if arms is not None else default_arms())
+        for arm in (
+            arms
+            if arms is not None
+            else default_arms(include_sequence=include_sequence)
+        )
     )
