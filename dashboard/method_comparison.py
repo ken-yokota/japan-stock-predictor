@@ -20,7 +20,18 @@ import streamlit as st
 
 from dashboard.presenters import format_percent
 from dashboard.ui import display_rows
-from notifications.risk_levels import CONVENTION_NOTE
+
+# Repeated rather than imported: the dashboard is barred from importing the
+# notification layer, and that ban is worth more than this one sentence of
+# duplication -- it is what stops a page from fetching, training or sending.
+# ``test_the_two_surfaces_state_the_same_convention`` pins this against
+# notifications.risk_levels so the two cannot drift into describing P90
+# differently, which is the failure the shared constant was protecting against.
+CONVENTION_NOTE = (
+    "Pxx の読み方: その確率で「これ以上になる」水準です。"
+    "P90 は90%の確率で上回る水準、つまり下振れ側のリスクです（上振れではありません）。"
+    "P95 はさらに悪い側、P50 は中央値です。"
+)
 
 ALL_METHODS_DIRECTORY = Path("docs/all_methods")
 

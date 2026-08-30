@@ -214,3 +214,19 @@ def test_a_family_with_no_hurdle_shows_a_dash_not_a_zero() -> None:
         {"thresholds": [{"arm": "logistic", "label": "ロジ", "threshold": None}]}
     )
     assert rows[0]["閾値"] == "—"
+
+
+def test_the_two_surfaces_state_the_same_convention() -> None:
+    """The dashboard may not import notifications, so the sentence is repeated.
+
+    Repeating it is the lesser evil: the import ban is what stops a page from
+    fetching, training or sending. What the ban cannot prevent is the two
+    copies drifting until one of them describes P90 as the upside again, which
+    is the exact confusion the convention was introduced to end. So they are
+    pinned equal here, where importing both is allowed.
+    """
+
+    from dashboard.method_comparison import CONVENTION_NOTE as dashboard_note
+    from notifications.risk_levels import CONVENTION_NOTE as mail_note
+
+    assert dashboard_note == mail_note
