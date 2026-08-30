@@ -241,11 +241,16 @@ def _render(candidates: tuple[EmailCandidate, ...]):
 
 
 def test_the_mail_leads_with_the_band_not_with_one_number() -> None:
+    """Named by the operator's convention: Pxx is the level exceeded xx% of the
+    time, so P90 is the downside. Labelling the 10th percentile "上位10%" read
+    as an upside target for a risk figure."""
+
     message = _render((_candidate("9101", "日本郵船", curve=_curve()),))
-    assert "中央値" in message.text
-    assert "下位10%" in message.text
-    assert "上位10%" in message.text
+    assert "P50" in message.text
+    assert "P90" in message.text
+    assert "上振れ10%" in message.text
     assert "80%区間" in message.text
+    assert "下振れ側のリスク" in message.text
 
 
 def test_the_mail_states_how_often_the_band_actually_held() -> None:

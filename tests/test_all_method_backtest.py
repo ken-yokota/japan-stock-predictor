@@ -142,12 +142,12 @@ def test_each_rule_selects_on_the_quantile_it_names() -> None:
     ]
     results = {r.rule: r for r in evaluate(_payload(rows), 0.003)}
     median_rule = next(
-        k for k in results if k.startswith("中央値(p50)>0.3%") and "P(上昇)" not in k
+        k for k in results if k.startswith("P50 > ") and "P(上昇)" not in k
     )
     assert results[median_rule].positions == 1
-    assert results["下位10%(p10)>0"].positions == 1
+    assert results["P90 > 0（下振れでもプラス）"].positions == 1
     # p90 clears the hurdle on both rows, which is the point of showing it.
-    upper_rule = next(k for k in results if k.startswith("上位10%(p90)"))
+    upper_rule = next(k for k in results if k.startswith("上振れ10%"))
     assert results[upper_rule].positions == 2
 
 
@@ -158,9 +158,7 @@ def test_the_probability_gate_can_only_reduce_what_the_median_selected() -> None
     ]
     results = {r.rule: r for r in evaluate(_payload(rows), 0.003)}
     plain = next(
-        results[k]
-        for k in results
-        if k.startswith("中央値(p50)") and "P(上昇)" not in k
+        results[k] for k in results if k.startswith("P50 > ") and "P(上昇)" not in k
     )
     gated = next(results[k] for k in results if "P(上昇)" in k)
     assert plain.positions == 2
@@ -202,3 +200,13 @@ def test_the_report_says_this_is_a_replay_and_too_small_to_conclude_from() -> No
     assert "実績ではありません" in text
     assert "偶然と区別できません" in text
     assert "被覆" in text
+    # The Pxx convention must travel with the numbers.
+    assert "P90 は90%の確率で上回る水準" in text
+    assert "Pxx別の精度" in text
+    assert "手法ごとの閾値" in text
+    assert "選んだことによる下駄" in text
+    # The Pxx convention must travel with the numbers.
+    assert "P90 は90%の確率で上回る水準" in text
+    assert "Pxx別の精度" in text
+    assert "手法ごとの閾値" in text
+    assert "選んだことによる下駄" in text

@@ -29,6 +29,7 @@ from notifications.report_layout import (
     signed_percent,
     table,
 )
+from notifications.risk_levels import CONVENTION_NOTE, risk_label
 
 # The bands the mail reports, and what each is called in it. The outer pair is
 # the 80% band and the inner the 50%; the middle level is the centre. The 5th
@@ -42,8 +43,9 @@ UPPER_INNER = 0.75
 UPPER_OUTER = 0.90
 
 # The quantile levels the mail prints as columns. The model fits nineteen;
-# printing all of them would be a spreadsheet, and these five are the ones
-# a decision is read off.
+# printing all of them would be a spreadsheet. Named by the operator's
+# convention, in which Pxx is the level exceeded xx% of the time -- so P90 is
+# the downside. See notifications/risk_levels.py.
 REPORTED = (0.10, 0.25, 0.50, 0.75, 0.90)
 
 # Width of the density plot in characters. Odd, so the middle column is
@@ -61,9 +63,9 @@ COVERAGE_NOTE = (
 )
 
 READING_NOTE = (
-    "中央値は分布の中心で、上下どちらに転ぶ確率も半々の水準です。"
+    "P50（中央値）は分布の中心で、上下どちらに転ぶ確率も半々の水準です。"
     "80%区間は、当日の結果が10回のうちおよそ8回入ると見込まれる範囲です。"
-    "点ではなく幅で読んでください。"
+    "点ではなく幅で読んでください。" + CONVENTION_NOTE
 )
 
 DENSITY_NOTE = (
@@ -191,7 +193,7 @@ def _returntable(items: Sequence[EmailCandidate]) -> str:
     """
 
     header = (
-        "  順位  銘柄                  下位10%   下位25%    中央値   上位25%   上位10%"
+        "  順位  銘柄                      P90      P75      P50   上振れ25% 上振れ10%"
         "  P(上昇)\n"
         "  ----  --------------------  --------  --------  --------  --------  --------"
         "  -------"
@@ -233,7 +235,8 @@ def _densitytext(items: Sequence[EmailCandidate]) -> str:
         lines.append(f"  {density_row(item.density, peak)}")
         lines.append(
             f"  {item.ticker} {item.company}"
-            f"（中央値 {_percent(item.distribution_median)} / "
+            f"（P50 {_percent(item.distribution_median)} / "
+            f"P90 {_percent(_at(item, LOWER_OUTER))} / "
             f"80%区間 {_band_text(item)} / "
             f"P(上昇) {_probability(item.distribution_probability_up)}）"
         )
@@ -263,7 +266,7 @@ def _pricetable(items: Sequence[EmailCandidate]) -> str:
     """The same distribution as prices, which is what the operator reads."""
 
     header = (
-        "  銘柄                  前日終値   下位10%    中央値    上位10%\n"
+        "  銘柄                      前日終値       P90       P50  上振れ10%\n"
         "  --------------------  ---------  ---------  ---------  ---------"
     )
     rows = []
@@ -332,7 +335,8 @@ def _reasons_text(items: Sequence[EmailCandidate]) -> str:
     for item in items:
         lines = [
             f"  {item.ticker} {item.company}"
-            f"（中央値 {_percent(item.distribution_median)} / "
+            f"（P50 {_percent(item.distribution_median)} / "
+            f"P90 {_percent(_at(item, LOWER_OUTER))} / "
             f"80%区間 {_band_text(item)}）"
         ]
         lines.append(f"    押し上げた要因: {', '.join(item.positive_factors) or '—'}")
@@ -398,7 +402,7 @@ def _distribution_legend() -> str:
         [
             ("50%区間", BAND_INNER),
             ("80%区間", BAND_OUTER),
-            ("中央値", MEDIAN_MARK),
+            ("P50（中央値）", MEDIAN_MARK),
             ("0%（前日終値）", GRID),
         ]
     )
@@ -425,9 +429,9 @@ def _buy_rows_html(items: Sequence[EmailCandidate]) -> str:
             ("順位", "center"),
             ("銘柄", "left"),
             ("予測の分布", "left"),
-            ("下位10%", "right"),
-            ("中央値", "right"),
-            ("上位10%", "right"),
+            ("P90", "right"),
+            ("P50", "right"),
+            ("上振れ10%", "right"),
             ("P(上昇)", "right"),
         ],
         rows,
@@ -469,7 +473,7 @@ def _density_rows_html(items: Sequence[EmailCandidate]) -> str:
             [
                 ("銘柄", "left"),
                 ("確率密度", "left"),
-                ("中央値", "right"),
+                ("P50", "right"),
                 ("80%区間", "right"),
                 ("P(上昇)", "right"),
             ],
@@ -495,7 +499,7 @@ def _quantile_rows_html(items: Sequence[EmailCandidate]) -> str:
         for index, item in enumerate(items)
     ]
     return table(
-        [("銘柄", "left"), *((f"{level:.0%}", "right") for level in REPORTED)],
+        [("銘柄", "left"), *((risk_label(level), "right") for level in REPORTED)],
         rows,
     )
 
@@ -532,9 +536,9 @@ def _price_rows_html(items: Sequence[EmailCandidate]) -> str:
         [
             ("銘柄", "left"),
             ("前日終値", "right"),
-            ("下位10%", "right"),
-            ("中央値", "right"),
-            ("上位10%", "right"),
+            ("P90", "right"),
+            ("P50", "right"),
+            ("上振れ10%", "right"),
         ],
         rows,
     )
@@ -587,7 +591,7 @@ def _all_rows_html(items: Sequence[EmailCandidate]) -> str:
             ("銘柄", "left"),
             ("判定", "center"),
             ("予測の分布", "left"),
-            ("中央値", "right"),
+            ("P50", "right"),
             ("80%区間", "right"),
             ("P(上昇)", "right"),
         ],
@@ -611,7 +615,7 @@ def _reasons_html(items: Sequence[EmailCandidate]) -> str:
             )
         blocks.append(
             f"<p style='margin:16px 0 6px;font-size:14px;color:{INK}'>"
-            f"{_name_html(item)} <span style='color:{MUTED}'>中央値 "
+            f"{_name_html(item)} <span style='color:{MUTED}'>P50 "
             f"{_percent(item.distribution_median)} / 80%区間 "
             f"{html.escape(_band_text(item))}</span></p>"
             + table([("区分", "left"), ("要因", "left")], rows)
@@ -759,7 +763,7 @@ def render_morning_email(
             + section(
                 "買い候補の分位点",
                 _quantile_rows_html(selected),
-                "各パーセンタイルの予測リターンです。50%が中央値にあたります。",
+                "P90は90%の確率で上回る水準、つまり下振れ側のリスクです。P50が中央値です。",
             )
             + section(
                 "買い候補の予測分布（要約）",
