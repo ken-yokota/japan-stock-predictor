@@ -348,6 +348,37 @@ class LogisticArm:
             )
 
 
+def _impute(
+    matrix: NDArray[np.float64], current: NDArray[np.float64]
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    """Fill gaps with the training window's column medians, as the pipelines do.
+
+    Every other arm gets this from ``SimpleImputer(strategy="median")`` inside
+    its pipeline. scikit-learn's random forest cannot take NaN, so it needs the
+    same fill applied by hand -- and it has to be the *same* fill. The point of
+    running ten families on one morning is that they see identical inputs; a
+    family with its own imputation is a family whose difference cannot be
+    attributed to the model.
+
+    The first version filled with zero, which is not a neutral value: for a
+    price level, a moving average or a yield it sits outside the data entirely.
+    Measured on 2026-08-28 that affected 19 cells in 29,760, so it changed
+    nothing then -- but missingness is not constant. The day a provider is down
+    is the day it would matter, and that is the day the forest would quietly
+    diverge from everything it is being compared against.
+
+    Medians come from the training rows only, then are applied to the row being
+    predicted, so the session being forecast never influences its own fill.
+    """
+
+    finite = np.where(np.isfinite(matrix), matrix, np.nan)
+    medians = np.nanmedian(finite, axis=0)
+    medians = np.where(np.isfinite(medians), medians, 0.0)
+    filled = np.where(np.isfinite(matrix), matrix, medians)
+    filled_current = np.where(np.isfinite(current), current, medians)
+    return filled, filled_current
+
+
 class RandomForestArm:
     """Many shallow trees; the spread between them is the distribution.
 
@@ -386,8 +417,7 @@ class RandomForestArm:
         n_splits: int,
     ) -> ArmForecast:
         try:
-            matrix = np.nan_to_num(_matrix(features), nan=0.0)
-            current = np.nan_to_num(_matrix(latest), nan=0.0)
+            matrix, current = _impute(_matrix(features), _matrix(latest))
             scored: list[tuple[float, int]] = []
             for depth in self.depths:
                 model = self._make(depth, oob=True)

@@ -356,3 +356,54 @@ def test_the_mail_says_which_verdicts_actually_place_an_order() -> None:
 
     assert "発注の対象" in ARM_NOTE
     assert "比較のために" in ARM_NOTE
+
+
+def test_the_forest_fills_gaps_the_same_way_every_other_arm_does() -> None:
+    """Ten families on one morning only means something if they see one input.
+
+    scikit-learn's forest cannot take NaN, so the fill is applied by hand -- and
+    the first version used zero, which is not neutral for a price level or a
+    yield. A family with its own imputation is a family whose difference cannot
+    be attributed to the model.
+    """
+
+    from models.arms import _impute
+
+    matrix = np.array([[1.0, 10.0], [3.0, np.nan], [5.0, 30.0]])
+    current = np.array([[np.nan, 20.0]])
+    filled, filled_current = _impute(matrix, current)
+    # Column medians of the finite training values: 3.0 and 20.0.
+    assert filled[1][1] == pytest.approx(20.0)
+    assert filled_current[0][0] == pytest.approx(3.0)
+    assert np.isfinite(filled).all()
+    assert np.isfinite(filled_current).all()
+
+
+def test_infinities_are_treated_as_gaps_not_as_enormous_numbers() -> None:
+    """nan_to_num turned an infinity into 1.8e308, which is a real split point."""
+
+    from models.arms import _impute
+
+    matrix = np.array([[1.0], [3.0], [np.inf], [5.0]])
+    filled, _ = _impute(matrix, np.array([[-np.inf]]))
+    assert np.isfinite(filled).all()
+    assert filled[2][0] == pytest.approx(3.0)
+
+
+def test_a_column_that_is_entirely_missing_does_not_poison_the_matrix() -> None:
+    from models.arms import _impute
+
+    matrix = np.array([[1.0, np.nan], [2.0, np.nan]])
+    filled, filled_current = _impute(matrix, np.array([[3.0, np.nan]]))
+    assert np.isfinite(filled).all()
+    assert np.isfinite(filled_current).all()
+
+
+def test_the_fill_comes_from_training_rows_only() -> None:
+    """Using the scored row's own value would let it set its own fill."""
+
+    from models.arms import _impute
+
+    matrix = np.array([[1.0], [1.0], [1.0]])
+    _, filled_current = _impute(matrix, np.array([[np.nan]]))
+    assert filled_current[0][0] == pytest.approx(1.0)

@@ -16,6 +16,11 @@ morning mail reads. Two properties matter more than the numbers themselves:
 * until that file exists, every family reports "閾値未導出" and no verdict is
   printed. A default hurdle would be a number nobody measured, presented in
   the column where a measured one belongs
+
+The mail and the dashboard read the *same* document. Writing the hurdles to a
+second file beside it would create something that can go stale independently,
+and a stale hurdle is worse than an absent one because it still looks
+measured.
 """
 
 from __future__ import annotations
@@ -24,16 +29,35 @@ import json
 from pathlib import Path
 from typing import Any
 
-THRESHOLDS_PATH = Path("docs/all_methods/thresholds.json")
+ALL_METHODS_DIRECTORY = Path("docs/all_methods")
 
 # Below this many out-of-sample positions the hurdle rests on too little to be
-# worth acting on, and the mail says so rather than printing a verdict.
+# worth acting on, and the mail says so rather than printing a bare verdict.
 MINIMUM_EVALUATION_POSITIONS = 10
 
 
-def load_thresholds(path: Path = THRESHOLDS_PATH) -> dict[str, dict[str, Any]]:
+def newest_report(directory: Path = ALL_METHODS_DIRECTORY) -> Path | None:
+    """The most recent scored comparison, or ``None``.
+
+    The hurdles are read out of the same document the dashboard renders rather
+    than a second file written beside it. A copy would be one more thing that
+    can go stale, and a stale hurdle is worse than none: it looks measured.
+    """
+
+    candidates = sorted(
+        (path for path in directory.glob("*.json")),
+        key=lambda path: path.name,
+    )
+    return candidates[-1] if candidates else None
+
+
+def load_thresholds(path: Path | None = None) -> dict[str, dict[str, Any]]:
     """Every family's hurdle and the evidence behind it, or an empty mapping."""
 
+    if path is None:
+        path = newest_report()
+        if path is None:
+            return {}
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
