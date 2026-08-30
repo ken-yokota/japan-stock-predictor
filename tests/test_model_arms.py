@@ -257,3 +257,102 @@ def test_the_sequence_arms_stay_off_until_something_measures_them() -> None:
     assert not any(a.name in {"lstm", "transformer"} for a in default_arms())
     with_sequence = default_arms(include_sequence=True)
     assert {"lstm", "transformer"} <= {a.name for a in with_sequence}
+
+
+# --- each family's own buy hurdle ---------------------------------------
+
+
+def test_a_family_with_no_derived_hurdle_gets_no_verdict() -> None:
+    """A default hurdle would be an unmeasured number in a measured column."""
+
+    from notifications.method_thresholds import verdict
+
+    call, basis = verdict("lightgbm", 0.02, {})
+    assert call == "—"
+    assert basis == "閾値未導出"
+
+
+def test_a_verdict_compares_the_centre_against_that_family_s_own_hurdle() -> None:
+    thresholds = {
+        "lightgbm": {"threshold": 0.005, "evaluation_positions": 40},
+        "ridge": {"threshold": 0.012, "evaluation_positions": 40},
+    }
+    from notifications.method_thresholds import verdict
+
+    # The same forecast is a buy for one family and not for the other, which is
+    # the whole reason the hurdles are per-family.
+    assert verdict("lightgbm", 0.008, thresholds)[0] == "買い"
+    assert verdict("ridge", 0.008, thresholds)[0] == "見送り"
+
+
+def test_a_hurdle_resting_on_a_handful_of_trades_says_so_in_the_basis() -> None:
+    from notifications.method_thresholds import (
+        MINIMUM_EVALUATION_POSITIONS,
+        verdict,
+    )
+
+    thin = {"x": {"threshold": 0.0, "evaluation_positions": 3}}
+    solid = {
+        "x": {
+            "threshold": 0.0,
+            "evaluation_positions": MINIMUM_EVALUATION_POSITIONS,
+        }
+    }
+    assert "根拠薄い" in verdict("x", 0.01, thin)[1]
+    assert "根拠薄い" not in verdict("x", 0.01, solid)[1]
+
+
+def test_a_family_that_predicted_nothing_gets_no_verdict() -> None:
+    """The classifier estimates no return, so it has nothing to threshold."""
+
+    from notifications.method_thresholds import verdict
+
+    call, basis = verdict("logistic", None, {"logistic": {"threshold": 0.0}})
+    assert call == "—"
+    assert basis == "予測なし"
+
+
+def test_a_malformed_threshold_file_costs_the_verdicts_not_the_mail(
+    tmp_path,
+) -> None:
+    from notifications.method_thresholds import load_thresholds
+
+    broken = tmp_path / "thresholds.json"
+    broken.write_text("{ not json", encoding="utf-8")
+    assert load_thresholds(broken) == {}
+    assert load_thresholds(tmp_path / "absent.json") == {}
+
+
+def test_only_entries_with_a_real_number_become_hurdles(tmp_path) -> None:
+    import json
+
+    from notifications.method_thresholds import load_thresholds
+
+    path = tmp_path / "thresholds.json"
+    path.write_text(
+        json.dumps(
+            {
+                "from": "2026-08-07",
+                "to": "2026-08-28",
+                "thresholds": [
+                    {"arm": "ridge", "threshold": 0.004, "evaluation_positions": 12},
+                    {"arm": "lstm", "threshold": None},
+                    {"arm": "mlp"},
+                    "not-a-dict",
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    loaded = load_thresholds(path)
+    assert set(loaded) == {"ridge"}
+    assert loaded["ridge"]["threshold"] == pytest.approx(0.004)
+
+
+def test_the_mail_says_which_verdicts_actually_place_an_order() -> None:
+    """Ten verdicts in a table invites reading them as ten signals to act on."""
+
+    from notifications.templates import ARM_NOTE
+
+    assert "発注の対象" in ARM_NOTE
+    assert "比較のために" in ARM_NOTE

@@ -26,6 +26,7 @@ from notifications.senders import (
     NotificationError,
     ResendSender,
 )
+from notifications.method_thresholds import load_thresholds
 from notifications.templates import DENSITY_COLUMNS, render_morning_email
 
 # Bumped when the mail stopped leading with a point forecast and started
@@ -236,6 +237,7 @@ def load_morning_email_payload(
         provider_status=provider_status,
         model_version=prediction_set.model_version,
         warnings=_trim_warnings(prediction_set.warnings),
+        method_thresholds=load_thresholds(),
     )
     return prediction_set, payload
 

@@ -77,7 +77,8 @@ TRADE_JOIN = """
 """
 
 
-RESULT_QUERY = """
+RESULT_QUERY = (
+    """
     SELECT p.ticker, p.signal, p.predicted_intraday_return, p.probability_up,
            p.return_threshold, p.probability_threshold,
            a.actual_intraday_return, a.actual_open, a.actual_close,
@@ -85,14 +86,20 @@ RESULT_QUERY = """
     FROM predictions AS p
     JOIN prediction_sets AS ps ON ps.prediction_set_id = p.prediction_set_id
     JOIN actual_results AS a ON a.prediction_id = p.prediction_id
-""" + TRADE_JOIN + """
+"""
+    + TRADE_JOIN
+    + """
     WHERE ps.prediction_date = :day
-""" + CURRENT_RESULT + """
+"""
+    + CURRENT_RESULT
+    + """
     ORDER BY p.predicted_intraday_return DESC
 """
+)
 
 
-HISTORY_QUERY = """
+HISTORY_QUERY = (
+    """
     SELECT ps.prediction_date AS day,
            count(*) FILTER (WHERE p.signal = 'BUY') AS buys,
            count(*) FILTER (
@@ -111,13 +118,18 @@ HISTORY_QUERY = """
     FROM prediction_sets AS ps
     JOIN predictions AS p ON p.prediction_set_id = ps.prediction_set_id
     JOIN actual_results AS a ON a.prediction_id = p.prediction_id
-""" + TRADE_JOIN + """
+"""
+    + TRADE_JOIN
+    + """
     WHERE ps.prediction_date <= :day
-""" + CURRENT_RESULT + """
+"""
+    + CURRENT_RESULT
+    + """
     GROUP BY ps.prediction_date
     ORDER BY ps.prediction_date DESC
     LIMIT :limit
 """
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -210,9 +222,9 @@ class DayResult:
     def all_return(self) -> float:
         if not self.items:
             return 0.0
-        return sum(
-            float(item["actual_intraday_return"]) for item in self.items
-        ) / len(self.items)
+        return sum(float(item["actual_intraday_return"]) for item in self.items) / len(
+            self.items
+        )
 
     @property
     def warnings(self) -> tuple[str, ...]:
@@ -418,8 +430,7 @@ def caveat_text(result: DayResult) -> str:
     )
     if count < MINIMUM_TRADES_FOR_EVIDENCE:
         line += (
-            f"勝率も損益も、{MINIMUM_TRADES_FOR_EVIDENCE}取引未満では"
-            "証拠になりません。"
+            f"勝率も損益も、{MINIMUM_TRADES_FOR_EVIDENCE}取引未満では証拠になりません。"
         )
     return line + "意味のある判断には最低でも数十営業日の蓄積が必要です。"
 
@@ -475,8 +486,7 @@ def result_sections(
             section(
                 f"図: 直近{len(history)}営業日の損益と累積",
                 profit_figure,
-                "棒は累積損益です。最下行が本日。"
-                "日次の損益は数字の列に出しています。",
+                "棒は累積損益です。最下行が本日。日次の損益は数字の列に出しています。",
             )
         )
     rate_figure = hit_rate_figure(history)

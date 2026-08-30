@@ -8,6 +8,7 @@ import unicodedata
 from collections.abc import Iterable, Sequence
 
 from notifications.contracts import EmailCandidate, MorningEmailPayload, RenderedEmail
+from notifications.method_thresholds import verdict
 from notifications.report_layout import (
     BAND,
     BAND_INNER,
@@ -742,7 +743,7 @@ def render_morning_email(
                 "",
                 "■ 全モデル系統の予測",
                 "",
-                _arms_text(selected),
+                _arms_text(selected, payload.method_thresholds),
                 "",
                 f"  {ARM_NOTE}",
                 "",
@@ -783,7 +784,7 @@ def render_morning_email(
             )
             + section(
                 "全モデル系統の予測",
-                _arms_html(selected),
+                _arms_html(selected, payload.method_thresholds),
                 ARM_NOTE + " " + ARM_WIDTH_NOTE,
             )
             + section(
@@ -874,6 +875,11 @@ SPREAD_LABEL = {
 }
 
 ARM_NOTE = (
+    "判定は各系統が自分の閾値で出した買い/見送りです。"
+    "閾値は手法ごとにバックテストの前半で選び後半で採点したもので、"
+    "『閾値未導出』の系統はまだ根拠が無いため判定を出していません。"
+    "実際に発注の対象となるのは従来どおりRidgeとロジスティックの判定だけで、"
+    "他系統の判定は比較のために並べているものです。"
     "毎朝この全系統を同じ行・同じ特徴量で学習させて記録しています。"
     "ただし売買の判定は従来どおりRidgeの点予測とロジスティックの確率だけで行っており、"
     "ここの系統は判定に一切関与していません。"
@@ -928,53 +934,71 @@ def _arm_band(arm: dict[str, object]) -> str:
     return f"{low:+.2%} 〜 {high:+.2%}"
 
 
-def _armtable(item: EmailCandidate) -> str:
-    """Every family's answer for one ticker, side by side."""
+def _armtable(item: EmailCandidate, thresholds: dict[str, dict[str, object]]) -> str:
+    """Every family's answer for one ticker, side by side, with its own call."""
 
     rows = _arm_rows(item)
     if not rows:
         return "  （この銘柄では全系統の記録がありません）"
     header = (
-        "  系統                      状態        点予測   P(上昇)  80%区間"
-        "               幅の作り方\n"
-        "  ------------------------  --------  --------  --------  "
-        "--------------------  --------------------"
+        "  系統                      判定      閾値             点予測   P(上昇)"
+        "  80%区間\n"
+        "  ------------------------  --------  -------------------  --------"
+        "  --------  --------------------"
     )
     lines = []
     for arm in rows:
         label = str(arm.get("label") or arm.get("name") or "—")
         status = str(arm.get("status") or "—")
-        spread = SPREAD_LABEL.get(str(arm.get("spread_kind")), "—")
         detail = str(arm.get("detail") or "")
+        centre = arm.get("predicted_return")
+        call, basis = verdict(
+            str(arm.get("name") or ""),
+            float(centre) if isinstance(centre, int | float) else None,
+            thresholds,
+        )
+        if status != "OK":
+            call, basis = "—", status
         lines.append(
-            f"  {_pad(label, 24)}  {status:<8}"
-            f"  {_arm_number(arm.get('predicted_return')):>8}"
+            f"  {_pad(label, 24)}  {_pad(call, 8)}  {_pad(basis, 19)}"
+            f"  {_arm_number(centre):>8}"
             f"  {_arm_number(arm.get('probability_up'), 'plain'):>8}"
-            f"  {_pad(_arm_band(arm), 20)}  {spread}"
-            + (f"\n      {detail}" if detail else "")
+            f"  {_arm_band(arm)}" + (f"\n      {detail}" if detail else "")
         )
     return "\n".join([header, *lines])
 
 
-def _arms_text(items: Sequence[EmailCandidate]) -> str:
+def _arms_text(
+    items: Sequence[EmailCandidate], thresholds: dict[str, dict[str, object]]
+) -> str:
     blocks = []
     for item in items:
-        blocks.append(f"  ▼ {item.ticker} {item.company}\n\n{_armtable(item)}")
+        blocks.append(
+            f"  ▼ {item.ticker} {item.company}\n\n{_armtable(item, thresholds)}"
+        )
     return "\n\n".join(blocks) if blocks else "  （買い候補がありません）"
 
 
-def _arm_rows_html(item: EmailCandidate) -> str:
+def _arm_rows_html(
+    item: EmailCandidate, thresholds: dict[str, dict[str, object]]
+) -> str:
     rows = []
     for index, arm in enumerate(_arm_rows(item)):
         status = str(arm.get("status") or "—")
-        tone = (
-            "done" if status == "OK" else "warn" if status == "UNAVAILABLE" else "fail"
-        )
         predicted = arm.get("predicted_return")
+        call, basis = verdict(
+            str(arm.get("name") or ""),
+            float(predicted) if isinstance(predicted, int | float) else None,
+            thresholds,
+        )
+        if status != "OK":
+            call, basis = "—", status
+        tone = "done" if call == "買い" else "wait" if call == "見送り" else "warn"
         rows.append(
             f"<tr style='background:{'#fff' if index % 2 == 0 else BAND}'>"
             + cell(html.escape(str(arm.get("label") or arm.get("name") or "—")))
-            + cell(badge(status, tone), align="center")
+            + cell(badge(call, tone), align="center")
+            + cell(html.escape(basis), muted=True, nowrap=False)
             + cell(
                 signed_percent(
                     predicted if isinstance(predicted, int | float) else None
@@ -1002,7 +1026,8 @@ def _arm_rows_html(item: EmailCandidate) -> str:
     return table(
         [
             ("系統", "left"),
-            ("状態", "center"),
+            ("判定", "center"),
+            ("根拠", "left"),
             ("点予測", "right"),
             ("P(上昇)", "right"),
             ("80%区間", "right"),
@@ -1012,11 +1037,13 @@ def _arm_rows_html(item: EmailCandidate) -> str:
     )
 
 
-def _arms_html(items: Sequence[EmailCandidate]) -> str:
+def _arms_html(
+    items: Sequence[EmailCandidate], thresholds: dict[str, dict[str, object]]
+) -> str:
     blocks = []
     for item in items:
         blocks.append(
             f"<p style='margin:16px 0 6px;font-size:14px;color:{INK}'>"
-            f"{_name_html(item)}</p>" + _arm_rows_html(item)
+            f"{_name_html(item)}</p>" + _arm_rows_html(item, thresholds)
         )
     return "".join(blocks)

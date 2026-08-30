@@ -73,6 +73,10 @@ class MorningEmailPayload:
     provider_status: str = "UNKNOWN"
     model_version: str = "unknown"
     warnings: tuple[str, ...] = field(default_factory=tuple)
+    # Each model family's own buy hurdle, derived from the replay. Empty
+    # until one has been derived, which the template says out loud rather
+    # than filling in a default nobody measured.
+    method_thresholds: dict[str, dict[str, object]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
