@@ -20,13 +20,13 @@ from database.models import (
 from database.repository import PredictionPipelineRepository
 from models.distribution import ReturnDistribution
 from notifications.contracts import EmailCandidate, EmailDelivery, MorningEmailPayload
+from notifications.method_thresholds import load_thresholds
 from notifications.senders import (
     DryRunSender,
     GmailSmtpSender,
     NotificationError,
     ResendSender,
 )
-from notifications.method_thresholds import load_thresholds
 from notifications.templates import DENSITY_COLUMNS, render_morning_email
 
 # Bumped when the mail stopped leading with a point forecast and started
@@ -121,12 +121,31 @@ def load_morning_email_payload(
     *,
     prediction_date: date | None,
     dashboard_url: str,
+    prediction_set_id: str | None = None,
 ) -> tuple[PredictionSet, MorningEmailPayload]:
-    """Read only a terminal persisted set; never calculate or fetch here."""
+    """Read only a terminal persisted set; never calculate or fetch here.
 
-    # A reference prediction is never mailed: it names a session that does not
-    # open, and a message that looks like every other morning would be read as
-    # one.
+    ``prediction_set_id`` names one set exactly and bypasses the MORNING
+    filter. It exists for previewing a message that will never be delivered on
+    its own -- a reference or replayed set, which the scheduled path must keep
+    refusing. The alternative was flipping a run's type in production to make
+    it visible and flipping it back, and a temporary write to the live record
+    to render a preview is not a trade worth making: the close pipeline scores
+    whichever MORNING set is newest, so a crash between the two writes would
+    put a replay into the live record.
+    """
+
+    if prediction_set_id is not None:
+        chosen = session.get(PredictionSet, prediction_set_id)
+        if chosen is None or chosen.status not in ("READY", "INSUFFICIENT_DATA"):
+            raise ValueError(
+                f"no terminal prediction set is available for {prediction_set_id}"
+            )
+        return _project_prediction_set(session, config, chosen, dashboard_url)
+
+    # A reference prediction is never mailed on the scheduled path: it names a
+    # session that does not open, and a message that looks like every other
+    # morning would be read as one.
     statement = (
         select(PredictionSet)
         .join(DailyRun, DailyRun.run_id == PredictionSet.run_id)
@@ -145,6 +164,16 @@ def load_morning_email_payload(
     if prediction_set is None:
         label = prediction_date.isoformat() if prediction_date else "latest"
         raise ValueError(f"no terminal prediction set is available for {label}")
+    return _project_prediction_set(session, config, prediction_set, dashboard_url)
+
+
+def _project_prediction_set(
+    session: Session,
+    config: AppConfig,
+    prediction_set: PredictionSet,
+    dashboard_url: str,
+) -> tuple[PredictionSet, MorningEmailPayload]:
+    """Turn one persisted set into the payload the templates render."""
 
     names = {stock.ticker: stock.name for stock in config.stocks.stocks}
     rows = list(

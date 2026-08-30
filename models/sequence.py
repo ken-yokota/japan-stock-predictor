@@ -23,6 +23,7 @@ disappears on slow days is an arm whose absence nobody investigates.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -43,6 +44,21 @@ WORKER = PROJECT_ROOT / "neural" / "worker.py"
 # Long enough that a slow ticker finishes, short enough that a hung worker
 # cannot eat the morning. Measured: LSTM about 45s, Transformer about 7s.
 DEFAULT_TIMEOUT_SECONDS = 180.0
+
+# Every numerical library in the child defaults to one thread per core, and the
+# child is already one of several processes a caller may be running in
+# parallel. Left alone, four workers on a four-core machine spawned about
+# thirty-two compute threads between them and the load average reached 150 --
+# the run did not fail, it simply stopped making progress. Capping here rather
+# than at the call site means a caller cannot forget.
+_SINGLE_THREAD_ENV = {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "TORCH_NUM_THREADS": "1",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,6 +119,7 @@ class SequenceArm:
                 timeout=self.timeout_seconds,
                 check=False,
                 cwd=str(PROJECT_ROOT),
+                env={**os.environ, **_SINGLE_THREAD_ENV},
             )
         except subprocess.TimeoutExpired:
             return ArmForecast(

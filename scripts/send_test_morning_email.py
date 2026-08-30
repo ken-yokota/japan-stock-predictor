@@ -45,6 +45,15 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config-dir", type=Path, default=Path("config"))
     parser.add_argument("--prediction-date", type=date.fromisoformat)
+    parser.add_argument(
+        "--prediction-set-id",
+        help=(
+            "Render one set exactly, including a REFERENCE or replayed "
+            "one that the scheduled path correctly refuses to deliver. "
+            "Read-only: a preview never needs a temporary write to the "
+            "live record."
+        ),
+    )
     parser.add_argument("--top-n", type=int, default=5)
     parser.add_argument("--dry-run", action="store_true")
     return parser
@@ -62,6 +71,7 @@ def main() -> int:
                     config,
                     prediction_date=args.prediction_date,
                     dashboard_url=environment.app_url,
+                    prediction_set_id=args.prediction_set_id,
                 )
         except ValueError as error:
             print(
