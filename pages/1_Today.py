@@ -123,27 +123,26 @@ def main() -> None:
             for column, card in zip(columns, cards[start : start + 2], strict=False):
                 with column.container(border=True):
                     st.markdown(f"#### {card.label}")
+                    # Row one is the forecast and always present. Row two is
+                    # the outcome and appears only once the session settles, so
+                    # the card is the same shape at 08:30 and at 17:00 with the
+                    # evening simply adding a line rather than rearranging one.
+                    top_left, top_right = st.columns(2)
+                    top_left.metric("予測R", card.predicted_return)
+                    top_right.metric("上昇確率", card.probability_up)
                     if card.settled:
-                        left, right = st.columns(2)
-                        left.metric("予測リターン", card.predicted_return)
-                        right.metric(
-                            "実績リターン",
-                            card.actual_return,
+                        low_left, low_right = st.columns(2)
+                        low_left.metric("実績R", card.actual_return)
+                        low_right.metric(
+                            "方向",
+                            card.direction,
                             delta=card.direction,
                             delta_color=(
                                 "normal" if card.direction == "的中" else "inverse"
                             ),
                         )
-                        st.caption(
-                            f"上昇確率 {card.probability_up} • "
-                            f"Rank {card.rank} • 方向 {card.direction}"
-                        )
                     else:
-                        st.metric("予測リターン", card.predicted_return)
-                        st.caption(
-                            f"上昇確率 {card.probability_up} • Rank {card.rank} • "
-                            "実績は大引け後に表示されます"
-                        )
+                        st.caption("実績は大引け後に表示されます")
 
     # The day's own record. Present before the close too -- the forecast
     # columns are filled and the outcome columns read "—" -- because the same
@@ -314,11 +313,18 @@ def _render_densities(
     )
     with st.expander(label, expanded=False):
         st.caption(
-            "縦の破線が予測リターン、赤い実線が実績リターンです。"
-            "横軸は全銘柄で共通にしてあるので、銘柄どうしを見比べられます。"
+            "縦の破線が予測リターン、赤い実線が実績リターン、"
+            "灰色の点線が下振れ側の P50 / P75 / P90 です。"
             if settled_day
-            else "縦の破線が予測リターンです。実績が確定すると赤い実線が重なります。"
+            else "縦の破線が予測リターン、灰色の点線が下振れ側の P50 / P75 / P90 です。"
+            "実績が確定すると赤い実線が重なります。"
         )
+        st.caption(
+            "Pxx はその確率で「これ以上になる」水準です。"
+            "P90 は90%の確率で上回る水準、つまり下振れ側のリスクで、"
+            "図では P50 より左に出ます（上振れではありません）。"
+        )
+        buy_only = st.checkbox("BUY候補のみ", value=True)
         buy_first = sorted(
             drawable,
             key=lambda row: (
@@ -326,22 +332,19 @@ def _render_densities(
                 row.get("rank") or 999,
             ),
         )
-        choices = [str(row.get("ticker", "")) for row in buy_first]
-        default = [
-            str(row.get("ticker", ""))
-            for row in buy_first
-            if str(row.get("signal", "")).upper() == "BUY"
-        ] or choices[:4]
-        selected = st.multiselect(
-            "表示する銘柄",
-            choices,
-            default=default,
-            format_func=stock_label,
+        chosen = (
+            [row for row in buy_first if str(row.get("signal", "")).upper() == "BUY"]
+            if buy_only
+            else buy_first
         )
-        chosen = [row for row in buy_first if str(row.get("ticker", "")) in selected]
         if not chosen:
-            st.caption("銘柄を選ぶと分布が表示されます。")
+            st.caption(
+                "BUY候補がありません。チェックを外すと全銘柄の分布を表示します。"
+            )
             return
+        # The axis spans whichever set is on screen. Rescaling to the drawn
+        # rows keeps the shapes readable instead of squeezing four candidates
+        # into the corner of an axis sized for twenty-two.
         low, high = shared_axis(chosen)
         for row in chosen:
             chart = density_chart(row, low=low, high=high)

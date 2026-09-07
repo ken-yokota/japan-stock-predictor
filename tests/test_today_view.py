@@ -16,6 +16,8 @@ import pytest
 from dashboard.today_view import (
     PINNED_COLUMNS,
     RESULT_COLUMNS,
+    RISK_QUANTILES,
+    _quantile_at,
     buy_cards,
     day_is_settled,
     density_chart,
@@ -235,17 +237,69 @@ def test_the_axis_has_a_usable_default_when_there_is_nothing_to_span() -> None:
     assert low < high
 
 
-def test_a_chart_is_built_for_a_row_that_has_a_curve() -> None:
+def _marks(chart: Any) -> list[str]:
+    out: list[str] = []
+    for layer in chart.layer:
+        mark = layer.mark
+        out.append(str(getattr(mark, "type", mark)))
+    return out
+
+
+def test_a_settled_chart_carries_the_outcome_rule() -> None:
     chart = density_chart(_row(actual_intraday_return=0.01), low=-0.05, high=0.05)
     assert chart is not None
-    # Density, the predicted rule, and the realised rule.
-    assert len(chart.layer) == 3
+    marks = _marks(chart)
+    assert marks.count("area") == 1
+    # Predicted, the three downside levels, and the realised return.
+    assert marks.count("rule") == 3
+    assert "text" in marks
 
 
-def test_an_unsettled_row_has_no_outcome_rule() -> None:
-    chart = density_chart(_row(actual_intraday_return=None), low=-0.05, high=0.05)
+def test_an_unsettled_chart_has_no_outcome_rule() -> None:
+    settled = density_chart(_row(actual_intraday_return=0.01), low=-0.05, high=0.05)
+    unsettled = density_chart(_row(actual_intraday_return=None), low=-0.05, high=0.05)
+    assert settled is not None and unsettled is not None
+    assert _marks(unsettled).count("rule") == _marks(settled).count("rule") - 1
+
+
+def test_the_downside_levels_are_labelled_and_ordered_leftwards() -> None:
+    # Under the operator's convention P90 is the return exceeded 90% of the
+    # time, so it is the *worst* of the three and sits furthest left. An
+    # unlabelled rule at that end would read as a target.
+    chart = density_chart(_row(), low=-0.05, high=0.05)
     assert chart is not None
-    assert len(chart.layer) == 2
+    labelled = [
+        layer for layer in chart.layer if str(getattr(layer.mark, "type", "")) == "text"
+    ]
+    assert labelled
+    frame = labelled[0].data
+    assert list(frame["label"]) == ["P50", "P75", "P90"]
+    assert frame["x"].iloc[0] > frame["x"].iloc[1] > frame["x"].iloc[2]
+
+
+def test_the_risk_levels_match_the_notification_layer() -> None:
+    # dashboard/ may not import notifications, so the convention is duplicated.
+    # This is what stops the two copies drifting into describing P90
+    # differently -- the failure the shared constant existed to prevent.
+    from notifications.risk_levels import RISK_LEVELS
+
+    for label, level in RISK_QUANTILES:
+        assert RISK_LEVELS[level] == label
+
+
+def test_a_level_between_two_fitted_points_is_interpolated() -> None:
+    curve = [(0.1, -0.02), (0.5, 0.0), (0.9, 0.02)]
+    assert _quantile_at(curve, 0.5) == pytest.approx(0.0)
+    assert _quantile_at(curve, 0.3) == pytest.approx(-0.01)
+
+
+def test_a_level_outside_the_fit_is_pinned_not_extrapolated() -> None:
+    # A curve fitted from P10 to P90 has said nothing about P99, and drawing a
+    # confident rule out there would invent a claim the model never made.
+    curve = [(0.1, -0.02), (0.5, 0.0), (0.9, 0.02)]
+    assert _quantile_at(curve, 0.01) == pytest.approx(-0.02)
+    assert _quantile_at(curve, 0.99) == pytest.approx(0.02)
+    assert _quantile_at([], 0.5) is None
 
 
 # --- the mail-log lookup ----------------------------------------------------

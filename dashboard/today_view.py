@@ -55,8 +55,22 @@ PINNED_COLUMNS: frozenset[str] = frozenset({"予測日", "銘柄名", "判定"})
 
 # One width for every column. Equal spacing is the point -- a table whose
 # columns size themselves to their contents puts the eye somewhere different
-# on each row.
-COLUMN_WIDTH_PX = 110
+# on each row. Narrow enough that all eleven fit a laptop screen without
+# horizontal scrolling, which is what the three pinned columns exist to
+# survive when it does not.
+COLUMN_WIDTH_PX = 84
+
+# The operator's Pxx convention, repeated rather than imported: dashboard/ is
+# barred from importing the notification layer, and that ban is worth more than
+# this duplication. **Pxx is a downside level -- the return exceeded xx% of the
+# time** -- so P90 is the bad case, not the good one, and P90 sits *below* P50
+# on the axis. ``test_the_risk_levels_match_the_notification_layer`` pins this
+# against notifications.risk_levels so the two cannot drift.
+RISK_QUANTILES: tuple[tuple[str, float], ...] = (
+    ("P50", 0.50),
+    ("P75", 0.25),
+    ("P90", 0.10),
+)
 
 _SETTLED_STATUSES = frozenset({"FINAL", "CORRECTED"})
 
@@ -281,6 +295,36 @@ def distribution_of(row: Mapping[str, Any]) -> list[tuple[float, float]] | None:
     return sorted(levels.items())
 
 
+def _quantile_at(curve: list[tuple[float, float]], level: float) -> float | None:
+    """The return at one quantile level, interpolated between fitted points.
+
+    Pinned at the outermost fitted level rather than extrapolated. A curve
+    fitted from P5 to P95 cannot support a claim past its own ends, and drawing
+    one would put a confident-looking rule where the model has said nothing.
+    """
+
+    if not curve:
+        return None
+    for candidate, value in curve:
+        if abs(candidate - level) < 1e-9:
+            return value
+    if level <= curve[0][0]:
+        return curve[0][1]
+    if level >= curve[-1][0]:
+        return curve[-1][1]
+    for index in range(len(curve) - 1):
+        (low_level, low_value), (high_level, high_value) = (
+            curve[index],
+            curve[index + 1],
+        )
+        if low_level <= level <= high_level:
+            if high_level == low_level:
+                return low_value
+            weight = (level - low_level) / (high_level - low_level)
+            return low_value + weight * (high_value - low_value)
+    return None
+
+
 def shared_axis(
     rows: Sequence[Mapping[str, Any]], *, pad: float = 0.15
 ) -> tuple[float, float]:
@@ -363,7 +407,8 @@ def density_chart(
     """
 
     frame = density_frame(row, low=low, high=high, columns=columns)
-    if frame is None:
+    curve = distribution_of(row)
+    if frame is None or curve is None:
         return None
 
     area = (
@@ -386,6 +431,32 @@ def density_chart(
             alt.Chart(pd.DataFrame({"x": [predicted * 100]}))
             .mark_rule(strokeDash=[4, 3], size=2)
             .encode(x=alt.X("x:Q"))
+        )
+
+    # The downside levels, drawn where the risk actually is. Under the
+    # operator's convention P90 is the return exceeded 90% of the time, so
+    # these march leftwards: P50, then P75, then P90 furthest out. Labelled on
+    # the chart because an unlabelled rule at the bad end reads as a target.
+    risk_points = [
+        {"x": value * 100, "label": label}
+        for label, level in RISK_QUANTILES
+        if (value := _quantile_at(curve, level)) is not None
+    ]
+    if risk_points:
+        risk_frame = pd.DataFrame(risk_points)
+        layers.append(
+            alt.Chart(risk_frame)
+            .mark_rule(color="#6b7280", strokeDash=[2, 2], size=1)
+            .encode(
+                x=alt.X("x:Q"), tooltip=["label:N", alt.Tooltip("x:Q", format="+.2f")]
+            )
+        )
+        layers.append(
+            alt.Chart(risk_frame)
+            .mark_text(
+                align="left", baseline="top", dx=3, dy=2, fontSize=10, color="#6b7280"
+            )
+            .encode(x=alt.X("x:Q"), text="label:N")
         )
 
     actual = as_number(row.get("actual_intraday_return"))
