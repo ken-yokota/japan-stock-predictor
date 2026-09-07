@@ -3,7 +3,7 @@
 Both failures the operator hit on 2026-08-12 shipped through a green CI,
 because nothing in CI ever loaded the dashboard the way Streamlit loads it:
 
-- ``pages/10_History.py`` raised ``ImportError`` on a name it imports from
+- ``pages/2_History.py`` raised ``ImportError`` on a name it imports from
   ``dashboard.ui``. CI type-checks ``dashboard`` but not ``pages``, and no
   test imports a page, so a page that cannot even be read still passed.
 - ``pages/1_Today.py`` raised ``UnserializableReturnValueError`` from

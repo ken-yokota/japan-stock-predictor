@@ -20,12 +20,18 @@ import streamlit as st
 
 from dashboard.catalog import stock_label
 from dashboard.history import build_history_report
+from dashboard.history_progress import (
+    GROUPINGS,
+    accuracy_series,
+    cumulative_profit,
+    grouped_accuracy,
+    grouped_returns,
+    pivot,
+)
 from dashboard.outcomes import outcome_table_rows
 from dashboard.presenters import format_number, format_percent, format_yen
 from dashboard.progress import (
-    DEFAULT_ROLLING_SESSIONS,
     daily_points,
-    rolling_series,
     version_changes,
     version_summary,
 )
@@ -54,48 +60,76 @@ WINDOWS: tuple[tuple[str, int | None], ...] = (
 )
 
 
-def _render_progress(report: dict[str, Any]) -> None:
-    """Is the model improving? Plotted against what doing nothing would score."""
+def _deviation_chart(points: list[Any], label: str) -> None:
+    """Plot accuracy as points away from a coin flip, with zero marked."""
 
-    points = daily_points(report["predictions"])
+    frame = pd.DataFrame(
+        {
+            "日付": [point.date for point in points],
+            label: [point.deviation * 100 for point in points],
+            "五分五分": [0.0 for _ in points],
+        }
+    ).set_index("日付")
+    st.line_chart(frame, use_container_width=True)
+
+
+def _render_progress(report: dict[str, Any], window: str) -> None:
+    """Is the model beating a coin flip, and is the gap moving?"""
+
+    rows = report["predictions"]
     st.subheader("モデルは良くなっているか")
-    if not points:
+
+    buy_points = accuracy_series(rows, buy_only=True)
+    all_points = accuracy_series(rows, buy_only=False)
+    if not buy_points and not all_points:
         st.info("PENDING: 実績が確定した営業日がまだありません。")
         return
 
-    window = DEFAULT_ROLLING_SESSIONS
-    frame = pd.DataFrame(rolling_series(points, window)).set_index("date")
     st.caption(
-        "**上の線が下の線を上回っていれば、モデルが「常に上昇」より当たっています。**"
-        "毎日の値は上下に振れるので、移動平均と累積の両方を見てください。"
-        f"移動平均は{window}営業日たまるまで表示されません。"
+        "縦軸は**五分五分（50%）からの差**です。方向当ては当たり外れの二択なので、"
+        "50%は「何も知らない」場合の成績にあたります。"
+        "その日の的中率が75%なら +25%、25%なら -25% と表示されます。"
+        "0の線を上回っていた日が、当てずっぽうより当たっていた日です。"
     )
 
-    rolling_columns = [
-        f"方向的中率({window}日移動平均)",
-        f"常に上昇({window}日移動平均)",
-    ]
-    if frame[rolling_columns].notna().any().any():
-        st.caption(f"{window}営業日の移動平均")
-        st.line_chart(frame.loc[:, rolling_columns], use_container_width=True)
+    st.caption("① 買い候補の方向的中率（その日にBUYを出した銘柄のみ）")
+    if buy_points:
+        _deviation_chart(buy_points, "買い候補の的中率 (50%からの差)")
+        st.caption(
+            f"対象 {len(buy_points)}営業日 / "
+            f"BUY {sum(point.count for point in buy_points)}件。"
+            "1日あたりの件数が少ないので、単日の上下は成績というより偶然です。"
+        )
+    else:
+        st.info("この期間にBUYはありません。0件も正常な結果です。")
 
-    st.caption("累積 (初日からの通算。日数が増えるほど安定します)")
-    st.line_chart(
-        frame.loc[:, ["累積の方向的中率", "累積の常に上昇"]], use_container_width=True
-    )
+    st.caption("② 全銘柄の方向的中率（BUY以外も含む全公開予測）")
+    if all_points:
+        _deviation_chart(all_points, "全銘柄の的中率 (50%からの差)")
+        st.caption(
+            f"対象 {len(all_points)}営業日 / "
+            f"{sum(point.count for point in all_points)}件。"
+            "①はルールが選んだ銘柄の成績、②はモデルが方向を当てられるかそのものです。"
+        )
 
-    st.caption("日々の方向的中率 (振れが大きいので、単独では判断できません)")
-    st.line_chart(
-        frame.loc[:, ["方向的中率", "常に上昇と予測した場合"]],
-        use_container_width=True,
-    )
+    profit = cumulative_profit(rows)
+    if profit and any(value != 0.0 for _, value in profit):
+        st.caption("③ 累積損益（BUYシグナルの想定損益を積み上げたもの）")
+        st.line_chart(
+            pd.DataFrame(
+                {"日付": [day for day, _ in profit], "累積損益": [v for _, v in profit]}
+            ).set_index("日付"),
+            use_container_width=True,
+        )
+        st.caption(
+            "記録された建玉数から計算した想定値で、手数料・スリッページは含みません。"
+            "件数が少ないうちは証拠になりません。"
+        )
 
-    if frame["累積損益"].abs().sum() > 0:
-        st.caption("累積損益 (BUYシグナルのみ。件数が少ないうちは証拠になりません)")
-        st.line_chart(frame.loc[:, ["累積損益"]], use_container_width=True)
+    _render_breakdown(rows, window)
 
-    changes = version_changes(points)
-    versions = version_summary(points)
+    changes = version_changes(daily_points(rows))
+    versions = version_summary(daily_points(rows))
     if len(versions) > 1 or changes:
         st.caption("モデル改良の履歴と、その版が担当した期間の成績")
         display_rows(
@@ -121,6 +155,53 @@ def _render_progress(report: dict[str, Any]) -> None:
             "「差(pt)」は同じ日の「常に上昇」と比べているぶん、その影響を抑えてあります。"
         )
     st.divider()
+
+
+def _render_breakdown(rows: list[dict[str, Any]], window: str) -> None:
+    """Per-sector or per-ticker accuracy and returns, folded away until asked.
+
+    Both charts obey one selector. Splitting the choice in two invites reading
+    a sector accuracy line beside a per-ticker return line and treating them as
+    the same cut of the data.
+    """
+
+    with st.expander("業界別・銘柄別の内訳", expanded=False):
+        # Keyed per window: the three tabs all render this, and Streamlit
+        # refuses two widgets with the same key on one page.
+        grouping = st.radio(
+            "集計単位",
+            GROUPINGS,
+            horizontal=True,
+            key=f"history_breakdown_grouping_{window}",
+        )
+        st.caption(
+            "BUY以外も含む全公開予測が対象です。"
+            "1日あたりの件数が少ない区分ほど線は大きく振れます。"
+        )
+
+        accuracy = grouped_accuracy(rows, grouping=grouping)
+        if not accuracy:
+            st.info("実績が確定した営業日がまだありません。")
+            return
+        st.caption(f"{grouping} 方向的中率（50%からの差）")
+        st.line_chart(
+            pd.DataFrame(pivot(accuracy, value="deviation")).T.sort_index() * 100,
+            use_container_width=True,
+        )
+
+        returns = grouped_returns(rows, grouping=grouping)
+        if not returns:
+            return
+        st.caption(f"{grouping} 予測Rと実績R")
+        predicted = pd.DataFrame(pivot(returns, value="predicted_mean")).T.sort_index()
+        actual = pd.DataFrame(pivot(returns, value="actual_mean")).T.sort_index()
+        st.caption("予測R (%)")
+        st.line_chart(predicted * 100, use_container_width=True)
+        st.caption("実績R (%)")
+        st.line_chart(actual * 100, use_container_width=True)
+        st.caption(
+            "同じ行を平均しているので、2枚の差はその区分に対するモデルの偏りです。"
+        )
 
 
 def _render_significance(report: dict[str, Any]) -> None:
@@ -217,6 +298,7 @@ def main() -> None:
     render_header(
         "実績",
         "本番pipelineが公開した予測と、その後に観測された実績です。",
+        show_banner=False,
     )
 
     service = require_service()
@@ -247,7 +329,7 @@ def main() -> None:
                 continue
             report = build_history_report([dict(row) for row in result.rows])
 
-            _render_progress(report)
+            _render_progress(report, label)
             _render_significance(report)
 
             # The record itself, before any aggregate of it: one row per

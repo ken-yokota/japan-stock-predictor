@@ -33,13 +33,13 @@ cd /Users/yokotaken/Desktop/japan-stock-predictor
 |---|---|---|
 | Overview（最初の画面） | [app.py](../app.py) | DB接続状態、最新pipelineの状態、最新予測の状態、各ページへのリンク |
 | Today | [pages/1_Today.py](../pages/1_Today.py) | 当日のBUY候補、予測リターン、上昇確率、実績Open、Open基準の予測終値、品質警告 |
-| Stock Detail | [pages/2_Stock_Detail.py](../pages/2_Stock_Detail.py) | 銘柄1つの予測履歴と実績の突き合わせ、累積損益、係数履歴 |
-| Factor Analysis | [pages/3_Factor_Analysis.py](../pages/3_Factor_Analysis.py) | どの海外指標がどれだけ効いたか（標準化係数） |
-| Sector Analysis | [pages/4_Sector_Analysis.py](../pages/4_Sector_Analysis.py) | 海運・エネルギー・自動車・金融・商社の業種別比較 |
-| Backtest | [pages/5_Backtest.py](../pages/5_Backtest.py) | 保存済みOOS成績と、**閾値・投資額・コストを変えた再計算** |
-| System Status | [pages/6_System_Status.py](../pages/6_System_Status.py) | run履歴、Provider採用状況、鮮度、DB状態 |
-| テスト | [pages/7_Test.py](../pages/7_Test.py) | 直近期間の検証結果。日別勝率、金額ベース勝率、寄り付き/大引けの予測と実績、銘柄別の係数推移 |
-| Company Analysis | [pages/8_Company_Analysis.py](../pages/8_Company_Analysis.py) | 企業別の予測値の推移と、どの指標がどの係数で効いたか。新しく使われ始めた指標も表示 |
+| Stock Detail | [pages/3_Stock_Detail.py](../pages/3_Stock_Detail.py) | 銘柄1つの予測履歴と実績の突き合わせ、累積損益、係数履歴 |
+| Factor Analysis | [pages/4_Factor_Analysis.py](../pages/4_Factor_Analysis.py) | どの海外指標がどれだけ効いたか（標準化係数） |
+| Sector Analysis | [pages/5_Sector_Analysis.py](../pages/5_Sector_Analysis.py) | 海運・エネルギー・自動車・金融・商社の業種別比較 |
+| Backtest | [pages/6_Backtest.py](../pages/6_Backtest.py) | 保存済みOOS成績と、**閾値・投資額・コストを変えた再計算** |
+| System Status | [pages/7_System_Status.py](../pages/7_System_Status.py) | run履歴、Provider採用状況、鮮度、DB状態 |
+| テスト | [pages/8_Test.py](../pages/8_Test.py) | 直近期間の検証結果。日別勝率、金額ベース勝率、寄り付き/大引けの予測と実績、銘柄別の係数推移 |
+| Company Analysis | [pages/9_Company_Analysis.py](../pages/9_Company_Analysis.py) | 企業別の予測値の推移と、どの指標がどの係数で効いたか。新しく使われ始めた指標も表示 |
 
 画面の中身を組み立てている共通部品は次の4つです。表示を直したいときはページ本体ではなく
 こちらを見ます。

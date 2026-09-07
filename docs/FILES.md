@@ -63,7 +63,7 @@
 | `models/training.py` | 銘柄別model fit/predict/係数 | `TickerModelBundle`, `train_ticker_model`, `train_models_by_ticker` | features/target/config | fitted bundle | sklearn/models | prediction/backtest | `test_models.py` | — | 単一classは定数probability |
 | `models/prediction.py` | trained modelのthin prediction API | `predict_ticker` | bundle/one row | `TickerPrediction` | models | integrations | `test_models.py` | — | fitはしない |
 | `backtest/walk_forward.py` | strict one-step OOS | `walk_forward_validate`, `assert_walk_forward_oos` | long DataFrame/features | OOS DataFrame | models/pandas | walk-forward script | `test_walk_forward.py` | — | `[t-120,t)`で`t`を予測 |
-| `backtest/scenario.py` | 保存済みOOS予測へ売買条件を再適用 | `ScenarioConfig`, `evaluate_scenario`, `prepare_scenario_frame` | OOS予測+実績Open/Close、閾値/資金/コスト/Top N | portfolio・銘柄別metric・trade明細 | metrics/trading/pandas | `pages/5_Backtest.py` | `test_scenario.py` | — | modelを再学習しない。model/学習期間の変更は`walk-forward`再実行が必要。試行回数を数えselection biasを警告 |
+| `backtest/scenario.py` | 保存済みOOS予測へ売買条件を再適用 | `ScenarioConfig`, `evaluate_scenario`, `prepare_scenario_frame` | OOS予測+実績Open/Close、閾値/資金/コスト/Top N | portfolio・銘柄別metric・trade明細 | metrics/trading/pandas | `pages/6_Backtest.py` | `test_scenario.py` | — | modelを再学習しない。model/学習期間の変更は`walk-forward`再実行が必要。試行回数を数えselection biasを警告 |
 | `trading/strategy.py` | BUY、100株lot、両側cost paper simulation | `is_buy_signal`, `simulate_intraday_trade`, `simulate_prediction_frame` | prediction/Open/Close/config | `TradeResult`/DataFrame | pandas | close/backtest | `test_trading.py` | — | `held_overnight=False`; broker APIなし |
 | `trading/post_open.py` | Actual Open基準のPredicted Close導出 | `project_predicted_close`, `PostOpenProjection` | actual_open、predicted_return | `PostOpenProjection`または`None` | stdlib/Decimal | `dashboard/presenters.py` | `test_post_open.py` | — | 朝の保存値を上書きしない。Openが無ければ`None`を返し、代替値を捏造しない |
 | `metrics/performance.py` | PF/Expectancy/risk/correlation/誤差 | `calculate_performance_metrics`, `mean_absolute_error`, `root_mean_squared_error`ほか | OOS P/L/return/predicted/actual | `PerformanceMetrics` | numpy | close/backtest/scenario | `test_metrics.py` | — | undefinedは0/inf規則を確認。MAE/RMSEはreturn単位 |
@@ -100,14 +100,14 @@
 | `dashboard/ui.py` | cached serviceと共通widgets | `require_service`, cached queries, render helpers | `DATABASE_URL`/query results | Streamlit components | Streamlit/database | app/pages | `test_dashboard.py` | `DATABASE_URL` | Providerへlive接続しない |
 | `dashboard/catalog.py` | ticker/company/sector表示名 | `stock_label`, `sector_label` | ticker | label | static mapping | pages | dashboard tests | — | configとの同期を確認 |
 | `pages/1_Today.py` | 今日のpublication/BUY順位 | `main` | latest DB rows | page | dashboard | Streamlit | dashboard tests | DB only | status/warningを先に表示 |
-| `pages/2_Stock_Detail.py` | 銘柄別prediction/actual/metric/P&L | `main` | DB history | page/chart/table | dashboard/pandas | Streamlit | dashboard tests | DB only | 少数sampleを警告 |
-| `pages/3_Factor_Analysis.py` | 最新係数 | `main` | model coefficients | chart/table | dashboard/pandas | Streamlit | dashboard tests | DB only | 因果ではない |
-| `pages/4_Sector_Analysis.py` | 最新予測sector集約 | `main` | predictions/metrics | chart/table | dashboard/pandas | Streamlit | dashboard tests | DB only | 単純平均 |
-| `pages/5_Backtest.py` | 保存済みOOS結果 + 条件変更後の再計算 | `main`, `_render_persisted`, `_render_scenario` | metrics/trades/OOS予測 | chart/table/再計算結果 | dashboard/backtest.scenario/pandas | Streamlit | dashboard tests, `test_scenario.py` | DB only | UI上でmodelを再学習しない。閾値/資金/コスト/Top Nのみ変更可 |
-| `pages/6_System_Status.py` | run/provider/raw health | `main` | persisted audit | alert/table | dashboard | Streamlit | dashboard tests | DB only | live pingではない |
-| `pages/8_Company_Analysis.py` | 企業別の予測推移と係数推移 | `main` | `artifacts/week_test/latest.json` | 銘柄別の予測・係数・新規指標 | dashboard/pandas | Streamlit | artifact経由 | なし | 新規指標は係数が0を抜けた時点で判定 |
-| `pages/7_Test.py` | 直近期間の検証結果表示 | `main` | `artifacts/week_test/latest.json` | 日別勝率/金額比/予測対実績/係数推移 | dashboard/pandas | Streamlit | artifact経由 | なし | artifactを読むだけで再計算しない。DBも使わない |
-| `dashboard/factors.py` | BUY条件の表示と係数集計・推移 | `load_configured_buy_rule`, `buy_rule_mismatches`, `summarize_coefficients`, `coefficient_timeline`, `newly_active_features` | `config/trading.yaml`、係数行 | `BuyRule`、安定性レポート | PyYAML/pandas/`scoring.stability` | `pages/3_Factor_Analysis.py` | `test_factors.py` | — | 表示専用read。strict検証は`data.config`が担当。設定と保存済み判定の食い違いを警告 |
+| `pages/3_Stock_Detail.py` | 銘柄別prediction/actual/metric/P&L | `main` | DB history | page/chart/table | dashboard/pandas | Streamlit | dashboard tests | DB only | 少数sampleを警告 |
+| `pages/4_Factor_Analysis.py` | 最新係数 | `main` | model coefficients | chart/table | dashboard/pandas | Streamlit | dashboard tests | DB only | 因果ではない |
+| `pages/5_Sector_Analysis.py` | 最新予測sector集約 | `main` | predictions/metrics | chart/table | dashboard/pandas | Streamlit | dashboard tests | DB only | 単純平均 |
+| `pages/6_Backtest.py` | 保存済みOOS結果 + 条件変更後の再計算 | `main`, `_render_persisted`, `_render_scenario` | metrics/trades/OOS予測 | chart/table/再計算結果 | dashboard/backtest.scenario/pandas | Streamlit | dashboard tests, `test_scenario.py` | DB only | UI上でmodelを再学習しない。閾値/資金/コスト/Top Nのみ変更可 |
+| `pages/7_System_Status.py` | run/provider/raw health | `main` | persisted audit | alert/table | dashboard | Streamlit | dashboard tests | DB only | live pingではない |
+| `pages/9_Company_Analysis.py` | 企業別の予測推移と係数推移 | `main` | `artifacts/week_test/latest.json` | 銘柄別の予測・係数・新規指標 | dashboard/pandas | Streamlit | artifact経由 | なし | 新規指標は係数が0を抜けた時点で判定 |
+| `pages/8_Test.py` | 直近期間の検証結果表示 | `main` | `artifacts/week_test/latest.json` | 日別勝率/金額比/予測対実績/係数推移 | dashboard/pandas | Streamlit | artifact経由 | なし | artifactを読むだけで再計算しない。DBも使わない |
+| `dashboard/factors.py` | BUY条件の表示と係数集計・推移 | `load_configured_buy_rule`, `buy_rule_mismatches`, `summarize_coefficients`, `coefficient_timeline`, `newly_active_features` | `config/trading.yaml`、係数行 | `BuyRule`、安定性レポート | PyYAML/pandas/`scoring.stability` | `pages/4_Factor_Analysis.py` | `test_factors.py` | — | 表示専用read。strict検証は`data.config`が担当。設定と保存済み判定の食い違いを警告 |
 
 ## Scripts / automation
 
@@ -157,6 +157,6 @@
 - メール文面変更: `notifications/templates.py`。template versionとemail testsも変更。
 - Dashboard変更: 対応する`pages/`、`dashboard/query_service.py`、`test_dashboard.py`。
 - schedule変更: `.github/workflows/`と`config/settings.yaml`の双方。
-- Backtest画面の可変条件追加: `backtest/scenario.py`の`ScenarioConfig`、`pages/5_Backtest.py`の入力、`test_scenario.py`。
+- Backtest画面の可変条件追加: `backtest/scenario.py`の`ScenarioConfig`、`pages/6_Backtest.py`の入力、`test_scenario.py`。
 - 回帰候補追加: `models/linear.py`にpipeline、`models/base.py`の`REGRESSION_CANDIDATES`とgrid、`models/comparison.py`の`_candidate_grid`/`_build_candidate`、`test_model_comparison.py`。
 - Dashboardの見方の説明: `docs/DASHBOARD_GUIDE.md`。

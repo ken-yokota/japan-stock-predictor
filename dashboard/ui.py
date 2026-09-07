@@ -347,10 +347,22 @@ def _render_settled_day(service: DashboardQueryService, newest: str) -> None:
     )
 
 
-def render_header(title: str, description: str) -> None:
+def render_header(
+    title: str, description: str, *, show_banner: bool = True
+) -> None:
+    """Title, description, and -- unless asked otherwise -- the day's banner.
+
+    History switches the banner off. That page is about the record over weeks;
+    a strip reporting today's prediction, today's status and today's hit rate
+    at the top of it answers a different question than the one the reader
+    opened it to ask, and the prediction-set notes that ride along with the
+    banner are noise there too.
+    """
+
     st.title(title)
     st.caption(description)
-    render_latest_day_banner()
+    if show_banner:
+        render_latest_day_banner()
     st.info(
         "研究用の参考情報であり、投資助言ではありません。予測値・順位・BUY表示だけで"
         "売買判断をしないでください。"

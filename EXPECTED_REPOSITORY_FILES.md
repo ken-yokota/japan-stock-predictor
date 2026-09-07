@@ -23,11 +23,11 @@
 | `src/.../services/` | Morning/Open/Close等の日次ワークフロー統合 |
 | `app.py` | Streamlitエントリーポイント |
 | `pages/1_Today.py` | 今日の予測・BUYランキング |
-| `pages/2_Stock_Detail.py` | 銘柄別予測履歴、損益、係数 |
-| `pages/3_Factor_Analysis.py` | 指標寄与、係数、安定性 |
-| `pages/4_Sector_Analysis.py` | 業種別比較 |
-| `pages/5_Backtest.py` | 閾値・投資額等を変更したOOS再計算 |
-| `pages/6_System_Status.py` | Provider/DB/Workflow/欠損/エラー状態 |
+| `pages/3_Stock_Detail.py` | 銘柄別予測履歴、損益、係数 |
+| `pages/4_Factor_Analysis.py` | 指標寄与、係数、安定性 |
+| `pages/5_Sector_Analysis.py` | 業種別比較 |
+| `pages/6_Backtest.py` | 閾値・投資額等を変更したOOS再計算 |
+| `pages/7_System_Status.py` | Provider/DB/Workflow/欠損/エラー状態 |
 | `scripts/phase0_data_feasibility.py` | 無料データの取得可否・08:30利用可否検証 |
 | `scripts/bootstrap_history.py` | 2〜3年を目標に履歴データを初期取得 |
 | `scripts/run_walk_forward.py` | OOS walk-forward一括作成 |
