@@ -115,34 +115,32 @@ def main() -> None:
     if not cards:
         st.info("BUY条件を満たす公開済み銘柄はありません。0件も正常な結果です。")
     else:
-        # Before the close a card carries the forecast only; after it, the
-        # outcome sits beside the forecast on the same card. Two views of one
-        # card rather than two places to look.
-        for start in range(0, min(len(cards), 6), 2):
+        # Text lines rather than metric widgets. st.metric is tall, and four of
+        # them per card pushed the candidates off a laptop screen -- on the one
+        # page whose whole job is to answer "what do I buy" without scrolling.
+        # The forecast is always the first line; the outcome adds a second only
+        # once the session settles, so the morning card and the evening card
+        # are the same object with one line more.
+        for start in range(0, len(cards), 2):
             columns = st.columns(2)
             for column, card in zip(columns, cards[start : start + 2], strict=False):
                 with column.container(border=True):
-                    st.markdown(f"#### {card.label}")
-                    # Row one is the forecast and always present. Row two is
-                    # the outcome and appears only once the session settles, so
-                    # the card is the same shape at 08:30 and at 17:00 with the
-                    # evening simply adding a line rather than rearranging one.
-                    top_left, top_right = st.columns(2)
-                    top_left.metric("予測R", card.predicted_return)
-                    top_right.metric("上昇確率", card.probability_up)
+                    st.markdown(
+                        f"**{card.label}**　<small>Rank {card.rank}</small>",
+                        unsafe_allow_html=True,
+                    )
+                    st.markdown(
+                        f"予測R **{card.predicted_return}**"
+                        f" ／ 上昇確率 **{card.probability_up}**"
+                    )
                     if card.settled:
-                        low_left, low_right = st.columns(2)
-                        low_left.metric("実績R", card.actual_return)
-                        low_right.metric(
-                            "方向",
-                            card.direction,
-                            delta=card.direction,
-                            delta_color=(
-                                "normal" if card.direction == "的中" else "inverse"
-                            ),
+                        colour = "green" if card.direction == "的中" else "red"
+                        st.markdown(
+                            f"実績R **{card.actual_return}**"
+                            f" ／ :{colour}[**{card.direction}**]"
                         )
                     else:
-                        st.caption("実績は大引け後に表示されます")
+                        st.caption("実績は大引け後")
 
     # The day's own record. Present before the close too -- the forecast
     # columns are filled and the outcome columns read "—" -- because the same

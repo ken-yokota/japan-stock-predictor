@@ -46,7 +46,6 @@ from dashboard.ui import (
     cached_prediction_history_window,
     configure_page,
     display_rows,
-    render_header,
     render_query_state,
     require_service,
 )
@@ -295,10 +294,21 @@ def _render_significance(report: dict[str, Any]) -> None:
 
 def main() -> None:
     configure_page("実績", "📊")
-    render_header(
-        "実績",
-        "本番pipelineが公開した予測と、その後に観測された実績です。",
-        show_banner=False,
+    # This page draws its own header instead of calling render_header, and
+    # deliberately does not reach for a parameter on it. Streamlit Cloud keeps
+    # already-imported modules in memory while re-reading changed pages, so
+    # adding a keyword to a shared function breaks every page that passes it
+    # until someone reboots the container -- which is how this page failed on
+    # 2026-09-07 with TypeError. Plain st.* calls cannot go stale.
+    #
+    # The banner is left out on purpose: 実績 is about the record over weeks,
+    # and a strip reporting today's prediction, status and hit rate answers a
+    # different question at the top of it.
+    st.title("実績")
+    st.caption("本番pipelineが公開した予測と、その後に観測された実績です。")
+    st.info(
+        "研究用の参考情報であり、投資助言ではありません。予測値・順位・BUY表示だけで"
+        "売買判断をしないでください。"
     )
 
     service = require_service()
