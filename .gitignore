@@ -23,3 +23,6 @@ artifacts/
 
 # Written by the TodoWrite hook for the periodic progress mail.
 .progress-tasks.json
+
+# Local morning-run logs (stand-in for GitHub Actions while Neon is blocked)
+local_logs/

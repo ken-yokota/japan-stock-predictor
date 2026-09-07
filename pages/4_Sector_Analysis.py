@@ -11,10 +11,13 @@ from dashboard.presenters import (
     format_percent,
     format_probability,
     sector_rows,
+    sector_timeseries,
 )
+from dashboard.query_service import DashboardQueryService
 from dashboard.ui import (
     cached_latest_run,
     cached_metrics,
+    cached_oos_scenario_rows,
     cached_prediction_set,
     cached_selections,
     cached_today_predictions,
@@ -90,6 +93,96 @@ def main() -> None:
     st.caption(
         "単純平均です。業種ごとの銘柄数、欠損、Provider、学習期間が異なる場合は"
         "直接比較できません。業種平均は個別銘柄の売買推奨ではありません。"
+    )
+
+    st.divider()
+    _render_timeseries(service)
+
+
+def _render_timeseries(service: DashboardQueryService) -> None:
+    """Predicted vs realised sector average over the settled sessions."""
+
+    st.subheader("業種別 予測平均と実績平均の推移")
+    scenario = cached_oos_scenario_rows(service)
+    if not scenario.ready:
+        st.info("実績を読み取れないため推移を表示できません。")
+        return
+    series = sector_timeseries(scenario.rows)
+    if not series:
+        st.info(
+            "確定した実績がまだありません。大引け後の答え合わせが済んだ日から"
+            "推移が表示されます。"
+        )
+        return
+
+    sectors = sorted({day.sector for day in series})
+    sessions = sorted({day.date for day in series})
+    st.caption(
+        f"確定済み {len(sessions)}営業日 / {len(sectors)}業種。"
+        "実績は寄り付き→大引け（close/open-1）で、予測と同じ量です。"
+        "前日終値からの騰落とは異なります。"
+    )
+
+    selected = st.selectbox("業種", sectors, index=0)
+    days = [day for day in series if day.sector == selected]
+    st.line_chart(
+        pd.DataFrame(
+            {
+                "日付": [day.date for day in days],
+                "予測平均 (%)": [day.predicted_mean * 100 for day in days],
+                "実績平均 (%)": [day.actual_mean * 100 for day in days],
+            }
+        ).set_index("日付"),
+        use_container_width=True,
+    )
+
+    agreed = sum(
+        1 for day in days if (day.predicted_mean >= 0.0) == (day.actual_mean >= 0.0)
+    )
+    columns = st.columns(4)
+    columns[0].metric("営業日数", len(days))
+    columns[1].metric(
+        "予測平均", format_percent(sum(d.predicted_mean for d in days) / len(days))
+    )
+    columns[2].metric(
+        "実績平均", format_percent(sum(d.actual_mean for d in days) / len(days))
+    )
+    columns[3].metric("方向一致", f"{agreed}/{len(days)}")
+
+    with st.expander("全業種の平均を比較する", expanded=False):
+        display_rows(
+            [
+                {
+                    "業種": sector,
+                    "営業日数": len(group),
+                    "予測平均": format_percent(
+                        sum(day.predicted_mean for day in group) / len(group)
+                    ),
+                    "実績平均": format_percent(
+                        sum(day.actual_mean for day in group) / len(group)
+                    ),
+                }
+                for sector in sectors
+                if (group := [day for day in series if day.sector == sector])
+            ]
+        )
+
+    with st.expander(f"{selected} の日次内訳", expanded=False):
+        display_rows(
+            [
+                {
+                    "日付": day.date,
+                    "銘柄数": day.count,
+                    "予測平均": format_percent(day.predicted_mean),
+                    "実績平均": format_percent(day.actual_mean),
+                }
+                for day in reversed(days)
+            ]
+        )
+
+    st.caption(
+        "業種平均どうしの比較です。銘柄数が業種ごとに異なるため、方向一致率は"
+        "個別銘柄の的中率ではありません。売買判断の根拠には使えません。"
     )
 
 

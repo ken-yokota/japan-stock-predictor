@@ -37,6 +37,17 @@ class Alert:
 
 
 @dataclass(frozen=True, slots=True)
+class SectorDay:
+    """One sector's averages for one settled session."""
+
+    date: str
+    sector: str
+    predicted_mean: float
+    actual_mean: float
+    count: int
+
+
+@dataclass(frozen=True, slots=True)
 class OperationalCounts:
     fallback: int = 0
     stale_or_missing: int = 0
@@ -599,3 +610,48 @@ def sector_rows(
             }
         )
     return output
+
+
+def sector_timeseries(
+    rows: Iterable[Mapping[str, Any]],
+) -> list[SectorDay]:
+    """Mean predicted and mean realised return per sector, per session.
+
+    The realised figure is open-to-close (``close / open - 1``), the same
+    quantity ``predicted_intraday_return`` forecasts. Comparing the settled
+    close against the *previous* close instead would fold in the overnight gap,
+    which this system never predicts, and would flatter or penalise every
+    sector by whatever the market did while it was shut.
+
+    Rows arrive from ``oos_scenario_rows``, which has already restricted them to
+    SUCCESS predictions whose outcome reached FINAL or CORRECTED, so a session
+    still awaiting settlement cannot appear here as a flat line.
+    """
+
+    buckets: dict[tuple[str, str], list[tuple[float, float]]] = {}
+    for row in rows:
+        predicted = as_number(row.get("predicted_return"))
+        open_price = as_number(row.get("actual_open"))
+        close_price = as_number(row.get("actual_close"))
+        if predicted is None or open_price is None or close_price is None:
+            continue
+        if open_price <= 0.0 or close_price <= 0.0:
+            continue
+        date = str(row.get("prediction_date", "")).strip()
+        if not date:
+            continue
+        sector = sector_label(str(row.get("ticker", "")))
+        buckets.setdefault((date, sector), []).append(
+            (predicted, close_price / open_price - 1.0)
+        )
+
+    return [
+        SectorDay(
+            date=date,
+            sector=sector,
+            predicted_mean=sum(pair[0] for pair in pairs) / len(pairs),
+            actual_mean=sum(pair[1] for pair in pairs) / len(pairs),
+            count=len(pairs),
+        )
+        for (date, sector), pairs in sorted(buckets.items())
+    ]

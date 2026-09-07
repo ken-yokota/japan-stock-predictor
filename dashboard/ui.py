@@ -375,15 +375,61 @@ def render_query_state(
     return False
 
 
+ADVISORY_TABLE_THRESHOLD = 6
+
+
 def render_alerts(alerts: tuple[Alert, ...]) -> None:
-    for alert in alerts:
-        body = f"**{alert.title}** — {alert.detail}"
-        if alert.level is AlertLevel.ERROR:
-            st.error(body)
-        elif alert.level is AlertLevel.WARNING:
-            st.warning(body)
-        else:
-            st.info(body)
+    """Keep blocking alerts inline and fold the advisory ones behind a count.
+
+    A morning with per-ticker data-quality notes produces one warning per
+    ticker, so the band above the content grew to twenty or more yellow boxes
+    and pushed the page itself below the fold. The cost was not only the
+    scrolling: a reader trained to skip that band also skips the red alerts
+    inside it, and those are the ones that say the numbers are not tradeable.
+
+    Errors therefore stay where they were. Everything else collapses into one
+    expander whose label still carries the count, so nothing is hidden in the
+    sense of being unfindable -- it is one click away and it announces itself.
+    """
+
+    errors = tuple(alert for alert in alerts if alert.level is AlertLevel.ERROR)
+    advisories = tuple(alert for alert in alerts if alert.level is not AlertLevel.ERROR)
+
+    for alert in errors:
+        st.error(f"**{alert.title}** — {alert.detail}")
+
+    if not advisories:
+        return
+
+    warnings = sum(1 for alert in advisories if alert.level is AlertLevel.WARNING)
+    label = f"⚠️ 注意 {len(advisories)}件"
+    if warnings and warnings != len(advisories):
+        label = f"⚠️ 注意 {len(advisories)}件（警告 {warnings}件）"
+    with st.expander(label, expanded=False):
+        if len(advisories) < ADVISORY_TABLE_THRESHOLD:
+            for alert in advisories:
+                body = f"**{alert.title}** — {alert.detail}"
+                if alert.level is AlertLevel.WARNING:
+                    st.warning(body)
+                else:
+                    st.info(body)
+            return
+        # A settled morning carries roughly twenty data-quality notes per
+        # ticker, which reached 446 on 2026-09-07. Stacked callout widgets are
+        # built even while the expander is shut, so past a handful they cost
+        # render time and stop being readable. One sortable table is cheaper
+        # and can actually be scanned.
+        display_rows(
+            [
+                {
+                    "種別": alert.level.value,
+                    "対象": alert.title,
+                    "内容": alert.detail,
+                }
+                for alert in advisories
+            ],
+            height=320,
+        )
 
 
 def render_cutoff_summary(
