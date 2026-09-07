@@ -157,6 +157,38 @@ class DashboardQueryService:
             parameters={"since": since} if since else None,
         )
 
+    def email_deliveries(self, *, limit: int = 50) -> QueryResult:
+        """Delivery records for recent prediction sets.
+
+        Read so the day's table can say whether the mail actually went out.
+        Only the fields needed for that claim are selected: the recipient and
+        the message body are not the dashboard's business.
+        """
+
+        return self._read(
+            required={
+                "email_logs": frozenset(
+                    {"prediction_set_id", "status", "sent_at", "subject"}
+                ),
+                "prediction_sets": frozenset(
+                    {"prediction_set_id", "prediction_date"}
+                ),
+            },
+            statement="""
+                SELECT
+                    ps.prediction_date,
+                    el.status,
+                    el.sent_at,
+                    el.subject
+                FROM email_logs AS el
+                JOIN prediction_sets AS ps
+                  ON ps.prediction_set_id = el.prediction_set_id
+                ORDER BY ps.prediction_date DESC, el.created_at DESC
+                LIMIT :limit
+            """,
+            parameters={"limit": max(1, min(limit, 500))},
+        )
+
     def latest_run(self) -> QueryResult:
         return self._read(
             required={

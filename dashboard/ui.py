@@ -314,8 +314,16 @@ def render_latest_day_banner() -> None:
                 f"買い{buys}銘柄のうち{buys - settled}銘柄は実績が未確定です"
                 "（分母には含めています）。"
             )
-    for warning in warnings:
-        st.warning(warning)
+    # Folded, not dropped. These are the prediction set's own notes -- free
+    # ingestion was partial, old feature rows were pruned -- and they are the
+    # same two or three every morning. Rendered inline they sat between the
+    # title and the BUY list on every page, so the operator scrolled past a
+    # yellow band daily to reach the answer they came for. The label carries
+    # the count, so a morning with something new to say still shows it.
+    if warnings:
+        with st.expander(f"⚠️ この予測セットの注記 {len(warnings)}件", expanded=False):
+            for warning in warnings:
+                st.warning(warning)
     _render_settled_day(service, str(prediction_date))
 
 

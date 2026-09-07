@@ -16,8 +16,16 @@ from dashboard.outcomes import outcome_table_rows
 from dashboard.presenters import (
     derive_operational_alerts,
     format_percent,
-    format_probability,
     today_table_rows,
+)
+from dashboard.today_view import (
+    buy_cards,
+    day_is_settled,
+    density_chart,
+    morning_email_sent,
+    result_column_config,
+    result_rows,
+    shared_axis,
 )
 from dashboard.ui import (
     cached_feature_completeness,
@@ -77,13 +85,6 @@ def main() -> None:
 
     metric_rows = metrics.rows if metrics.ready else ()
     table = today_table_rows(prediction_rows, metric_rows)
-    buy_rows = [
-        row
-        for row in prediction_rows
-        if str(row.get("status", "")).upper() == "SUCCESS"
-        and str(row.get("signal", "")).upper() == "BUY"
-        and str(row.get("prediction_set_status", "")).upper() == "READY"
-    ]
 
     # Completeness used to open the page with seven metrics, two banners and an
     # auto-expanded table, which pushed the BUY candidates - the reason anyone
@@ -93,8 +94,7 @@ def main() -> None:
     # read. Everything else is available lower down, unchanged.
     completeness = cached_feature_completeness(service)
     signals = {
-        str(row.get("ticker")): str(row.get("signal") or "")
-        for row in prediction_rows
+        str(row.get("ticker")): str(row.get("signal") or "") for row in prediction_rows
     }
     coverages = {
         str(row.get("ticker")): row.get("feature_coverage") for row in prediction_rows
@@ -110,46 +110,82 @@ def main() -> None:
             for row in (completeness.rows if completeness.ready else ())
         ]
     )
-    st.subheader(f"BUY候補 {len(buy_rows)}件")
-    if not buy_rows:
+    cards = buy_cards(prediction_rows)
+    st.subheader(f"BUY候補 {len(cards)}件")
+    if not cards:
         st.info("BUY条件を満たす公開済み銘柄はありません。0件も正常な結果です。")
     else:
-        for start in range(0, min(len(buy_rows), 6), 2):
+        # Before the close a card carries the forecast only; after it, the
+        # outcome sits beside the forecast on the same card. Two views of one
+        # card rather than two places to look.
+        for start in range(0, min(len(cards), 6), 2):
             columns = st.columns(2)
-            for column, row in zip(columns, buy_rows[start : start + 2], strict=False):
+            for column, card in zip(columns, cards[start : start + 2], strict=False):
                 with column.container(border=True):
-                    st.markdown(f"#### {stock_label(str(row['ticker']))}")
-                    st.metric(
-                        "予測リターン",
-                        format_percent(row.get("predicted_intraday_return")),
-                    )
-                    st.caption(
-                        "上昇確率 "
-                        f"{format_probability(row.get('probability_up'))} • "
-                        f"Rank {row.get('rank') or '—'} • "
-                        "Feature Coverage "
-                        f"{format_percent(row.get('feature_coverage'), digits=1)}"
-                    )
+                    st.markdown(f"#### {card.label}")
+                    if card.settled:
+                        left, right = st.columns(2)
+                        left.metric("予測リターン", card.predicted_return)
+                        right.metric(
+                            "実績リターン",
+                            card.actual_return,
+                            delta=card.direction,
+                            delta_color=(
+                                "normal" if card.direction == "的中" else "inverse"
+                            ),
+                        )
+                        st.caption(
+                            f"上昇確率 {card.probability_up} • "
+                            f"Rank {card.rank} • 方向 {card.direction}"
+                        )
+                    else:
+                        st.metric("予測リターン", card.predicted_return)
+                        st.caption(
+                            f"上昇確率 {card.probability_up} • Rank {card.rank} • "
+                            "実績は大引け後に表示されます"
+                        )
 
-    # The day's own record, once it settles. Kept separate from the forecast
-    # table above so an unsettled morning is visibly unsettled rather than a
-    # row of dashes inside the predictions.
+    # The day's own record. Present before the close too -- the forecast
+    # columns are filled and the outcome columns read "—" -- because the same
+    # eleven columns before and after the close mean the operator learns one
+    # table rather than two.
     settled = [
         row for row in prediction_rows if row.get("actual_intraday_return") is not None
     ]
-    if settled:
+    settled_day = day_is_settled(prediction_rows)
+    prediction_day = str((publication or {}).get("prediction_date", ""))
+    email_sent = morning_email_sent(service, prediction_day)
+    # Every ticker missing a required indicator, not only the BUY ones: the
+    # table covers all 22, so a NO BUY row with missing data must say so too.
+    degraded = frozenset(
+        item.ticker for item in quality.stocks if item.missing_required
+    )
+
+    heading = f"本日の結果（確定 {len(settled)}銘柄）" if settled_day else "本日の予測"
+    st.subheader(heading)
+    if settled_day:
         buy_outcomes = outcome_table_rows(prediction_rows, buy_only=True)
         hits = sum(1 for row in buy_outcomes if row["方向"] == "的中")
         scored = sum(1 for row in buy_outcomes if row["方向"] in {"的中", "外れ"})
-        st.subheader(f"本日の結果（確定 {len(settled)}銘柄）")
         if scored:
             st.caption(f"BUY候補の方向的中 {hits}/{scored}")
-        display_rows(outcome_table_rows(prediction_rows), height=420)
     else:
         st.caption(
-            "本日の実績はまだ確定していません。"
-            "引け後の更新で、この下に予測と結果の比較が出ます。"
+            "実績列は大引け後の更新で埋まります。いまは予測値だけが確定しています。"
         )
+    st.dataframe(
+        result_rows(
+            prediction_rows,
+            email_sent=email_sent,
+            degraded_tickers=degraded,
+        ),
+        hide_index=True,
+        column_config=result_column_config(),
+        height=420,
+        use_container_width=True,
+    )
+
+    _render_densities(prediction_rows, settled_day)
 
     st.subheader("全銘柄")
     st.caption(
@@ -254,6 +290,65 @@ def main() -> None:
               いたか、記録自体が無いか。UNKNOWNは「欠損なし」ではありません。
             """
         )
+
+
+def _render_densities(
+    prediction_rows: tuple[dict[str, object], ...] | list[dict[str, object]],
+    settled_day: bool,
+) -> None:
+    """Per-ticker forecast densities, folded away until asked for.
+
+    Twenty-two charts is a lot of page, and most mornings nobody wants them, so
+    the whole section stays closed until it is opened. Every ticker is drawn on
+    one shared return axis: densities on private axes cannot be compared with
+    each other by eye, which is the main thing a wall of them is for.
+    """
+
+    drawable = [row for row in prediction_rows if row.get("return_distribution")]
+    if not drawable:
+        return
+    label = (
+        f"確率密度分布 {len(drawable)}銘柄（実績を重ねて表示）"
+        if settled_day
+        else f"確率密度分布 {len(drawable)}銘柄（予測のみ）"
+    )
+    with st.expander(label, expanded=False):
+        st.caption(
+            "縦の破線が予測リターン、赤い実線が実績リターンです。"
+            "横軸は全銘柄で共通にしてあるので、銘柄どうしを見比べられます。"
+            if settled_day
+            else "縦の破線が予測リターンです。実績が確定すると赤い実線が重なります。"
+        )
+        buy_first = sorted(
+            drawable,
+            key=lambda row: (
+                0 if str(row.get("signal", "")).upper() == "BUY" else 1,
+                row.get("rank") or 999,
+            ),
+        )
+        choices = [str(row.get("ticker", "")) for row in buy_first]
+        default = [
+            str(row.get("ticker", ""))
+            for row in buy_first
+            if str(row.get("signal", "")).upper() == "BUY"
+        ] or choices[:4]
+        selected = st.multiselect(
+            "表示する銘柄",
+            choices,
+            default=default,
+            format_func=stock_label,
+        )
+        chosen = [row for row in buy_first if str(row.get("ticker", "")) in selected]
+        if not chosen:
+            st.caption("銘柄を選ぶと分布が表示されます。")
+            return
+        low, high = shared_axis(chosen)
+        for row in chosen:
+            chart = density_chart(row, low=low, high=high)
+            if chart is None:
+                continue
+            st.markdown(f"**{stock_label(str(row.get('ticker', '')))}**")
+            st.altair_chart(chart, use_container_width=True)
 
 
 if __name__ == "__main__":
