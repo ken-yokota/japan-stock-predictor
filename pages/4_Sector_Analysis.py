@@ -11,9 +11,9 @@ from dashboard.presenters import (
     format_percent,
     format_probability,
     sector_rows,
-    sector_timeseries,
 )
 from dashboard.query_service import DashboardQueryService
+from dashboard.sector_history import sector_timeseries
 from dashboard.ui import (
     cached_latest_run,
     cached_metrics,

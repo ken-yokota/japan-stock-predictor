@@ -14,7 +14,8 @@ from typing import Any
 
 import pytest
 
-from dashboard.presenters import Alert, AlertLevel, sector_timeseries
+from dashboard.presenters import Alert, AlertLevel
+from dashboard.sector_history import sector_timeseries
 
 
 def _row(**overrides: Any) -> dict[str, Any]:
