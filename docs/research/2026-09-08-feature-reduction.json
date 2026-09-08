@@ -1,0 +1,48 @@
+{
+  "recorded_on": "2026-09-08",
+  "status": "immutable record - reruns must write a new file, never overwrite this",
+  "question": "Which indicators can be removed from production without losing information?",
+  "instruction": "Operator asked for a reduction on 2026-09-08 and delegated the choice.",
+  "supersedes": {
+    "file": "docs/research/2026-08-16-production-vs-candidates.json",
+    "its_recommendation": "Keep production's 27 indicators. No change is supported.",
+    "why_overridden": "That study asked whether a candidate set was BETTER than production and production_reduced came back INCONCLUSIVE (Wilcoxon p=0.0173 against a 0.0167 Bonferroni threshold). The question here is different: does removing provably redundant columns HURT? On the same measurement it does not - production_reduced was better on MAE, direction and rank IC simultaneously, with the paired strategy CI entirely positive. Removal is adopted on absence of harm plus provable redundancy, not on a claim of improvement."
+  },
+  "removed": [
+    {"id": "us_10y_minus_2y_spread", "basis": "exact identity", "evidence": "10Y - 2Y - spread = 0 on all 565 stored sessions, max error 0. Holding all three makes the design matrix rank deficient; the derived column carries zero information. Needs no measurement.", "measured_in_prior_study": false},
+    {"id": "sp500", "basis": "dominated by a fresher series", "evidence": "cash close stops 05:00 JST; sp500_futures trades to the 08:30 cutoff", "measured_in_prior_study": true},
+    {"id": "nasdaq100", "basis": "dominated by a fresher series", "evidence": "same, against nasdaq100_futures", "measured_in_prior_study": true},
+    {"id": "dow", "basis": "near-linear combination", "evidence": "30 large caps against two US index futures already held", "measured_in_prior_study": true},
+    {"id": "gold", "basis": "no mechanism", "evidence": "no path from gold to Japanese equity open-to-close returns", "measured_in_prior_study": true},
+    {"id": "mchi", "basis": "composition", "evidence": "same China large-cap exposure as FXI, to within tracking error", "measured_in_prior_study": true},
+    {"id": "toyota_adr", "basis": "measured to earn nothing", "evidence": "dropping the ADR columns moved 14 of 1,386 predictions and was slightly better on all three metrics", "measured_in_prior_study": true},
+    {"id": "honda_adr", "basis": "measured to earn nothing", "evidence": "same", "measured_in_prior_study": true},
+    {"id": "mufg_adr", "basis": "measured to earn nothing", "evidence": "same", "measured_in_prior_study": true},
+    {"id": "smfg_adr", "basis": "measured to earn nothing", "evidence": "same", "measured_in_prior_study": true}
+  ],
+  "prior_measurement": {
+    "source": "docs/research/2026-08-16-production-vs-candidates.json",
+    "window": {"sessions": 63, "paired_predictions": 1386, "tickers": 22},
+    "production": {"indicators": 27, "mae": 1.2564, "direction": 0.557, "rank_ic": 0.1119},
+    "production_reduced": {"indicators": 22, "mae": 1.2512, "direction": 0.5584, "rank_ic": 0.1123},
+    "paired_strategy_delta": {"total": 0.072, "ci": [0.000269, 0.00218], "t_p": 0.02252, "wilcoxon_p": 0.01727, "bonferroni_threshold": 0.0167},
+    "caveat": "That mirror did not contain us_2y_yield or us_10y_minus_2y_spread, so the rank-deficiency fix adopted here was never measured. It is an arithmetic identity and does not need to be."
+  },
+  "effect_on_config": {
+    "common": "16 -> 10",
+    "indicators_per_ticker": {"7203": [23, 15], "8306": [19, 12], "9107": [22, 16], "1605": [22, 16], "8053": [15, 10]},
+    "features_removed_per_ticker": "roughly 70, against a 120-session training window"
+  },
+  "why_now": [
+    "Ridge selected the maximum alpha in 1,078 of 1,078 predictions and logistic the minimum C: cross-validation is asking for more shrinkage than the grid allows.",
+    "Live measurement on 2026-09-08 over 18 sessions and 708 predictions: regression of actual on predicted gives b=+0.072 (t=0.98), R^2=0.0014, and mean absolute error 1.337pt against 1.248pt for predicting zero. The model is currently worse than doing nothing, which is not a state in which to add predictors."
+  ],
+  "known_limits": [
+    "No new measurement was run for this change. It rests on the 2026-08-16 study for nine of the ten removals and on an arithmetic identity for the tenth.",
+    "The 2026-08-16 mirror used SPY rather than the configured ^GSPC, and lacked six series with no free history.",
+    "63 sessions. The paired trading test was underpowered at that length and still is.",
+    "This does not claim the reduction improves anything. It claims no measured harm, provable redundancy, and a smaller feature budget."
+  ],
+  "how_to_reverse": "Set enabled: true on the ten indicators in config/indicators.yaml and restore them to common/sectors. Their verified sources were left intact for exactly this reason.",
+  "next_check": "Re-run docs/research/2026-08-16 style comparison once 20+ settled sessions exist under the reduced set, and re-measure b and rank IC on live data."
+}

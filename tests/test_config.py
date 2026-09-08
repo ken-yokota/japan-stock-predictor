@@ -174,11 +174,38 @@ def test_indicator_config_has_common_and_all_five_sector_groups() -> None:
     for group in config.sectors.values():
         assigned_ids.update(group.indicators)
 
+    disabled_ids = {
+        indicator.id for indicator in config.indicators if not indicator.enabled
+    }
+
     assert set(config.sectors) == EXPECTED_SECTORS
-    assert len(config.common) == 15
-    assert indicator_ids == assigned_ids
+    assert len(config.common) == 10
+    # Every catalogued indicator is either assigned somewhere or explicitly
+    # disabled. Nothing is allowed to sit in the file unreferenced and unexplained.
+    assert indicator_ids == assigned_ids | disabled_ids
+    # A disabled indicator must not also be assigned: the two states contradict.
+    assert not (assigned_ids & disabled_ids)
     assert config.sectors["trading_company"].indicators == []
     assert config.sectors["trading_company"].notes is not None
+
+
+def test_a_disabled_indicator_says_why_and_keeps_its_verified_sources() -> None:
+    """Disabling is a modelling decision, and must not fake unavailability.
+
+    The reason lives in the file because the alternative -- flipping
+    resolution_status to pending or unavailable -- would put a false claim
+    about the provider into the record that exists to hold provider truth.
+    """
+
+    config = load_indicators_config()
+    disabled = [i for i in config.indicators if not i.enabled]
+    assert disabled, "the reduction of 2026-09-08 disabled ten indicators"
+    for indicator in disabled:
+        assert indicator.disabled_reason, f"{indicator.id} disabled without a reason"
+        # Still resolved, still holding a verified source: the data is
+        # obtainable, it is simply not used.
+        assert indicator.resolution_status == "resolved"
+        assert any(source.status == "verified" for source in indicator.sources)
 
 
 def test_indicator_sources_make_resolution_state_explicit() -> None:

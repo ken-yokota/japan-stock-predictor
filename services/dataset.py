@@ -353,6 +353,7 @@ class PointInTimeDatasetBuilder:
                 indicator_id
                 for indicator_id in requested
                 if catalog[indicator_id].resolution_status == "resolved"
+                and catalog[indicator_id].enabled
             )
         )
 

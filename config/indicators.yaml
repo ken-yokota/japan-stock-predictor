@@ -10,6 +10,8 @@ indicators:
     category: equity_index
     required: true
     resolution_status: resolved
+    enabled: false
+    disabled_reason: "現金指数は05:00 JSTで止まる。sp500_futures がcutoffまで動く同じ対象の新しい情報なので、こちらは厳密に古い"
     sources:
       - kind: direct
         provider: yahoo_finance
@@ -49,6 +51,8 @@ indicators:
     category: equity_index
     required: true
     resolution_status: resolved
+    enabled: false
+    disabled_reason: "同上。nasdaq100_futures に置き換わる"
     sources:
       - kind: direct
         provider: yahoo_finance
@@ -88,6 +92,8 @@ indicators:
     category: equity_index
     required: true
     resolution_status: resolved
+    enabled: false
+    disabled_reason: "30銘柄の値動きは、保持している他の米株指数のほぼ線形結合"
     sources:
       - kind: direct
         provider: yahoo_finance
@@ -434,6 +440,8 @@ indicators:
     category: commodity
     required: true
     resolution_status: resolved
+    enabled: false
+    disabled_reason: "日本株のザラ場リターンに至る経路がない。「念のため」で120行の予算を使う典型"
     sources:
       - kind: direct
         provider: yahoo_finance
@@ -569,6 +577,8 @@ indicators:
     category: derived_interest_rate
     required: true
     resolution_status: resolved
+    enabled: false
+    disabled_reason: "10Y-2Yの厳密な恒等式。565営業日すべてで誤差0を実測。3つ同時保持は設計行列がランク落ちする"
     sources:
       - kind: derived
         provider: internal
@@ -704,6 +714,8 @@ indicators:
     category: equity_proxy
     required: true
     resolution_status: resolved
+    enabled: false
+    disabled_reason: "FXIと同じ中国大型株エクスポージャ。日次リターンはトラッキング誤差の範囲で同一"
     sources:
       - kind: proxy
         provider: yahoo_finance
@@ -1178,8 +1190,9 @@ indicators:
     category: adr
     required: true
     resolution_status: resolved
-    applies_to_tickers:
-      - "7203"
+    enabled: false
+    disabled_reason: "ADR列は測定済みで寄与ゼロ。1,386予測のうち14件しか動かさず、3指標すべてでわずかに改善した"
+    applies_to_tickers: []
     sources:
       - kind: proxy
         provider: yahoo_finance
@@ -1213,8 +1226,9 @@ indicators:
     category: adr
     required: true
     resolution_status: resolved
-    applies_to_tickers:
-      - "7267"
+    enabled: false
+    disabled_reason: "同上"
+    applies_to_tickers: []
     sources:
       - kind: proxy
         provider: yahoo_finance
@@ -1314,8 +1328,9 @@ indicators:
     category: adr
     required: true
     resolution_status: resolved
-    applies_to_tickers:
-      - "8306"
+    enabled: false
+    disabled_reason: "同上"
+    applies_to_tickers: []
     sources:
       - kind: proxy
         provider: yahoo_finance
@@ -1349,8 +1364,9 @@ indicators:
     category: adr
     required: true
     resolution_status: resolved
-    applies_to_tickers:
-      - "8316"
+    enabled: false
+    disabled_reason: "同上"
+    applies_to_tickers: []
     sources:
       - kind: proxy
         provider: yahoo_finance
@@ -1380,9 +1396,6 @@ indicators:
         availability_at_0830: available
 
 common:
-  - sp500
-  - nasdaq100
-  - dow
   - vix
   - usdjpy
   - eurjpy
@@ -1390,11 +1403,9 @@ common:
   - nikkei225_futures
   - sp500_futures
   - nasdaq100_futures
-  - gold
   - us_2y_yield
   - us_10y_yield
   - us_30y_yield
-  - us_10y_minus_2y_spread
 
 # Sector lists are additions to `common`; repeated common factors are omitted.
 sectors:
@@ -1404,7 +1415,6 @@ sectors:
       - baltic_capesize_index
       - baltic_panamax_index
       - fxi
-      - mchi
       - copper
       - iron_ore
       - wti
@@ -1421,27 +1431,21 @@ sectors:
       - oih
       - natural_gas
       - fxi
-      - mchi
     notes: "USDJPY, SPY/S&P 500, VIX, and Gold are inherited from common."
 
   automotive:
     indicators:
       - xli
       - fxi
-      - mchi
       - ewy
       - copper
       - wti
-      - toyota_adr
-      - honda_adr
     notes: "USDJPY, SPY/S&P 500, NASDAQ 100, and VIX are inherited from common."
 
   financial:
     indicators:
       - xlf
       - kre
-      - mufg_adr
-      - smfg_adr
     notes: "US yields, yield spread, USDJPY, SPY/S&P 500, VIX, and Nikkei futures are inherited from common."
 
   trading_company:

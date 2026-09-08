@@ -377,6 +377,14 @@ class IndicatorConfig(_StrictModel):
     required: bool
     optional_reason: NonEmptyStr | None = None
     resolution_status: ResolutionStatus
+    # Availability and use are different questions, and the three resolution
+    # statuses only answer the first. An indicator whose symbol is verified and
+    # fetchable but which the model deliberately does not use is neither
+    # "pending" nor "unavailable"; saying either would put a false claim about
+    # the provider into the file that exists to record provider truth. So the
+    # modelling decision gets its own field, with the reason beside it.
+    enabled: bool = True
+    disabled_reason: NonEmptyStr | None = None
     applies_to_tickers: list[Ticker] = Field(default_factory=list)
     sources: Annotated[list[IndicatorSourceConfig], Field(min_length=1)]
 
@@ -479,9 +487,21 @@ class IndicatorsConfig(_StrictModel):
                 )
             referenced_ids.update(group.indicators)
 
-        unassigned = known_ids - referenced_ids
+        # A disabled indicator is allowed to sit in no group: not being used is
+        # exactly what disabling it means. An *enabled* one that no sector
+        # reaches is still a mistake, and still caught.
+        disabled_ids = {
+            indicator.id for indicator in self.indicators if not indicator.enabled
+        }
+        unassigned = known_ids - referenced_ids - disabled_ids
         if unassigned:
             raise ValueError(f"unassigned indicators: {sorted(unassigned)}")
+        enabled_but_referenced_nowhere = disabled_ids & referenced_ids
+        if enabled_but_referenced_nowhere:
+            raise ValueError(
+                "disabled indicators must not be referenced by common or a "
+                f"sector: {sorted(enabled_but_referenced_nowhere)}"
+            )
 
         resolved_symbols: dict[tuple[str, str], str] = {}
         resolved_roles: set[tuple[str, str, str]] = set()

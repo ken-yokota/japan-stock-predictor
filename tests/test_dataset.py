@@ -54,8 +54,8 @@ def _indicator_row(session_date: date, index: int) -> MarketData:
     available_at = event_at + timedelta(minutes=15)
     close = Decimal(4000 + index * 2)
     return MarketData(
-        canonical_symbol="sp500",
-        symbol="^GSPC",
+        canonical_symbol="sp500_futures",
+        symbol="ES=F",
         provider="yahoo_finance",
         market="US_INDEX",
         market_timezone="America/New_York",
@@ -100,7 +100,11 @@ def test_dataset_uses_120_prior_sessions_and_excludes_future_revision() -> None:
         )
         assert len(before.training_frame) == 120
         assert "stock__return_1d" in before.feature_names
-        assert "sp500__return_1d" in before.feature_names
+        # The futures series, not the cash index. sp500 was disabled on
+        # 2026-09-08: its close stops at 05:00 JST, so it is strictly older
+        # information about the same thing ES=F carries to the cutoff.
+        assert "sp500_futures__return_1d" in before.feature_names
+        assert not any(name.startswith("sp500__") for name in before.feature_names)
         assert before.current_sample.target_return is None
         for references in before.current_sample.lineage.values():
             for reference in references:
