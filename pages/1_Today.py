@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import streamlit as st
 
+from dashboard.arm_density import render_arm_tabs
 from dashboard.catalog import stock_label
 from dashboard.completeness import (
     NORMAL,
@@ -183,6 +184,7 @@ def main() -> None:
     )
 
     _render_densities(prediction_rows, settled_day)
+    _render_arm_densities(prediction_rows)
 
     st.subheader("全銘柄")
     st.caption(
@@ -287,6 +289,33 @@ def main() -> None:
               いたか、記録自体が無いか。UNKNOWNは「欠損なし」ではありません。
             """
         )
+
+
+def _render_arm_densities(
+    prediction_rows: tuple[dict[str, object], ...] | list[dict[str, object]],
+) -> None:
+    """Every model family's curve for one chosen ticker, one tab each."""
+
+    usable = [row for row in prediction_rows if row.get("arm_predictions")]
+    if not usable:
+        return
+    with st.expander("手法別の確率密度分布", expanded=False):
+        ordered = sorted(
+            usable,
+            key=lambda row: (
+                0 if str(row.get("signal", "")).upper() == "BUY" else 1,
+                row.get("rank") or 999,
+            ),
+        )
+        choice = st.selectbox(
+            "銘柄",
+            [str(row.get("ticker", "")) for row in ordered],
+            format_func=stock_label,
+            key="today_arm_density_ticker",
+        )
+        row = next(r for r in ordered if str(r.get("ticker", "")) == choice)
+        actual = row.get("actual_intraday_return")
+        render_arm_tabs(row, actual=float(actual) if actual is not None else None)
 
 
 def _render_densities(

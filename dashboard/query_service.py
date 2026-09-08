@@ -107,6 +107,8 @@ class DashboardQueryService:
                         "probability_threshold",
                         "positive_factors",
                         "negative_factors",
+                        "return_distribution",
+                        "arm_predictions",
                     }
                 ),
                 "daily_runs": frozenset({"run_id", "run_type"}),
@@ -143,6 +145,7 @@ class DashboardQueryService:
                     p.predicted_price_difference,
                     p.return_threshold, p.probability_threshold,
                     p.positive_factors, p.negative_factors,
+                    p.return_distribution, p.arm_predictions,
                     a.actual_open, a.actual_close, a.actual_intraday_return,
                     a.actual_price_difference,
                     t.shares, t.net_profit_jpy

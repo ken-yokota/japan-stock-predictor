@@ -18,6 +18,7 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
+from dashboard.arm_density import render_arm_tabs
 from dashboard.catalog import stock_label
 from dashboard.history import build_history_report
 from dashboard.history_progress import (
@@ -203,6 +204,40 @@ def _render_breakdown(rows: list[dict[str, Any]], window: str) -> None:
         )
 
 
+def _render_arm_densities(rows: list[dict[str, Any]], window: str) -> None:
+    """Any past session's per-family curves, with what the day actually did.
+
+    Today answers "what does each family think"; here the outcome is already
+    known, so the same tabs answer "which family's shape contained it". The
+    realised return is drawn on the shared axis for exactly that.
+    """
+
+    usable = [row for row in rows if row.get("arm_predictions")]
+    if not usable:
+        st.caption(
+            "手法別の分布はこの期間の記録に含まれていません。"
+            "朝のpipelineが手法別の曲線を保存し始めた日から表示されます。"
+        )
+        return
+
+    with st.expander("手法別の確率密度分布（過去の日）", expanded=False):
+        days = sorted(
+            {str(row.get("prediction_date", "")) for row in usable}, reverse=True
+        )
+        day = st.selectbox("予測日", days, key=f"history_arm_day_{window}")
+        same_day = [row for row in usable if str(row.get("prediction_date", "")) == day]
+        tickers = sorted({str(row.get("ticker", "")) for row in same_day})
+        ticker = st.selectbox(
+            "銘柄",
+            tickers,
+            format_func=stock_label,
+            key=f"history_arm_ticker_{window}",
+        )
+        row = next(r for r in same_day if str(r.get("ticker", "")) == ticker)
+        actual = row.get("actual_intraday_return")
+        render_arm_tabs(row, actual=float(actual) if actual is not None else None)
+
+
 def _render_significance(report: dict[str, Any]) -> None:
     """Has the signal beaten simply owning these stocks, and can we tell yet?"""
 
@@ -364,6 +399,8 @@ def main() -> None:
                     "BUY以外も含む全公開予測です。実績が未確定の日は空欄になります。"
                 )
                 display_rows(list(reversed(everything)), height=520)
+
+            _render_arm_densities(rows, label)
 
             render_report(report, f"history_{label}")
 
