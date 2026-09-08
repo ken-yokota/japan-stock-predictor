@@ -73,7 +73,7 @@ def main() -> None:
         }
     ).set_index("業種")
     st.subheader("業種別 平均予測リターン")
-    st.bar_chart(chart, use_container_width=True)
+    st.bar_chart(chart, width="stretch")
 
     display_rows(
         [
@@ -133,7 +133,7 @@ def _render_timeseries(service: DashboardQueryService) -> None:
                 "実績平均 (%)": [day.actual_mean * 100 for day in days],
             }
         ).set_index("日付"),
-        use_container_width=True,
+        width="stretch",
     )
 
     agreed = sum(

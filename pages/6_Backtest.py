@@ -99,7 +99,7 @@ def _scenario_controls() -> ScenarioConfig:
             value=5.0,
             step=0.5,
         )
-        submitted = st.form_submit_button("この条件で再計算", use_container_width=True)
+        submitted = st.form_submit_button("この条件で再計算", width="stretch")
 
     if submitted:
         st.session_state[_SCENARIO_COUNT_KEY] = (
@@ -180,7 +180,7 @@ def _render_scenario(service: DashboardQueryService) -> None:
         equity = (1.0 + outcome.daily_returns).cumprod()
         st.line_chart(
             pd.DataFrame({"OOS Equity (1銘柄=1.0起点)": equity}),
-            use_container_width=True,
+            width="stretch",
         )
 
     if not outcome.per_ticker.empty:
@@ -300,7 +300,7 @@ def _render_persisted(service: DashboardQueryService) -> None:
             }
         ).set_index("銘柄")
         if not cost_pending:
-            st.bar_chart(profit_frame, use_container_width=True)
+            st.bar_chart(profit_frame, width="stretch")
         display_rows(
             [
                 {

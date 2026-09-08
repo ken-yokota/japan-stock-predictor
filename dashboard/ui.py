@@ -255,7 +255,7 @@ def configure_page(title: str, icon: str) -> None:
     with st.sidebar:
         st.caption("READ ONLY • Asia/Tokyo")
         st.caption(f"表示時刻: {datetime.now(JST):%Y-%m-%d %H:%M JST}")
-        if st.button("DB表示を更新", use_container_width=True):
+        if st.button("DB表示を更新", width="stretch"):
             # The reads now live in cache_resource; clearing only cache_data
             # would leave the button doing nothing at all.
             st.cache_data.clear()
@@ -462,11 +462,11 @@ def display_rows(
     """Render a horizontally scrollable table without exposing an index."""
 
     if height is None:
-        st.dataframe(rows, hide_index=True, use_container_width=True)
+        st.dataframe(rows, hide_index=True, width="stretch")
     else:
         st.dataframe(
             rows,
             hide_index=True,
-            use_container_width=True,
+            width="stretch",
             height=height,
         )

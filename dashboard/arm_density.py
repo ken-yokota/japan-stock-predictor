@@ -300,7 +300,7 @@ def render_arm_tabs(row: Mapping[str, Any], *, actual: float | None = None) -> N
             if chart is None:
                 st.info("この手法の分布は描画できませんでした。")
                 continue
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart, width="stretch")
             st.caption(
                 f"5%〜95%幅 {curve.width * 100:.2f}pt"
                 + (

@@ -180,7 +180,7 @@ def main() -> None:
         hide_index=True,
         column_config=result_column_config(),
         height=420,
-        use_container_width=True,
+        width="stretch",
     )
 
     _render_densities(prediction_rows, settled_day)
@@ -378,7 +378,7 @@ def _render_densities(
             if chart is None:
                 continue
             st.markdown(f"**{stock_label(str(row.get('ticker', '')))}**")
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart, width="stretch")
 
 
 if __name__ == "__main__":

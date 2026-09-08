@@ -160,7 +160,7 @@ def main() -> None:
     st.subheader("予測と実績")
     if any(row["実績リターン(%)"] is not None for row in chart_rows):
         frame = pd.DataFrame(chart_rows).set_index("日付")
-        st.line_chart(frame, use_container_width=True)
+        st.line_chart(frame, width="stretch")
         st.caption("縦軸は%。実績が未確定の日は線が途切れます（0として描きません）。")
     else:
         st.info("PENDING: 確定した実績リターンがまだありません。")

@@ -173,9 +173,7 @@ class DashboardQueryService:
                 "email_logs": frozenset(
                     {"prediction_set_id", "status", "sent_at", "subject"}
                 ),
-                "prediction_sets": frozenset(
-                    {"prediction_set_id", "prediction_date"}
-                ),
+                "prediction_sets": frozenset({"prediction_set_id", "prediction_date"}),
             },
             statement="""
                 SELECT

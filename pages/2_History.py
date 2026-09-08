@@ -20,6 +20,12 @@ import streamlit as st
 
 from dashboard.arm_density import render_arm_tabs
 from dashboard.catalog import stock_label
+from dashboard.forecast_quality import (
+    MINIMUM_SESSIONS_FOR_EVIDENCE,
+    comparison_rows,
+    coverage_rows,
+    evaluate,
+)
 from dashboard.history import build_history_report
 from dashboard.history_progress import (
     GROUPINGS,
@@ -70,7 +76,7 @@ def _deviation_chart(points: list[Any], label: str) -> None:
             "五分五分": [0.0 for _ in points],
         }
     ).set_index("日付")
-    st.line_chart(frame, use_container_width=True)
+    st.line_chart(frame, width="stretch")
 
 
 def _render_progress(report: dict[str, Any], window: str) -> None:
@@ -119,7 +125,7 @@ def _render_progress(report: dict[str, Any], window: str) -> None:
             pd.DataFrame(
                 {"日付": [day for day, _ in profit], "累積損益": [v for _, v in profit]}
             ).set_index("日付"),
-            use_container_width=True,
+            width="stretch",
         )
         st.caption(
             "記録された建玉数から計算した想定値で、手数料・スリッページは含みません。"
@@ -186,7 +192,7 @@ def _render_breakdown(rows: list[dict[str, Any]], window: str) -> None:
         st.caption(f"{grouping} 方向的中率（50%からの差）")
         st.line_chart(
             pd.DataFrame(pivot(accuracy, value="deviation")).T.sort_index() * 100,
-            use_container_width=True,
+            width="stretch",
         )
 
         returns = grouped_returns(rows, grouping=grouping)
@@ -196,11 +202,54 @@ def _render_breakdown(rows: list[dict[str, Any]], window: str) -> None:
         predicted = pd.DataFrame(pivot(returns, value="predicted_mean")).T.sort_index()
         actual = pd.DataFrame(pivot(returns, value="actual_mean")).T.sort_index()
         st.caption("予測R (%)")
-        st.line_chart(predicted * 100, use_container_width=True)
+        st.line_chart(predicted * 100, width="stretch")
         st.caption("実績R (%)")
-        st.line_chart(actual * 100, use_container_width=True)
+        st.line_chart(actual * 100, width="stretch")
         st.caption(
             "同じ行を平均しているので、2枚の差はその区分に対するモデルの偏りです。"
+        )
+
+
+# What the 5,500-observation OOS study measured, repeated here rather than
+# imported: dashboard/ may not import models. It is the column that makes a
+# thin window readable -- a figure reproducing the study means something even
+# on three sessions, and one contradicting it means something else.
+PRIOR_COVERAGE: tuple[tuple[float, float], ...] = ((0.80, 0.755), (0.50, 0.463))
+
+
+def _render_forecast_quality(rows: list[dict[str, Any]]) -> None:
+    """Point prediction against the curve's median, and both against zero."""
+
+    quality = evaluate(rows)
+    with st.expander("予測値の精度（点予測 vs 分布P50）", expanded=False):
+        if not quality.observations:
+            st.info(
+                "分布と実績がそろった営業日がまだありません。"
+                "分布の保存は2026-08-28に始まったので、ここは日が経つほど埋まります。"
+            )
+            return
+
+        st.caption(
+            f"対象 {quality.sessions}営業日 / {quality.observations}件。"
+            "売買判定に使っているのは点予測（Ridge）で、画面の密度は別モデル"
+            "（分位点回帰）です。どちらが実績に近いかをここで測っています。"
+        )
+        renderer = st.success if quality.has_enough_evidence else st.info
+        renderer(quality.verdict)
+        display_rows(comparison_rows(quality))
+        if not quality.has_enough_evidence:
+            st.caption(
+                f"上の数字は表示していますが、{MINIMUM_SESSIONS_FOR_EVIDENCE}営業日に"
+                "届くまでは差を根拠にしないでください。「常に0」を置いてあるのは、"
+                "予測がその下に来ていないかを毎回確かめるためです。"
+            )
+
+        st.caption("区間の被覆率（公称どおりの割合で実績が入っているか）")
+        display_rows(coverage_rows(quality, PRIOR_COVERAGE))
+        st.caption(
+            "公称より低ければ区間が狭すぎ、高ければ広すぎます。"
+            "既存OOS調査は5,500件での測定値で、そちらに近ければこの窓が薄くても"
+            "同じ性質を見ていると考えられます。"
         )
 
 
@@ -400,6 +449,7 @@ def main() -> None:
                 )
                 display_rows(list(reversed(everything)), height=520)
 
+            _render_forecast_quality(rows)
             _render_arm_densities(rows, label)
 
             render_report(report, f"history_{label}")

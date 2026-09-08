@@ -84,7 +84,7 @@ def _render_prediction_series(frame: pd.DataFrame) -> None:
             "実績リターン": frame["actual_return"],
         }
     ).set_index("日付")
-    st.line_chart(chart, use_container_width=True)
+    st.line_chart(chart, width="stretch")
     st.caption(
         "2本の線が近いほど、その銘柄をうまく読めていたことになります。"
         "符号 (プラスかマイナスか)が一致しているかを先に見てください。"
@@ -163,7 +163,7 @@ def _render_coefficients(report: dict[str, Any], ticker: str) -> None:
         pivot = frame.loc[frame["feature"].isin(chosen)].pivot_table(
             index="date", columns="feature", values="coefficient", aggfunc="mean"
         )
-        st.line_chart(pivot, use_container_width=True)
+        st.line_chart(pivot, width="stretch")
         st.caption(
             "線が上下に振れている指標は、日によって効き方が変わっていたことを"
             "意味します。符号がまたいで反転する指標は信頼性が低いと考えてください。"

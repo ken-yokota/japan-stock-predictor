@@ -208,13 +208,13 @@ def _render_daily(report: dict[str, Any]) -> None:
         cumulative["累積損益 (円)"] = cumulative["net_profit_jpy"].cumsum()
         st.line_chart(
             cumulative.set_index("date").loc[:, ["累積損益 (円)"]],
-            use_container_width=True,
+            width="stretch",
         )
     if "direction_accuracy" in frame.columns:
         st.caption("日ごとの方向的中率 (BUY以外の予測も含む全銘柄)")
         st.bar_chart(
             frame.set_index("date").loc[:, ["direction_accuracy"]],
-            use_container_width=True,
+            width="stretch",
         )
 
 
@@ -296,7 +296,7 @@ def _render_price_predictions(report: dict[str, Any], key_prefix: str) -> None:
                 "実際の寄り付き": series["actual_open"],
             }
         ).set_index("日付")
-        st.line_chart(chart, use_container_width=True)
+        st.line_chart(chart, width="stretch")
 
 
 def _render_company_coefficients(report: dict[str, Any], key_prefix: str) -> None:
@@ -342,7 +342,7 @@ def _render_company_coefficients(report: dict[str, Any], key_prefix: str) -> Non
         pivot = view.loc[view["feature"].isin(chosen)].pivot_table(
             index="date", columns="feature", values="coefficient", aggfunc="mean"
         )
-        st.line_chart(pivot, use_container_width=True)
+        st.line_chart(pivot, width="stretch")
 
     wide = view.pivot_table(
         index="date", columns="feature", values="coefficient", aggfunc="mean"
@@ -410,7 +410,7 @@ def _render_coefficients(report: dict[str, Any], key_prefix: str) -> None:
         pivot = frame.loc[frame["feature"].isin(chosen)].pivot_table(
             index="date", columns="feature", values="mean_coefficient", aggfunc="mean"
         )
-        st.line_chart(pivot, use_container_width=True)
+        st.line_chart(pivot, width="stretch")
 
     dates = sorted({str(value) for value in frame["date"]})
     chosen_date = st.selectbox(

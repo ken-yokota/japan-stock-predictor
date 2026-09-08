@@ -159,7 +159,7 @@ def _render_rolling_coefficients(service: DashboardQueryService) -> None:
                 "平均係数": [float(str(row["平均係数"])) for row in reversed(top)],
             }
         ).set_index("指標")
-        st.bar_chart(chart, use_container_width=True)
+        st.bar_chart(chart, width="stretch")
 
     display_rows(summary, height=520)
 
@@ -204,7 +204,7 @@ def _render_coefficient_timeline(rows: object) -> None:
         "グラフに出す指標", features, default=features[:6], key="prod_timeline"
     )
     if chosen:
-        st.line_chart(timeline.loc[:, chosen], use_container_width=True)
+        st.line_chart(timeline.loc[:, chosen], width="stretch")
 
     st.caption(
         f"全 {len(features)} 指標 x {len(timeline)} 回の学習。"

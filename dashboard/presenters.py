@@ -485,6 +485,14 @@ def today_table_rows(
         metric = latest_metrics.get(ticker, {})
         output.append(
             {
+                # An em dash, deliberately, despite the Arrow warning it logs
+                # ("Could not convert '—' with type str"). Only the BUY rows
+                # carry a rank, so a numeric column would be 16 nulls out of 22;
+                # pandas promotes that to float and every rank renders as "1.0".
+                # Streamlit recovers from the warning on its own, and log noise
+                # is the cheaper of the two. A real fix needs a per-column
+                # format on display_rows, which is a shared signature this
+                # deployment cannot safely widen.
                 "順位": prediction.get("rank") or "—",
                 "銘柄": stock_label(ticker),
                 "業種": sector_label(ticker),
