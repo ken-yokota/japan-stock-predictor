@@ -48,17 +48,25 @@ RESULT_COLUMNS: tuple[str, ...] = (
     "状態",
 )
 
-# Frozen while the table scrolls sideways: which day, which stock, and whether
-# it was a buy. Everything right of those is only meaningful once you know
-# which row you are reading.
-PINNED_COLUMNS: frozenset[str] = frozenset({"予測日", "銘柄名", "判定"})
+# Frozen while the table scrolls sideways: which day and which stock. Every
+# other cell is unreadable without those two, and nothing else is -- 判定 was
+# pinned too at first and taken back out, because a pinned column costs its
+# width on every screen whether or not the reader needs it there.
+PINNED_COLUMNS: frozenset[str] = frozenset({"予測日", "銘柄名"})
 
-# One width for every column. Equal spacing is the point -- a table whose
-# columns size themselves to their contents puts the eye somewhere different
-# on each row. Narrow enough that all eleven fit a laptop screen without
-# horizontal scrolling, which is what the three pinned columns exist to
-# survive when it does not.
-COLUMN_WIDTH_PX = 84
+# One width for all nine data columns. Equal spacing is the point -- a table
+# whose columns size themselves to their contents puts the eye somewhere
+# different on each row -- and every one of them holds something short: a
+# percentage, a price, a verdict.
+COLUMN_WIDTH_PX = 68
+
+# The two identifying columns are the exception, and the exception is the
+# reason they are pinned. At 68px "8306 三菱UFJフィナンシャル・グループ" shows
+# about four characters, which makes a frozen column that cannot identify its
+# own row -- the opposite of what pinning it is for. Widened to what the
+# longest name and a full date actually need, and no further. The table is
+# still narrower overall than when all eleven were 84px.
+IDENTITY_WIDTH_PX: dict[str, int] = {"予測日": 92, "銘柄名": 156}
 
 # The operator's Pxx convention, repeated rather than imported: dashboard/ is
 # barred from importing the notification layer, and that ban is worth more than
@@ -220,7 +228,7 @@ def result_column_config() -> dict[str, Any]:
     return {
         name: column_config.TextColumn(
             name,
-            width=COLUMN_WIDTH_PX,
+            width=IDENTITY_WIDTH_PX.get(name, COLUMN_WIDTH_PX),
             pinned=name in PINNED_COLUMNS,
             help=help_text.get(name),
         )

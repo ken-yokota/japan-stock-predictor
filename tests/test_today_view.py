@@ -14,6 +14,8 @@ from typing import Any
 import pytest
 
 from dashboard.today_view import (
+    COLUMN_WIDTH_PX,
+    IDENTITY_WIDTH_PX,
     PINNED_COLUMNS,
     RESULT_COLUMNS,
     RISK_QUANTILES,
@@ -87,8 +89,23 @@ def test_columns_are_exactly_the_eleven_asked_for_in_order() -> None:
     )
 
 
-def test_the_first_three_columns_are_the_pinned_ones() -> None:
-    assert frozenset(RESULT_COLUMNS[:3]) == PINNED_COLUMNS
+def test_the_two_identifying_columns_are_the_pinned_ones() -> None:
+    assert frozenset(RESULT_COLUMNS[:2]) == PINNED_COLUMNS
+
+
+def test_the_pinned_columns_are_wide_enough_to_identify_a_row() -> None:
+    # A frozen column narrow enough to truncate the stock name cannot do the
+    # job it was frozen for. The longest label is 22 characters.
+    for name in PINNED_COLUMNS:
+        assert IDENTITY_WIDTH_PX[name] > COLUMN_WIDTH_PX
+
+
+def test_the_data_columns_all_share_one_width() -> None:
+    data_columns = [name for name in RESULT_COLUMNS if name not in PINNED_COLUMNS]
+    assert len(data_columns) == 9
+    assert {IDENTITY_WIDTH_PX.get(name, COLUMN_WIDTH_PX) for name in data_columns} == {
+        COLUMN_WIDTH_PX
+    }
 
 
 def test_an_unsettled_row_shows_a_dash_not_a_zero() -> None:
