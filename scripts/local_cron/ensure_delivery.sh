@@ -23,6 +23,15 @@ mkdir -p "$LOGDIR"
 STAMP="$(TZ=Asia/Tokyo date +%Y-%m-%d)"
 LOG="$LOGDIR/${STAMP}_ensure_${WINDOW}.log"
 PY="$REPO/.venv/bin/python"
+
+# launchd starts jobs with a minimal PATH -- not the login shell's -- so gh is
+# not on it. On 2026-09-09 this backstop detected the missing evening
+# correctly, tried to dispatch, and died on "gh: command not found", which is
+# the one failure mode a backstop cannot afford. Resolved explicitly, and the
+# run aborts loudly rather than proceeding without it.
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+GH="$(command -v gh || true)"
+
 cd "$REPO" || exit 1
 
 exec >>"$LOG" 2>&1
@@ -60,14 +69,20 @@ if ! needs_repair "$BEFORE"; then
 fi
 
 echo "--- missing; dispatching the same workflows the cron would have run ---"
+if [ -z "$GH" ]; then
+  echo "gh not found on PATH; cannot dispatch"
+  "$PY" -m scripts.send_progress_report \
+    --note "GitHubが${WINDOW}の実行を落としましたが、代替起動に必要な gh が見つからず復旧できませんでした。手動での実行が必要です。ログ: ${LOG}"
+  exit 1
+fi
 DATE="$(TZ=Asia/Tokyo date +%F)"
 if [ "$WINDOW" = "evening" ]; then
-  gh workflow run close_update.yml -f prediction_date="$DATE" -f dry_run=false \
+  "$GH" workflow run close_update.yml -f prediction_date="$DATE" -f dry_run=false \
     && sleep 420
-  gh workflow run daily_summary.yml -f for_date="$DATE" -f dry_run=false \
+  "$GH" workflow run daily_summary.yml -f for_date="$DATE" -f dry_run=false \
     && sleep 180
 else
-  gh workflow run morning_kick.yml && sleep 900
+  "$GH" workflow run morning_kick.yml && sleep 900
 fi
 
 AFTER="$(verdict)"
