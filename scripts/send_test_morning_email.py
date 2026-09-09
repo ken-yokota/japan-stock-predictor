@@ -54,7 +54,6 @@ def _parser() -> argparse.ArgumentParser:
             "live record."
         ),
     )
-    parser.add_argument("--top-n", type=int, default=5)
     parser.add_argument("--dry-run", action="store_true")
     return parser
 
@@ -92,7 +91,6 @@ def main() -> int:
             payload,
             sender=sender_address,
             recipient=recipient,
-            top_n=args.top_n,
         )
         stamp = datetime.now(ZoneInfo("Asia/Tokyo"))
         with_distribution = sum(1 for item in payload.candidates if item.distribution)

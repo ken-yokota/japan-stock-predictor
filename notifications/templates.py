@@ -676,17 +676,23 @@ def render_morning_email(
     *,
     sender: str,
     recipient: str,
-    top_n: int = 5,
 ) -> RenderedEmail:
-    """Render a deterministic message from a persisted prediction set."""
+    """Render a deterministic message from a persisted prediction set.
 
-    if top_n <= 0:
-        raise ValueError("top_n must be positive")
+    Every published BUY appears. There used to be a ``top_n`` of five, and on
+    2026-09-09 the morning mail was headed "買い5銘柄" while the set contained
+    seven -- the subject was counting what had been *displayed*, not what had
+    been issued, and the body's "5銘柄 / 全22銘柄" measured the remainder
+    against every ticker rather than against the BUYs that had been cut. Two
+    recommendations were invisible to the only surface the operator reads
+    before the open. A longer mail is the lesser cost.
+    """
+
     selected = tuple(
         item
         for item in payload.candidates
         if item.signal == "BUY" and item.status == "READY"
-    )[:top_n]
+    )
     date_text = payload.prediction_date.isoformat()
     subject = f"【日本株AI予測】{date_text} 寄り付き→大引け／買い{len(selected)}銘柄"
     everything = tuple(payload.candidates)

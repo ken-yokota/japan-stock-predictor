@@ -70,7 +70,6 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config-dir", type=Path, default=Path("config"))
     parser.add_argument("--prediction-date", type=date.fromisoformat)
-    parser.add_argument("--top-n", type=int, default=5)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
         "--defer-missing",
@@ -194,7 +193,6 @@ def main() -> int:
                     payload,
                     sender=sender,
                     recipient=recipient,
-                    top_n=args.top_n,
                 )
             except ValueError as error:
                 reason = (
@@ -259,7 +257,6 @@ def main() -> int:
                 config,
                 environment,
                 prediction_date=prediction_date,
-                top_n=args.top_n,
             )
         except ValueError as error:
             if not _is_missing_prediction(error):

@@ -47,13 +47,11 @@ class EmailDispatcher:
         *,
         sender_address: str,
         recipient: str,
-        top_n: int = 5,
     ) -> EmailDelivery | None:
         message = render_morning_email(
             payload,
             sender=sender_address,
             recipient=recipient,
-            top_n=top_n,
         )
         if not self._log_store.claim(message.idempotency_key):
             return None

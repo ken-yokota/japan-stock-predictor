@@ -298,7 +298,6 @@ def send_persisted_morning_email(
     environment: EnvironmentSettings,
     *,
     prediction_date: date | None = None,
-    top_n: int = 5,
 ) -> EmailDelivery | None:
     """Claim in DB, commit, send, then record the provider result.
 
@@ -319,7 +318,6 @@ def send_persisted_morning_email(
             payload,
             sender=sender_address,
             recipient=recipient,
-            top_n=top_n,
         )
         repository = PredictionPipelineRepository(session)
         repository.create_email_log(

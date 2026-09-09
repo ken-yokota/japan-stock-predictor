@@ -789,3 +789,68 @@ def test_todo_hook_writes_nothing_on_malformed_input(tmp_path: Path) -> None:
 
     assert result.returncode == 0
     assert not target.exists()
+
+
+def _buy(ticker: str, predicted: float) -> EmailCandidate:
+    return EmailCandidate(
+        ticker=ticker,
+        company=f"銘柄{ticker}",
+        predicted_return=predicted,
+        probability_up=0.7,
+        signal="BUY",
+        readability_score=80,
+        profit_factor=1.5,
+        expectancy_jpy=1000,
+        positive_factors=(),
+        negative_factors=(),
+    )
+
+
+def test_every_published_buy_reaches_the_morning_mail() -> None:
+    """No truncation, at any count.
+
+    On 2026-09-09 the mail was headed 買い5銘柄 while the set held seven: the
+    renderer cut to a top five and then counted what it had displayed. Two
+    recommendations were invisible on the only surface read before the open,
+    so the operator could not have acted on them.
+    """
+
+    candidates = [_buy(str(7200 + index), 0.02 - index * 0.001) for index in range(9)]
+    message = render_morning_email(
+        _payload(*candidates), sender="s@example.com", recipient="r@example.com"
+    )
+    for candidate in candidates:
+        assert candidate.ticker in message.text, f"{candidate.ticker} was dropped"
+    assert "買い9銘柄" in message.subject
+
+
+def test_the_subject_counts_signals_issued_not_rows_displayed() -> None:
+    # The two must be the same number now. They were not, and the subject was
+    # reporting the smaller one.
+    for count in (1, 5, 6, 12):
+        candidates = [_buy(str(7200 + index), 0.01) for index in range(count)]
+        message = render_morning_email(
+            _payload(*candidates), sender="s@example.com", recipient="r@example.com"
+        )
+        assert f"買い{count}銘柄" in message.subject
+
+
+def test_non_buy_rows_are_still_excluded_from_the_count() -> None:
+    # Removing the cap must not turn every ticker into a recommendation.
+    buy = _buy("7203", 0.02)
+    hold = EmailCandidate(
+        ticker="7267",
+        company="銘柄7267",
+        predicted_return=0.001,
+        probability_up=0.4,
+        signal="NO_BUY",
+        readability_score=80,
+        profit_factor=1.0,
+        expectancy_jpy=0,
+        positive_factors=(),
+        negative_factors=(),
+    )
+    message = render_morning_email(
+        _payload(buy, hold), sender="s@example.com", recipient="r@example.com"
+    )
+    assert "買い1銘柄" in message.subject
