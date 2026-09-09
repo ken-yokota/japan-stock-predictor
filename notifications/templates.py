@@ -26,6 +26,7 @@ from notifications.report_layout import (
     distribution_bar,
     legend,
     page,
+    row,
     section,
     signed_percent,
     table,
@@ -761,13 +762,13 @@ def render_morning_email(
                 _reasons_text(selected),
             ]
         )
+        # The density figures and the per-family tables are not in the HTML any
+        # more. Both are on the dashboard now -- the density with one tab per
+        # model family, which the mail could never match -- and between them
+        # they were 283KB of a 407KB message, which Gmail was clipping. The
+        # plain-text part still carries the ASCII density at 2KB.
         html_body = (
             section(
-                "買い候補の確率密度分布",
-                _density_rows_html(selected),
-                DENSITY_NOTE,
-            )
-            + section(
                 "買い候補の分位点",
                 _quantile_rows_html(selected),
                 "P90は90%の確率で上回る水準、つまり下振れ側のリスクです。P50が中央値です。",
@@ -790,8 +791,9 @@ def render_morning_email(
             )
             + section(
                 "全モデル系統の予測",
-                _arms_html(selected, payload.method_thresholds),
-                ARM_NOTE + " " + ARM_WIDTH_NOTE,
+                _arms_summary_html(selected, payload.method_thresholds),
+                ARM_NOTE + " 手法ごとの予測値と区間はダッシュボードの"
+                "「手法別の確率密度分布」で見られます。",
             )
             + section(
                 "なぜその予測になったか",
@@ -816,10 +818,14 @@ def render_morning_email(
         )
     if everything:
         text_body += "\n\n\n■ 全銘柄の予測分布\n\n" + _alltable(everything)
+        # Kept in the text part, dropped from the HTML: the dashboard's Today
+        # page carries the same twenty-two rows in a table that sorts and pins.
         html_body += section(
-            "全銘柄の予測分布",
-            _all_rows_html(everything),
-            "買わなかった銘柄も載せています。欠けている銘柄は予測自体がありません。",
+            "全銘柄の予測",
+            "<p style='margin:0;font-size:14px'>"
+            f"買わなかった銘柄を含む全{len(everything)}銘柄は、"
+            "ダッシュボードの Today でご覧ください。"
+            "（このメールのテキスト版にも全銘柄の表が入っています）</p>",
         )
     warning_text = "\n".join(f"- {item}" for item in payload.warnings)
     methods = {
@@ -1039,6 +1045,46 @@ def _arm_rows_html(
             ("80%区間", "right"),
             ("幅の作り方", "left"),
         ],
+        rows,
+    )
+
+
+def _arms_summary_html(
+    items: Sequence[EmailCandidate], thresholds: dict[str, dict[str, object]]
+) -> str:
+    """How many families agreed, per candidate, in one line each.
+
+    The full ten-row table per candidate was 89KB on an eighteen-BUY morning
+    even after the styling moved to a stylesheet, and the mail has a hard
+    budget: Gmail clips past roughly 102KB, and a clipped mail hides the very
+    recommendations it exists to deliver. The operator asked on 2026-08-30 to
+    see what every family said, so the count stays here and the per-family
+    numbers move to the dashboard's method tabs rather than being dropped.
+    """
+
+    rows = []
+    for item in items:
+        arms = _arm_rows(item)
+        usable = [row for row in arms if row.get("status") == "OK"]
+        buys = sum(1 for row in usable if str(row.get("verdict", "")) == "買い")
+        rows.append(
+            row(
+                [
+                    cell(_name_html(item)),
+                    cell(f"{buys} / {len(usable)}", align="right"),
+                    cell(
+                        "—" if not usable else ", ".join(
+                            str(r.get("label", "")) for r in usable
+                            if str(r.get("verdict", "")) == "買い"
+                        ) or "なし",
+                        muted=True,
+                        nowrap=False,
+                    ),
+                ]
+            )
+        )
+    return table(
+        (("銘柄", "left"), ("買い判定", "right"), ("買いと答えた手法", "left")),
         rows,
     )
 

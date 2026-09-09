@@ -854,3 +854,48 @@ def test_non_buy_rows_are_still_excluded_from_the_count() -> None:
         _payload(buy, hold), sender="s@example.com", recipient="r@example.com"
     )
     assert "買い1銘柄" in message.subject
+
+
+def test_the_morning_mail_fits_inside_gmails_clipping_limit() -> None:
+    """A clipped mail hides the recommendations it exists to deliver.
+
+    Gmail truncates past roughly 102KB and offers a "view entire message"
+    link, which is exactly the failure removing top_n was meant to end: the
+    operator would again be reading a partial list of what to buy. The worst
+    morning on record carried eighteen BUY candidates, so that is the size the
+    budget has to hold.
+    """
+
+    candidates = [_buy(str(7200 + index), 0.02 - index * 0.0005) for index in range(18)]
+    message = render_morning_email(
+        _payload(*candidates), sender="s@example.com", recipient="r@example.com"
+    )
+    rendered = len(message.html.encode("utf-8"))
+    assert rendered < 102 * 1024, f"{rendered / 1024:.1f}KB would be clipped"
+
+
+def test_the_shared_table_styling_is_defined_once() -> None:
+    # It was inline on every cell: 136 characters of which 128 were style. The
+    # stylesheet is what makes the budget above reachable without deleting
+    # sections, so its absence should fail here rather than in the inbox.
+    message = render_morning_email(
+        _payload(_buy("7203", 0.02)),
+        sender="s@example.com",
+        recipient="r@example.com",
+    )
+    assert "<style>" in message.html
+    assert "<td class=" in message.html
+    assert "padding:9px 10px;border-bottom" not in message.html.split("</style>")[1]
+
+
+def test_every_family_is_still_counted_even_though_the_table_moved() -> None:
+    # The operator asked on 2026-08-30 to see what all ten families said. The
+    # per-family numbers are on the dashboard now; the agreement count must
+    # still be in the mail.
+    message = render_morning_email(
+        _payload(_buy("7203", 0.02)),
+        sender="s@example.com",
+        recipient="r@example.com",
+    )
+    assert "全モデル系統の予測" in message.html
+    assert "買い判定" in message.html

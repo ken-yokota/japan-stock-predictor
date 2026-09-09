@@ -65,6 +65,28 @@ def badge(label: str, tone: str = "wait") -> str:
     )
 
 
+# The shared table styling lives in one <style> block rather than on every
+# cell. It was inline, and at 136 characters per cell -- 128 of them style and
+# 8 of them the number -- a morning with eighteen BUY candidates rendered 625KB
+# of HTML. Gmail clips a message past roughly 102KB, so the mail was being
+# truncated and the operator could not see the recommendations it was carrying.
+#
+# If a client strips the block the tables still render, just unstyled, which is
+# the failure this can afford. The alternative considered was cutting sections
+# out of the mail; markup is the cheaper thing to lose.
+STYLESHEET = (
+    "<style>"
+    f".c{{padding:9px 10px;border-bottom:1px solid {LINE};"
+    f"white-space:nowrap;color:{INK};font-size:14px}}"
+    f".c.m{{color:{MUTED}}}.c.w{{white-space:normal}}"
+    ".c.r{text-align:right}.c.x{text-align:center}"
+    f".h{{padding:9px 10px;font-size:12px;letter-spacing:.04em;color:#fff;"
+    f"background:{HEAD};white-space:nowrap;font-weight:600}}"
+    ".h.r{text-align:right}.h.x{text-align:center}"
+    "</style>"
+)
+
+
 def cell(
     content: str,
     *,
@@ -72,12 +94,16 @@ def cell(
     muted: bool = False,
     nowrap: bool = True,
 ) -> str:
-    style = (
-        f"padding:9px 10px;border-bottom:1px solid {LINE};text-align:{align};"
-        f"{'white-space:nowrap;' if nowrap else ''}"
-        f"color:{MUTED if muted else INK};font-size:14px"
-    )
-    return f"<td style='{style}'>{content}</td>"
+    classes = "c"
+    if muted:
+        classes += " m"
+    if not nowrap:
+        classes += " w"
+    if align == "right":
+        classes += " r"
+    elif align == "center":
+        classes += " x"
+    return f"<td class='{classes}'>{content}</td>"
 
 
 def row(cells: Sequence[str], background: str = "#fff") -> str:
@@ -85,11 +111,12 @@ def row(cells: Sequence[str], background: str = "#fff") -> str:
 
 
 def _header_cell(name: str, align: str) -> str:
-    return (
-        f"<th style='padding:9px 10px;text-align:{align};font-size:12px;"
-        f"letter-spacing:.04em;color:#fff;background:{HEAD};"
-        f"white-space:nowrap;font-weight:600'>{html.escape(name)}</th>"
-    )
+    classes = "h"
+    if align == "right":
+        classes += " r"
+    elif align == "center":
+        classes += " x"
+    return f"<th class='{classes}'>{html.escape(name)}</th>"
 
 
 def table(
@@ -156,7 +183,8 @@ def page(title: str, lede: str, blocks: Sequence[str], footer: str) -> str:
     return (
         "<!doctype html><html><head><meta charset='utf-8'>"
         "<meta name='viewport' content='width=device-width,initial-scale=1'>"
-        f"</head><body style='margin:0;background:{BAND};padding:16px 0'>"
+        + STYLESHEET
+        + f"</head><body style='margin:0;background:{BAND};padding:16px 0'>"
         "<div style='max-width:680px;margin:0 auto;background:#fff;padding:22px;"
         "border-radius:10px;font-family:-apple-system,BlinkMacSystemFont,"
         '"Hiragino Sans","Yu Gothic",sans-serif;line-height:1.6\'>'
