@@ -443,7 +443,12 @@ def test_settings_match_specified_phase_one_defaults() -> None:
     assert config.provider.snapshot_freshness_minutes == 15
     assert config.model.training_window_jpx_sessions == 120
     assert config.signal.predicted_intraday_return_threshold == pytest.approx(0.003)
-    assert config.signal.probability_up_threshold == pytest.approx(0.60)
+    # Raised from 0.60 on 2026-09-10 to lift the profit factor: on the 110
+    # live trades settled to that date, 0.60 returned 0.931 and 0.625 returned
+    # 1.184. Pinned because it is a bet made on 18 sessions, not a tuning knob
+    # -- moving it should require editing this line and saying why.
+    # docs/research/2026-09-10-threshold.json.
+    assert config.signal.probability_up_threshold == pytest.approx(0.625)
     assert config.data_quality.max_feature_missing_ratio == pytest.approx(0.20)
     assert config.data_quality.threshold_status == "confirmed"
     # Zero since 2026-08-29, by the operator's instruction: no orders are

@@ -2,7 +2,29 @@ version: 1
 
 signal:
   predicted_intraday_return_threshold: 0.003
-  probability_up_threshold: 0.60
+  # Raised from 0.60 on 2026-09-10. On the 110 live trades settled between
+  # 2026-08-10 and 2026-09-10, the 0.60 rule returned a profit factor of 0.931
+  # -- gross 535,450 against 575,250, a net of -39,800 yen. The losses were not
+  # much more numerous than the wins so much as no smaller: 49.1% won, average
+  # win 9,916 against average loss 10,272.
+  #
+  # Sweeping this one number is the only lever a fixed open-to-close hold has,
+  # because the trade cannot be managed once it is on. 0.625 gives 1.184 on 94
+  # trades, and it is chosen over 0.650 (1.213) as the lower edge of a plateau
+  # rather than its peak: 0.625 through 0.675 all sit above 1.17, and the lower
+  # edge is the point in a plateau least likely to be a selection artifact.
+  # It also has the closest agreement between the two halves of the record
+  # (1.308 and 1.112) and keeps all 18 sessions.
+  #
+  # This is a bet, not a proven improvement. 18 sessions, the threshold chosen
+  # by looking at them, and a session bootstrap that puts the profit factor
+  # above 1 in only 65% of draws. What it does rest on: at 0.60, removing any
+  # one of 16 of the 18 sessions still leaves a profit factor below 1, so the
+  # old value is a measured loser rather than an unlucky one. Standing still
+  # was not the safe option. docs/research/2026-09-10-threshold.json records
+  # the whole sweep, and scripts/verify_threshold.py re-judges it on sessions
+  # after 2026-09-10 that this choice never saw.
+  probability_up_threshold: 0.625
   return_comparison: strict_greater_than
   probability_comparison: greater_than_or_equal
   insufficient_data_status: INSUFFICIENT_DATA

@@ -1,0 +1,190 @@
+{
+  "recorded_on": "2026-09-10",
+  "status": "immutable record - reruns must write a new file",
+  "change": {
+    "parameter": "signal.probability_up_threshold",
+    "from": 0.6,
+    "to": 0.625
+  },
+  "target": "profit factor = gross profit / gross loss, on the trades the buy rule takes",
+  "why_this_target": "Direction accuracy weights a 0.1% win the same as a 3% loss. The operator's measure is the money, and the record showed the problem was size as much as count: 49.1% of trades won, but the average loss (10,272 yen) exceeded the average win (9,916).",
+  "population": {
+    "window": "2026-08-10..2026-09-10",
+    "predictions_with_a_settled_outcome": 440,
+    "sessions": 20,
+    "trades_under_the_old_rule": 110,
+    "sessions_carrying_a_trade": 18,
+    "reconstruction": "predictions joined to the highest result_version of actual_results, then priced through simulate_intraday_trade at the configured lot and capital. Reproduces the stored BUY flag exactly: all 110 rows the rule takes carry signal='BUY', and no NO_BUY row clears both halves.",
+    "not_included": "5 BUYs from 2026-08-11 and 2026-08-28 never got an actual_results row, because AUTOMATION_ENABLED was left false and the evening pipeline did not run. Their outcome is not on the record, so they are absent from every arm equally rather than repaired."
+  },
+  "correction": {
+    "what_was_wrong": "An earlier pass in this session reported 174 trades, a profit factor of 0.840, and gross figures of 780,264 against 929,383. Those numbers were not the live record and the conclusions drawn from them were stated with more confidence than they had earned.",
+    "what_is_right": "110 trades, profit factor 0.931, gross 535,450 against 575,250.",
+    "why_it_matters": "The direction of the finding held -- 0.625 still beats 0.60 and the plateau is still there -- but the effect is smaller than reported and the evidence for it is weaker. The corrected sweep is below and supersedes the earlier one entirely."
+  },
+  "evidence": {
+    "sweep": [
+      {
+        "threshold": 0.55,
+        "trades": 143,
+        "sessions": 18,
+        "pf": 1.089,
+        "first_half_pf": 1.199,
+        "second_half_pf": 1.016,
+        "net_jpy": 61850,
+        "win_rate": 0.51
+      },
+      {
+        "threshold": 0.575,
+        "trades": 121,
+        "sessions": 18,
+        "pf": 0.945,
+        "first_half_pf": 1.08,
+        "second_half_pf": 0.859,
+        "net_jpy": -34100,
+        "win_rate": 0.496
+      },
+      {
+        "threshold": 0.6,
+        "trades": 110,
+        "sessions": 18,
+        "pf": 0.931,
+        "first_half_pf": 0.984,
+        "second_half_pf": 0.893,
+        "net_jpy": -39800,
+        "win_rate": 0.491
+      },
+      {
+        "threshold": 0.625,
+        "trades": 94,
+        "sessions": 18,
+        "pf": 1.184,
+        "first_half_pf": 1.308,
+        "second_half_pf": 1.112,
+        "net_jpy": 76900,
+        "win_rate": 0.521
+      },
+      {
+        "threshold": 0.65,
+        "trades": 82,
+        "sessions": 17,
+        "pf": 1.213,
+        "first_half_pf": 1.532,
+        "second_half_pf": 1.067,
+        "net_jpy": 78150,
+        "win_rate": 0.537
+      },
+      {
+        "threshold": 0.675,
+        "trades": 62,
+        "sessions": 15,
+        "pf": 1.171,
+        "first_half_pf": 1.852,
+        "second_half_pf": 0.959,
+        "net_jpy": 52050,
+        "win_rate": 0.597
+      },
+      {
+        "threshold": 0.7,
+        "trades": 47,
+        "sessions": 11,
+        "pf": 1.015,
+        "first_half_pf": 3.258,
+        "second_half_pf": 0.778,
+        "net_jpy": 3400,
+        "win_rate": 0.553
+      },
+      {
+        "threshold": 0.725,
+        "trades": 29,
+        "sessions": 9,
+        "pf": 1.214,
+        "first_half_pf": 2.334,
+        "second_half_pf": 1.055,
+        "net_jpy": 25500,
+        "win_rate": 0.586
+      },
+      {
+        "threshold": 0.75,
+        "trades": 21,
+        "sessions": 9,
+        "pf": 1.024,
+        "first_half_pf": 1.889,
+        "second_half_pf": 0.877,
+        "net_jpy": 2400,
+        "win_rate": 0.524
+      }
+    ],
+    "why_0625": "0.625 through 0.675 is a plateau rather than a peak, which is the more believable shape, and 0.625 is its lower edge -- the point in it least likely to be sitting on a selection artifact. Within the plateau it has the closest agreement between the two halves of the record (1.308 against 1.112, where 0.675 splits 1.852 against 0.959), and it keeps all 18 trading sessions and 94 of the 110 trades.",
+    "why_not_0650": "0.650 is a close second and is arguably the more robust point: profit factor 1.213, and no single session's removal drops it below 1. It was not chosen because its two halves are further apart, it loses a session, and it takes 12 fewer trades for 0.03 of profit factor. Both sit in the same plateau; the difference between them is not resolvable on 18 sessions.",
+    "leave_one_session_out": {
+      "at_0600": {
+        "range": [
+          0.738,
+          1.278
+        ],
+        "sessions_whose_removal_drops_it_below_one": 16
+      },
+      "at_0625": {
+        "range": [
+          0.9835,
+          1.6652
+        ],
+        "sessions_whose_removal_drops_it_below_one": 2,
+        "worst_without": "2026-08-20"
+      },
+      "at_0650": {
+        "range": [
+          1.037,
+          1.809
+        ],
+        "sessions_whose_removal_drops_it_below_one": 0
+      },
+      "reads_as": "0.625 does not depend on any single morning: removing the best one leaves 0.984. 0.60 is the opposite -- 16 of 18 removals leave it below 1, which is a consistently losing rule rather than an unlucky one."
+    },
+    "declined_band": {
+      "band": "0.600 <= probability_up < 0.625",
+      "trades": 16,
+      "sessions": 10,
+      "net_jpy": -116700,
+      "median_session_jpy": -10275,
+      "wilcoxon_p_one_sided_less": 0.0654,
+      "reads_as": "The band the change gives up lost money on the record, but at p=0.065 over 10 sessions that is not significant even one-sided. It is the direction of the bet, not proof of it."
+    },
+    "bootstrap_at_0625": {
+      "method": "sessions resampled whole, 4000 draws",
+      "p05": 0.516,
+      "p50": 1.212,
+      "p95": 2.71,
+      "share_above_one": 0.646,
+      "reads_as": "The honest width of the estimate. Two-thirds of resamples put the profit factor above 1, which is a lean, not a finding. Reported because it is the number that argues most strongly against the change."
+    },
+    "reproduced_by": "scripts/verify_threshold.py, run against the record with recorded_on moved back so the whole window is scored. It returns exactly these figures, which is what makes the forward check a continuation of this measurement rather than a second, differently computed one."
+  },
+  "rejected_alternatives": {
+    "predicted_return >= 1.5%": "Collapsed across the halves of the record and rested on a single session. Not stable.",
+    "P90 downside filter": "Only about a third of predictions carry a stored distribution, and the profit factor moved without pattern across thresholds.",
+    "narrow distribution filter": "Profit factor fell as the band narrowed. Confidence in the width did not predict the outcome."
+  },
+  "known_limits": [
+    "18 sessions carrying a trade. The threshold was chosen by looking at them, so this is in-sample selection and 1.184 is optimistic by an unknown amount.",
+    "Nine thresholds were examined. A plateau argues against luck but does not remove it.",
+    "The session bootstrap puts the profit factor above 1 in only 65% of draws. On this evidence alone the change would not clear any conventional bar.",
+    "The sweep is not monotonic -- 0.550 beats both 0.575 and 0.600 -- which says the relationship between the probability and the money is noisy rather than clean, and that some of the plateau is sampling noise.",
+    "Fewer trades: 110 to 94. Profit factor rises while exposure falls, which is the intended trade but is not free.",
+    "The rule cannot manage a position. Everything here is selection at 08:30 and nothing else."
+  ],
+  "verdict_as_shipped": "A bet, taken deliberately, on the best evidence available: 0.60 is a measured loser on this record (16 of 18 leave-one-out removals leave it below 1) and standing still is not the safe option. It is not an established improvement, and nothing here should be reported as one until the forward check has 20 sessions.",
+  "forward_check": {
+    "rule": "Re-measure on sessions strictly after 2026-09-10. The choice never saw them.",
+    "baseline_threshold": 0.6,
+    "adopted_threshold": 0.625,
+    "return_threshold": 0.003,
+    "both_conditions": "The buy rule is an AND: predicted_intraday_return >= 0.003 AND probability_up >= the threshold. Only the probability half moved. Scoring the probability half alone would measure a rule the system does not run.",
+    "minimum_sessions_for_verdict": 20,
+    "no_resweep": "Only these two thresholds may be scored. Sweeping again on the new sessions and adopting the winner would repeat on fresh data exactly the selection this check exists to audit.",
+    "test": "Raising the threshold only removes trades, so the two arms differ by exactly the trades in the 0.600-0.625 band. The question is therefore whether that band loses money: Wilcoxon signed-rank on its per-session net P&L, one observation per session because 22 tickers on one morning share a market.",
+    "why_it_is_measurable": "The close pipeline writes an actual result for every prediction, not only the ones that became BUYs. The trades the raised threshold declines stay on the record with their open and close, so the 0.60 arm remains reconstructible for as long as the rows exist.",
+    "script": "scripts/verify_threshold.py"
+  }
+}
