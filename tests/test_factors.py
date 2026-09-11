@@ -67,7 +67,10 @@ def test_configured_rule_is_read_from_the_repository_config() -> None:
 
     assert rule is not None
     assert rule.return_threshold == pytest.approx(0.003)
-    assert rule.probability_threshold == pytest.approx(0.60)
+    # Matches config/trading.yaml, raised from 0.60 on 2026-09-10. The two
+    # must agree: the buy rule the dashboard and the mail describe is the one
+    # the pipeline applies, and a drift between them would be invisible.
+    assert rule.probability_threshold == pytest.approx(0.625)
     assert rule.lot_size == 100
 
 
