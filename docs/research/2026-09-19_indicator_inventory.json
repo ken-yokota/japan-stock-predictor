@@ -1,0 +1,1062 @@
+[
+  {
+    "indicator": "sp500",
+    "symbol": "^GSPC",
+    "provider": "yahoo_finance",
+    "market": "US_INDEX",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": false,
+    "rows": 585,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 585
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 585,
+      "historical_availability_estimated": 585,
+      "corrected_revision": 10
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free",
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "nasdaq100",
+    "symbol": "^NDX",
+    "provider": "yahoo_finance",
+    "market": "US_INDEX",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": false,
+    "rows": 585,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 585
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 585,
+      "historical_availability_estimated": 585,
+      "corrected_revision": 10
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free",
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "dow",
+    "symbol": "^DJI",
+    "provider": "yahoo_finance",
+    "market": "US_INDEX",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": false,
+    "rows": 585,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 585
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 585,
+      "historical_availability_estimated": 585,
+      "corrected_revision": 10
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free",
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "vix",
+    "symbol": "^VIX",
+    "provider": "yahoo_finance",
+    "market": "US_INDEX",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": true,
+    "rows": 575,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 575
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 575,
+      "historical_availability_estimated": 575
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "usdjpy",
+    "symbol": "JPY=X",
+    "provider": "yahoo_finance",
+    "market": "FOREX",
+    "timezone": "UTC",
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": true,
+    "rows": 539,
+    "history_start": "2024-08-01",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 539
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 539,
+      "historical_availability_estimated": 539,
+      "ohlc_bound_dropped_high": 18,
+      "ohlc_bound_dropped_low": 16
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "yahoo_finance",
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "eurjpy",
+    "symbol": "EURJPY=X",
+    "provider": "yahoo_finance",
+    "market": "FOREX",
+    "timezone": "UTC",
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": true,
+    "rows": 539,
+    "history_start": "2024-08-01",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 539
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 539,
+      "historical_availability_estimated": 539,
+      "ohlc_bound_dropped_high": 16,
+      "ohlc_bound_dropped_low": 14
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "yahoo_finance",
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "dollar_index",
+    "symbol": "DX-Y.NYB",
+    "provider": "yahoo_finance",
+    "market": "FUTURES",
+    "timezone": "UTC",
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": true,
+    "rows": 544,
+    "history_start": "2024-08-01",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 544
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 544,
+      "historical_availability_estimated": 544,
+      "corrected_revision": 10
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "yahoo_finance",
+      "eodhd_free",
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "nikkei225_futures",
+    "symbol": "NIY=F",
+    "provider": "yahoo_finance",
+    "market": "FUTURES",
+    "timezone": "UTC",
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": true,
+    "rows": 546,
+    "history_start": "2024-08-01",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 546
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 546,
+      "historical_availability_estimated": 546,
+      "continuous_futures_contract": 546,
+      "corrected_revision": 12
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "yahoo_finance",
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "sp500_futures",
+    "symbol": "ES=F",
+    "provider": "yahoo_finance",
+    "market": "FUTURES",
+    "timezone": "UTC",
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": true,
+    "rows": 547,
+    "history_start": "2024-08-01",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 547
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 547,
+      "historical_availability_estimated": 547,
+      "continuous_futures_contract": 547,
+      "corrected_revision": 13
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "yahoo_finance",
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "nasdaq100_futures",
+    "symbol": "NQ=F",
+    "provider": "yahoo_finance",
+    "market": "FUTURES",
+    "timezone": "UTC",
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": true,
+    "rows": 547,
+    "history_start": "2024-08-01",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 547
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 547,
+      "historical_availability_estimated": 547,
+      "continuous_futures_contract": 547,
+      "corrected_revision": 13
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "yahoo_finance",
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "gold",
+    "symbol": "GC=F",
+    "provider": "yahoo_finance",
+    "market": "FUTURES",
+    "timezone": "UTC",
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": false,
+    "rows": 570,
+    "history_start": "2024-08-01",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 547,
+      "DELAYED": 23
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 570,
+      "historical_availability_estimated": 547,
+      "continuous_futures_contract": 570,
+      "corrected_revision": 13,
+      "delay_not_guaranteed": 23
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "yahoo_finance",
+      "eodhd_free",
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "us_2y_yield",
+    "symbol": null,
+    "provider": "us_treasury",
+    "market": "US_TREASURY",
+    "timezone": "America/New_York",
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": true,
+    "rows": 573,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "OFFICIAL": 573
+    },
+    "quality_flags": {
+      "official_us_treasury": 573,
+      "published_schedule_estimate": 573
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "us_treasury"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "us_10y_yield",
+    "symbol": null,
+    "provider": "us_treasury",
+    "market": "US_TREASURY",
+    "timezone": "America/New_York",
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": true,
+    "rows": 573,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "OFFICIAL": 573
+    },
+    "quality_flags": {
+      "official_us_treasury": 573,
+      "published_schedule_estimate": 573
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "us_treasury"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "us_30y_yield",
+    "symbol": null,
+    "provider": "us_treasury",
+    "market": "US_TREASURY",
+    "timezone": "America/New_York",
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": true,
+    "rows": 573,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "OFFICIAL": 573
+    },
+    "quality_flags": {
+      "official_us_treasury": 573,
+      "published_schedule_estimate": 573
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "us_treasury"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "us_10y_minus_2y_spread",
+    "symbol": null,
+    "provider": "internal",
+    "market": null,
+    "timezone": null,
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": false,
+    "rows": 573,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "OFFICIAL": 573
+    },
+    "quality_flags": {
+      "official_us_treasury": 573,
+      "published_schedule_estimate": 573,
+      "derived_from_treasury_yields": 573,
+      "ten_year_minus_two_year_spread": 573
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "baltic_dry_index",
+    "symbol": "BDRY",
+    "provider": "yahoo_finance",
+    "market": "US",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": true,
+    "rows": 584,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 584
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 584,
+      "historical_availability_estimated": 584,
+      "corrected_revision": 9,
+      "ohlc_bound_dropped_low": 4,
+      "ohlc_bound_dropped_high": 4
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free",
+      "eodhd_free",
+      null
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "baltic_capesize_index",
+    "symbol": null,
+    "provider": "eodhd_free",
+    "market": null,
+    "timezone": null,
+    "market_close": null,
+    "configured_availability_0830": "pending",
+    "enabled": true,
+    "rows": 0,
+    "history_start": null,
+    "history_end": null,
+    "quality_counts": {},
+    "quality_flags": {},
+    "missing_close_rate": null,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      null
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "baltic_panamax_index",
+    "symbol": null,
+    "provider": "eodhd_free",
+    "market": null,
+    "timezone": null,
+    "market_close": null,
+    "configured_availability_0830": "pending",
+    "enabled": true,
+    "rows": 0,
+    "history_start": null,
+    "history_end": null,
+    "quality_counts": {},
+    "quality_flags": {},
+    "missing_close_rate": null,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      null
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "fxi",
+    "symbol": "FXI",
+    "provider": "yahoo_finance",
+    "market": "US",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": true,
+    "rows": 724,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 724
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 724,
+      "historical_availability_estimated": 724,
+      "corrected_revision": 149
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "mchi",
+    "symbol": "MCHI",
+    "provider": "yahoo_finance",
+    "market": "US",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": false,
+    "rows": 725,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 725
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 725,
+      "historical_availability_estimated": 725,
+      "corrected_revision": 150
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "copper",
+    "symbol": "HG=F",
+    "provider": "yahoo_finance",
+    "market": "FUTURES",
+    "timezone": "UTC",
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": true,
+    "rows": 568,
+    "history_start": "2024-08-01",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 547,
+      "DELAYED": 21
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 568,
+      "historical_availability_estimated": 547,
+      "continuous_futures_contract": 568,
+      "corrected_revision": 13,
+      "delay_not_guaranteed": 21
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "yahoo_finance",
+      "eodhd_free",
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "iron_ore",
+    "symbol": null,
+    "provider": "eodhd_free",
+    "market": null,
+    "timezone": null,
+    "market_close": null,
+    "configured_availability_0830": "pending",
+    "enabled": true,
+    "rows": 0,
+    "history_start": null,
+    "history_end": null,
+    "quality_counts": {},
+    "quality_flags": {},
+    "missing_close_rate": null,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      null
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "wti",
+    "symbol": "CL=F",
+    "provider": "yahoo_finance",
+    "market": "FUTURES",
+    "timezone": "UTC",
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": true,
+    "rows": 570,
+    "history_start": "2024-08-01",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 547,
+      "DELAYED": 23
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 570,
+      "historical_availability_estimated": 547,
+      "continuous_futures_contract": 570,
+      "corrected_revision": 13,
+      "delay_not_guaranteed": 23
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "yahoo_finance",
+      "eodhd_free",
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "brent",
+    "symbol": "BZ=F",
+    "provider": "yahoo_finance",
+    "market": "FUTURES",
+    "timezone": "UTC",
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": true,
+    "rows": 563,
+    "history_start": "2024-08-01",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 547,
+      "DELAYED": 16
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 563,
+      "historical_availability_estimated": 547,
+      "continuous_futures_contract": 563,
+      "corrected_revision": 13,
+      "delay_not_guaranteed": 16
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "yahoo_finance",
+      "eodhd_free",
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "audjpy",
+    "symbol": "AUDJPY=X",
+    "provider": "yahoo_finance",
+    "market": "FOREX",
+    "timezone": "UTC",
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": true,
+    "rows": 539,
+    "history_start": "2024-08-01",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 539
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 539,
+      "historical_availability_estimated": 539,
+      "ohlc_bound_dropped_low": 15,
+      "ohlc_bound_dropped_high": 14
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "yahoo_finance",
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "us_shipping_equity_proxy",
+    "symbol": null,
+    "provider": "eodhd_free",
+    "market": null,
+    "timezone": null,
+    "market_close": null,
+    "configured_availability_0830": "pending",
+    "enabled": true,
+    "rows": 0,
+    "history_start": null,
+    "history_end": null,
+    "quality_counts": {},
+    "quality_flags": {},
+    "missing_close_rate": null,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "xle",
+    "symbol": "XLE",
+    "provider": "yahoo_finance",
+    "market": "US",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": true,
+    "rows": 704,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 704
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 704,
+      "historical_availability_estimated": 704,
+      "corrected_revision": 129,
+      "ohlc_bound_dropped_high": 1
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "oih",
+    "symbol": "OIH",
+    "provider": "yahoo_finance",
+    "market": "US",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": true,
+    "rows": 616,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 616
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 616,
+      "historical_availability_estimated": 616,
+      "corrected_revision": 41,
+      "ohlc_bound_dropped_high": 2
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "natural_gas",
+    "symbol": "NG=F",
+    "provider": "yahoo_finance",
+    "market": "FUTURES",
+    "timezone": "UTC",
+    "market_close": null,
+    "configured_availability_0830": "conditional",
+    "enabled": true,
+    "rows": 570,
+    "history_start": "2024-08-01",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 547,
+      "DELAYED": 23
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 570,
+      "historical_availability_estimated": 547,
+      "continuous_futures_contract": 570,
+      "corrected_revision": 13,
+      "delay_not_guaranteed": 23
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "yahoo_finance",
+      "eodhd_free",
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "xli",
+    "symbol": "XLI",
+    "provider": "yahoo_finance",
+    "market": "US",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": true,
+    "rows": 781,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 781
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 781,
+      "historical_availability_estimated": 781,
+      "corrected_revision": 206
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "ewy",
+    "symbol": "EWY",
+    "provider": "yahoo_finance",
+    "market": "US",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": true,
+    "rows": 587,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 587
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 587,
+      "historical_availability_estimated": 587,
+      "corrected_revision": 12
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "toyota_adr",
+    "symbol": "TM",
+    "provider": "yahoo_finance",
+    "market": "US",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": false,
+    "rows": 586,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 586
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 586,
+      "historical_availability_estimated": 586,
+      "corrected_revision": 11,
+      "ohlc_bound_dropped_high": 3,
+      "ohlc_bound_dropped_low": 1
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "honda_adr",
+    "symbol": "HMC",
+    "provider": "yahoo_finance",
+    "market": "US",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": false,
+    "rows": 598,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 598
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 598,
+      "historical_availability_estimated": 598,
+      "corrected_revision": 23,
+      "ohlc_bound_dropped_high": 3,
+      "ohlc_bound_dropped_low": 1
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "xlf",
+    "symbol": "XLF",
+    "provider": "yahoo_finance",
+    "market": "US",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": true,
+    "rows": 779,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 779
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 779,
+      "historical_availability_estimated": 779,
+      "corrected_revision": 204
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "kre",
+    "symbol": "KRE",
+    "provider": "yahoo_finance",
+    "market": "US",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": true,
+    "rows": 809,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 809
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 809,
+      "historical_availability_estimated": 809,
+      "corrected_revision": 234
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "mufg_adr",
+    "symbol": "MUFG",
+    "provider": "yahoo_finance",
+    "market": "US",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": false,
+    "rows": 586,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 586
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 586,
+      "historical_availability_estimated": 586,
+      "corrected_revision": 11,
+      "ohlc_bound_dropped_high": 1
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  },
+  {
+    "indicator": "smfg_adr",
+    "symbol": "SMFG",
+    "provider": "yahoo_finance",
+    "market": "US",
+    "timezone": "America/New_York",
+    "market_close": "16:00",
+    "configured_availability_0830": "available",
+    "enabled": false,
+    "rows": 597,
+    "history_start": "2024-06-03",
+    "history_end": "2026-09-17",
+    "quality_counts": {
+      "FREE_UNVERIFIED": 597
+    },
+    "quality_flags": {
+      "yahoo_unofficial": 597,
+      "historical_availability_estimated": 597,
+      "corrected_revision": 22,
+      "ohlc_bound_dropped_low": 2,
+      "ohlc_bound_dropped_high": 1
+    },
+    "missing_close_rate": 0.0,
+    "missing_expected_sessions_rate": null,
+    "stale_rate": null,
+    "fallback": [
+      "eodhd_free"
+    ],
+    "evidence": "STORED_DATA_AUDIT_NOT_LIVE_PROVIDER_PROBE"
+  }
+]

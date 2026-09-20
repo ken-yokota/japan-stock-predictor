@@ -50,24 +50,32 @@ def service_from_environment() -> DashboardQueryService | None:
         return None
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_database_health(_service: DashboardQueryService) -> QueryResult:
-    return _service.database_health()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_database_health(service: DashboardQueryService) -> QueryResult:
+    return service.database_health()
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_latest_run(_service: DashboardQueryService) -> QueryResult:
-    return _service.latest_run()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_latest_run(service: DashboardQueryService) -> QueryResult:
+    return service.latest_run()
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_prediction_set(_service: DashboardQueryService) -> QueryResult:
-    return _service.latest_prediction_set()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_prediction_set(service: DashboardQueryService) -> QueryResult:
+    return service.latest_prediction_set()
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
 def cached_day_scoreboard(
-    _service: DashboardQueryService, prediction_date: str
+    service: DashboardQueryService, prediction_date: str
 ) -> tuple[int, int, int, float] | None:
     """Return (buy count, settled buys, correct buys, net yen) for one day.
 
@@ -75,7 +83,7 @@ def cached_day_scoreboard(
     banner degrades to "未確定" rather than showing a zero that reads as a loss.
     """
 
-    predictions = _service.today_predictions()
+    predictions = service.today_predictions()
     if not predictions.ready or not predictions.rows:
         return None
     buys = [
@@ -87,7 +95,7 @@ def cached_day_scoreboard(
     if not buys:
         return 0, 0, 0, 0.0
 
-    actuals = _service.actual_results()
+    actuals = service.actual_results()
     if not actuals.ready:
         return len(buys), 0, 0, 0.0
     realized = {
@@ -103,7 +111,7 @@ def cached_day_scoreboard(
     # construction, but the operator asked for the plain statement.
     correct = sum(1 for row in settled if float(realized[row["prediction_id"]]) > 0)
 
-    trades = _service.simulated_trades()
+    trades = service.simulated_trades()
     settled_ids = {row["prediction_id"] for row in settled}
     profit = 0.0
     if trades.ready:
@@ -115,13 +123,15 @@ def cached_day_scoreboard(
     return len(buys), len(settled), correct, profit
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
 def cached_latest_settled_day(
-    _service: DashboardQueryService,
+    service: DashboardQueryService,
 ) -> tuple[str, int, int, float] | None:
     """Return (date, buys, correct buys, net yen) for the newest settled day."""
 
-    history = _service.published_prediction_history(None)
+    history = service.published_prediction_history(None)
     if not history.ready:
         return None
     settled = [
@@ -147,83 +157,113 @@ def cached_latest_settled_day(
     return day, len(buys), correct, profit
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_today_predictions(_service: DashboardQueryService) -> QueryResult:
-    return _service.today_predictions()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_today_predictions(service: DashboardQueryService) -> QueryResult:
+    return service.today_predictions()
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_feature_completeness(_service: DashboardQueryService) -> QueryResult:
-    return _service.feature_completeness()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_feature_completeness(service: DashboardQueryService) -> QueryResult:
+    return service.feature_completeness()
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
 def cached_prediction_history_window(
-    _service: DashboardQueryService, since: str | None
+    service: DashboardQueryService, since: str | None
 ) -> QueryResult:
-    return _service.published_prediction_history(since)
+    return service.published_prediction_history(since)
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_prediction_history(_service: DashboardQueryService) -> QueryResult:
-    return _service.prediction_history()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_prediction_history(service: DashboardQueryService) -> QueryResult:
+    return service.prediction_history()
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_actual_results(_service: DashboardQueryService) -> QueryResult:
-    return _service.actual_results()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_actual_results(service: DashboardQueryService) -> QueryResult:
+    return service.actual_results()
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_metrics(_service: DashboardQueryService) -> QueryResult:
-    return _service.latest_metrics()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_metrics(service: DashboardQueryService) -> QueryResult:
+    return service.latest_metrics()
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_coefficients(_service: DashboardQueryService) -> QueryResult:
-    return _service.model_coefficients()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_coefficients(service: DashboardQueryService) -> QueryResult:
+    return service.model_coefficients()
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_trades(_service: DashboardQueryService) -> QueryResult:
-    return _service.simulated_trades()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_trades(service: DashboardQueryService) -> QueryResult:
+    return service.simulated_trades()
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_oos_scenario_rows(_service: DashboardQueryService) -> QueryResult:
-    return _service.oos_scenario_rows()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_oos_scenario_rows(service: DashboardQueryService) -> QueryResult:
+    return service.oos_scenario_rows()
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
 def cached_coefficient_history(
-    _service: DashboardQueryService, ticker: str, task: str
+    service: DashboardQueryService, ticker: str, task: str
 ) -> QueryResult:
-    return _service.coefficient_history(ticker=ticker, task=task)
+    return service.coefficient_history(ticker=ticker, task=task)
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_applied_buy_thresholds(_service: DashboardQueryService) -> QueryResult:
-    return _service.applied_buy_thresholds()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_applied_buy_thresholds(service: DashboardQueryService) -> QueryResult:
+    return service.applied_buy_thresholds()
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_selections(_service: DashboardQueryService) -> QueryResult:
-    return _service.provider_selections()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_selections(service: DashboardQueryService) -> QueryResult:
+    return service.provider_selections()
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_batches(_service: DashboardQueryService) -> QueryResult:
-    return _service.ingestion_batches()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_batches(service: DashboardQueryService) -> QueryResult:
+    return service.ingestion_batches()
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_run_steps(_service: DashboardQueryService) -> QueryResult:
-    return _service.run_steps()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_run_steps(service: DashboardQueryService) -> QueryResult:
+    return service.run_steps()
 
 
-@st.cache_resource(ttl=_CACHE_TTL_SECONDS, show_spinner=False)
-def cached_raw_summary(_service: DashboardQueryService) -> QueryResult:
-    return _service.raw_data_summary()
+@st.cache_resource(
+    ttl=_CACHE_TTL_SECONDS, show_spinner=False, hash_funcs={DashboardQueryService: id}
+)
+def cached_raw_summary(service: DashboardQueryService) -> QueryResult:
+    return service.raw_data_summary()
 
 
 def configure_page(title: str, icon: str) -> None:

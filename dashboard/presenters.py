@@ -493,7 +493,7 @@ def today_table_rows(
                 # is the cheaper of the two. A real fix needs a per-column
                 # format on display_rows, which is a shared signature this
                 # deployment cannot safely widen.
-                "順位": prediction.get("rank") or "—",
+                "順位": prediction.get("rank"),
                 "銘柄": stock_label(ticker),
                 "業種": sector_label(ticker),
                 "状態": safe_text(prediction.get("status", "—")),

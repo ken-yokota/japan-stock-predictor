@@ -341,3 +341,25 @@ def test_single_fit_cannot_show_a_new_top_entry() -> None:
     ]
 
     assert newly_influential_features(rows) == []
+
+
+def test_factor_appearance_handles_multiple_fits_with_same_training_date():
+    rows = [
+        {
+            "model_run_id": model,
+            "training_end": "2026-09-18",
+            "feature_name": name,
+            "coefficient": value,
+        }
+        for model, coefficients in [
+            ("a", {"x": 1.0, "y": 0.0}),
+            ("b", {"x": 0.1, "y": 2.0}),
+        ]
+        for name, value in coefficients.items()
+    ]
+    influential = newly_influential_features(rows, top=1)
+    active = newly_active_features(rows)
+    assert influential[0]["feature"] == "y"
+    assert influential[0]["coefficient"] == 2.0
+    assert influential[0]["rank"] == 1
+    assert active[0]["coefficient"] == 2.0

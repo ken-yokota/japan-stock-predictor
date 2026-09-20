@@ -234,15 +234,25 @@ class DayResult:
         return tuple(str(item) for item in raw)
 
 
-def load_day_result(engine: Engine, day: date) -> DayResult | None:
+def load_day_result(
+    engine: Engine, day: date, *, prediction_set_id: str | None = None
+) -> DayResult | None:
     """Read one day's settled rows, or ``None`` when the day has not settled."""
 
+    query = RESULT_QUERY
+    parameters: dict[str, object] = {"day": day, "strategy": STRATEGY_VERSION}
+    if prediction_set_id is not None:
+        query = query.replace(
+            "WHERE ps.prediction_date = :day",
+            "WHERE ps.prediction_date = :day AND ps.prediction_set_id = :set_id",
+        )
+        parameters["set_id"] = prediction_set_id
     with engine.connect() as connection:
         rows = [
             dict(item)
             for item in connection.execute(
-                text(RESULT_QUERY),
-                {"day": day, "strategy": STRATEGY_VERSION},
+                text(query),
+                parameters,
             ).mappings()
         ]
     return DayResult(day, tuple(rows)) if rows else None

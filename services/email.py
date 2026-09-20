@@ -188,7 +188,11 @@ def _project_prediction_set(
     candidates: list[EmailCandidate] = []
     for row in rows:
         metric = _latest_metric(session, row.ticker, prediction_set.prediction_date)
-        positive, negative = _factors(session, row.regression_model_run_id)
+        # These are today's standardized coefficient x feature contributions,
+        # calculated and frozen with the prediction. Coefficient sign alone
+        # does not determine whether today's observation pushes up or down.
+        positive = tuple(row.positive_factors or ())
+        negative = tuple(row.negative_factors or ())
         distribution = curves[row.ticker]
         density: tuple[float, ...] = ()
         if distribution is not None and scale > 0.0:

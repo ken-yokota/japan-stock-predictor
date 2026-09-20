@@ -1,0 +1,350 @@
+[
+  {
+    "page": "pages/10_Preview.py",
+    "status": "PASS",
+    "tabs": [],
+    "selectboxes": [],
+    "exceptions": [],
+    "selector_tests": []
+  },
+  {
+    "page": "pages/11_All_Methods.py",
+    "status": "PASS",
+    "tabs": [
+      "2026-08-07 〜 2026-08-28",
+      "Ridge回帰",
+      "ElasticNet回帰",
+      "MLP（ニューラルネット）",
+      "Lasso回帰",
+      "XGBoost",
+      "LightGBM",
+      "ランダムフォレスト",
+      "Transformer",
+      "LSTM",
+      "P50 > 0.3%",
+      "P50 > 0.3% かつ P(上昇)>=60%",
+      "P90 > 0（下振れでもプラス）",
+      "上振れ10% > 0.3%（対照・悪いはず）"
+    ],
+    "selectboxes": [],
+    "exceptions": [],
+    "selector_tests": []
+  },
+  {
+    "page": "pages/1_Today.py",
+    "status": "PASS",
+    "tabs": [
+      "本番（分位点回帰）",
+      "Ridge回帰",
+      "ランダムフォレスト",
+      "LightGBM",
+      "XGBoost",
+      "Lasso回帰",
+      "ElasticNet回帰",
+      "MLP（ニューラルネット）"
+    ],
+    "selectboxes": [
+      "銘柄"
+    ],
+    "exceptions": [],
+    "selector_tests": [
+      {
+        "label": "銘柄",
+        "status": "PASS"
+      }
+    ]
+  },
+  {
+    "page": "pages/2_History.py",
+    "status": "PASS",
+    "tabs": [
+      "直近1週間",
+      "本番（分位点回帰）",
+      "Ridge回帰",
+      "ランダムフォレスト",
+      "LightGBM",
+      "XGBoost",
+      "Lasso回帰",
+      "ElasticNet回帰",
+      "MLP（ニューラルネット）",
+      "直近1ヶ月",
+      "本番（分位点回帰）",
+      "Ridge回帰",
+      "ランダムフォレスト",
+      "LightGBM",
+      "XGBoost",
+      "Lasso回帰",
+      "ElasticNet回帰",
+      "MLP（ニューラルネット）",
+      "全期間",
+      "本番（分位点回帰）",
+      "Ridge回帰",
+      "ランダムフォレスト",
+      "LightGBM",
+      "XGBoost",
+      "Lasso回帰",
+      "ElasticNet回帰",
+      "MLP（ニューラルネット）"
+    ],
+    "selectboxes": [
+      "予測日",
+      "銘柄",
+      "日付",
+      "銘柄を選ぶ",
+      "予測日",
+      "銘柄",
+      "日付",
+      "銘柄を選ぶ",
+      "予測日",
+      "銘柄",
+      "日付",
+      "銘柄を選ぶ"
+    ],
+    "exceptions": [],
+    "selector_tests": [
+      {
+        "label": "予測日",
+        "status": "PASS"
+      },
+      {
+        "label": "銘柄",
+        "status": "PASS"
+      },
+      {
+        "label": "日付",
+        "status": "PASS"
+      },
+      {
+        "label": "銘柄を選ぶ",
+        "status": "PASS"
+      },
+      {
+        "label": "予測日",
+        "status": "PASS"
+      },
+      {
+        "label": "銘柄",
+        "status": "PASS"
+      },
+      {
+        "label": "日付",
+        "status": "PASS"
+      },
+      {
+        "label": "銘柄を選ぶ",
+        "status": "PASS"
+      },
+      {
+        "label": "予測日",
+        "status": "PASS"
+      },
+      {
+        "label": "銘柄",
+        "status": "PASS"
+      },
+      {
+        "label": "日付",
+        "status": "PASS"
+      },
+      {
+        "label": "銘柄を選ぶ",
+        "status": "PASS"
+      }
+    ]
+  },
+  {
+    "page": "pages/3_Stock_Detail.py",
+    "status": "PASS",
+    "tabs": [],
+    "selectboxes": [
+      "銘柄"
+    ],
+    "exceptions": [],
+    "selector_tests": [
+      {
+        "label": "銘柄",
+        "status": "PASS"
+      }
+    ]
+  },
+  {
+    "page": "pages/4_Factor_Analysis.py",
+    "status": "FAIL",
+    "tabs": [],
+    "selectboxes": [
+      "銘柄",
+      "集計期間"
+    ],
+    "exceptions": [
+      "cannot convert the series to <class 'float'>"
+    ],
+    "selector_tests": [
+      {
+        "label": "銘柄",
+        "status": "FAIL"
+      },
+      {
+        "label": "集計期間",
+        "status": "FAIL"
+      }
+    ]
+  },
+  {
+    "page": "pages/5_Sector_Analysis.py",
+    "status": "PASS",
+    "tabs": [],
+    "selectboxes": [
+      "業種"
+    ],
+    "exceptions": [],
+    "selector_tests": [
+      {
+        "label": "業種",
+        "status": "PASS"
+      }
+    ]
+  },
+  {
+    "page": "pages/6_Backtest.py",
+    "status": "PASS",
+    "tabs": [
+      "保存済みOOS結果",
+      "条件を変えて再計算"
+    ],
+    "selectboxes": [],
+    "exceptions": [],
+    "selector_tests": []
+  },
+  {
+    "page": "pages/7_System_Status.py",
+    "status": "PASS",
+    "tabs": [],
+    "selectboxes": [],
+    "exceptions": [],
+    "selector_tests": []
+  },
+  {
+    "page": "pages/8_Test.py",
+    "status": "PASS",
+    "tabs": [
+      "production（共通5500予測/250営業日）",
+      "production_compact（共通5500予測/250営業日）",
+      "production / forest（共通5500予測/250営業日）",
+      "production / quantile（共通5500予測/250営業日）",
+      "production / quantile_wide（共通5500予測/250営業日）",
+      "production / tree（共通5500予測/250営業日）",
+      "★未使用期間 2024-07〜2025-08 / compact 38列（事前登録・0/3 FAIL）",
+      "★未使用期間 2024-07〜2025-08 / 本番構成72列（事前登録・0/3 FAIL）",
+      "Live 全期間 (2026-08-10〜08-28・コスト0)",
+      "Live 直近1週間 (2026-08-24〜08-28・コスト0)",
+      "OOS production 250営業日（往復0.200%時代の記録・比較用に保存）",
+      "regularization_k10",
+      "regularization_production",
+      "学習窓 120営業日",
+      "学習窓 250営業日",
+      "学習窓 250営業日",
+      "2026-06-01 〜 2026-08-07  [学習120日]",
+      "2026-06-01 〜 2026-08-07  [学習250日]",
+      "2026-07-01 〜 2026-08-07  [学習120日]",
+      "2026-08-01 〜 2026-08-07  [学習120日]"
+    ],
+    "selectboxes": [
+      "日付",
+      "銘柄を選ぶ",
+      "銘柄",
+      "係数を確認する日付",
+      "日付",
+      "銘柄を選ぶ",
+      "銘柄",
+      "係数を確認する日付",
+      "日付",
+      "銘柄を選ぶ",
+      "銘柄",
+      "係数を確認する日付",
+      "日付",
+      "銘柄を選ぶ",
+      "銘柄",
+      "係数を確認する日付"
+    ],
+    "exceptions": [],
+    "selector_tests": [
+      {
+        "label": "日付",
+        "status": "PASS"
+      },
+      {
+        "label": "銘柄を選ぶ",
+        "status": "PASS"
+      },
+      {
+        "label": "銘柄",
+        "status": "PASS"
+      },
+      {
+        "label": "係数を確認する日付",
+        "status": "PASS"
+      },
+      {
+        "label": "日付",
+        "status": "PASS"
+      },
+      {
+        "label": "銘柄を選ぶ",
+        "status": "PASS"
+      },
+      {
+        "label": "銘柄",
+        "status": "PASS"
+      },
+      {
+        "label": "係数を確認する日付",
+        "status": "PASS"
+      },
+      {
+        "label": "日付",
+        "status": "PASS"
+      },
+      {
+        "label": "銘柄を選ぶ",
+        "status": "PASS"
+      },
+      {
+        "label": "銘柄",
+        "status": "PASS"
+      },
+      {
+        "label": "係数を確認する日付",
+        "status": "PASS"
+      },
+      {
+        "label": "日付",
+        "status": "PASS"
+      },
+      {
+        "label": "銘柄を選ぶ",
+        "status": "PASS"
+      },
+      {
+        "label": "銘柄",
+        "status": "PASS"
+      },
+      {
+        "label": "係数を確認する日付",
+        "status": "PASS"
+      }
+    ]
+  },
+  {
+    "page": "pages/9_Company_Analysis.py",
+    "status": "FAIL",
+    "error_type": "KeyError"
+  },
+  {
+    "page": "app.py",
+    "status": "PASS",
+    "tabs": [],
+    "selectboxes": [],
+    "exceptions": [],
+    "selector_tests": []
+  }
+]

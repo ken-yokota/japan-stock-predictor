@@ -26,6 +26,7 @@ measured.
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -34,6 +35,18 @@ ALL_METHODS_DIRECTORY = Path("docs/all_methods")
 # Below this many out-of-sample positions the hurdle rests on too little to be
 # worth acting on, and the mail says so rather than printing a bare verdict.
 MINIMUM_EVALUATION_POSITIONS = 10
+
+
+def arm_verdict(
+    arm: dict[str, Any], thresholds: dict[str, dict[str, Any]]
+) -> tuple[str, str]:
+    """Compute the verdict from persisted numbers, never an invented DTO field."""
+    status = str(arm.get("status") or "UNAVAILABLE")
+    if status != "OK":
+        return "—", status
+    raw = arm.get("predicted_return")
+    point = float(raw) if isinstance(raw, int | float) and math.isfinite(raw) else None
+    return verdict(str(arm.get("name") or ""), point, thresholds)
 
 
 def newest_report(directory: Path = ALL_METHODS_DIRECTORY) -> Path | None:

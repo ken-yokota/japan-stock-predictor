@@ -1,0 +1,4004 @@
+{
+  "evidence": "ESTIMATED_BACKFILL_RESEARCH_NOT_LIVE_AND_NOT_SEALED",
+  "period": [
+    "2026-07-02",
+    "2026-09-18"
+  ],
+  "tickers": 22,
+  "sessions": 55,
+  "per_ticker": [
+    {
+      "ticker": "1605",
+      "model": "champion_replay",
+      "feature_counts": [
+        184
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.014248725383108557,
+      "rmse": 0.01740224156176319,
+      "pearson": -0.1643052668676098,
+      "spearman": -0.2131313131313132,
+      "direction_accuracy": 0.45454545454545453,
+      "n": 55,
+      "brier": 0.278652943183611,
+      "log_loss": 0.754483549992227,
+      "ece": 0.23551529049901296,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 1,
+          "mean_probability": 0.19765635248703975,
+          "up_frequency": 0.0
+        },
+        {
+          "lower": 0.2,
+          "n": 5,
+          "mean_probability": 0.2405242436182605,
+          "up_frequency": 0.6
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 13,
+          "mean_probability": 0.3661587221029929,
+          "up_frequency": 0.6923076923076923
+        },
+        {
+          "lower": 0.4,
+          "n": 10,
+          "mean_probability": 0.45621086000865924,
+          "up_frequency": 0.3
+        },
+        {
+          "lower": 0.5,
+          "n": 17,
+          "mean_probability": 0.5418346270256164,
+          "up_frequency": 0.29411764705882354
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 6,
+          "mean_probability": 0.6350243715129767,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 3,
+          "mean_probability": 0.7116419139296513,
+          "up_frequency": 0.6666666666666666
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 5,
+      "wins": 3,
+      "losses": 2,
+      "win_rate": 0.6,
+      "gross_return_sum": 0.03535222699971308,
+      "net_return_sum": 0.03535222699971308,
+      "pf": 2.5233865773961996,
+      "pf_status": "FINITE",
+      "expectancy": 0.007070445399942615,
+      "sharpe": 1.711996946130533,
+      "sortino": 4.55449995455351,
+      "max_drawdown": -0.013444951801116156,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.008770109696266282,
+        0.02313729628607204
+      ]
+    },
+    {
+      "ticker": "1605",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3,
+        5
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.011503866142795046,
+      "rmse": 0.01405618480607174,
+      "pearson": 0.09560088246326885,
+      "spearman": 0.038023088023088035,
+      "direction_accuracy": 0.509090909090909,
+      "n": 55,
+      "brier": 0.2602422817446988,
+      "log_loss": 0.7159867911841272,
+      "ece": 0.08789247045521897,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 1,
+          "mean_probability": 0.22820644431425835,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 2,
+          "mean_probability": 0.3506682577850964,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.4,
+          "n": 27,
+          "mean_probability": 0.46282556433068556,
+          "up_frequency": 0.4074074074074074
+        },
+        {
+          "lower": 0.5,
+          "n": 22,
+          "mean_probability": 0.5278581442930695,
+          "up_frequency": 0.5454545454545454
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 3,
+          "mean_probability": 0.6267392574801717,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "gross_return_sum": -0.010646792653713044,
+      "net_return_sum": -0.010646792653713044,
+      "pf": 0.0,
+      "pf_status": "FINITE",
+      "expectancy": -0.010646792653713044,
+      "sharpe": -2.140518204038027,
+      "sortino": -2.1405182040380275,
+      "max_drawdown": -0.010646792653713044,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "5019",
+      "model": "champion_replay",
+      "feature_counts": [
+        184
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.01531549433715942,
+      "rmse": 0.019249773464123175,
+      "pearson": -0.015137612100870534,
+      "spearman": -0.043290043290043295,
+      "direction_accuracy": 0.4909090909090909,
+      "n": 55,
+      "brier": 0.28454503498076184,
+      "log_loss": 0.7690792938576901,
+      "ece": 0.15453373827003888,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 1,
+          "mean_probability": 0.17300396738738655,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.2,
+          "n": 4,
+          "mean_probability": 0.2619721906128834,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 9,
+          "mean_probability": 0.35300305735836823,
+          "up_frequency": 0.4444444444444444
+        },
+        {
+          "lower": 0.4,
+          "n": 15,
+          "mean_probability": 0.4499877634231527,
+          "up_frequency": 0.5333333333333333
+        },
+        {
+          "lower": 0.5,
+          "n": 13,
+          "mean_probability": 0.5523894613417322,
+          "up_frequency": 0.46153846153846156
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 10,
+          "mean_probability": 0.6332786634645393,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 3,
+          "mean_probability": 0.7110808900585844,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333333333333333,
+      "gross_return_sum": -0.042154888233455035,
+      "net_return_sum": -0.042154888233455035,
+      "pf": 0.42645259679602326,
+      "pf_status": "FINITE",
+      "expectancy": -0.007025814705575839,
+      "sharpe": -1.9093669866474556,
+      "sortino": -2.3015289096552145,
+      "max_drawdown": -0.042350948170759906,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.019895289579354727,
+        0.00781651060516094
+      ]
+    },
+    {
+      "ticker": "5019",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3,
+        5,
+        8
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.013652498441742645,
+      "rmse": 0.01714878768902592,
+      "pearson": -0.0028629652134702665,
+      "spearman": -0.12474747474747479,
+      "direction_accuracy": 0.4727272727272727,
+      "n": 55,
+      "brier": 0.25701182221033736,
+      "log_loss": 0.7075397563597641,
+      "ece": 0.08666829924412923,
+      "reliability": [
+        {
+          "lower": 0.30000000000000004,
+          "n": 6,
+          "mean_probability": 0.3701994566420863,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.4,
+          "n": 29,
+          "mean_probability": 0.46871972544041324,
+          "up_frequency": 0.5172413793103449
+        },
+        {
+          "lower": 0.5,
+          "n": 19,
+          "mean_probability": 0.5220652651291193,
+          "up_frequency": 0.42105263157894735
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 1,
+          "mean_probability": 0.6615851985983414,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "gross_return_sum": -0.004006410256410242,
+      "net_return_sum": -0.004006410256410242,
+      "pf": 0.0,
+      "pf_status": "FINITE",
+      "expectancy": -0.004006410256410242,
+      "sharpe": -2.1405182040380266,
+      "sortino": -2.1405182040380275,
+      "max_drawdown": -0.004006410256410242,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "5020",
+      "model": "champion_replay",
+      "feature_counts": [
+        184
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.01347888735550071,
+      "rmse": 0.017230169475986438,
+      "pearson": 0.024039421730021052,
+      "spearman": 0.041125541125541135,
+      "direction_accuracy": 0.43636363636363634,
+      "n": 55,
+      "brier": 0.272953776147104,
+      "log_loss": 0.7432060540684102,
+      "ece": 0.16203180750379842,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 2,
+          "mean_probability": 0.27823956978688125,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 11,
+          "mean_probability": 0.3424163519751946,
+          "up_frequency": 0.45454545454545453
+        },
+        {
+          "lower": 0.4,
+          "n": 14,
+          "mean_probability": 0.4605188760444023,
+          "up_frequency": 0.42857142857142855
+        },
+        {
+          "lower": 0.5,
+          "n": 17,
+          "mean_probability": 0.5572683783503205,
+          "up_frequency": 0.6470588235294118
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 10,
+          "mean_probability": 0.6537498242646864,
+          "up_frequency": 0.3
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 1,
+          "mean_probability": 0.7236083486967686,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 6,
+      "wins": 1,
+      "losses": 5,
+      "win_rate": 0.16666666666666666,
+      "gross_return_sum": -0.062173876138448936,
+      "net_return_sum": -0.062173876138448936,
+      "pf": 0.1974482907353213,
+      "pf_status": "FINITE",
+      "expectancy": -0.01036231268974149,
+      "sharpe": -2.517624711105677,
+      "sortino": -2.6202009470081107,
+      "max_drawdown": -0.07151995975338488,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.025438394863261753,
+        0.0029490481135279094
+      ]
+    },
+    {
+      "ticker": "5020",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.012641195821085223,
+      "rmse": 0.01619293145759117,
+      "pearson": -0.03144376326943274,
+      "spearman": -0.04408369408369409,
+      "direction_accuracy": 0.509090909090909,
+      "n": 55,
+      "brier": 0.2540006936849866,
+      "log_loss": 0.7007068404034272,
+      "ece": 0.03548090606067276,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 1,
+          "mean_probability": 0.2843444599482454,
+          "up_frequency": 0.0
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 2,
+          "mean_probability": 0.3591913889585202,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.4,
+          "n": 50,
+          "mean_probability": 0.47245937619010697,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.5,
+          "n": 2,
+          "mean_probability": 0.5042284804055727,
+          "up_frequency": 0.5
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": null,
+      "gross_return_sum": 0.0,
+      "net_return_sum": 0.0,
+      "pf": null,
+      "pf_status": "NO_LOSSES_OR_NO_TRADES",
+      "expectancy": null,
+      "sharpe": null,
+      "sortino": null,
+      "max_drawdown": 0.0,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "5021",
+      "model": "champion_replay",
+      "feature_counts": [
+        184
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.012721769556856189,
+      "rmse": 0.015861311339056727,
+      "pearson": -0.08231176224617548,
+      "spearman": -0.061616161616161624,
+      "direction_accuracy": 0.45454545454545453,
+      "n": 55,
+      "brier": 0.2818805825890841,
+      "log_loss": 0.7622328668678804,
+      "ece": 0.17369804699886177,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 2,
+          "mean_probability": 0.18300810299226705,
+          "up_frequency": 0.0
+        },
+        {
+          "lower": 0.2,
+          "n": 6,
+          "mean_probability": 0.2557747319762809,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 14,
+          "mean_probability": 0.34888703544686556,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.4,
+          "n": 20,
+          "mean_probability": 0.4484053689153047,
+          "up_frequency": 0.45
+        },
+        {
+          "lower": 0.5,
+          "n": 8,
+          "mean_probability": 0.5344507965207119,
+          "up_frequency": 0.25
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 4,
+          "mean_probability": 0.6355641790489068,
+          "up_frequency": 0.25
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 1,
+          "mean_probability": 0.756687557011437,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 4,
+      "wins": 1,
+      "losses": 3,
+      "win_rate": 0.25,
+      "gross_return_sum": -0.010465045851960286,
+      "net_return_sum": -0.010465045851960286,
+      "pf": 0.47896987526278534,
+      "pf_status": "FINITE",
+      "expectancy": -0.0026162614629900716,
+      "sharpe": -1.354621900898234,
+      "sortino": -1.6793568144551603,
+      "max_drawdown": -0.012015018773466779,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.009843408635497125,
+        0.006029764368052193
+      ]
+    },
+    {
+      "ticker": "5021",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3,
+        5,
+        8
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.011555539499260376,
+      "rmse": 0.01441668066011879,
+      "pearson": -0.10532225519821758,
+      "spearman": -0.11471861471861475,
+      "direction_accuracy": 0.509090909090909,
+      "n": 55,
+      "brier": 0.25987296150692096,
+      "log_loss": 0.7133512472391631,
+      "ece": 0.11328450771299262,
+      "reliability": [
+        {
+          "lower": 0.30000000000000004,
+          "n": 2,
+          "mean_probability": 0.39542528340334443,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.4,
+          "n": 36,
+          "mean_probability": 0.47044273649048335,
+          "up_frequency": 0.4166666666666667
+        },
+        {
+          "lower": 0.5,
+          "n": 15,
+          "mean_probability": 0.521358944022594,
+          "up_frequency": 0.4
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 2,
+          "mean_probability": 0.6325879085124866,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "gross_return_sum": -0.0069319640564826646,
+      "net_return_sum": -0.0069319640564826646,
+      "pf": 0.0,
+      "pf_status": "FINITE",
+      "expectancy": -0.0069319640564826646,
+      "sharpe": -2.1405182040380266,
+      "sortino": -2.140518204038027,
+      "max_drawdown": -0.0069319640564826646,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "7201",
+      "model": "champion_replay",
+      "feature_counts": [
+        173
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.017475885802299234,
+      "rmse": 0.02172173764904801,
+      "pearson": 0.08086537990764474,
+      "spearman": 0.04343434343434344,
+      "direction_accuracy": 0.5272727272727272,
+      "n": 55,
+      "brier": 0.24741215530507119,
+      "log_loss": 0.6879312583206746,
+      "ece": 0.13105247283336038,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 3,
+          "mean_probability": 0.2658376558756813,
+          "up_frequency": 0.3333333333333333
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 8,
+          "mean_probability": 0.35729173673941766,
+          "up_frequency": 0.625
+        },
+        {
+          "lower": 0.4,
+          "n": 11,
+          "mean_probability": 0.4591431020920991,
+          "up_frequency": 0.2727272727272727
+        },
+        {
+          "lower": 0.5,
+          "n": 12,
+          "mean_probability": 0.5470975617011957,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 14,
+          "mean_probability": 0.6349381566327414,
+          "up_frequency": 0.5714285714285714
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 2,
+          "mean_probability": 0.7207422876041719,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.8,
+          "n": 5,
+          "mean_probability": 0.8095421433423482,
+          "up_frequency": 0.8
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 16,
+      "wins": 9,
+      "losses": 6,
+      "win_rate": 0.5625,
+      "gross_return_sum": 0.03906844762623274,
+      "net_return_sum": 0.03906844762623274,
+      "pf": 1.2682625978947502,
+      "pf_status": "FINITE",
+      "expectancy": 0.002441777976639546,
+      "sharpe": 0.8113242902750848,
+      "sortino": 1.1683245452506668,
+      "max_drawdown": -0.13779753883117773,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.01041651062956934,
+        0.015210133678627901
+      ]
+    },
+    {
+      "ticker": "7201",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        5,
+        8
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.01709331777672489,
+      "rmse": 0.021095426214403207,
+      "pearson": -0.01770832039486325,
+      "spearman": -0.0012265512265512266,
+      "direction_accuracy": 0.4727272727272727,
+      "n": 55,
+      "brier": 0.2828804208156358,
+      "log_loss": 0.7626169987024223,
+      "ece": 0.18967125083782965,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 5,
+          "mean_probability": 0.2687193602183005,
+          "up_frequency": 0.6
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 10,
+          "mean_probability": 0.35047275364015906,
+          "up_frequency": 0.8
+        },
+        {
+          "lower": 0.4,
+          "n": 27,
+          "mean_probability": 0.46713584921134604,
+          "up_frequency": 0.4444444444444444
+        },
+        {
+          "lower": 0.5,
+          "n": 10,
+          "mean_probability": 0.5226619279600411,
+          "up_frequency": 0.7
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 3,
+          "mean_probability": 0.6313981614892635,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "gross_return_sum": -0.04473998893331643,
+      "net_return_sum": -0.04473998893331643,
+      "pf": 0.0,
+      "pf_status": "FINITE",
+      "expectancy": -0.04473998893331643,
+      "sharpe": -2.140518204038028,
+      "sortino": -2.1405182040380275,
+      "max_drawdown": -0.04473998893331643,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "7203",
+      "model": "champion_replay",
+      "feature_counts": [
+        173
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.012562717214901908,
+      "rmse": 0.015558126910976553,
+      "pearson": -0.030841511815875897,
+      "spearman": -0.036435786435786446,
+      "direction_accuracy": 0.4727272727272727,
+      "n": 55,
+      "brier": 0.2772272247918704,
+      "log_loss": 0.7523472674297664,
+      "ece": 0.15891772157661463,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 4,
+          "mean_probability": 0.25811910336129823,
+          "up_frequency": 0.75
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 5,
+          "mean_probability": 0.34101446418589254,
+          "up_frequency": 0.6
+        },
+        {
+          "lower": 0.4,
+          "n": 17,
+          "mean_probability": 0.456412951980246,
+          "up_frequency": 0.35294117647058826
+        },
+        {
+          "lower": 0.5,
+          "n": 14,
+          "mean_probability": 0.5488082243509579,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 9,
+          "mean_probability": 0.6270348021482542,
+          "up_frequency": 0.3333333333333333
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 6,
+          "mean_probability": 0.7320624795294299,
+          "up_frequency": 0.6666666666666666
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 6,
+      "wins": 3,
+      "losses": 3,
+      "win_rate": 0.5,
+      "gross_return_sum": 0.046472422042202255,
+      "net_return_sum": 0.046472422042202255,
+      "pf": 2.4487229424267642,
+      "pf_status": "FINITE",
+      "expectancy": 0.0077454036737003755,
+      "sharpe": 1.8089410867413065,
+      "sortino": 4.896826061509952,
+      "max_drawdown": -0.017290160326941195,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.007177924039802327,
+        0.026127728811603097
+      ]
+    },
+    {
+      "ticker": "7203",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        5
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.011281830052395286,
+      "rmse": 0.014663815530403574,
+      "pearson": 0.020805026074783198,
+      "spearman": 0.043795093795093804,
+      "direction_accuracy": 0.509090909090909,
+      "n": 55,
+      "brier": 0.26407998360541446,
+      "log_loss": 0.7282770516608427,
+      "ece": 0.08629669769358483,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 1,
+          "mean_probability": 0.1346932125481941,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.2,
+          "n": 2,
+          "mean_probability": 0.2892198028860694,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 23,
+          "mean_probability": 0.3636771479073965,
+          "up_frequency": 0.391304347826087
+        },
+        {
+          "lower": 0.4,
+          "n": 20,
+          "mean_probability": 0.4499284717754476,
+          "up_frequency": 0.55
+        },
+        {
+          "lower": 0.5,
+          "n": 9,
+          "mean_probability": 0.5358438920940632,
+          "up_frequency": 0.4444444444444444
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": null,
+      "gross_return_sum": 0.0,
+      "net_return_sum": 0.0,
+      "pf": null,
+      "pf_status": "NO_LOSSES_OR_NO_TRADES",
+      "expectancy": null,
+      "sharpe": null,
+      "sortino": null,
+      "max_drawdown": 0.0,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "7267",
+      "model": "champion_replay",
+      "feature_counts": [
+        173
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.016304162322918026,
+      "rmse": 0.01990942589540647,
+      "pearson": -0.24889607904017638,
+      "spearman": -0.28102453102453107,
+      "direction_accuracy": 0.38181818181818183,
+      "n": 55,
+      "brier": 0.2914591310292289,
+      "log_loss": 0.7824253433415166,
+      "ece": 0.23810900138176924,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 2,
+          "mean_probability": 0.2491592287324628,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 8,
+          "mean_probability": 0.3535960778067109,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.4,
+          "n": 19,
+          "mean_probability": 0.4489985928538079,
+          "up_frequency": 0.631578947368421
+        },
+        {
+          "lower": 0.5,
+          "n": 16,
+          "mean_probability": 0.5459995118659301,
+          "up_frequency": 0.375
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 8,
+          "mean_probability": 0.6407834199649012,
+          "up_frequency": 0.25
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 1,
+          "mean_probability": 0.7193150890153657,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.8,
+          "n": 1,
+          "mean_probability": 0.8111109595795479,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 8,
+      "wins": 3,
+      "losses": 5,
+      "win_rate": 0.375,
+      "gross_return_sum": -0.011620940492411025,
+      "net_return_sum": -0.011620940492411025,
+      "pf": 0.8150800567220189,
+      "pf_status": "FINITE",
+      "expectancy": -0.0014526175615513781,
+      "sharpe": -0.5520456537647687,
+      "sortino": -0.8439025699330066,
+      "max_drawdown": -0.03832617955917039,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.011561658495897626,
+        0.011015047668500368
+      ]
+    },
+    {
+      "ticker": "7267",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3,
+        5
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.014536854245093071,
+      "rmse": 0.01784435057923763,
+      "pearson": -0.31747407406077094,
+      "spearman": -0.2295815295815296,
+      "direction_accuracy": 0.509090909090909,
+      "n": 55,
+      "brier": 0.25716013001252525,
+      "log_loss": 0.7078593512313206,
+      "ece": 0.09457507269637166,
+      "reliability": [
+        {
+          "lower": 0.30000000000000004,
+          "n": 2,
+          "mean_probability": 0.38177749565281976,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.4,
+          "n": 25,
+          "mean_probability": 0.4787199041818831,
+          "up_frequency": 0.52
+        },
+        {
+          "lower": 0.5,
+          "n": 25,
+          "mean_probability": 0.522947681718969,
+          "up_frequency": 0.44
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 3,
+          "mean_probability": 0.6198298503929779,
+          "up_frequency": 0.3333333333333333
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "gross_return_sum": -0.010663507109004766,
+      "net_return_sum": -0.010663507109004766,
+      "pf": 0.0,
+      "pf_status": "FINITE",
+      "expectancy": -0.010663507109004766,
+      "sharpe": -2.140518204038028,
+      "sortino": -2.1405182040380275,
+      "max_drawdown": -0.010663507109004766,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "7269",
+      "model": "champion_replay",
+      "feature_counts": [
+        173
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.014171232427518277,
+      "rmse": 0.018259321824559503,
+      "pearson": 0.058002295330881734,
+      "spearman": 0.10245310245310248,
+      "direction_accuracy": 0.6,
+      "n": 55,
+      "brier": 0.25609733548495567,
+      "log_loss": 0.7052628721200379,
+      "ece": 0.14026051355538854,
+      "reliability": [
+        {
+          "lower": 0.30000000000000004,
+          "n": 11,
+          "mean_probability": 0.35866737251538294,
+          "up_frequency": 0.5454545454545454
+        },
+        {
+          "lower": 0.4,
+          "n": 13,
+          "mean_probability": 0.45317642980986866,
+          "up_frequency": 0.46153846153846156
+        },
+        {
+          "lower": 0.5,
+          "n": 15,
+          "mean_probability": 0.5569201498686518,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 7,
+          "mean_probability": 0.6455304002762043,
+          "up_frequency": 0.42857142857142855
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 7,
+          "mean_probability": 0.7258199370866991,
+          "up_frequency": 0.42857142857142855
+        },
+        {
+          "lower": 0.8,
+          "n": 2,
+          "mean_probability": 0.8473435913833363,
+          "up_frequency": 1.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 13,
+      "wins": 8,
+      "losses": 5,
+      "win_rate": 0.6153846153846154,
+      "gross_return_sum": 0.017341104778751504,
+      "net_return_sum": 0.017341104778751504,
+      "pf": 1.1417366666194795,
+      "pf_status": "FINITE",
+      "expectancy": 0.0013339311368270389,
+      "sharpe": 0.43645964471769905,
+      "sortino": 0.6141653200576783,
+      "max_drawdown": -0.07223026379016806,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.012407397809037192,
+        0.014158849936105687
+      ]
+    },
+    {
+      "ticker": "7269",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3,
+        5,
+        8
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.013631719124197363,
+      "rmse": 0.017549931218636305,
+      "pearson": -0.22357895877216893,
+      "spearman": -0.09862914862914865,
+      "direction_accuracy": 0.41818181818181815,
+      "n": 55,
+      "brier": 0.2654223985303569,
+      "log_loss": 0.7272219757832822,
+      "ece": 0.1675865969072336,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 1,
+          "mean_probability": 0.17913965468593793,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.2,
+          "n": 1,
+          "mean_probability": 0.28341310091110816,
+          "up_frequency": 0.0
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 6,
+          "mean_probability": 0.35939252291839274,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.4,
+          "n": 16,
+          "mean_probability": 0.4745272857521229,
+          "up_frequency": 0.75
+        },
+        {
+          "lower": 0.5,
+          "n": 24,
+          "mean_probability": 0.5178897167719319,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 7,
+          "mean_probability": 0.6332039843843768,
+          "up_frequency": 0.2857142857142857
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "gross_return_sum": -0.03875253481996743,
+      "net_return_sum": -0.03875253481996743,
+      "pf": 0.0,
+      "pf_status": "FINITE",
+      "expectancy": -0.019376267409983716,
+      "sharpe": -2.979674744798668,
+      "sortino": -2.954593044607558,
+      "max_drawdown": -0.038395761067467116,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.023696682464455,
+        -0.015055852355512434
+      ]
+    },
+    {
+      "ticker": "7270",
+      "model": "champion_replay",
+      "feature_counts": [
+        173
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.01587907670616371,
+      "rmse": 0.018965886260527275,
+      "pearson": -0.13605288962087803,
+      "spearman": -0.20945543754196616,
+      "direction_accuracy": 0.36363636363636365,
+      "n": 55,
+      "brier": 0.27964237065384756,
+      "log_loss": 0.7571169653513702,
+      "ece": 0.13901344464124782,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 1,
+          "mean_probability": 0.18210965341812999,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 4,
+          "mean_probability": 0.3662914182831235,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.4,
+          "n": 12,
+          "mean_probability": 0.44979031047243606,
+          "up_frequency": 0.5833333333333334
+        },
+        {
+          "lower": 0.5,
+          "n": 23,
+          "mean_probability": 0.5538709693734041,
+          "up_frequency": 0.5652173913043478
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 14,
+          "mean_probability": 0.6231597052982151,
+          "up_frequency": 0.35714285714285715
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 1,
+          "mean_probability": 0.7052949289017719,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 5,
+      "wins": 1,
+      "losses": 4,
+      "win_rate": 0.2,
+      "gross_return_sum": -0.023699980003241694,
+      "net_return_sum": -0.023699980003241694,
+      "pf": 0.5163918723348797,
+      "pf_status": "FINITE",
+      "expectancy": -0.004739996000648339,
+      "sharpe": -1.364895172444531,
+      "sortino": -1.8826183071458884,
+      "max_drawdown": -0.026982238548746262,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.016466973358967296,
+        0.011323609938750501
+      ]
+    },
+    {
+      "ticker": "7270",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.014211241410432873,
+      "rmse": 0.017395460011215506,
+      "pearson": -0.028342758517548305,
+      "spearman": -0.04372373239766845,
+      "direction_accuracy": 0.4909090909090909,
+      "n": 55,
+      "brier": 0.2619421882034432,
+      "log_loss": 0.7174083547404073,
+      "ece": 0.1328355530207043,
+      "reliability": [
+        {
+          "lower": 0.30000000000000004,
+          "n": 2,
+          "mean_probability": 0.38215992019229933,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.4,
+          "n": 32,
+          "mean_probability": 0.4691135440480141,
+          "up_frequency": 0.5625
+        },
+        {
+          "lower": 0.5,
+          "n": 20,
+          "mean_probability": 0.5231808840036695,
+          "up_frequency": 0.4
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 1,
+          "mean_probability": 0.6182909859863976,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": null,
+      "gross_return_sum": 0.0,
+      "net_return_sum": 0.0,
+      "pf": null,
+      "pf_status": "NO_LOSSES_OR_NO_TRADES",
+      "expectancy": null,
+      "sharpe": null,
+      "sortino": null,
+      "max_drawdown": 0.0,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "8001",
+      "model": "champion_replay",
+      "feature_counts": [
+        118
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.011261908969677797,
+      "rmse": 0.01413718671298357,
+      "pearson": 0.16299467239087317,
+      "spearman": 0.2656565656565657,
+      "direction_accuracy": 0.6727272727272727,
+      "n": 55,
+      "brier": 0.2605307833290221,
+      "log_loss": 0.7179322080435159,
+      "ece": 0.15301716445081479,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 1,
+          "mean_probability": 0.29245391814951477,
+          "up_frequency": 0.0
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 13,
+          "mean_probability": 0.35063582485608047,
+          "up_frequency": 0.38461538461538464
+        },
+        {
+          "lower": 0.4,
+          "n": 9,
+          "mean_probability": 0.44624351135950646,
+          "up_frequency": 0.7777777777777778
+        },
+        {
+          "lower": 0.5,
+          "n": 16,
+          "mean_probability": 0.5480364845983405,
+          "up_frequency": 0.625
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 10,
+          "mean_probability": 0.6441410326070682,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 5,
+          "mean_probability": 0.7658142385301918,
+          "up_frequency": 0.4
+        },
+        {
+          "lower": 0.8,
+          "n": 1,
+          "mean_probability": 0.803950313138289,
+          "up_frequency": 1.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 8,
+      "wins": 5,
+      "losses": 3,
+      "win_rate": 0.625,
+      "gross_return_sum": 0.021564244211574768,
+      "net_return_sum": 0.021564244211574768,
+      "pf": 1.748636634539894,
+      "pf_status": "FINITE",
+      "expectancy": 0.002695530526446846,
+      "sharpe": 1.3477275696623623,
+      "sortino": 2.0485915445875627,
+      "max_drawdown": -0.026091076525174617,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.0064180823602951066,
+        0.010252446474897176
+      ]
+    },
+    {
+      "ticker": "8001",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.011265213443545797,
+      "rmse": 0.013687418215957514,
+      "pearson": -0.09753978928633379,
+      "spearman": -0.14350649350649353,
+      "direction_accuracy": 0.4727272727272727,
+      "n": 55,
+      "brier": 0.2544407154902441,
+      "log_loss": 0.7020667871337452,
+      "ece": 0.12530495022095997,
+      "reliability": [
+        {
+          "lower": 0.30000000000000004,
+          "n": 3,
+          "mean_probability": 0.3968703003168759,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.4,
+          "n": 43,
+          "mean_probability": 0.4789133775588676,
+          "up_frequency": 0.5813953488372093
+        },
+        {
+          "lower": 0.5,
+          "n": 9,
+          "mean_probability": 0.5195175997927479,
+          "up_frequency": 0.3333333333333333
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": null,
+      "gross_return_sum": 0.0,
+      "net_return_sum": 0.0,
+      "pf": null,
+      "pf_status": "NO_LOSSES_OR_NO_TRADES",
+      "expectancy": null,
+      "sharpe": null,
+      "sortino": null,
+      "max_drawdown": 0.0,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "8002",
+      "model": "champion_replay",
+      "feature_counts": [
+        118
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.013087386109076067,
+      "rmse": 0.016146448717342873,
+      "pearson": 0.2220907880902948,
+      "spearman": 0.17503607503607507,
+      "direction_accuracy": 0.5636363636363636,
+      "n": 55,
+      "brier": 0.26547797807176315,
+      "log_loss": 0.7275415574715257,
+      "ece": 0.12568022755772362,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 2,
+          "mean_probability": 0.2392070546213861,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 7,
+          "mean_probability": 0.3561419583266882,
+          "up_frequency": 0.5714285714285714
+        },
+        {
+          "lower": 0.4,
+          "n": 12,
+          "mean_probability": 0.4535596346406876,
+          "up_frequency": 0.5833333333333334
+        },
+        {
+          "lower": 0.5,
+          "n": 19,
+          "mean_probability": 0.5534586748202494,
+          "up_frequency": 0.5789473684210527
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 12,
+          "mean_probability": 0.6423197184434221,
+          "up_frequency": 0.5833333333333334
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 3,
+          "mean_probability": 0.7114713830521047,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 9,
+      "wins": 4,
+      "losses": 5,
+      "win_rate": 0.4444444444444444,
+      "gross_return_sum": 0.04382004272714257,
+      "net_return_sum": 0.04382004272714257,
+      "pf": 1.794152806525323,
+      "pf_status": "FINITE",
+      "expectancy": 0.004868893636349175,
+      "sharpe": 1.4247750341468772,
+      "sortino": 3.1434424796347837,
+      "max_drawdown": -0.04092143596941267,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.008383679273181266,
+        0.019929785769243213
+      ]
+    },
+    {
+      "ticker": "8002",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3,
+        8
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.012182887779974892,
+      "rmse": 0.015159090351823348,
+      "pearson": 0.2950422501968681,
+      "spearman": 0.27813852813852824,
+      "direction_accuracy": 0.6,
+      "n": 55,
+      "brier": 0.2536968087949018,
+      "log_loss": 0.7005727602169176,
+      "ece": 0.08052015568929528,
+      "reliability": [
+        {
+          "lower": 0.4,
+          "n": 28,
+          "mean_probability": 0.4786969013705275,
+          "up_frequency": 0.6071428571428571
+        },
+        {
+          "lower": 0.5,
+          "n": 27,
+          "mean_probability": 0.5123008074550375,
+          "up_frequency": 0.48148148148148145
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": null,
+      "gross_return_sum": 0.0,
+      "net_return_sum": 0.0,
+      "pf": null,
+      "pf_status": "NO_LOSSES_OR_NO_TRADES",
+      "expectancy": null,
+      "sharpe": null,
+      "sortino": null,
+      "max_drawdown": 0.0,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "8031",
+      "model": "champion_replay",
+      "feature_counts": [
+        118
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.011250032231401834,
+      "rmse": 0.01434207218421498,
+      "pearson": 0.2014898216068397,
+      "spearman": 0.2241702741702742,
+      "direction_accuracy": 0.5272727272727272,
+      "n": 55,
+      "brier": 0.2469029083528586,
+      "log_loss": 0.6878250764561158,
+      "ece": 0.07250960463177554,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 1,
+          "mean_probability": 0.25882421978504183,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 18,
+          "mean_probability": 0.35298989791653557,
+          "up_frequency": 0.3888888888888889
+        },
+        {
+          "lower": 0.4,
+          "n": 17,
+          "mean_probability": 0.451023565653658,
+          "up_frequency": 0.5294117647058824
+        },
+        {
+          "lower": 0.5,
+          "n": 10,
+          "mean_probability": 0.5353667593516446,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 4,
+          "mean_probability": 0.6543626765246948,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 5,
+          "mean_probability": 0.7406094092945407,
+          "up_frequency": 0.8
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 6,
+      "wins": 4,
+      "losses": 2,
+      "win_rate": 0.6666666666666666,
+      "gross_return_sum": 0.016933468092816595,
+      "net_return_sum": 0.016933468092816595,
+      "pf": 2.526752910919475,
+      "pf_status": "FINITE",
+      "expectancy": 0.002822244682136099,
+      "sharpe": 1.8743170006867687,
+      "sortino": 3.6304309878306937,
+      "max_drawdown": -0.009927358014168663,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.002923102854424722,
+        0.008373697359571127
+      ]
+    },
+    {
+      "ticker": "8031",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3,
+        8
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.010687090126146612,
+      "rmse": 0.013662238971487767,
+      "pearson": -0.06608779765990119,
+      "spearman": 0.08520923520923523,
+      "direction_accuracy": 0.4909090909090909,
+      "n": 55,
+      "brier": 0.25217168840919146,
+      "log_loss": 0.6979438673301233,
+      "ece": 0.05420465645093572,
+      "reliability": [
+        {
+          "lower": 0.30000000000000004,
+          "n": 12,
+          "mean_probability": 0.3676094521445705,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.4,
+          "n": 38,
+          "mean_probability": 0.4731138555699727,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.5,
+          "n": 5,
+          "mean_probability": 0.5258207915609452,
+          "up_frequency": 0.6
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": null,
+      "gross_return_sum": 0.0,
+      "net_return_sum": 0.0,
+      "pf": null,
+      "pf_status": "NO_LOSSES_OR_NO_TRADES",
+      "expectancy": null,
+      "sharpe": null,
+      "sortino": null,
+      "max_drawdown": 0.0,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "8053",
+      "model": "champion_replay",
+      "feature_counts": [
+        118
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.016555265565837734,
+      "rmse": 0.020773457629751177,
+      "pearson": 0.15974192780919436,
+      "spearman": 0.0906926406926407,
+      "direction_accuracy": 0.45454545454545453,
+      "n": 55,
+      "brier": 0.2528310430584771,
+      "log_loss": 0.7057374655652248,
+      "ece": 0.10828745730481121,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 2,
+          "mean_probability": 0.23603297943129842,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 7,
+          "mean_probability": 0.3387247406801827,
+          "up_frequency": 0.42857142857142855
+        },
+        {
+          "lower": 0.4,
+          "n": 14,
+          "mean_probability": 0.447272974571354,
+          "up_frequency": 0.42857142857142855
+        },
+        {
+          "lower": 0.5,
+          "n": 18,
+          "mean_probability": 0.5454375061864306,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 7,
+          "mean_probability": 0.6453322227171195,
+          "up_frequency": 0.5714285714285714
+        },
+        {
+          "lower": 0.8,
+          "n": 7,
+          "mean_probability": 0.833953886246493,
+          "up_frequency": 0.5714285714285714
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 9,
+      "wins": 5,
+      "losses": 4,
+      "win_rate": 0.5555555555555556,
+      "gross_return_sum": 0.031818156850759394,
+      "net_return_sum": 0.031818156850759394,
+      "pf": 1.701906820994985,
+      "pf_status": "FINITE",
+      "expectancy": 0.003535350761195488,
+      "sharpe": 1.36177107806239,
+      "sortino": 2.7298405127003993,
+      "max_drawdown": -0.028380369222254398,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.00678906426960362,
+        0.01529718168077401
+      ]
+    },
+    {
+      "ticker": "8053",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3,
+        5
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.01281862718389089,
+      "rmse": 0.01655588083088962,
+      "pearson": 0.06561512763218784,
+      "spearman": 0.023881673881673886,
+      "direction_accuracy": 0.5454545454545454,
+      "n": 55,
+      "brier": 0.2523439149051577,
+      "log_loss": 0.6978247754781022,
+      "ece": 0.07812359136792897,
+      "reliability": [
+        {
+          "lower": 0.30000000000000004,
+          "n": 2,
+          "mean_probability": 0.391649470984886,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.4,
+          "n": 49,
+          "mean_probability": 0.4690462566111733,
+          "up_frequency": 0.5510204081632653
+        },
+        {
+          "lower": 0.5,
+          "n": 4,
+          "mean_probability": 0.5158407602883397,
+          "up_frequency": 0.5
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": null,
+      "gross_return_sum": 0.0,
+      "net_return_sum": 0.0,
+      "pf": null,
+      "pf_status": "NO_LOSSES_OR_NO_TRADES",
+      "expectancy": null,
+      "sharpe": null,
+      "sortino": null,
+      "max_drawdown": 0.0,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "8058",
+      "model": "champion_replay",
+      "feature_counts": [
+        118
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.011955404640257633,
+      "rmse": 0.016030922071757613,
+      "pearson": 0.15715817421984257,
+      "spearman": 0.2575036075036076,
+      "direction_accuracy": 0.5818181818181818,
+      "n": 55,
+      "brier": 0.2628814225050607,
+      "log_loss": 0.7225464028973133,
+      "ece": 0.16415034540300952,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 4,
+          "mean_probability": 0.2596122410555721,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 10,
+          "mean_probability": 0.35780693216498227,
+          "up_frequency": 0.2
+        },
+        {
+          "lower": 0.4,
+          "n": 17,
+          "mean_probability": 0.4562906241046888,
+          "up_frequency": 0.5882352941176471
+        },
+        {
+          "lower": 0.5,
+          "n": 9,
+          "mean_probability": 0.5433088616279448,
+          "up_frequency": 0.5555555555555556
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 12,
+          "mean_probability": 0.6525495425557107,
+          "up_frequency": 0.3333333333333333
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 3,
+          "mean_probability": 0.7682581645002241,
+          "up_frequency": 0.6666666666666666
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 11,
+      "wins": 5,
+      "losses": 6,
+      "win_rate": 0.45454545454545453,
+      "gross_return_sum": 0.06668494051444374,
+      "net_return_sum": 0.06668494051444374,
+      "pf": 2.3415877025201692,
+      "pf_status": "FINITE",
+      "expectancy": 0.006062267319494885,
+      "sharpe": 2.2280686090164936,
+      "sortino": 4.342161507445751,
+      "max_drawdown": -0.031033801146471585,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.0048022005447263,
+        0.016962073652982416
+      ]
+    },
+    {
+      "ticker": "8058",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3,
+        5
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.012143387611081883,
+      "rmse": 0.015274292172938691,
+      "pearson": -0.15900732107329282,
+      "spearman": -0.20620490620490625,
+      "direction_accuracy": 0.5272727272727272,
+      "n": 55,
+      "brier": 0.25058729010319336,
+      "log_loss": 0.6943604563716514,
+      "ece": 0.026091589231446388,
+      "reliability": [
+        {
+          "lower": 0.4,
+          "n": 50,
+          "mean_probability": 0.47807046121551877,
+          "up_frequency": 0.46
+        },
+        {
+          "lower": 0.5,
+          "n": 5,
+          "mean_probability": 0.5063028693907228,
+          "up_frequency": 0.4
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": null,
+      "gross_return_sum": 0.0,
+      "net_return_sum": 0.0,
+      "pf": null,
+      "pf_status": "NO_LOSSES_OR_NO_TRADES",
+      "expectancy": null,
+      "sharpe": null,
+      "sortino": null,
+      "max_drawdown": 0.0,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "8306",
+      "model": "champion_replay",
+      "feature_counts": [
+        140
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.012248387306291627,
+      "rmse": 0.015156346574184335,
+      "pearson": -0.03536106636569509,
+      "spearman": -0.07164502164502166,
+      "direction_accuracy": 0.5454545454545454,
+      "n": 55,
+      "brier": 0.246304584601283,
+      "log_loss": 0.6870828606751076,
+      "ece": 0.10673157817988434,
+      "reliability": [
+        {
+          "lower": 0.4,
+          "n": 3,
+          "mean_probability": 0.4595994428625403,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.5,
+          "n": 22,
+          "mean_probability": 0.5401202645222477,
+          "up_frequency": 0.6818181818181818
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 24,
+          "mean_probability": 0.6377260461054816,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 6,
+          "mean_probability": 0.739517675750378,
+          "up_frequency": 0.5
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 20,
+      "wins": 13,
+      "losses": 7,
+      "win_rate": 0.65,
+      "gross_return_sum": 0.09014326008643858,
+      "net_return_sum": 0.09014326008643858,
+      "pf": 2.3386721361796035,
+      "pf_status": "FINITE",
+      "expectancy": 0.004507163004321929,
+      "sharpe": 3.2405571987973807,
+      "sortino": 7.01524220705512,
+      "max_drawdown": -0.01941644169704848,
+      "sample_status": "DESCRIPTIVE_ONLY",
+      "expectancy_date_bootstrap_ci95": [
+        -0.0008491847949427553,
+        0.010257597231771269
+      ]
+    },
+    {
+      "ticker": "8306",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.012091518741516342,
+      "rmse": 0.014856794840792503,
+      "pearson": -0.12342036349373806,
+      "spearman": -0.21998556998557003,
+      "direction_accuracy": 0.5636363636363636,
+      "n": 55,
+      "brier": 0.2503432425524125,
+      "log_loss": 0.6938868543736644,
+      "ece": 0.16035217705001242,
+      "reliability": [
+        {
+          "lower": 0.4,
+          "n": 8,
+          "mean_probability": 0.48885455979317,
+          "up_frequency": 0.875
+        },
+        {
+          "lower": 0.5,
+          "n": 46,
+          "mean_probability": 0.5189427843138295,
+          "up_frequency": 0.6304347826086957
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 1,
+          "mean_probability": 0.6015742945321984,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": null,
+      "gross_return_sum": 0.0,
+      "net_return_sum": 0.0,
+      "pf": null,
+      "pf_status": "NO_LOSSES_OR_NO_TRADES",
+      "expectancy": null,
+      "sharpe": null,
+      "sortino": null,
+      "max_drawdown": 0.0,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "8316",
+      "model": "champion_replay",
+      "feature_counts": [
+        140
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.011613802231013593,
+      "rmse": 0.014373185170139401,
+      "pearson": 0.05203427193716616,
+      "spearman": 0.06356421356421357,
+      "direction_accuracy": 0.5454545454545454,
+      "n": 55,
+      "brier": 0.2577433914285848,
+      "log_loss": 0.7096737653611006,
+      "ece": 0.10797943704144988,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 1,
+          "mean_probability": 0.22818383528682334,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 4,
+          "mean_probability": 0.3681168480282076,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.4,
+          "n": 13,
+          "mean_probability": 0.45710478695551365,
+          "up_frequency": 0.5384615384615384
+        },
+        {
+          "lower": 0.5,
+          "n": 20,
+          "mean_probability": 0.543469837151066,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 7,
+          "mean_probability": 0.6460151281913475,
+          "up_frequency": 0.42857142857142855
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 8,
+          "mean_probability": 0.7426438156960004,
+          "up_frequency": 0.625
+        },
+        {
+          "lower": 0.8,
+          "n": 2,
+          "mean_probability": 0.8753853354138403,
+          "up_frequency": 1.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 14,
+      "wins": 8,
+      "losses": 6,
+      "win_rate": 0.5714285714285714,
+      "gross_return_sum": 0.03964232961865288,
+      "net_return_sum": 0.03964232961865288,
+      "pf": 1.8372744606795486,
+      "pf_status": "FINITE",
+      "expectancy": 0.00283159497276092,
+      "sharpe": 1.7938283463366456,
+      "sortino": 3.102810945550331,
+      "max_drawdown": -0.03960113926578046,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.004068510006274758,
+        0.009646196027984475
+      ]
+    },
+    {
+      "ticker": "8316",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3,
+        5
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.010848936297319376,
+      "rmse": 0.013543686119175976,
+      "pearson": 0.11686482632978015,
+      "spearman": -0.0066378066378066395,
+      "direction_accuracy": 0.41818181818181815,
+      "n": 55,
+      "brier": 0.24856411496940226,
+      "log_loss": 0.6901127678856376,
+      "ece": 0.11216395151247144,
+      "reliability": [
+        {
+          "lower": 0.30000000000000004,
+          "n": 2,
+          "mean_probability": 0.35148788656330193,
+          "up_frequency": 0.0
+        },
+        {
+          "lower": 0.4,
+          "n": 22,
+          "mean_probability": 0.48083449861525196,
+          "up_frequency": 0.6818181818181818
+        },
+        {
+          "lower": 0.5,
+          "n": 30,
+          "mean_probability": 0.5134316302080799,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 1,
+          "mean_probability": 0.6414516233524715,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": null,
+      "gross_return_sum": 0.0,
+      "net_return_sum": 0.0,
+      "pf": null,
+      "pf_status": "NO_LOSSES_OR_NO_TRADES",
+      "expectancy": null,
+      "sharpe": null,
+      "sortino": null,
+      "max_drawdown": 0.0,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "8411",
+      "model": "champion_replay",
+      "feature_counts": [
+        140
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.014248001426130705,
+      "rmse": 0.017734856826231212,
+      "pearson": -0.089319302824037,
+      "spearman": -0.05916305916305918,
+      "direction_accuracy": 0.43636363636363634,
+      "n": 55,
+      "brier": 0.25539773630341844,
+      "log_loss": 0.7101511031226795,
+      "ece": 0.14454059866228236,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 1,
+          "mean_probability": 0.25925746054269144,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 1,
+          "mean_probability": 0.35747670650244173,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.4,
+          "n": 6,
+          "mean_probability": 0.4813166372676371,
+          "up_frequency": 0.3333333333333333
+        },
+        {
+          "lower": 0.5,
+          "n": 24,
+          "mean_probability": 0.5478826495758328,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 14,
+          "mean_probability": 0.6407721618746383,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 8,
+          "mean_probability": 0.7476079580219318,
+          "up_frequency": 0.75
+        },
+        {
+          "lower": 0.8,
+          "n": 1,
+          "mean_probability": 0.8378042576153467,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 14,
+      "wins": 9,
+      "losses": 5,
+      "win_rate": 0.6428571428571429,
+      "gross_return_sum": 0.11099521524808742,
+      "net_return_sum": 0.11099521524808742,
+      "pf": 4.374339502193968,
+      "pf_status": "FINITE",
+      "expectancy": 0.007928229660577673,
+      "sharpe": 3.827829603398583,
+      "sortino": 11.826833065005582,
+      "max_drawdown": -0.019362974531600075,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.00037284005250995075,
+        0.01632493152884245
+      ]
+    },
+    {
+      "ticker": "8411",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3,
+        5
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.01305899320113293,
+      "rmse": 0.016839277792333376,
+      "pearson": -0.020574291075544086,
+      "spearman": -0.007575757575757578,
+      "direction_accuracy": 0.509090909090909,
+      "n": 55,
+      "brier": 0.24690309873222954,
+      "log_loss": 0.6890740094942439,
+      "ece": 0.12328146770804345,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 2,
+          "mean_probability": 0.22283406716300386,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 1,
+          "mean_probability": 0.33299849566910533,
+          "up_frequency": 0.0
+        },
+        {
+          "lower": 0.4,
+          "n": 9,
+          "mean_probability": 0.4724696179809417,
+          "up_frequency": 0.5555555555555556
+        },
+        {
+          "lower": 0.5,
+          "n": 37,
+          "mean_probability": 0.5223200599884464,
+          "up_frequency": 0.6216216216216216
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 5,
+          "mean_probability": 0.6496411471160186,
+          "up_frequency": 0.8
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 1,
+          "mean_probability": 0.7194248795803796,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 2,
+      "wins": 1,
+      "losses": 1,
+      "win_rate": 0.5,
+      "gross_return_sum": 0.00580429606502475,
+      "net_return_sum": 0.00580429606502475,
+      "pf": 3.9246823584118027,
+      "pf_status": "FINITE",
+      "expectancy": 0.002902148032512375,
+      "sharpe": 1.5389284989574477,
+      "sortino": 6.2603358292093345,
+      "max_drawdown": -0.001984590240485695,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.001984590240485695,
+        0.007788886305510445
+      ]
+    },
+    {
+      "ticker": "8604",
+      "model": "champion_replay",
+      "feature_counts": [
+        140
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.011015271951050603,
+      "rmse": 0.014464302496182831,
+      "pearson": -0.06818736277576253,
+      "spearman": -0.0673881673881674,
+      "direction_accuracy": 0.5454545454545454,
+      "n": 55,
+      "brier": 0.25030769922800494,
+      "log_loss": 0.6975617342599485,
+      "ece": 0.12715309644214523,
+      "reliability": [
+        {
+          "lower": 0.30000000000000004,
+          "n": 3,
+          "mean_probability": 0.3667233401231398,
+          "up_frequency": 0.3333333333333333
+        },
+        {
+          "lower": 0.4,
+          "n": 7,
+          "mean_probability": 0.4778998293842312,
+          "up_frequency": 0.7142857142857143
+        },
+        {
+          "lower": 0.5,
+          "n": 20,
+          "mean_probability": 0.5486425874583293,
+          "up_frequency": 0.7
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 21,
+          "mean_probability": 0.6549980448503178,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 4,
+          "mean_probability": 0.7415899451653617,
+          "up_frequency": 0.25
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 18,
+      "wins": 10,
+      "losses": 8,
+      "win_rate": 0.5555555555555556,
+      "gross_return_sum": 0.06816106885120143,
+      "net_return_sum": 0.06816106885120143,
+      "pf": 2.110159194967527,
+      "pf_status": "FINITE",
+      "expectancy": 0.0037867260472889686,
+      "sharpe": 2.6259964939287417,
+      "sortino": 4.845629699251597,
+      "max_drawdown": -0.028625192598208837,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.0019075736259293785,
+        0.009347729467854683
+      ]
+    },
+    {
+      "ticker": "8604",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3,
+        5
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.010918734992424274,
+      "rmse": 0.014377640434693539,
+      "pearson": -0.1136123764033498,
+      "spearman": -0.06443001443001443,
+      "direction_accuracy": 0.45454545454545453,
+      "n": 55,
+      "brier": 0.25275542999555145,
+      "log_loss": 0.6986830472633155,
+      "ece": 0.12742631915847455,
+      "reliability": [
+        {
+          "lower": 0.4,
+          "n": 20,
+          "mean_probability": 0.4837716981802047,
+          "up_frequency": 0.65
+        },
+        {
+          "lower": 0.5,
+          "n": 35,
+          "mean_probability": 0.5233176709337087,
+          "up_frequency": 0.6285714285714286
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": null,
+      "gross_return_sum": 0.0,
+      "net_return_sum": 0.0,
+      "pf": null,
+      "pf_status": "NO_LOSSES_OR_NO_TRADES",
+      "expectancy": null,
+      "sharpe": null,
+      "sortino": null,
+      "max_drawdown": 0.0,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "8766",
+      "model": "champion_replay",
+      "feature_counts": [
+        140
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.011911208235139949,
+      "rmse": 0.015366737028414346,
+      "pearson": 0.17088204256877687,
+      "spearman": 0.18398268398268403,
+      "direction_accuracy": 0.6181818181818182,
+      "n": 55,
+      "brier": 0.2376060740049655,
+      "log_loss": 0.6673618368536794,
+      "ece": 0.051364439860351815,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 1,
+          "mean_probability": 0.23900166650797933,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 7,
+          "mean_probability": 0.36885057821525596,
+          "up_frequency": 0.42857142857142855
+        },
+        {
+          "lower": 0.4,
+          "n": 25,
+          "mean_probability": 0.45244132928514014,
+          "up_frequency": 0.48
+        },
+        {
+          "lower": 0.5,
+          "n": 13,
+          "mean_probability": 0.5546331515334081,
+          "up_frequency": 0.5384615384615384
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 6,
+          "mean_probability": 0.661888404360471,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 3,
+          "mean_probability": 0.7606224684362847,
+          "up_frequency": 1.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 8,
+      "wins": 7,
+      "losses": 1,
+      "win_rate": 0.875,
+      "gross_return_sum": 0.07662817271391942,
+      "net_return_sum": 0.07662817271391942,
+      "pf": 4.235194536773888,
+      "pf_status": "FINITE",
+      "expectancy": 0.009578521589239927,
+      "sharpe": 3.0704039952179683,
+      "sortino": 6.924992799568882,
+      "max_drawdown": -0.023685800604229645,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.001073920395318785,
+        0.020170089916083905
+      ]
+    },
+    {
+      "ticker": "8766",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3,
+        8
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.012441352737298815,
+      "rmse": 0.015532531560141366,
+      "pearson": 0.11607471868939695,
+      "spearman": 0.004545454545454546,
+      "direction_accuracy": 0.509090909090909,
+      "n": 55,
+      "brier": 0.2662945288714946,
+      "log_loss": 0.7280896194911821,
+      "ece": 0.1282193838128308,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 1,
+          "mean_probability": 0.1562145941965693,
+          "up_frequency": 0.0
+        },
+        {
+          "lower": 0.2,
+          "n": 2,
+          "mean_probability": 0.23366326236595564,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 14,
+          "mean_probability": 0.3566138614530354,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.4,
+          "n": 33,
+          "mean_probability": 0.455650202667311,
+          "up_frequency": 0.5454545454545454
+        },
+        {
+          "lower": 0.5,
+          "n": 5,
+          "mean_probability": 0.521554242279041,
+          "up_frequency": 0.6
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": null,
+      "gross_return_sum": 0.0,
+      "net_return_sum": 0.0,
+      "pf": null,
+      "pf_status": "NO_LOSSES_OR_NO_TRADES",
+      "expectancy": null,
+      "sharpe": null,
+      "sortino": null,
+      "max_drawdown": 0.0,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "9101",
+      "model": "champion_replay",
+      "feature_counts": [
+        184
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.01567009033479967,
+      "rmse": 0.020109651530551546,
+      "pearson": -0.2819831828204085,
+      "spearman": -0.24040404040404048,
+      "direction_accuracy": 0.5272727272727272,
+      "n": 55,
+      "brier": 0.27083389492503573,
+      "log_loss": 0.7445402303846455,
+      "ece": 0.1983023701685639,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 2,
+          "mean_probability": 0.21156216143026246,
+          "up_frequency": 0.5
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 4,
+          "mean_probability": 0.34545976954334934,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.4,
+          "n": 7,
+          "mean_probability": 0.47307466000107856,
+          "up_frequency": 0.8571428571428571
+        },
+        {
+          "lower": 0.5,
+          "n": 13,
+          "mean_probability": 0.5527283164790601,
+          "up_frequency": 0.6923076923076923
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 12,
+          "mean_probability": 0.649766294124365,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 13,
+          "mean_probability": 0.742425523729492,
+          "up_frequency": 0.6153846153846154
+        },
+        {
+          "lower": 0.8,
+          "n": 4,
+          "mean_probability": 0.8385620538873134,
+          "up_frequency": 0.5
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 21,
+      "wins": 13,
+      "losses": 8,
+      "win_rate": 0.6190476190476191,
+      "gross_return_sum": 0.0520239981819961,
+      "net_return_sum": 0.0520239981819961,
+      "pf": 1.4830511808039597,
+      "pf_status": "FINITE",
+      "expectancy": 0.002477333246761719,
+      "sharpe": 1.5297092796171614,
+      "sortino": 2.257863745537889,
+      "max_drawdown": -0.041111187678154026,
+      "sample_status": "DESCRIPTIVE_ONLY",
+      "expectancy_date_bootstrap_ci95": [
+        -0.004229220979538939,
+        0.008688777351806143
+      ]
+    },
+    {
+      "ticker": "9101",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        5,
+        8
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.014354006712508962,
+      "rmse": 0.018221016247599406,
+      "pearson": 0.08400751352994651,
+      "spearman": 0.0476911976911977,
+      "direction_accuracy": 0.6,
+      "n": 55,
+      "brier": 0.24956593450528244,
+      "log_loss": 0.6938763063285753,
+      "ece": 0.1653191930830179,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 2,
+          "mean_probability": 0.2536657510073653,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.4,
+          "n": 18,
+          "mean_probability": 0.4701190887291707,
+          "up_frequency": 0.6111111111111112
+        },
+        {
+          "lower": 0.5,
+          "n": 27,
+          "mean_probability": 0.5452988156776827,
+          "up_frequency": 0.7037037037037037
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 7,
+          "mean_probability": 0.6383442173818888,
+          "up_frequency": 0.7142857142857143
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 1,
+          "mean_probability": 0.7464917363235585,
+          "up_frequency": 1.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 4,
+      "wins": 3,
+      "losses": 1,
+      "win_rate": 0.75,
+      "gross_return_sum": 0.02050325484970761,
+      "net_return_sum": 0.02050325484970761,
+      "pf": 4.227948327620609,
+      "pf_status": "FINITE",
+      "expectancy": 0.005125813712426902,
+      "sharpe": 1.8824389837354079,
+      "sortino": 6.909482156966021,
+      "max_drawdown": -0.006351791530944673,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.0039624499199854835,
+        0.01696092522091608
+      ]
+    },
+    {
+      "ticker": "9104",
+      "model": "champion_replay",
+      "feature_counts": [
+        184
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.013468890984302817,
+      "rmse": 0.01763724039271255,
+      "pearson": -0.10063295894960136,
+      "spearman": -0.05274170274170275,
+      "direction_accuracy": 0.5454545454545454,
+      "n": 55,
+      "brier": 0.2616522920703625,
+      "log_loss": 0.7197789990306823,
+      "ece": 0.162806600702663,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 1,
+          "mean_probability": 0.26245878012947477,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 4,
+          "mean_probability": 0.35291549972971026,
+          "up_frequency": 0.75
+        },
+        {
+          "lower": 0.4,
+          "n": 6,
+          "mean_probability": 0.45643027495788835,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.5,
+          "n": 18,
+          "mean_probability": 0.552580233546718,
+          "up_frequency": 0.7222222222222222
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 19,
+          "mean_probability": 0.6447066227502786,
+          "up_frequency": 0.5789473684210527
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 7,
+          "mean_probability": 0.723440548432535,
+          "up_frequency": 0.5714285714285714
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 12,
+      "wins": 6,
+      "losses": 6,
+      "win_rate": 0.5,
+      "gross_return_sum": -0.05055707982284219,
+      "net_return_sum": -0.05055707982284219,
+      "pf": 0.45771562670865684,
+      "pf_status": "FINITE",
+      "expectancy": -0.004213089985236849,
+      "sharpe": -1.8991363858632535,
+      "sortino": -2.075473254279474,
+      "max_drawdown": -0.06679980249827655,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.013876400431987667,
+        0.004080985961112253
+      ]
+    },
+    {
+      "ticker": "9104",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.012403294515773855,
+      "rmse": 0.016105160929283508,
+      "pearson": 0.06512258424640575,
+      "spearman": 0.11132756132756136,
+      "direction_accuracy": 0.5636363636363636,
+      "n": 55,
+      "brier": 0.24933569418584065,
+      "log_loss": 0.693044428394492,
+      "ece": 0.16749643798494598,
+      "reliability": [
+        {
+          "lower": 0.2,
+          "n": 1,
+          "mean_probability": 0.2528190408238616,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.4,
+          "n": 15,
+          "mean_probability": 0.4887152104475011,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.5,
+          "n": 38,
+          "mean_probability": 0.5217089713213435,
+          "up_frequency": 0.6578947368421053
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 1,
+          "mean_probability": 0.6207921969194606,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": null,
+      "gross_return_sum": 0.0,
+      "net_return_sum": 0.0,
+      "pf": null,
+      "pf_status": "NO_LOSSES_OR_NO_TRADES",
+      "expectancy": null,
+      "sharpe": null,
+      "sortino": null,
+      "max_drawdown": 0.0,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    },
+    {
+      "ticker": "9107",
+      "model": "champion_replay",
+      "feature_counts": [
+        184
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.014833580778485782,
+      "rmse": 0.019938467110343097,
+      "pearson": -0.07060218284592273,
+      "spearman": -0.020274170274170278,
+      "direction_accuracy": 0.5636363636363636,
+      "n": 55,
+      "brier": 0.2568793874725756,
+      "log_loss": 0.7090605068497624,
+      "ece": 0.13998638154332477,
+      "reliability": [
+        {
+          "lower": 0.30000000000000004,
+          "n": 4,
+          "mean_probability": 0.36561239655445954,
+          "up_frequency": 1.0
+        },
+        {
+          "lower": 0.4,
+          "n": 11,
+          "mean_probability": 0.45244967276640663,
+          "up_frequency": 0.6363636363636364
+        },
+        {
+          "lower": 0.5,
+          "n": 21,
+          "mean_probability": 0.5465722169658235,
+          "up_frequency": 0.6190476190476191
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 12,
+          "mean_probability": 0.6436803943028838,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 6,
+          "mean_probability": 0.7437680651938718,
+          "up_frequency": 0.8333333333333334
+        },
+        {
+          "lower": 0.8,
+          "n": 1,
+          "mean_probability": 0.8034366506113023,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 14,
+      "wins": 9,
+      "losses": 4,
+      "win_rate": 0.6428571428571429,
+      "gross_return_sum": 0.09886521185732045,
+      "net_return_sum": 0.09886521185732045,
+      "pf": 2.625464767378691,
+      "pf_status": "FINITE",
+      "expectancy": 0.00706180084695146,
+      "sharpe": 2.855323847199597,
+      "sortino": 5.403727847118558,
+      "max_drawdown": -0.03536231884057961,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.0026507666340944845,
+        0.01736413497970831
+      ]
+    },
+    {
+      "ticker": "9107",
+      "model": "compact_nested_ridge",
+      "feature_counts": [
+        3,
+        5
+      ],
+      "samples": 55,
+      "sessions": 55,
+      "return_predictions": 55,
+      "mae": 0.015114985029137072,
+      "rmse": 0.01914372974511182,
+      "pearson": 0.09394106810393194,
+      "spearman": -0.0006493506493506496,
+      "direction_accuracy": 0.4727272727272727,
+      "n": 55,
+      "brier": 0.2536577088819811,
+      "log_loss": 0.7005001279613186,
+      "ece": 0.18378287917698524,
+      "reliability": [
+        {
+          "lower": 0.4,
+          "n": 22,
+          "mean_probability": 0.4780804107301487,
+          "up_frequency": 0.7727272727272727
+        },
+        {
+          "lower": 0.5,
+          "n": 32,
+          "mean_probability": 0.5306667468300028,
+          "up_frequency": 0.625
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 1,
+          "mean_probability": 0.6071632893575489,
+          "up_frequency": 0.0
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": null,
+      "gross_return_sum": 0.0,
+      "net_return_sum": 0.0,
+      "pf": null,
+      "pf_status": "NO_LOSSES_OR_NO_TRADES",
+      "expectancy": null,
+      "sharpe": null,
+      "sortino": null,
+      "max_drawdown": 0.0,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": null
+    }
+  ],
+  "aggregate": [
+    {
+      "model": "champion_replay",
+      "samples": 1210,
+      "sessions": 55,
+      "return_predictions": 1210,
+      "mae": 0.013694417357722356,
+      "rmse": 0.017437182883946533,
+      "pearson": 0.041378781552808455,
+      "spearman": 0.037006088727864345,
+      "direction_accuracy": 0.5140495867768595,
+      "n": 1210,
+      "brier": 0.2634190795234975,
+      "log_loss": 0.7236763281054944,
+      "ece": 0.10216001025268791,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 5,
+          "mean_probability": 0.1837572358554181,
+          "up_frequency": 0.4
+        },
+        {
+          "lower": 0.2,
+          "n": 42,
+          "mean_probability": 0.2529090139547894,
+          "up_frequency": 0.6428571428571429
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 165,
+          "mean_probability": 0.3546243018774173,
+          "up_frequency": 0.509090909090909
+        },
+        {
+          "lower": 0.4,
+          "n": 278,
+          "mean_probability": 0.4546552329384605,
+          "up_frequency": 0.5179856115107914
+        },
+        {
+          "lower": 0.5,
+          "n": 358,
+          "mean_probability": 0.5482083571404033,
+          "up_frequency": 0.5810055865921788
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 242,
+          "mean_probability": 0.6427040732449697,
+          "up_frequency": 0.5206611570247934
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 96,
+          "mean_probability": 0.7379640801901345,
+          "up_frequency": 0.5625
+        },
+        {
+          "lower": 0.8,
+          "n": 24,
+          "mean_probability": 0.8308915071052203,
+          "up_frequency": 0.625
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 233,
+      "wins": 129,
+      "losses": 102,
+      "win_rate": 0.5536480686695279,
+      "gross_return_sum": 0.6548424998588938,
+      "net_return_sum": 0.6548424998588938,
+      "pf": 1.507356429198435,
+      "pf_status": "FINITE",
+      "expectancy": 0.0028104828320124195,
+      "sharpe": 2.38475011823736,
+      "sortino": 3.793475193084664,
+      "max_drawdown": -0.0758995036895539,
+      "sample_status": "DESCRIPTIVE_ONLY",
+      "expectancy_date_bootstrap_ci95": [
+        -0.0014015062143648085,
+        0.006838735932288712
+      ]
+    },
+    {
+      "model": "champion_replay",
+      "samples": 1210,
+      "sessions": 55,
+      "return_predictions": 1210,
+      "mae": 0.013694417357722356,
+      "rmse": 0.017437182883946533,
+      "pearson": 0.041378781552808455,
+      "spearman": 0.037006088727864345,
+      "direction_accuracy": 0.5140495867768595,
+      "n": 1210,
+      "brier": 0.2634190795234975,
+      "log_loss": 0.7236763281054944,
+      "ece": 0.10216001025268791,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 5,
+          "mean_probability": 0.1837572358554181,
+          "up_frequency": 0.4
+        },
+        {
+          "lower": 0.2,
+          "n": 42,
+          "mean_probability": 0.2529090139547894,
+          "up_frequency": 0.6428571428571429
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 165,
+          "mean_probability": 0.3546243018774173,
+          "up_frequency": 0.509090909090909
+        },
+        {
+          "lower": 0.4,
+          "n": 278,
+          "mean_probability": 0.4546552329384605,
+          "up_frequency": 0.5179856115107914
+        },
+        {
+          "lower": 0.5,
+          "n": 358,
+          "mean_probability": 0.5482083571404033,
+          "up_frequency": 0.5810055865921788
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 242,
+          "mean_probability": 0.6427040732449697,
+          "up_frequency": 0.5206611570247934
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 96,
+          "mean_probability": 0.7379640801901345,
+          "up_frequency": 0.5625
+        },
+        {
+          "lower": 0.8,
+          "n": 24,
+          "mean_probability": 0.8308915071052203,
+          "up_frequency": 0.625
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 5,
+      "trades": 233,
+      "wins": 127,
+      "losses": 106,
+      "win_rate": 0.5450643776824035,
+      "gross_return_sum": 0.6548424998588938,
+      "net_return_sum": 0.5383424998588937,
+      "pf": 1.4008563696651717,
+      "pf_status": "FINITE",
+      "expectancy": 0.0023104828320124195,
+      "sharpe": 1.9185369633063658,
+      "sortino": 2.975986728652671,
+      "max_drawdown": -0.08513402970394957,
+      "sample_status": "DESCRIPTIVE_ONLY",
+      "expectancy_date_bootstrap_ci95": [
+        -0.0019015062143648085,
+        0.006338735932288712
+      ]
+    },
+    {
+      "model": "champion_replay",
+      "samples": 1210,
+      "sessions": 55,
+      "return_predictions": 1210,
+      "mae": 0.013694417357722356,
+      "rmse": 0.017437182883946533,
+      "pearson": 0.041378781552808455,
+      "spearman": 0.037006088727864345,
+      "direction_accuracy": 0.5140495867768595,
+      "n": 1210,
+      "brier": 0.2634190795234975,
+      "log_loss": 0.7236763281054944,
+      "ece": 0.10216001025268791,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 5,
+          "mean_probability": 0.1837572358554181,
+          "up_frequency": 0.4
+        },
+        {
+          "lower": 0.2,
+          "n": 42,
+          "mean_probability": 0.2529090139547894,
+          "up_frequency": 0.6428571428571429
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 165,
+          "mean_probability": 0.3546243018774173,
+          "up_frequency": 0.509090909090909
+        },
+        {
+          "lower": 0.4,
+          "n": 278,
+          "mean_probability": 0.4546552329384605,
+          "up_frequency": 0.5179856115107914
+        },
+        {
+          "lower": 0.5,
+          "n": 358,
+          "mean_probability": 0.5482083571404033,
+          "up_frequency": 0.5810055865921788
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 242,
+          "mean_probability": 0.6427040732449697,
+          "up_frequency": 0.5206611570247934
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 96,
+          "mean_probability": 0.7379640801901345,
+          "up_frequency": 0.5625
+        },
+        {
+          "lower": 0.8,
+          "n": 24,
+          "mean_probability": 0.8308915071052203,
+          "up_frequency": 0.625
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 10,
+      "trades": 233,
+      "wins": 125,
+      "losses": 108,
+      "win_rate": 0.5364806866952789,
+      "gross_return_sum": 0.6548424998588938,
+      "net_return_sum": 0.42184249985889355,
+      "pf": 1.3019832532276534,
+      "pf_status": "FINITE",
+      "expectancy": 0.0018104828320124186,
+      "sharpe": 1.45132958064957,
+      "sortino": 2.1957959641098554,
+      "max_drawdown": -0.09428084645326551,
+      "sample_status": "DESCRIPTIVE_ONLY",
+      "expectancy_date_bootstrap_ci95": [
+        -0.0024015062143648083,
+        0.005838735932288712
+      ]
+    },
+    {
+      "model": "champion_replay",
+      "samples": 1210,
+      "sessions": 55,
+      "return_predictions": 1210,
+      "mae": 0.013694417357722356,
+      "rmse": 0.017437182883946533,
+      "pearson": 0.041378781552808455,
+      "spearman": 0.037006088727864345,
+      "direction_accuracy": 0.5140495867768595,
+      "n": 1210,
+      "brier": 0.2634190795234975,
+      "log_loss": 0.7236763281054944,
+      "ece": 0.10216001025268791,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 5,
+          "mean_probability": 0.1837572358554181,
+          "up_frequency": 0.4
+        },
+        {
+          "lower": 0.2,
+          "n": 42,
+          "mean_probability": 0.2529090139547894,
+          "up_frequency": 0.6428571428571429
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 165,
+          "mean_probability": 0.3546243018774173,
+          "up_frequency": 0.509090909090909
+        },
+        {
+          "lower": 0.4,
+          "n": 278,
+          "mean_probability": 0.4546552329384605,
+          "up_frequency": 0.5179856115107914
+        },
+        {
+          "lower": 0.5,
+          "n": 358,
+          "mean_probability": 0.5482083571404033,
+          "up_frequency": 0.5810055865921788
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 242,
+          "mean_probability": 0.6427040732449697,
+          "up_frequency": 0.5206611570247934
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 96,
+          "mean_probability": 0.7379640801901345,
+          "up_frequency": 0.5625
+        },
+        {
+          "lower": 0.8,
+          "n": 24,
+          "mean_probability": 0.8308915071052203,
+          "up_frequency": 0.625
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 15,
+      "trades": 233,
+      "wins": 121,
+      "losses": 112,
+      "win_rate": 0.51931330472103,
+      "gross_return_sum": 0.6548424998588938,
+      "net_return_sum": 0.3053424998588935,
+      "pf": 1.2103008703836737,
+      "pf_status": "FINITE",
+      "expectancy": 0.0013104828320124186,
+      "sharpe": 0.9833682085851758,
+      "sortino": 1.4515163086980296,
+      "max_drawdown": -0.10375649045544844,
+      "sample_status": "DESCRIPTIVE_ONLY",
+      "expectancy_date_bootstrap_ci95": [
+        -0.0029015062143648083,
+        0.005338735932288711
+      ]
+    },
+    {
+      "model": "champion_replay",
+      "samples": 1210,
+      "sessions": 55,
+      "return_predictions": 1210,
+      "mae": 0.013694417357722356,
+      "rmse": 0.017437182883946533,
+      "pearson": 0.041378781552808455,
+      "spearman": 0.037006088727864345,
+      "direction_accuracy": 0.5140495867768595,
+      "n": 1210,
+      "brier": 0.2634190795234975,
+      "log_loss": 0.7236763281054944,
+      "ece": 0.10216001025268791,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 5,
+          "mean_probability": 0.1837572358554181,
+          "up_frequency": 0.4
+        },
+        {
+          "lower": 0.2,
+          "n": 42,
+          "mean_probability": 0.2529090139547894,
+          "up_frequency": 0.6428571428571429
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 165,
+          "mean_probability": 0.3546243018774173,
+          "up_frequency": 0.509090909090909
+        },
+        {
+          "lower": 0.4,
+          "n": 278,
+          "mean_probability": 0.4546552329384605,
+          "up_frequency": 0.5179856115107914
+        },
+        {
+          "lower": 0.5,
+          "n": 358,
+          "mean_probability": 0.5482083571404033,
+          "up_frequency": 0.5810055865921788
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 242,
+          "mean_probability": 0.6427040732449697,
+          "up_frequency": 0.5206611570247934
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 96,
+          "mean_probability": 0.7379640801901345,
+          "up_frequency": 0.5625
+        },
+        {
+          "lower": 0.8,
+          "n": 24,
+          "mean_probability": 0.8308915071052203,
+          "up_frequency": 0.625
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 20,
+      "trades": 233,
+      "wins": 118,
+      "losses": 115,
+      "win_rate": 0.5064377682403434,
+      "gross_return_sum": 0.6548424998588938,
+      "net_return_sum": 0.18884249985889345,
+      "pf": 1.1251502369942619,
+      "pf_status": "FINITE",
+      "expectancy": 0.0008104828320124182,
+      "sharpe": 0.5148950385029438,
+      "sortino": 0.7417078259532971,
+      "max_drawdown": -0.11361335533196248,
+      "sample_status": "DESCRIPTIVE_ONLY",
+      "expectancy_date_bootstrap_ci95": [
+        -0.0034015062143648083,
+        0.004838735932288712
+      ]
+    },
+    {
+      "model": "compact_nested_ridge",
+      "samples": 1210,
+      "sessions": 55,
+      "return_predictions": 1210,
+      "mae": 0.012747140494794475,
+      "rmse": 0.016174524011331987,
+      "pearson": 0.022007671770709756,
+      "spearman": 0.017666899814325496,
+      "direction_accuracy": 0.5057851239669422,
+      "n": 1210,
+      "brier": 0.2565124113959637,
+      "log_loss": 0.7073183715921694,
+      "ece": 0.07965734407843872,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 3,
+          "mean_probability": 0.1566824871435671,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.2,
+          "n": 17,
+          "mean_probability": 0.25830268317257443,
+          "up_frequency": 0.6470588235294118
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 89,
+          "mean_probability": 0.3640347202855303,
+          "up_frequency": 0.5280898876404494
+        },
+        {
+          "lower": 0.4,
+          "n": 617,
+          "mean_probability": 0.4723780107280715,
+          "up_frequency": 0.5494327390599676
+        },
+        {
+          "lower": 0.5,
+          "n": 446,
+          "mean_probability": 0.5227847373156926,
+          "up_frequency": 0.5560538116591929
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 36,
+          "mean_probability": 0.6333049544945161,
+          "up_frequency": 0.3333333333333333
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 2,
+          "mean_probability": 0.732958307951969,
+          "up_frequency": 0.5
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 0,
+      "trades": 13,
+      "wins": 4,
+      "losses": 9,
+      "win_rate": 0.3076923076923077,
+      "gross_return_sum": -0.08943364691416222,
+      "net_return_sum": -0.08943364691416222,
+      "pf": 0.2792118672668885,
+      "pf_status": "FINITE",
+      "expectancy": -0.006879511301089402,
+      "sharpe": -2.908982453263363,
+      "sortino": -3.1264799560014804,
+      "max_drawdown": -0.09015934253456048,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.017162217833410848,
+        0.0018574307793043801
+      ]
+    },
+    {
+      "model": "compact_nested_ridge",
+      "samples": 1210,
+      "sessions": 55,
+      "return_predictions": 1210,
+      "mae": 0.012747140494794475,
+      "rmse": 0.016174524011331987,
+      "pearson": 0.022007671770709756,
+      "spearman": 0.017666899814325496,
+      "direction_accuracy": 0.5057851239669422,
+      "n": 1210,
+      "brier": 0.2565124113959637,
+      "log_loss": 0.7073183715921694,
+      "ece": 0.07965734407843872,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 3,
+          "mean_probability": 0.1566824871435671,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.2,
+          "n": 17,
+          "mean_probability": 0.25830268317257443,
+          "up_frequency": 0.6470588235294118
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 89,
+          "mean_probability": 0.3640347202855303,
+          "up_frequency": 0.5280898876404494
+        },
+        {
+          "lower": 0.4,
+          "n": 617,
+          "mean_probability": 0.4723780107280715,
+          "up_frequency": 0.5494327390599676
+        },
+        {
+          "lower": 0.5,
+          "n": 446,
+          "mean_probability": 0.5227847373156926,
+          "up_frequency": 0.5560538116591929
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 36,
+          "mean_probability": 0.6333049544945161,
+          "up_frequency": 0.3333333333333333
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 2,
+          "mean_probability": 0.732958307951969,
+          "up_frequency": 0.5
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 5,
+      "trades": 13,
+      "wins": 4,
+      "losses": 9,
+      "win_rate": 0.3076923076923077,
+      "gross_return_sum": -0.08943364691416222,
+      "net_return_sum": -0.09593364691416223,
+      "pf": 0.2538851080229871,
+      "pf_status": "FINITE",
+      "expectancy": -0.007379511301089403,
+      "sharpe": -3.0603447663220082,
+      "sortino": -3.261517766684005,
+      "max_drawdown": -0.09247523171344896,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.017662217833410848,
+        0.00135743077930438
+      ]
+    },
+    {
+      "model": "compact_nested_ridge",
+      "samples": 1210,
+      "sessions": 55,
+      "return_predictions": 1210,
+      "mae": 0.012747140494794475,
+      "rmse": 0.016174524011331987,
+      "pearson": 0.022007671770709756,
+      "spearman": 0.017666899814325496,
+      "direction_accuracy": 0.5057851239669422,
+      "n": 1210,
+      "brier": 0.2565124113959637,
+      "log_loss": 0.7073183715921694,
+      "ece": 0.07965734407843872,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 3,
+          "mean_probability": 0.1566824871435671,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.2,
+          "n": 17,
+          "mean_probability": 0.25830268317257443,
+          "up_frequency": 0.6470588235294118
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 89,
+          "mean_probability": 0.3640347202855303,
+          "up_frequency": 0.5280898876404494
+        },
+        {
+          "lower": 0.4,
+          "n": 617,
+          "mean_probability": 0.4723780107280715,
+          "up_frequency": 0.5494327390599676
+        },
+        {
+          "lower": 0.5,
+          "n": 446,
+          "mean_probability": 0.5227847373156926,
+          "up_frequency": 0.5560538116591929
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 36,
+          "mean_probability": 0.6333049544945161,
+          "up_frequency": 0.3333333333333333
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 2,
+          "mean_probability": 0.732958307951969,
+          "up_frequency": 0.5
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 10,
+      "trades": 13,
+      "wins": 4,
+      "losses": 9,
+      "win_rate": 0.3076923076923077,
+      "gross_return_sum": -0.08943364691416222,
+      "net_return_sum": -0.10243364691416224,
+      "pf": 0.23027119052056982,
+      "pf_status": "FINITE",
+      "expectancy": -0.007879511301089402,
+      "sharpe": -3.207232820870614,
+      "sortino": -3.3909944889759966,
+      "max_drawdown": -0.09478640290092533,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.01816221783341085,
+        0.0008574307793043801
+      ]
+    },
+    {
+      "model": "compact_nested_ridge",
+      "samples": 1210,
+      "sessions": 55,
+      "return_predictions": 1210,
+      "mae": 0.012747140494794475,
+      "rmse": 0.016174524011331987,
+      "pearson": 0.022007671770709756,
+      "spearman": 0.017666899814325496,
+      "direction_accuracy": 0.5057851239669422,
+      "n": 1210,
+      "brier": 0.2565124113959637,
+      "log_loss": 0.7073183715921694,
+      "ece": 0.07965734407843872,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 3,
+          "mean_probability": 0.1566824871435671,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.2,
+          "n": 17,
+          "mean_probability": 0.25830268317257443,
+          "up_frequency": 0.6470588235294118
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 89,
+          "mean_probability": 0.3640347202855303,
+          "up_frequency": 0.5280898876404494
+        },
+        {
+          "lower": 0.4,
+          "n": 617,
+          "mean_probability": 0.4723780107280715,
+          "up_frequency": 0.5494327390599676
+        },
+        {
+          "lower": 0.5,
+          "n": 446,
+          "mean_probability": 0.5227847373156926,
+          "up_frequency": 0.5560538116591929
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 36,
+          "mean_probability": 0.6333049544945161,
+          "up_frequency": 0.3333333333333333
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 2,
+          "mean_probability": 0.732958307951969,
+          "up_frequency": 0.5
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 15,
+      "trades": 13,
+      "wins": 4,
+      "losses": 9,
+      "win_rate": 0.3076923076923077,
+      "gross_return_sum": -0.08943364691416222,
+      "net_return_sum": -0.10893364691416224,
+      "pf": 0.20820203967373088,
+      "pf_status": "FINITE",
+      "expectancy": -0.008379511301089403,
+      "sharpe": -3.349619057126076,
+      "sortino": -3.51515997153589,
+      "max_drawdown": -0.09709286330897826,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.01866221783341085,
+        0.0003574307793043801
+      ]
+    },
+    {
+      "model": "compact_nested_ridge",
+      "samples": 1210,
+      "sessions": 55,
+      "return_predictions": 1210,
+      "mae": 0.012747140494794475,
+      "rmse": 0.016174524011331987,
+      "pearson": 0.022007671770709756,
+      "spearman": 0.017666899814325496,
+      "direction_accuracy": 0.5057851239669422,
+      "n": 1210,
+      "brier": 0.2565124113959637,
+      "log_loss": 0.7073183715921694,
+      "ece": 0.07965734407843872,
+      "reliability": [
+        {
+          "lower": 0.1,
+          "n": 3,
+          "mean_probability": 0.1566824871435671,
+          "up_frequency": 0.6666666666666666
+        },
+        {
+          "lower": 0.2,
+          "n": 17,
+          "mean_probability": 0.25830268317257443,
+          "up_frequency": 0.6470588235294118
+        },
+        {
+          "lower": 0.30000000000000004,
+          "n": 89,
+          "mean_probability": 0.3640347202855303,
+          "up_frequency": 0.5280898876404494
+        },
+        {
+          "lower": 0.4,
+          "n": 617,
+          "mean_probability": 0.4723780107280715,
+          "up_frequency": 0.5494327390599676
+        },
+        {
+          "lower": 0.5,
+          "n": 446,
+          "mean_probability": 0.5227847373156926,
+          "up_frequency": 0.5560538116591929
+        },
+        {
+          "lower": 0.6000000000000001,
+          "n": 36,
+          "mean_probability": 0.6333049544945161,
+          "up_frequency": 0.3333333333333333
+        },
+        {
+          "lower": 0.7000000000000001,
+          "n": 2,
+          "mean_probability": 0.732958307951969,
+          "up_frequency": 0.5
+        }
+      ],
+      "interval_samples": 0,
+      "interval80_coverage": null,
+      "interval80_mean_width": null,
+      "cost_bp": 20,
+      "trades": 13,
+      "wins": 3,
+      "losses": 10,
+      "win_rate": 0.23076923076923078,
+      "gross_return_sum": -0.08943364691416222,
+      "net_return_sum": -0.11543364691416225,
+      "pf": 0.19008267720212285,
+      "pf_status": "FINITE",
+      "expectancy": -0.008879511301089403,
+      "sharpe": -3.487497818538213,
+      "sortino": -3.6342565788594516,
+      "max_drawdown": -0.09939462014224354,
+      "sample_status": "LOW_SAMPLE",
+      "expectancy_date_bootstrap_ci95": [
+        -0.019162217833410846,
+        -0.0001425692206956199
+      ]
+    }
+  ],
+  "promotion": "NOT_PROMOTED",
+  "limitations": [
+    "Historical daily available_at estimates do not prove actual vendor availability.",
+    "Current champion resolver replay; initial feature coverage frozen, unlike legacy daily production coverage.",
+    "Compact candidates use existing covered daily returns only, not all proposed IR factors.",
+    "Thresholds fixed at current .003/.625 for both candidates; this is inspected development data."
+  ]
+}

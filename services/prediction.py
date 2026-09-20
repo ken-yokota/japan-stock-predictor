@@ -246,6 +246,34 @@ class PredictionService:
             dataset = self.build_dataset(
                 ticker, prediction_date, operational=operational
             )
+        if dataset.missing_required_indicators:
+            return PredictionComputation(
+                dataset,
+                None,
+                self._insufficient(
+                    ticker,
+                    prediction_date,
+                    dataset,
+                    "required indicators unavailable: "
+                    + ", ".join(dataset.missing_required_indicators),
+                ),
+            )
+        registry = self._config.ticker_features
+        if (
+            registry is not None
+            and registry.tickers[ticker].selected_columns is not None
+            and dataset.current_frame.isna().any(axis=None)
+        ):
+            return PredictionComputation(
+                dataset,
+                None,
+                self._insufficient(
+                    ticker,
+                    prediction_date,
+                    dataset,
+                    "frozen selected feature missing at cutoff",
+                ),
+            )
         minimum_rows = self._config.model.training.minimum_complete_rows
         if len(dataset.training_frame) < minimum_rows:
             return PredictionComputation(

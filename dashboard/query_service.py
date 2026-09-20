@@ -80,6 +80,28 @@ class DashboardQueryService:
             return QueryResult.unavailable()
         return QueryResult.from_rows(rows)
 
+    def latest_model_diagnostics(self, ticker: str) -> QueryResult:
+        """Saved explanation for the latest successful daily linear fit."""
+        return self._read(
+            required={
+                "model_runs": frozenset(
+                    {"ticker", "task", "cutoff_at", "diagnostics", "status"}
+                ),
+                "feature_sets": frozenset({"feature_set_id", "details", "config_hash"}),
+            },
+            statement="""
+                SELECT m.cutoff_at, m.algorithm, m.feature_version, m.model_version,
+                       m.training_start, m.training_end, m.diagnostics,
+                       f.details, f.config_hash
+                FROM model_runs m JOIN feature_sets f
+                  ON f.feature_set_id = m.feature_set_id
+                WHERE m.ticker = :ticker AND m.task = 'REGRESSION'
+                  AND m.status = 'SUCCESS'
+                ORDER BY m.cutoff_at DESC, m.started_at DESC LIMIT 1
+            """,
+            parameters={"ticker": ticker},
+        )
+
     def published_prediction_history(self, since: str | None = None) -> QueryResult:
         """Every published prediction in the window, with its settled outcome.
 

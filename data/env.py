@@ -35,6 +35,15 @@ class EnvironmentSettings(BaseSettings):
     smtp_password: SecretStr | None = None
     email_from: str | None = None
     email_to: str | None = None
+    test_email_to: str | None = None
+
+    def require_test_email_addresses(self) -> tuple[str, str]:
+        """Use the configured operator recipient when no TEST override exists."""
+        recipient = self.test_email_to or self.email_to
+        if not self.email_from or not recipient:
+            raise ValueError("EMAIL_FROM and TEST_EMAIL_TO or EMAIL_TO are required")
+        return self.email_from, recipient
+
     app_url: str = "http://localhost:8501"
     timezone: str = "Asia/Tokyo"
     eodhd_base_url: str = "https://eodhd.com/api"

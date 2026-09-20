@@ -26,6 +26,8 @@ from yaml.constructor import ConstructorError
 from yaml.nodes import MappingNode
 from yaml.resolver import BaseResolver
 
+from data.feature_registry import FeatureRegistry
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG_DIR = PROJECT_ROOT / "config"
 
@@ -1050,12 +1052,24 @@ class AppConfig(_StrictModel):
     settings: SettingsConfig
     model: ModelConfig
     trading: TradingConfig
+    ticker_features: FeatureRegistry | None = None
 
     @model_validator(mode="after")
     def validate_cross_file_references(self) -> Self:
         """Validate stock-specific factors and primary-provider coverage."""
 
         tickers = {stock.ticker for stock in self.stocks.stocks}
+        if self.ticker_features is not None:
+            if set(self.ticker_features.tickers) != tickers:
+                raise ValueError(
+                    "feature registry must cover every configured ticker exactly"
+                )
+            catalog = {item.id: item for item in self.indicators.indicators}
+            for entry in self.ticker_features.tickers.values():
+                if any(name not in catalog for name in entry.selected):
+                    raise ValueError("unknown selected registry indicator")
+                if any(not catalog[name].enabled for name in entry.selected):
+                    raise ValueError("selected registry indicator must be enabled")
         primary_provider = self.settings.provider.primary
 
         legacy_model = self.settings.model
@@ -1191,7 +1205,7 @@ def _load_yaml(path: Path) -> dict[str, Any]:
     return cast(dict[str, Any], raw)
 
 
-def _validate_file(model: type[_StrictModel], path: Path) -> _StrictModel:
+def _validate_file(model: type[BaseModel], path: Path) -> BaseModel:
     """Load and validate a YAML file with a stable public error type."""
 
     try:
@@ -1249,6 +1263,12 @@ def load_app_config(config_dir: str | Path | None = None) -> AppConfig:
     """Load and cross-validate every application configuration file."""
 
     directory = Path(config_dir) if config_dir is not None else DEFAULT_CONFIG_DIR
+    registry_path = directory / "ticker_feature_sets.yaml"
+    registry = (
+        cast(FeatureRegistry, _validate_file(FeatureRegistry, registry_path))
+        if registry_path.exists()
+        else None
+    )
     try:
         return AppConfig(
             stocks=load_stocks_config(directory / "stocks.yaml"),
@@ -1256,6 +1276,7 @@ def load_app_config(config_dir: str | Path | None = None) -> AppConfig:
             settings=load_settings_config(directory / "settings.yaml"),
             model=load_model_config(directory / "model.yaml"),
             trading=load_trading_config(directory / "trading.yaml"),
+            ticker_features=registry,
         )
     except ValidationError as exc:
         raise ConfigError(

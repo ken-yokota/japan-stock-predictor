@@ -1,0 +1,265 @@
+{
+  "base": "0bf16a3a00f7ab8e4ee11a81bbc02e7321b896c5",
+  "all_commit_count": 284,
+  "original_local_main": "2f21d07aca086bf9ecb1ed047fca59c3ab464a98",
+  "original_main_behind": 98,
+  "remote_refs": [
+    {
+      "ref": "origin/audit-prediction-accuracy",
+      "head": "dcde6297b667e7a682a2f0b422319ced982fb724",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/automate-completeness-audit",
+      "head": "fd2b04bedff956f30039826790055babeeee9155",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/buy-hit-denominator",
+      "head": "0fa8e3f7d66558dccb96cadb2f7c4b29e675cbc1",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/cache-reads-without-pickling",
+      "head": "61761db50bf899d384747221cde5de7f7a4ddb45",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/desktop-compact-arm-2026-08-11",
+      "head": "d06e7f72e0c8901b64091f9770fb8f5cdec5ceeb",
+      "merged_by_ancestry": false,
+      "disposition": "REVIEW_INDIVIDUAL_NO_BULK_MERGE",
+      "unique_commits": [
+        "d06e7f72e0c8901b64091f9770fb8f5cdec5ceeb Preserve the Desktop working copy's uncommitted state"
+      ]
+    },
+    {
+      "ref": "origin/diagnose-coverage-gaps",
+      "head": "dc6f9b7df6fad8ffebcabd682cd60384ec1cb203",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/diagnose-dashboard-cache",
+      "head": "3c6426dc2ae3159038aa4a0eb2361e89a23fdf61",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/external-morning-kick",
+      "head": "2d34b3b0595a1d7a7fb9406c140a4730fc2c7710",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/fix-accuracy-audit-decimal",
+      "head": "ab0e5a4f85cc11bc2fa90bc79da3e9aaddfaea25",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/holiday-reference-runs",
+      "head": "f5a8b2adc2f0d32ff61668e766216ca5887ef27f",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/indicator-redesign",
+      "head": "19ecc10a9e045443eff9badae153f82576809ae5",
+      "merged_by_ancestry": false,
+      "disposition": "REVIEW_INDIVIDUAL_NO_BULK_MERGE",
+      "unique_commits": [
+        "19ecc10a9e045443eff9badae153f82576809ae5 Scope nine series to the businesses that actually have them",
+        "1cb302b80641c74ad9aaff9fce53388c5d18a88a Measure the production shape itself, and find it losing money",
+        "68c2d884164b8fb45780102598922571c4aedbac Write down what was decided today, and what I got wrong",
+        "27e9b3f8726c400c76895321eed35b377d2e6f74 Ask which horizons, not whether to read a level at all",
+        "fef4e12278d59a7f0edffbfdead9fc7a62863a52 Read each series as a level, not only as a change",
+        "40421d27ff2dbca1cfc131f6d467d6423ac767df Let a series belong to one stock"
+      ]
+    },
+    {
+      "ref": "origin/main",
+      "head": "0bf16a3a00f7ab8e4ee11a81bbc02e7321b896c5",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/morning-completeness-audit",
+      "head": "14aff4e92143b1835bb216142ee6c14ed6e8b7cb",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/morning-observability-ui",
+      "head": "8dc67c630f2ab6b7222d09cfc74de57676e68d86",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/narrow-universe-and-guard-the-dashboard",
+      "head": "5d410423c734c3cc1a9785fa7c3c0efe1d1d50c7",
+      "merged_by_ancestry": false,
+      "disposition": "REVIEW_INDIVIDUAL_NO_BULK_MERGE",
+      "unique_commits": [
+        "5d410423c734c3cc1a9785fa7c3c0efe1d1d50c7 Publish the dashboard's state as a public JSON file",
+        "86a5aff0b40de46647378c451cad8f5127455892 Wrap the line Ruff flagged in the new contract test",
+        "f1a6894fffdc3567c2a5500180bf561e5304aed8 Let the fetch plan follow the universe instead of a fixed 22",
+        "c717177f628d0c14a8ff36b634c1ad251317fbb7 Narrow the universe to 海運・石油・金融",
+        "07017d2aeaa4d8540e78de47f4173803f40264a9 Load the dashboard the way Streamlit loads it, in CI"
+      ]
+    },
+    {
+      "ref": "origin/observe-missing-indicators",
+      "head": "a52ab429300f7fc0b7eb38faa76396f3c0d821fa",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/outcomes-module",
+      "head": "b68e22398765cd32f0c97177bce56e1e3c7fa5e9",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/pin-delayed-execution-lookahead",
+      "head": "a68513fce6ba83291068bbc317881b9daad93e09",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/pooling-comparison",
+      "head": "b98367bb46d920f5304e34aeb42fd9ab6bc04e25",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/pooling-control",
+      "head": "7807a5fcff630f63a0856bdc3496061824a28dcd",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/prediction-outcome-views",
+      "head": "e48b4c7a87af4c32dda4f493b902bdbe8a367788",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/production-mirror",
+      "head": "a541c8d6de4d41fb6994675cd141181fb88f056c",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/prune-model-coefficients",
+      "head": "f20902d83a2e13fca0b6c1884811620273493335",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/publish-dashboard-snapshot",
+      "head": "33fdbca08f0a8d0e8e2ff01f805543841ed789ab",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/rank-ic-metric",
+      "head": "610c46961acbabb25c9ec9c728bcbac3e5236a80",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/reclaim-feature-storage",
+      "head": "ad02219998a944e017458945289f6c7742d4a57b",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/research-sector-pooling",
+      "head": "f9f10f9f972af86f4e1f9c8863ec41698957166e",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/skills-audit",
+      "head": "7e11a14a563b3438940170dd4af3c5798d0cd0ed",
+      "merged_by_ancestry": false,
+      "disposition": "REVIEW_INDIVIDUAL_NO_BULK_MERGE",
+      "unique_commits": [
+        "7e11a14a563b3438940170dd4af3c5798d0cd0ed Audit the skills, then keep only what nothing else can supply"
+      ]
+    },
+    {
+      "ref": "origin/snapshot",
+      "head": "47ebd22d2edbdfe9473a29d5badaae9161ab440c",
+      "merged_by_ancestry": false,
+      "disposition": "PUBLICATION_DATA_ONLY_NO_MERGE",
+      "unique_commits": [
+        "47ebd22d2edbdfe9473a29d5badaae9161ab440c Publish dashboard snapshot 2026-09-18T13:10:31Z [skip ci]"
+      ]
+    },
+    {
+      "ref": "origin/stop-persisting-train-cells",
+      "head": "20c42abf896c2f8489c98a9be9bb08c56d3f1546",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/system-overview-mail",
+      "head": "21eb1c2eb36452b5d63a33ba1888cf63c7a29122",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/today-page-declutter",
+      "head": "46cc09865858c2163e343c0953f703fe9cfb9d7f",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/wire-cutoff-from-settings",
+      "head": "00c5a6cfc45d73c1631a0522462eb72be7565ff3",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    },
+    {
+      "ref": "origin/yahoo-hard-timeout",
+      "head": "33f91f3c27abac3239a9884431c106b27ba87c20",
+      "merged_by_ancestry": true,
+      "disposition": "ALREADY_IN_MAIN",
+      "unique_commits": []
+    }
+  ]
+}

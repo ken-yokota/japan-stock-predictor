@@ -8,7 +8,7 @@ import unicodedata
 from collections.abc import Iterable, Sequence
 
 from notifications.contracts import EmailCandidate, MorningEmailPayload, RenderedEmail
-from notifications.method_thresholds import verdict
+from notifications.method_thresholds import arm_verdict
 from notifications.report_layout import (
     BAND,
     BAND_INNER,
@@ -818,14 +818,30 @@ def render_morning_email(
         )
     if everything:
         text_body += "\n\n\n■ 全銘柄の予測分布\n\n" + _alltable(everything)
-        # Kept in the text part, dropped from the HTML: the dashboard's Today
-        # page carries the same twenty-two rows in a table that sorts and pins.
+        # Keep every ticker visible in both alternatives without repeating the
+        # expensive distribution graphics (Gmail clips large HTML messages).
+        rows = []
+        for item in everything:
+            values = (
+                f"{item.ticker} {item.company}",
+                item.signal,
+                _percent(item.predicted_return),
+                _probability(item.probability_up),
+                _quality_label(item),
+            )
+            rows.append(
+                "<tr>"
+                + "".join(f"<td>{html.escape(value)}</td>" for value in values)
+                + "</tr>"
+            )
         html_body += section(
             "全銘柄の予測",
-            "<p style='margin:0;font-size:14px'>"
-            f"買わなかった銘柄を含む全{len(everything)}銘柄は、"
-            "ダッシュボードの Today でご覧ください。"
-            "（このメールのテキスト版にも全銘柄の表が入っています）</p>",
+            "<table style='width:100%;font-size:12px;border-spacing:4px'>"
+            "<thead><tr><th>銘柄</th><th>判定</th><th>予測Return</th>"
+            "<th>上昇確率</th><th>Data Quality</th></tr></thead><tbody>"
+            + "".join(rows)
+            + "</tbody></table>",
+            "上昇確率は既存Logisticの未校正出力です。校正済み確率ではありません。",
         )
     warning_text = "\n".join(f"- {item}" for item in payload.warnings)
     methods = {
@@ -961,16 +977,9 @@ def _armtable(item: EmailCandidate, thresholds: dict[str, dict[str, object]]) ->
     lines = []
     for arm in rows:
         label = str(arm.get("label") or arm.get("name") or "—")
-        status = str(arm.get("status") or "—")
         detail = str(arm.get("detail") or "")
         centre = arm.get("predicted_return")
-        call, basis = verdict(
-            str(arm.get("name") or ""),
-            float(centre) if isinstance(centre, int | float) else None,
-            thresholds,
-        )
-        if status != "OK":
-            call, basis = "—", status
+        call, basis = arm_verdict(arm, thresholds)
         lines.append(
             f"  {_pad(label, 24)}  {_pad(call, 8)}  {_pad(basis, 19)}"
             f"  {_arm_number(centre):>8}"
@@ -996,15 +1005,8 @@ def _arm_rows_html(
 ) -> str:
     rows = []
     for index, arm in enumerate(_arm_rows(item)):
-        status = str(arm.get("status") or "—")
         predicted = arm.get("predicted_return")
-        call, basis = verdict(
-            str(arm.get("name") or ""),
-            float(predicted) if isinstance(predicted, int | float) else None,
-            thresholds,
-        )
-        if status != "OK":
-            call, basis = "—", status
+        call, basis = arm_verdict(arm, thresholds)
         tone = "done" if call == "買い" else "wait" if call == "見送り" else "warn"
         rows.append(
             f"<tr style='background:{'#fff' if index % 2 == 0 else BAND}'>"
@@ -1065,18 +1067,23 @@ def _arms_summary_html(
     rows = []
     for item in items:
         arms = _arm_rows(item)
-        usable = [row for row in arms if row.get("status") == "OK"]
-        buys = sum(1 for row in usable if str(row.get("verdict", "")) == "買い")
+        usable = [
+            arm for arm in arms if arm_verdict(arm, thresholds)[0] in {"買い", "見送り"}
+        ]
+        buyers = [arm for arm in usable if arm_verdict(arm, thresholds)[0] == "買い"]
+        buys = len(buyers)
         rows.append(
             row(
                 [
                     cell(_name_html(item)),
-                    cell(f"{buys} / {len(usable)}", align="right"),
                     cell(
-                        "—" if not usable else ", ".join(
-                            str(r.get("label", "")) for r in usable
-                            if str(r.get("verdict", "")) == "買い"
-                        ) or "なし",
+                        f"{buys} / {len(usable)}" if usable else "未判定", align="right"
+                    ),
+                    cell(
+                        "—"
+                        if not usable
+                        else ", ".join(str(r.get("label", "")) for r in buyers)
+                        or "なし",
                         muted=True,
                         nowrap=False,
                     ),

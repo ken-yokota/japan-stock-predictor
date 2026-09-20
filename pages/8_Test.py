@@ -162,6 +162,10 @@ def _render_oos_section() -> None:
 
 def main() -> None:
     configure_page("テスト", "🧪")
+    st.caption(
+        "資料名の『未使用期間』は当時の登録を示します。現在は閲覧済みであり、"
+        "今回の新しいsealed holdoutやforward評価には再利用しません。"
+    )
     render_header(
         "テスト",
         "過去の教師データで学習したモデルを、直近の期間で検証した結果です。",

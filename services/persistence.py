@@ -7,18 +7,22 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
+from sqlalchemy import select
+
 from data.availability import prediction_cutoff
 from data.config import AppConfig
 from data.market_calendar import japan_sessions_before
 from database.models import (
     FeatureSet,
     FeatureValue,
+    ModelCoefficient,
     ModelRun,
     Prediction,
     PredictionSet,
 )
 from database.repository import PredictionPipelineRepository
 from services.dataset import ModelDataset, ModelSample, SourceReference
+from services.linear_diagnostics import linear_diagnostics
 from services.prediction import PredictionComputation
 from services.versioning import (
     FEATURE_VERSION,
@@ -188,6 +192,17 @@ def persist_feature_set(
         idempotency_key=key,
         details={
             "feature_names": list(dataset.feature_names),
+            "registry": (
+                {
+                    "version": config.ticker_features.feature_version,
+                    "registered_on": str(config.ticker_features.registered_on),
+                    "selection": config.ticker_features.tickers[
+                        dataset.ticker
+                    ].model_dump(mode="json"),
+                }
+                if config.ticker_features is not None
+                else None
+            ),
             "candidate_feature_count": dataset.candidate_feature_count,
             "feature_coverage": dataset.feature_coverage,
             "target": "raw_close/raw_open-1",
@@ -320,6 +335,17 @@ def persist_feature_set(
         ),
         details={
             "feature_names": list(dataset.feature_names),
+            "registry": (
+                {
+                    "version": config.ticker_features.feature_version,
+                    "registered_on": str(config.ticker_features.registered_on),
+                    "selection": config.ticker_features.tickers[
+                        dataset.ticker
+                    ].model_dump(mode="json"),
+                }
+                if config.ticker_features is not None
+                else None
+            ),
             "candidate_feature_count": dataset.candidate_feature_count,
             "feature_coverage": dataset.feature_coverage,
             "warnings": _warning_list(dataset.current_sample.warnings),
@@ -448,6 +474,51 @@ def _persist_model(
     )
     if model_run.status != "RUNNING":
         return model_run
+    prior_fits = repository.session.execute(
+        select(ModelRun.model_run_id, ModelRun.cutoff_at)
+        .join(FeatureSet, ModelRun.feature_set_id == FeatureSet.feature_set_id)
+        .where(
+            ModelRun.ticker == computation.result.ticker,
+            ModelRun.task == task,
+            ModelRun.algorithm == algorithm,
+            ModelRun.feature_version == FEATURE_VERSION,
+            ModelRun.model_version == MODEL_VERSION,
+            ModelRun.status == "SUCCESS",
+            ModelRun.cutoff_at < feature_set.cutoff_at,
+            FeatureSet.config_hash == feature_set.config_hash,
+        )
+        .order_by(ModelRun.cutoff_at.desc(), ModelRun.started_at.desc())
+        .limit(100)
+    ).all()
+    previous: list[str] = []
+    seen_cutoffs: set[datetime] = set()
+    for prior_id, prior_cutoff in prior_fits:
+        if prior_cutoff not in seen_cutoffs:
+            previous.append(prior_id)
+            seen_cutoffs.add(prior_cutoff)
+        if len(previous) == 19:
+            break
+    history: dict[str, dict[str, float]] = {}
+    if previous:
+        for row in repository.session.scalars(
+            select(ModelCoefficient).where(ModelCoefficient.model_run_id.in_(previous))
+        ):
+            history.setdefault(row.model_run_id, {})[row.feature_name] = float(
+                row.coefficient
+            )
+    if scaler is not None and constant_probability is None:
+        model_run.diagnostics = linear_diagnostics(
+            coefficients,
+            scaler.means,
+            scaler.scales,
+            {
+                str(k): float(v)
+                for k, v in computation.dataset.current_frame.iloc[0].items()
+            },
+            [values for values in history.values() if set(values) == set(coefficients)],
+        )
+    else:
+        model_run.diagnostics = {"kind": "CONSTANT_PROBABILITY", "features": []}
     for name in model.feature_names:
         repository.add_model_coefficient(
             model_run_id=model_run.model_run_id,

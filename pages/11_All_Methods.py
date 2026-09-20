@@ -15,7 +15,7 @@ import streamlit as st
 from dashboard.method_comparison import load_reports, render_report
 from dashboard.ui import configure_page
 
-configure_page("全手法の比較")
+configure_page("全手法の比較", "📊")
 st.title("全手法の比較")
 st.caption(
     "Ridge / ロジスティック / ランダムフォレスト / LightGBM / XGBoost / "

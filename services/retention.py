@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Any, cast
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -151,6 +151,13 @@ def prune_model_coefficients(
                 )
             )
             removed += _rows(result)
+            # Daily explanation JSON has the same lifetime as its underlying
+            # coefficients. Keep monthly anchors and model provenance forever.
+            session.execute(
+                update(ModelRun)
+                .where(ModelRun.model_run_id.in_(run_ids[offset : offset + 200]))
+                .values(diagnostics=None)
+            )
         session.commit()
         return CoefficientPruneReport(
             kept_dates=tuple(sorted(kept)),

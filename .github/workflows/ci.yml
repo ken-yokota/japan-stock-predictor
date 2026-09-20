@@ -16,6 +16,25 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      TEST_DELIVERY_POSTGRES_URL: postgresql+psycopg://postgres:postgres@localhost:5432/jsp_delivery_test
+      TEST_SUMMARY_POSTGRES_URL: postgresql+psycopg://postgres:postgres@localhost:5432/jsp_summary_test
+      TEST_LEAKAGE_POSTGRES_URL: postgresql+psycopg://postgres:postgres@localhost:5432/jsp_leakage_test
+      TEST_POSTGRES_URL: postgresql+psycopg://postgres:postgres@localhost:5432/jsp_retention_test
 
     steps:
       - name: Check out repository
@@ -36,7 +55,24 @@ jobs:
           python -m pip install -r requirements-dev.txt
 
       - name: Run tests
-        run: python -m pytest -q
+        run: |
+          python - <<'PY'
+          import os
+          from sqlalchemy import create_engine
+          from sqlalchemy.engine import make_url
+          names = (
+              "TEST_DELIVERY_POSTGRES_URL", "TEST_SUMMARY_POSTGRES_URL",
+              "TEST_LEAKAGE_POSTGRES_URL", "TEST_POSTGRES_URL",
+          )
+          for name in names:
+              target = make_url(os.environ[name])
+              assert target.host == "localhost" and target.database.startswith("jsp_")
+              engine = create_engine(target.set(database="postgres"), isolation_level="AUTOCOMMIT")
+              with engine.connect() as connection:
+                  connection.exec_driver_sql('CREATE DATABASE "' + target.database + '"')
+              engine.dispose()
+          PY
+          python -m pytest -q
 
       - name: Run Ruff
         run: python -m ruff check .
