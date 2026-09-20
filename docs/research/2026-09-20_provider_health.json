@@ -1,0 +1,17 @@
+{
+  "observed_at": "2026-09-20T05:07:41.749822+00:00",
+  "scope": "minimal connectivity only; no per-indicator coverage assertion",
+  "production_writes": 0,
+  "checks": [
+    {
+      "provider": "yahoo_finance",
+      "ok": true,
+      "checked_at": "2026-09-20T05:07:40.835824+00:00"
+    },
+    {
+      "provider": "us_treasury",
+      "ok": true,
+      "checked_at": "2026-09-20T05:07:40.968471+00:00"
+    }
+  ]
+}
