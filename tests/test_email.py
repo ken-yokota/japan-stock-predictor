@@ -515,16 +515,24 @@ def test_workflows_keep_retries_and_fail_only_required_close_attempt() -> None:
     )
     assert wait_step["if"] == "github.event_name == 'schedule'"
     wait_run = wait_step["run"]
-    assert "15 * 60" in wait_run
-    assert "max(0, math.ceil((target - now).total_seconds()))" in wait_run
+    assert 'python -m scripts.wait_for_prediction_window "${args[@]}"' in wait_run
     assert (
         subprocess.run(
             ["bash", "-n"], input=wait_run, text=True, check=False
         ).returncode
         == 0
     )
-    python_source = wait_run.split("python - <<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
-    compile(python_source, "morning_prediction_wait_step", "exec")
+    # Timing boundaries are exercised in test_prediction_collection_window;
+    # both production entry points must invoke the same tested implementation.
+    kick = yaml.load(
+        (workflow_dir / "morning_kick.yml").read_text(encoding="utf-8"),
+        Loader=yaml.BaseLoader,
+    )
+    kick_steps = next(iter(kick["jobs"].values()))["steps"]
+    kick_wait = next(
+        step for step in kick_steps if step.get("name", "").startswith("Wait ")
+    )
+    assert kick_wait["run"] == wait_run
     build_step = next(
         step
         for step in prediction_steps

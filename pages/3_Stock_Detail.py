@@ -80,7 +80,7 @@ def main() -> None:
                 f"登録 {configured['registered_on']} / {configured['status']}"
             )
             st.write("採用指標", configured["selected"])
-            st.write("研究候補（予測には未投入）", configured["candidate"])
+            st.write("研究候補（採用済み指標の再評価を含む）", configured["candidate"])
             st.write("除外指標", configured["excluded"])
             st.write("理由", configured["reason"])
             st.write(

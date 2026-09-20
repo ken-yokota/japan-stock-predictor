@@ -6,8 +6,8 @@ name: Morning kick
 # three morning-email ticks - 08:45, 08:50 and 08:55 JST - were all released
 # together at 09:44, which is the shape of a queue draining rather than of one
 # tick being unlucky. Adding ticks cannot help: they queue behind the same
-# backlog and arrive together too. Only a trigger from outside GitHub can put
-# the morning back on the clock.
+# backlog and arrive together too. An external trigger avoids the cron trigger
+# delay, but still depends on GitHub's API and runner queue; it is not an SLA.
 #
 # Every step here is idempotent. If the scheduled runs already did the work,
 # this finds it done and returns; if they never fired, this does it. Running
@@ -53,6 +53,11 @@ jobs:
       TIMEZONE: Asia/Tokyo
       PREDICTION_DATE: ${{ inputs.prediction_date }}
       SKIP_PREFETCH: ${{ inputs.skip_prefetch || false }}
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      NUMEXPR_NUM_THREADS: "1"
+      VECLIB_MAXIMUM_THREADS: "1"
 
     steps:
       - uses: actions/checkout@v6
@@ -80,6 +85,16 @@ jobs:
             args+=(--prediction-date "$PREDICTION_DATE")
           fi
           python -m scripts.prefetch_morning_data "${args[@]}"
+
+      - name: Wait for the 08:20 JST snapshot window
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=()
+          if [[ -n "$PREDICTION_DATE" ]]; then
+            args+=(--prediction-date "$PREDICTION_DATE")
+          fi
+          python -m scripts.wait_for_prediction_window "${args[@]}"
 
       - name: Build the prediction
         shell: bash

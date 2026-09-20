@@ -163,29 +163,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python - <<'PY'
-          import math
-          import time
-          from datetime import datetime
-          from zoneinfo import ZoneInfo
-
-          jst = ZoneInfo("Asia/Tokyo")
-          now = datetime.now(jst)
-          target = now.replace(hour=8, minute=20, second=0, microsecond=0)
-          # A severely delayed cron must never sleep toward the wrong day's
-          # window. The intended 08:10 firing needs at most ten minutes.
-          wait_seconds = min(
-              15 * 60,
-              max(0, math.ceil((target - now).total_seconds())),
-          )
-          print(
-              f"PIT snapshot wait: {wait_seconds}s "
-              f"(now={now:%H:%M:%S}, target={target:%H:%M:%S} JST)",
-              flush=True,
-          )
-          if wait_seconds:
-              time.sleep(wait_seconds)
-          PY
+          args=()
+          if [[ -n "$PREDICTION_DATE" ]]; then
+            args+=(--prediction-date "$PREDICTION_DATE")
+          fi
+          python -m scripts.wait_for_prediction_window "${args[@]}"
       - name: Build morning predictions
         shell: bash
         timeout-minutes: 60
