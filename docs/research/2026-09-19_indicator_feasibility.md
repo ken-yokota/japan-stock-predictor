@@ -47,3 +47,9 @@
 BCI/BPI/実BDI・Iron Ore・JKM LNG・原料炭は安定した利用許諾付きhistorical availability未確認。BDRYはBDIそのものではない。Maruti、Nifty Auto、INR系FX、RBOB/Heating Oil/crack spread、保険ETF、その他ADR/海外同業株は研究候補で、本番採用なし。米国株通常closeは04:00 JST（DST）/05:00 JST（標準時）。NSE通常closeは19:00 JST。市場closeとprovider available_timestampは別々に検証する。
 
 詳細な経済仮説と公式情報の出典は同日の3業種別driver researchを参照。ニュースNLPはlicenseと時点付きhistorical archiveが未確立のためRESEARCH_ONLY。
+
+## 2026-09-20 provider実測追補
+
+05:12 UTCのread-only取得probeで、既存Yahoo EOD指標29系列と日本株22系列の計51系列を取得できた。期間は2026-06-01〜2026-09-18。日本株22系列は各78営業日・欠測0。米国/日本の取引所calendarを照合した39系列は期待sessionの欠測0。FX・先物の12系列は銘柄固有calendar未照合のため欠測率をnullとした。
+
+この取得成功は、過去の各日08:30までに配信されていたことを証明しない。全系列のhistorical availabilityはSCHEDULE_ESTIMATE_ONLY_NOT_OBSERVED、vintage archiveがないためstale率は未計測。FREE_UNVERIFIEDから品質を昇格させていない。新規候補の採用やproduction DBへの書込みは行っていない。系列別の時刻・件数・欠測判定は[probe記録](2026-09-20_provider_series_probe.json)を参照。
