@@ -248,12 +248,13 @@ def newly_active_features(
         active = series.abs() > 0.0
         if bool(active.iloc[0]) or not bool(active.any()):
             continue
-        first_date = active.idxmax()
+        first_position = int(active.to_numpy().argmax())
+        first_date = active.index[first_position]
         appeared.append(
             {
                 "feature": str(feature),
                 "first_active_on": first_date,
-                "coefficient": float(series.loc[first_date]),
+                "coefficient": float(series.iloc[first_position]),
             }
         )
     return sorted(
@@ -288,13 +289,14 @@ def newly_influential_features(
         series = inside[feature]
         if bool(series.iloc[0]) or not bool(series.any()):
             continue
-        first_date = series.idxmax()
+        first_position = int(series.to_numpy().argmax())
+        first_date = series.index[first_position]
         appeared.append(
             {
                 "feature": str(feature),
                 "first_top_on": first_date,
-                "coefficient": float(timeline.loc[first_date, feature]),
-                "rank": int(ranks.loc[first_date, feature]),
+                "coefficient": float(timeline[feature].iloc[first_position]),
+                "rank": int(ranks[feature].iloc[first_position]),
             }
         )
     return sorted(

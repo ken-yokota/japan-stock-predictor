@@ -1,0 +1,1084 @@
+# Explicit complete per-ticker assignments. common/sector do not append here.
+version: 1
+feature_version: ticker-explicit-champion-20260919
+registered_on: '2026-09-19'
+minimum_forward_sessions: 20
+review_policy: monthly_or_20_new_sessions
+status: CHAMPION_PARITY
+tickers:
+  '9101':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - baltic_dry_index
+    - fxi
+    - copper
+    - wti
+    - brent
+    - audjpy
+    candidate:
+    - container_proxy
+    - lng_shipping_peer
+    - fxi
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - mchi
+    - iron_ore
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '9104':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - baltic_dry_index
+    - fxi
+    - copper
+    - wti
+    - brent
+    - audjpy
+    candidate:
+    - lng_shipping_peer
+    - tanker_peer
+    - container_proxy
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - mchi
+    - iron_ore
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '9107':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - baltic_dry_index
+    - fxi
+    - copper
+    - wti
+    - brent
+    - audjpy
+    candidate:
+    - car_carrier_peer
+    - toyota_adr
+    - container_proxy
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - mchi
+    - iron_ore
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - xli
+    - ewy
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '1605':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - wti
+    - brent
+    - xle
+    - oih
+    - natural_gas
+    - fxi
+    candidate:
+    - brent
+    - natural_gas
+    - lng_jkm
+    - usdjpy
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - mchi
+    - copper
+    - iron_ore
+    - audjpy
+    - us_shipping_equity_proxy
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '5020':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - wti
+    - brent
+    - xle
+    - oih
+    - natural_gas
+    - fxi
+    candidate:
+    - gasoline_crack
+    - distillate_crack
+    - refiner_peer
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - mchi
+    - copper
+    - iron_ore
+    - audjpy
+    - us_shipping_equity_proxy
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '5019':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - wti
+    - brent
+    - xle
+    - oih
+    - natural_gas
+    - fxi
+    candidate:
+    - gasoline_crack
+    - distillate_crack
+    - coal
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - mchi
+    - copper
+    - iron_ore
+    - audjpy
+    - us_shipping_equity_proxy
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '5021':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - wti
+    - brent
+    - xle
+    - oih
+    - natural_gas
+    - fxi
+    candidate:
+    - gasoline_crack
+    - distillate_crack
+    - dubai_crude
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - mchi
+    - copper
+    - iron_ore
+    - audjpy
+    - us_shipping_equity_proxy
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '7203':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - xli
+    - fxi
+    - ewy
+    - copper
+    - wti
+    candidate:
+    - toyota_adr
+    - usdjpy
+    - xli
+    - us_2y_yield
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - mchi
+    - iron_ore
+    - brent
+    - audjpy
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '7267':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - xli
+    - fxi
+    - ewy
+    - copper
+    - wti
+    candidate:
+    - honda_adr
+    - usdjpy
+    - india_etf
+    - us_2y_yield
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - mchi
+    - iron_ore
+    - brent
+    - audjpy
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - toyota_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '7201':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - xli
+    - fxi
+    - ewy
+    - copper
+    - wti
+    candidate:
+    - usdjpy
+    - ford
+    - fxi
+    - xli
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - mchi
+    - iron_ore
+    - brent
+    - audjpy
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - toyota_adr
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '7269':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - xli
+    - fxi
+    - ewy
+    - copper
+    - wti
+    candidate:
+    - maruti_suzuki
+    - india_etf
+    - inrjpy
+    - usdjpy
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - mchi
+    - iron_ore
+    - brent
+    - audjpy
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - toyota_adr
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '7270':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - xli
+    - fxi
+    - ewy
+    - copper
+    - wti
+    candidate:
+    - usdjpy
+    - ford
+    - sp500
+    - us_2y_yield
+    excluded:
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - mchi
+    - iron_ore
+    - brent
+    - audjpy
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - toyota_adr
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '8306':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - xlf
+    - kre
+    candidate:
+    - mufg_adr
+    - xlf
+    - us_2y_yield
+    - us_10y_yield
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - fxi
+    - mchi
+    - copper
+    - iron_ore
+    - wti
+    - brent
+    - audjpy
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '8316':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - xlf
+    - kre
+    candidate:
+    - smfg_adr
+    - xlf
+    - kre
+    - usdjpy
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - fxi
+    - mchi
+    - copper
+    - iron_ore
+    - wti
+    - brent
+    - audjpy
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - mufg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '8411':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - xlf
+    - kre
+    candidate:
+    - mizuho_adr
+    - xlf
+    - us_10y_yield
+    - usdjpy
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - fxi
+    - mchi
+    - copper
+    - iron_ore
+    - wti
+    - brent
+    - audjpy
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '8604':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - xlf
+    - kre
+    candidate:
+    - nomura_adr
+    - goldman_sachs
+    - morgan_stanley
+    - vix
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - fxi
+    - mchi
+    - copper
+    - iron_ore
+    - wti
+    - brent
+    - audjpy
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '8766':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    - xlf
+    - kre
+    candidate:
+    - insurance_etf
+    - insurance_peer
+    - us_10y_yield
+    - usdjpy
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - fxi
+    - mchi
+    - copper
+    - iron_ore
+    - wti
+    - brent
+    - audjpy
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '8001':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    candidate:
+    - consumer_etf
+    - fxi
+    - usdjpy
+    - us_2y_yield
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - mchi
+    - copper
+    - iron_ore
+    - wti
+    - brent
+    - audjpy
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '8002':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    candidate:
+    - copper
+    - corn
+    - soybeans
+    - audjpy
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - fxi
+    - mchi
+    - iron_ore
+    - wti
+    - brent
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '8031':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    candidate:
+    - iron_ore
+    - copper
+    - brent
+    - audjpy
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - fxi
+    - mchi
+    - wti
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '8053':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    candidate:
+    - copper
+    - power_proxy
+    - audjpy
+    - usdjpy
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - fxi
+    - mchi
+    - iron_ore
+    - wti
+    - brent
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - natural_gas
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null
+  '8058':
+    selected:
+    - vix
+    - usdjpy
+    - eurjpy
+    - dollar_index
+    - nikkei225_futures
+    - sp500_futures
+    - nasdaq100_futures
+    - us_2y_yield
+    - us_10y_yield
+    - us_30y_yield
+    candidate:
+    - copper
+    - natural_gas
+    - metallurgical_coal
+    - audjpy
+    excluded:
+    - sp500
+    - nasdaq100
+    - dow
+    - gold
+    - us_10y_minus_2y_spread
+    - baltic_dry_index
+    - baltic_capesize_index
+    - baltic_panamax_index
+    - fxi
+    - mchi
+    - iron_ore
+    - wti
+    - brent
+    - us_shipping_equity_proxy
+    - xle
+    - oih
+    - xli
+    - ewy
+    - toyota_adr
+    - honda_adr
+    - xlf
+    - kre
+    - mufg_adr
+    - smfg_adr
+    selected_columns: null
+    reason: 'Champion parity at 0bf16a3; current assignment retained pending paired
+      shared-PIT OOS. Candidate rationale: docs/research/2026-09-19_*_driver_research.md.
+      No new factor promoted.'
+    oos_improvement: null

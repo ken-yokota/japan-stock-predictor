@@ -1,0 +1,498 @@
+{
+  "size_bytes": 238338048,
+  "tables": [
+    {
+      "table": "account",
+      "estimated_rows": 0
+    },
+    {
+      "table": "actual_results",
+      "estimated_rows": 573
+    },
+    {
+      "table": "alembic_version",
+      "estimated_rows": 1
+    },
+    {
+      "table": "daily_runs",
+      "estimated_rows": 215
+    },
+    {
+      "table": "email_logs",
+      "estimated_rows": 44
+    },
+    {
+      "table": "feature_inputs",
+      "estimated_rows": 38779
+    },
+    {
+      "table": "feature_sets",
+      "estimated_rows": 638
+    },
+    {
+      "table": "feature_values",
+      "estimated_rows": 6879
+    },
+    {
+      "table": "ingestion_batches",
+      "estimated_rows": 85
+    },
+    {
+      "table": "instrument_mappings",
+      "estimated_rows": 0
+    },
+    {
+      "table": "invitation",
+      "estimated_rows": 0
+    },
+    {
+      "table": "jwks",
+      "estimated_rows": 0
+    },
+    {
+      "table": "market_data",
+      "estimated_rows": 25070
+    },
+    {
+      "table": "member",
+      "estimated_rows": 0
+    },
+    {
+      "table": "metric_snapshots",
+      "estimated_rows": 595
+    },
+    {
+      "table": "model_coefficients",
+      "estimated_rows": 247548
+    },
+    {
+      "table": "model_runs",
+      "estimated_rows": 1276
+    },
+    {
+      "table": "organization",
+      "estimated_rows": 0
+    },
+    {
+      "table": "prediction_sets",
+      "estimated_rows": 42
+    },
+    {
+      "table": "predictions",
+      "estimated_rows": 638
+    },
+    {
+      "table": "project_config",
+      "estimated_rows": 1
+    },
+    {
+      "table": "provider_attempts",
+      "estimated_rows": 1494
+    },
+    {
+      "table": "provider_selections",
+      "estimated_rows": 971
+    },
+    {
+      "table": "run_steps",
+      "estimated_rows": 43
+    },
+    {
+      "table": "session",
+      "estimated_rows": 0
+    },
+    {
+      "table": "simulated_trades",
+      "estimated_rows": 881
+    },
+    {
+      "table": "stock_prices",
+      "estimated_rows": 14071
+    },
+    {
+      "table": "user",
+      "estimated_rows": 0
+    },
+    {
+      "table": "verification",
+      "estimated_rows": 0
+    }
+  ],
+  "recent_runs": [
+    {
+      "run_type": "CLOSE",
+      "prediction_date": "2026-09-18",
+      "cutoff_at": null,
+      "started_at": "2026-09-18 12:13:16.260539+00:00",
+      "finished_at": "2026-09-18 12:17:43.753464+00:00",
+      "status": "SUCCESS"
+    },
+    {
+      "run_type": "CLOSE",
+      "prediction_date": "2026-09-18",
+      "cutoff_at": null,
+      "started_at": "2026-09-18 11:54:57.928173+00:00",
+      "finished_at": "2026-09-18 11:59:28.502684+00:00",
+      "status": "SUCCESS"
+    },
+    {
+      "run_type": "CLOSE",
+      "prediction_date": "2026-09-18",
+      "cutoff_at": null,
+      "started_at": "2026-09-18 11:48:07.598081+00:00",
+      "finished_at": "2026-09-18 11:53:44.147392+00:00",
+      "status": "SUCCESS"
+    },
+    {
+      "run_type": "CLOSE",
+      "prediction_date": "2026-09-18",
+      "cutoff_at": null,
+      "started_at": "2026-09-18 08:56:29.334590+00:00",
+      "finished_at": "2026-09-18 09:01:34.410308+00:00",
+      "status": "SUCCESS"
+    },
+    {
+      "run_type": "INGESTION",
+      "prediction_date": "2026-09-18",
+      "cutoff_at": "2026-09-17 23:30:00+00:00",
+      "started_at": "2026-09-18 00:13:40.852318+00:00",
+      "finished_at": "2026-09-18 00:13:45.700254+00:00",
+      "status": "PARTIAL"
+    },
+    {
+      "run_type": "MORNING",
+      "prediction_date": "2026-09-18",
+      "cutoff_at": "2026-09-17 23:30:00+00:00",
+      "started_at": "2026-09-17 23:07:26.569613+00:00",
+      "finished_at": "2026-09-17 23:17:08.144144+00:00",
+      "status": "SUCCESS"
+    },
+    {
+      "run_type": "INGESTION",
+      "prediction_date": "2026-09-18",
+      "cutoff_at": "2026-09-17 23:30:00+00:00",
+      "started_at": "2026-09-17 23:07:15.984143+00:00",
+      "finished_at": "2026-09-17 23:07:26.168519+00:00",
+      "status": "PARTIAL"
+    },
+    {
+      "run_type": "INGESTION",
+      "prediction_date": "2026-09-18",
+      "cutoff_at": "2026-09-17 23:30:00+00:00",
+      "started_at": "2026-09-17 23:06:20.005793+00:00",
+      "finished_at": "2026-09-17 23:07:03.457849+00:00",
+      "status": "PARTIAL"
+    },
+    {
+      "run_type": "CLOSE",
+      "prediction_date": "2026-09-17",
+      "cutoff_at": null,
+      "started_at": "2026-09-17 12:34:54.746281+00:00",
+      "finished_at": "2026-09-17 12:41:03.903727+00:00",
+      "status": "SUCCESS"
+    },
+    {
+      "run_type": "CLOSE",
+      "prediction_date": "2026-09-17",
+      "cutoff_at": null,
+      "started_at": "2026-09-17 12:12:55.762734+00:00",
+      "finished_at": "2026-09-17 12:18:43.052715+00:00",
+      "status": "SUCCESS"
+    },
+    {
+      "run_type": "CLOSE",
+      "prediction_date": "2026-09-17",
+      "cutoff_at": null,
+      "started_at": "2026-09-17 12:04:18.616872+00:00",
+      "finished_at": "2026-09-17 12:09:44.458806+00:00",
+      "status": "SUCCESS"
+    },
+    {
+      "run_type": "INGESTION",
+      "prediction_date": "2026-09-17",
+      "cutoff_at": "2026-09-16 23:30:00+00:00",
+      "started_at": "2026-09-17 00:27:19.068201+00:00",
+      "finished_at": "2026-09-17 00:27:24.349804+00:00",
+      "status": "PARTIAL"
+    },
+    {
+      "run_type": "MORNING",
+      "prediction_date": "2026-09-17",
+      "cutoff_at": "2026-09-16 23:30:00+00:00",
+      "started_at": "2026-09-16 23:07:19.822746+00:00",
+      "finished_at": "2026-09-16 23:14:41.799248+00:00",
+      "status": "SUCCESS"
+    },
+    {
+      "run_type": "INGESTION",
+      "prediction_date": "2026-09-17",
+      "cutoff_at": "2026-09-16 23:30:00+00:00",
+      "started_at": "2026-09-16 23:07:10.310212+00:00",
+      "finished_at": "2026-09-16 23:07:19.505152+00:00",
+      "status": "PARTIAL"
+    },
+    {
+      "run_type": "INGESTION",
+      "prediction_date": "2026-09-17",
+      "cutoff_at": "2026-09-16 23:30:00+00:00",
+      "started_at": "2026-09-16 23:06:22.237766+00:00",
+      "finished_at": "2026-09-16 23:07:00.336860+00:00",
+      "status": "PARTIAL"
+    }
+  ],
+  "schema_version": "0006_prediction_arms",
+  "raw_ranges": [
+    {
+      "canonical_symbol": "audjpy",
+      "rows": 539,
+      "first": "2024-08-01",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "baltic_dry_index",
+      "rows": 584,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "brent",
+      "rows": 563,
+      "first": "2024-08-01",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "copper",
+      "rows": 568,
+      "first": "2024-08-01",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "dollar_index",
+      "rows": 544,
+      "first": "2024-08-01",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "dow",
+      "rows": 585,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "eurjpy",
+      "rows": 539,
+      "first": "2024-08-01",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "ewy",
+      "rows": 587,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "fxi",
+      "rows": 724,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "gold",
+      "rows": 570,
+      "first": "2024-08-01",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "honda_adr",
+      "rows": 598,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "kre",
+      "rows": 809,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "mchi",
+      "rows": 725,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "mufg_adr",
+      "rows": 586,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "nasdaq100",
+      "rows": 585,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "nasdaq100_futures",
+      "rows": 547,
+      "first": "2024-08-01",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "natural_gas",
+      "rows": 570,
+      "first": "2024-08-01",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "nikkei225_futures",
+      "rows": 546,
+      "first": "2024-08-01",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "oih",
+      "rows": 616,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "smfg_adr",
+      "rows": 597,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "sp500",
+      "rows": 585,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "sp500_futures",
+      "rows": 547,
+      "first": "2024-08-01",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "toyota_adr",
+      "rows": 586,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "us_10y_minus_2y_spread",
+      "rows": 573,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "us_10y_yield",
+      "rows": 573,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "us_10y_yield_change_1d",
+      "rows": 572,
+      "first": "2024-06-04",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "us_10y_yield_change_3d",
+      "rows": 570,
+      "first": "2024-06-06",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "us_10y_yield_change_5d",
+      "rows": 568,
+      "first": "2024-06-10",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "us_2y_yield",
+      "rows": 573,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "us_2y_yield_change_1d",
+      "rows": 572,
+      "first": "2024-06-04",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "us_2y_yield_change_3d",
+      "rows": 570,
+      "first": "2024-06-06",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "us_2y_yield_change_5d",
+      "rows": 568,
+      "first": "2024-06-10",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "us_30y_yield",
+      "rows": 573,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "us_30y_yield_change_1d",
+      "rows": 572,
+      "first": "2024-06-04",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "us_30y_yield_change_3d",
+      "rows": 570,
+      "first": "2024-06-06",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "us_30y_yield_change_5d",
+      "rows": 568,
+      "first": "2024-06-10",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "usdjpy",
+      "rows": 539,
+      "first": "2024-08-01",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "vix",
+      "rows": 575,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "wti",
+      "rows": 570,
+      "first": "2024-08-01",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "xle",
+      "rows": 704,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "xlf",
+      "rows": 779,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    },
+    {
+      "canonical_symbol": "xli",
+      "rows": 781,
+      "first": "2024-06-03",
+      "last": "2026-09-17"
+    }
+  ]
+}

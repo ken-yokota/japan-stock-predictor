@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from data.availability import prediction_cutoff
 from data.config import AppConfig
+from data.feature_registry import resolve_indicator_ids
 from data.market_calendar import japan_sessions_before, japan_sessions_between
 from database.models import MarketData, StockPrice
 
@@ -332,30 +333,14 @@ class PointInTimeDatasetBuilder:
         return stocks, self._market_rows(cutoff_at)
 
     def _indicator_ids(self, ticker: str) -> tuple[str, ...]:
-        stock = next(
-            (item for item in self._config.stocks.stocks if item.ticker == ticker),
-            None,
-        )
-        if stock is None:
-            raise ValueError(f"unknown configured ticker: {ticker}")
-        catalog = {item.id: item for item in self._config.indicators.indicators}
-        requested = [
-            *self._config.indicators.common,
-            *self._config.indicators.sectors[stock.sector].indicators,
-        ]
-        requested.extend(
-            item.id
-            for item in self._config.indicators.indicators
-            if ticker in item.applies_to_tickers
-        )
-        return tuple(
-            dict.fromkeys(
-                indicator_id
-                for indicator_id in requested
-                if catalog[indicator_id].resolution_status == "resolved"
-                and catalog[indicator_id].enabled
-            )
-        )
+        return resolve_indicator_ids(self._config, ticker)
+
+    def _frozen_columns(self, ticker: str) -> tuple[str, ...] | None:
+        registry = self._config.ticker_features
+        if registry is None:
+            return None
+        names = registry.tickers[ticker].selected_columns
+        return tuple(names) if names is not None else None
 
     def _snapshot_max_age(self, indicator_id: str) -> timedelta | None:
         indicator = next(
@@ -553,6 +538,10 @@ class PointInTimeDatasetBuilder:
             and sum(name in item.values for item in usable) / max(len(usable), 1)
             >= minimum_feature_coverage
         )
+        frozen = self._frozen_columns(ticker)
+        if frozen is not None:
+            selected = frozen
+            candidates = list(frozen)
         training_frame = pd.DataFrame(
             [
                 {name: item.values.get(name, np.nan) for name in selected}
@@ -569,12 +558,13 @@ class PointInTimeDatasetBuilder:
             dtype=float,
         )
         current_frame = pd.DataFrame(
-            [{name: current.values[name] for name in selected}],
+            [{name: current.values.get(name, np.nan) for name in selected}],
             index=[prediction_date],
             columns=selected,
             dtype=float,
         )
-        feature_coverage = len(selected) / len(candidates) if candidates else 0.0
+        available_count = sum(name in current.values for name in selected)
+        feature_coverage = available_count / len(candidates) if candidates else 0.0
         # An indicator counts as observed when it contributed at least one
         # value to the scored row. Its features are always prefixed with the
         # indicator id, which is what makes this exact rather than inferred.
@@ -664,6 +654,9 @@ class PointInTimeDatasetBuilder:
             if sum(name in sample.values for sample in initial) / len(initial)
             >= minimum_feature_coverage
         )
+        frozen = self._frozen_columns(ticker)
+        if frozen is not None:
+            selected = frozen
         if not selected:
             raise ValueError(
                 "initial backtest window has no sufficiently covered features"

@@ -1,0 +1,47 @@
+[
+  {
+    "page": "pages/9_Company_Analysis.py",
+    "status": "PASS",
+    "tabs": [],
+    "selectboxes": [
+      "検証期間と学習設定",
+      "企業を選ぶ"
+    ],
+    "exceptions": [],
+    "selector_tests": [
+      {
+        "label": "検証期間と学習設定",
+        "status": "PASS"
+      },
+      {
+        "label": "企業を選ぶ",
+        "status": "PASS"
+      }
+    ]
+  },
+  {
+    "page": "pages/4_Factor_Analysis.py",
+    "status": "PASS",
+    "tabs": [],
+    "selectboxes": [
+      "銘柄",
+      "集計期間",
+      "対象銘柄"
+    ],
+    "exceptions": [],
+    "selector_tests": [
+      {
+        "label": "銘柄",
+        "status": "PASS"
+      },
+      {
+        "label": "集計期間",
+        "status": "PASS"
+      },
+      {
+        "label": "対象銘柄",
+        "status": "PASS"
+      }
+    ]
+  }
+]

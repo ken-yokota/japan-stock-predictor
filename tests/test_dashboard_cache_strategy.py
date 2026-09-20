@@ -63,3 +63,29 @@ def test_every_cached_read_is_cached_somehow() -> None:
 def test_the_refresh_button_clears_the_cache_that_holds_the_reads() -> None:
     source = UI.read_text(encoding="utf-8")
     assert "st.cache_resource.clear()" in source
+
+
+def test_streamlit_cache_invalidation_and_database_isolation():
+    from unittest.mock import Mock
+
+    from dashboard.query_service import DashboardQueryService
+    from dashboard.types import QueryResult
+    from dashboard.ui import cached_latest_run
+
+    first = Mock(spec=DashboardQueryService)
+    second = Mock(spec=DashboardQueryService)
+    first.latest_run.return_value = QueryResult.from_rows(({"run_id": "first"},))
+    second.latest_run.return_value = QueryResult.from_rows(({"run_id": "second"},))
+    # Actual service objects are used for the configured identity hash function.
+    one = object.__new__(DashboardQueryService)
+    two = object.__new__(DashboardQueryService)
+    one.latest_run = first.latest_run
+    two.latest_run = second.latest_run
+    cached_latest_run.clear()
+    assert cached_latest_run(one).first["run_id"] == "first"
+    assert cached_latest_run(two).first["run_id"] == "second"
+    first.latest_run.return_value = QueryResult.from_rows(({"run_id": "updated"},))
+    assert cached_latest_run(one).first["run_id"] == "first"
+    cached_latest_run.clear()
+    assert cached_latest_run(one).first["run_id"] == "updated"
+    cached_latest_run.clear()

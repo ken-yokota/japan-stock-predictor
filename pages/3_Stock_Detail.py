@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import json
+
 import pandas as pd  # type: ignore[import-untyped]
 import streamlit as st
 
 from dashboard.catalog import stock_label
+from dashboard.feature_audit import configured_selection
 from dashboard.outcomes import buy_hit_ratio, outcome_table_rows
 from dashboard.presenters import (
     as_number,
@@ -68,6 +71,48 @@ def main() -> None:
         "研究用の参考情報であり、投資助言ではありません。予測値・順位・BUY表示だけで"
         "売買判断をしないでください。"
     )
+
+    with st.expander("Feature Selection Audit / 指標の採用根拠"):
+        configured = configured_selection(ticker)
+        if configured:
+            st.caption(
+                f"構成ファイル: {configured['feature_version']} / "
+                f"登録 {configured['registered_on']} / {configured['status']}"
+            )
+            st.write("採用指標", configured["selected"])
+            st.write("研究候補（予測には未投入）", configured["candidate"])
+            st.write("除外指標", configured["excluded"])
+            st.write("理由", configured["reason"])
+            st.write(
+                "OOS改善",
+                configured.get("oos_improvement")
+                if configured.get("oos_improvement") is not None
+                else "採用を支持する証拠なし・Champion維持",
+            )
+        saved = service.latest_model_diagnostics(ticker)
+        if saved.ready and saved.first:
+            diagnostic = saved.first.get("diagnostics")
+            if isinstance(diagnostic, str):
+                diagnostic = json.loads(diagnostic)
+            st.caption(
+                f"保存済みfit: {saved.first.get('cutoff_at')} / "
+                f"学習終端 {saved.first.get('training_end')}"
+            )
+            if isinstance(diagnostic, dict) and diagnostic.get("features"):
+                st.dataframe(pd.DataFrame(diagnostic["features"]), hide_index=True)
+                st.caption(
+                    "Logistic係数の寄与はlog-odds単位。表示中はRidge Return寄与。"
+                    "20 fit未満の安定性はLOW SAMPLE。"
+                )
+            else:
+                st.info(
+                    "この保存済み予測には新しい係数診断がありません。過去値は作成しません。"
+                )
+        else:
+            st.info("係数診断は未保存、またはDB migration待ちです。")
+        st.caption(
+            "構成ファイルと過去の保存済み予測は別の版の場合があります。新指標はOOSと新規forward評価後に採否を決定します。"
+        )
 
     selected = [row for row in history.rows if str(row["ticker"]) == ticker]
     actuals = cached_actual_results(service)

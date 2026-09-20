@@ -91,13 +91,24 @@ jobs:
       # would silently run on the wrong interpreter against a dependency set
       # that was never installed there. The path is taken from the step output
       # instead and used only to build the sibling environment.
+      - name: Read sequence-arm configuration
+        id: sequence-config
+        run: |
+          python - <<'PYCONFIG' >> "$GITHUB_OUTPUT"
+          import yaml
+          with open("config/model.yaml") as stream:
+              enabled = yaml.safe_load(stream)["models"]["include_sequence_arms"]
+          print(f"enabled={str(bool(enabled)).lower()}")
+          PYCONFIG
       - name: Set up Python 3.12 for the sequence models
+        if: steps.sequence-config.outputs.enabled == 'true'
         id: neural-python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           update-environment: false
       - name: Build the sequence-model environment
+        if: steps.sequence-config.outputs.enabled == 'true'
         shell: bash
         timeout-minutes: 15
         env:

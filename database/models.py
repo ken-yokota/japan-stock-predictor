@@ -560,6 +560,7 @@ class ModelRun(Base):
     cv_results: Mapped[dict[str, Any]] = mapped_column(
         JSON, nullable=False, default=dict
     )
+    diagnostics: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     intercept: Mapped[Decimal | None] = mapped_column(Numeric(30, 12))
     artifact_uri: Mapped[str | None] = mapped_column(String(512))
     artifact_hash: Mapped[str | None] = mapped_column(String(64))
