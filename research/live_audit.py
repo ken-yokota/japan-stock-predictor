@@ -1,4 +1,4 @@
-"""Audit stored forecasts; exclude forecasts generated after the Japanese open.
+"""Audit stored forecasts that were published by the 08:30 JST cutoff.
 
 This is a descriptive audit of already observed history, never a sealed holdout
 or a permission to select new thresholds. Configuration versions stay separate.
@@ -15,6 +15,42 @@ import pandas as pd
 
 from data.config import load_app_config
 from research.probability_calibration import calibrate_oos, probability_metrics
+
+
+def eligible_publications(raw: pd.DataFrame) -> pd.DataFrame:
+    """Keep the last available morning decision per ticker and session.
+
+    Generation time is insufficient: a forecast created before the open but
+    published after the operational cutoff was unavailable at 08:30. Missing
+    publication metadata fails closed rather than inheriting the older cohort.
+    """
+
+    required = {
+        "prediction_date",
+        "published_at",
+        "cutoff_at",
+        "run_type",
+        "prediction_set_status",
+        "status",
+        "actual_intraday_return",
+        "ticker",
+    }
+    missing = required - set(raw.columns)
+    if missing:
+        raise ValueError(f"publication audit source missing {sorted(missing)}")
+
+    published = pd.to_datetime(raw.published_at, utc=True, errors="coerce")
+    cutoff = pd.to_datetime(raw.cutoff_at, utc=True, errors="coerce")
+    valid = published.notna() & cutoff.notna() & (published <= cutoff)
+    valid &= (raw.run_type == "MORNING") & (raw.prediction_set_status == "READY")
+    valid &= raw.actual_intraday_return.notna() & (raw.status == "SUCCESS")
+    candidates = raw.loc[valid].copy()
+    candidates["_publication_order"] = published.loc[valid]
+    return (
+        candidates.sort_values("_publication_order")
+        .drop_duplicates(["ticker", "prediction_date"], keep="last")
+        .drop(columns="_publication_order")
+    )
 
 
 def evaluate(group: pd.DataFrame, cost_bp: int = 0) -> dict[str, object]:
@@ -101,16 +137,9 @@ def evaluate(group: pd.DataFrame, cost_bp: int = 0) -> dict[str, object]:
 def audit(source: Path, destination: Path) -> dict[str, object]:
     raw = pd.DataFrame(json.loads(source.read_text()))
     raw["date"] = raw.prediction_date
-    generated = pd.to_datetime(raw.generated_at, utc=True)
-    market_open = pd.to_datetime(raw.date, utc=True)
-    # Tokyo 09:00 is UTC 00:00; a backfill made after open cannot be traded at open.
-    valid = (generated < market_open) & (raw.run_type == "MORNING")
-    valid &= raw.actual_intraday_return.notna() & (raw.status == "SUCCESS")
-    live = (
-        raw.loc[valid]
-        .sort_values("generated_at")
-        .drop_duplicates(["ticker", "date"], keep="last")
-    )
+    live = eligible_publications(raw)
+    if live.empty:
+        raise ValueError("no settled pre-cutoff morning predictions in audit source")
     sectors = {s.ticker: s.sector for s in load_app_config("config").stocks.stocks}
     rows = []
     for item in live.to_dict("records"):
@@ -210,7 +239,13 @@ def audit(source: Path, destination: Path) -> dict[str, object]:
         "eligible_live_rows": len(live),
         "eligible_sessions": int(live.date.nunique()),
         "excluded_rows": len(raw) - len(live),
-        "exclusion": "after-open/backfill, unsettled, failed, or duplicate ticker/date",
+        "exclusion": (
+            "not published by 08:30 cutoff, non-MORNING, non-READY, "
+            "unsettled, failed, or duplicate ticker/date"
+        ),
+        "cohort_rule": (
+            "READY MORNING, published_at <= cutoff_at, latest pre-cutoff ticker/date"
+        ),
         "cost_basis": "fixed round-trip bp; equal weight active positions; no leverage",
         "arm_trade_rule": (
             "common frozen dated champion thresholds for comparison; "

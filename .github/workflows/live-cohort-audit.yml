@@ -1,0 +1,38 @@
+name: Recompute published live model cohort
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install application
+        run: python -m pip install -e .
+
+      - name: Compute read-only aggregate metrics
+        run: >-
+          python -m scripts.recompute_live_model_metrics
+          --output "$RUNNER_TEMP/live-model-metrics.json"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: published-live-model-metrics
+          path: ${{ runner.temp }}/live-model-metrics.json
+          if-no-files-found: error
+          retention-days: 30
