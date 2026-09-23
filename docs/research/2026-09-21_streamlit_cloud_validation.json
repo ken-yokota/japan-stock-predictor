@@ -1,0 +1,475 @@
+{
+  "status": "IN_PROGRESS_PRE_DEPLOY",
+  "provenance": "Observed browser UI; initial failures retained; render PASS is not model/provider health PASS",
+  "checks": [
+    {
+      "page": "All Methods",
+      "status": "PASS",
+      "tabs": [
+        {
+          "tab": "2026-08-07 〜 2026-08-28",
+          "selected": "true"
+        },
+        {
+          "tab": "Ridge回帰",
+          "selected": "true"
+        },
+        {
+          "tab": "ElasticNet回帰",
+          "selected": "true"
+        },
+        {
+          "tab": "MLP（ニューラルネット）",
+          "selected": "true"
+        },
+        {
+          "tab": "Lasso回帰",
+          "selected": "true"
+        },
+        {
+          "tab": "XGBoost",
+          "selected": "true"
+        },
+        {
+          "tab": "LightGBM",
+          "selected": "true"
+        },
+        {
+          "tab": "ランダムフォレスト",
+          "selected": "true"
+        },
+        {
+          "tab": "Transformer",
+          "selected": "true"
+        },
+        {
+          "tab": "LSTM",
+          "selected": "true"
+        },
+        {
+          "tab": "P50 > 0.3%",
+          "selected": "true"
+        },
+        {
+          "tab": "P50 > 0.3% かつ P(上昇)>=60%",
+          "selected": "true"
+        },
+        {
+          "tab": "P90 > 0（下振れでもプラス）",
+          "selected": "true"
+        },
+        {
+          "tab": "上振れ10% > 0.3%（対照・悪いはず）",
+          "selected": "true"
+        }
+      ],
+      "alerts": [
+        "これは当時走っていなかったモデルの再現です。この系の実績ではありません。15営業日では、手法どうしの勝率の差は偶然と区別できません。どの手法が優れているかを、ここから結論づけないでください。"
+      ]
+    },
+    {
+      "page": "Factor Analysis",
+      "status": "FAIL_INITIAL_POST_DEPLOY",
+      "tabs": [],
+      "alerts": [
+        "保存済みの予測には、現在の設定と異なる条件で判定されたものがあります。画面の数字を解釈するときは、その予測がどの条件で作られたかを見てください。",
+        "この集計に使えた学習回数は 29 回で、選んだ 120 回分に足りていません。回数が少ないほど平均も安定性も当てになりません。",
+        "TypeError: This app has encountered an error. The original error message is redacted to prevent data leaks. Full error details have been recorded in the logs (if you're on Streamlit Cloud, click on 'Manage app' in the lower right of your app).Traceback:File \"/mount/src/japan-stock-predictor/pages/4_Factor_Analysis.py\", line 328, in <module>\n    main()\n    ~~~~^^File \"/mount/src/japan-stock-predictor/pages/4_Factor_Analysis.py\", line 317, in main\n    _render_rolling_coefficients(service)\n    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^File \"/mount/src/japan-stock-predictor/pages/4_Factor_Analysis.py\", line 151, in _render_rolling_coefficients\n    _render_coefficient_timeline(history.rows)\n    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^File \"/mount/src/japan-stock-predictor/pages/4_Factor_Analysis.py\", line 224, in _render_coefficient_timeline\n    influential = newly_influential_features(list(rows), top=5)File \"/mount/src/japan-stock-predictor/dashboard/factors.py\", line 296, in newly_influential_features\n    \"feature\": str(feature),\n                   ^^^^^^^^^File \"/home/adminuser/venv/lib/python3.14/site-packages/pandas/core/series.py\", line 251, in wrapper\n    raise TypeError(f\"cannot convert the series to {converter}\")"
+      ]
+    },
+    {
+      "page": "Stock Detail",
+      "status": "FAIL_INITIAL_POST_DEPLOY",
+      "tabs": [],
+      "alerts": [
+        "AttributeError: This app has encountered an error. The original error message is redacted to prevent data leaks. Full error details have been recorded in the logs (if you're on Streamlit Cloud, click on 'Manage app' in the lower right of your app).Traceback:File \"/mount/src/japan-stock-predictor/pages/3_Stock_Detail.py\", line 272, in <module>\n    main()\n    ~~~~^^File \"/mount/src/japan-stock-predictor/pages/3_Stock_Detail.py\", line 92, in main\n    saved = service.latest_model_diagnostics(ticker)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+      ]
+    },
+    {
+      "page": "Stock Detail",
+      "status": "PASS_AFTER_REBUILD",
+      "at": "2026-09-20T10:08:44.892Z",
+      "tabs": [],
+      "filters": [
+        "1605→7269",
+        "Feature Selection Audit"
+      ],
+      "alerts": []
+    },
+    {
+      "page": "Factor Analysis",
+      "status": "PASS_AFTER_REBUILD",
+      "at": "2026-09-20T10:10:20.018Z",
+      "tabs": [],
+      "warnings": [
+        "保存済みの予測には、現在の設定と異なる条件で判定されたものがあります。画面の数字を解釈するときは、その予測がどの条件で作られたかを見てください。",
+        "この集計に使えた学習回数は 29 回で、選んだ 120 回分に足りていません。回数が少ないほど平均も安定性も当てになりません。",
+        "係数は同一model・同一標準化条件内の感応度であり、因果関係、将来の安定性、投資収益を証明しません。係数安定性snapshotが未作成ならPENDINGとして扱ってください。"
+      ]
+    },
+    {
+      "page": "Factor Analysis",
+      "status": "PASS_FILTER",
+      "filter": "REGRESSION",
+      "at": "2026-09-20T10:11:35.860Z"
+    },
+    {
+      "page": "Sector Analysis",
+      "status": "PASS",
+      "tabs": [],
+      "filters": [
+        "業種切替"
+      ],
+      "at": "2026-09-20T10:13:55.025Z"
+    },
+    {
+      "page": "Backtest",
+      "status": "PASS",
+      "tabs": [
+        {
+          "name": "保存済みOOS結果",
+          "selected": "true",
+          "alerts": [
+            "すべてシミュレーションです。実注文ではありません。手数料・スリッページ・売買単位がPENDINGの場合、Net Profitを確定値として表示しません。"
+          ]
+        },
+        {
+          "name": "条件を変えて再計算",
+          "selected": "true",
+          "alerts": [
+            "すべてシミュレーションです。実注文ではありません。手数料・スリッページ・売買単位がPENDINGの場合、Net Profitを確定値として表示しません。"
+          ]
+        }
+      ],
+      "filters": [],
+      "at": "2026-09-20T10:14:46.918Z",
+      "limits": "Recalculation tab rendered; no threshold tuning performed"
+    },
+    {
+      "page": "System Status",
+      "status": "PASS_RENDER",
+      "tabs": [],
+      "at": "2026-09-20T10:15:56.367Z",
+      "limits": "Rendering is distinct from business/provider health"
+    },
+    {
+      "page": "Test",
+      "status": "PASS",
+      "tabs": [
+        {
+          "name": "production（共通5500予測/250営業日）",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "production_compact（共通5500予測/250営業日）",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "production / forest（共通5500予測/250営業日）",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "production / quantile（共通5500予測/250営業日）",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "production / quantile_wide（共通5500予測/250営業日）",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "production / tree（共通5500予測/250営業日）",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "★未使用期間 2024-07〜2025-08 / compact 38列（事前登録・0/3 FAIL）",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "★未使用期間 2024-07〜2025-08 / 本番構成72列（事前登録・0/3 FAIL）",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "Live 全期間 (2026-08-10〜08-28・コスト0)",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "Live 直近1週間 (2026-08-24〜08-28・コスト0)",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "OOS production 250営業日（往復0.200%時代の記録・比較用に保存）",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "regularization_k10",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "regularization_production",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "学習窓 120営業日",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "学習窓 250営業日",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "学習窓 250営業日",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "2026-06-01 〜 2026-08-07  [学習120日]",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "2026-06-01 〜 2026-08-07  [学習250日]",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "2026-07-01 〜 2026-08-07  [学習120日]",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "2026-08-01 〜 2026-08-07  [学習120日]",
+          "selected": "true",
+          "errors": []
+        }
+      ],
+      "at": "2026-09-20T10:16:28.111Z"
+    },
+    {
+      "page": "Preview",
+      "status": "PASS_RENDER_WITH_DATA_WARNING",
+      "tabs": [],
+      "warnings": [
+        "12系列がモデルに届いていません。 予測時点で値が利用可能と判定されず、除外されました。"
+      ],
+      "at": "2026-09-20T10:17:17.416Z"
+    },
+    {
+      "page": "Company Analysis",
+      "status": "PASS",
+      "tabs": [],
+      "filters": [
+        "企業切替"
+      ],
+      "at": "2026-09-20T10:17:45.786Z"
+    },
+    {
+      "page": "Preview",
+      "status": "FAIL_SEMANTIC_STALE_LABEL",
+      "tabs": [],
+      "at": "2026-09-20T10:17:45.786Z",
+      "finding": "Archived 2026-08-10 preview described as next-session production-equivalent; lacks current/archive distinction",
+      "filters": "No date widget: 対象日 is a metric"
+    },
+    {
+      "page": "Today",
+      "status": "PASS",
+      "tabs": [],
+      "at": "2026-09-20T10:19:40.864Z"
+    },
+    {
+      "page": "History",
+      "status": "PASS",
+      "tabs": [
+        {
+          "name": "直近1週間",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "直近1ヶ月",
+          "selected": "true",
+          "errors": []
+        },
+        {
+          "name": "全期間",
+          "selected": "true",
+          "errors": []
+        }
+      ],
+      "at": "2026-09-20T10:19:40.864Z"
+    },
+    {
+      "page": "History",
+      "status": "PASS_FILTER",
+      "filter": "日付切替",
+      "at": "2026-09-20T10:20:56.154Z"
+    },
+    {
+      "page": "app",
+      "status": "PASS",
+      "tabs": [],
+      "at": "2026-09-20T10:20:56.155Z"
+    },
+    {
+      "page": "History",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": "PASS_MOBILE_RENDER",
+      "at": "2026-09-20T10:24:12.491Z"
+    },
+    {
+      "page": "Today",
+      "status": "PASS_MOBILE_RENDER",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "at": "2026-09-20T15:10:08.074Z"
+    },
+    {
+      "page": "Stock Detail",
+      "status": "PASS_MOBILE_RENDER",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "at": "2026-09-20T15:11:14.745Z"
+    },
+    {
+      "page": "Factor Analysis",
+      "status": "PASS_MOBILE_RENDER",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "at": "2026-09-20T15:11:54.975Z"
+    },
+    {
+      "page": "Sector Analysis",
+      "status": "PASS_MOBILE_RENDER",
+      "observed_utc": "2026-09-23T05:47:00Z/2026-09-23T05:53:00Z",
+      "headings": [
+        "Sector Analysis"
+      ],
+      "warnings": [],
+      "semantic_limit": null
+    },
+    {
+      "page": "Backtest",
+      "status": "PASS_MOBILE_RENDER",
+      "observed_utc": "2026-09-23T05:47:00Z/2026-09-23T05:53:00Z",
+      "headings": [
+        "Backtest",
+        "銘柄別OOS指標",
+        "Paper Trade History"
+      ],
+      "warnings": [],
+      "semantic_limit": null
+    },
+    {
+      "page": "System Status",
+      "status": "PASS_MOBILE_RENDER",
+      "observed_utc": "2026-09-23T05:47:00Z/2026-09-23T05:53:00Z",
+      "headings": [
+        "System Status",
+        "Latest Pipeline Run",
+        "Provider Selection",
+        "Ingestion Batches",
+        "Run Steps",
+        "Raw Data Storage"
+      ],
+      "warnings": [],
+      "semantic_limit": null
+    },
+    {
+      "page": "Test",
+      "status": "PASS_MOBILE_RENDER",
+      "observed_utc": "2026-09-23T05:47:00Z/2026-09-23T05:53:00Z",
+      "headings": [
+        "テスト",
+        "OOS 3層評価",
+        "Trading Layer"
+      ],
+      "warnings": [
+        "Calibration slope 0.184 warning",
+        "Brier 0.2568 warning"
+      ],
+      "semantic_limit": null
+    },
+    {
+      "page": "Company Analysis",
+      "status": "PASS_MOBILE_RENDER",
+      "observed_utc": "2026-09-23T05:47:00Z/2026-09-23T05:53:00Z",
+      "headings": [
+        "Company Analysis",
+        "予測値の推移",
+        "係数の時系列推移"
+      ],
+      "warnings": [],
+      "semantic_limit": null
+    },
+    {
+      "page": "Preview",
+      "status": "PASS_MOBILE_RENDER",
+      "observed_utc": "2026-09-23T05:47:00Z/2026-09-23T05:53:00Z",
+      "headings": [
+        "予測プレビュー",
+        "BUY 判定",
+        "全銘柄 (予測リターン順)"
+      ],
+      "warnings": [
+        "12系列がモデルに届いていません"
+      ],
+      "semantic_limit": "Old Preview/History meaning still fails pending PR#4"
+    },
+    {
+      "page": "All Methods",
+      "status": "PASS_MOBILE_RENDER",
+      "observed_utc": "2026-09-23T05:47:00Z/2026-09-23T05:53:00Z",
+      "headings": [
+        "全手法の比較",
+        "手法ごとの閾値",
+        "買いルール別の成績"
+      ],
+      "warnings": [
+        "再現モデルと少数標本の注意"
+      ],
+      "semantic_limit": null
+    },
+    {
+      "page": "app",
+      "status": "PASS_MOBILE_RENDER",
+      "observed_utc": "2026-09-23T05:47:00Z/2026-09-23T05:53:00Z",
+      "headings": [
+        "日本株 短期予測 Dashboard",
+        "最新の保存状態",
+        "ページ"
+      ],
+      "warnings": [],
+      "semantic_limit": "Old Preview/History meaning still fails pending PR#4"
+    }
+  ],
+  "mobile_recheck": {
+    "observed_window_utc": "2026-09-23T05:47:00Z/2026-09-23T05:53:00Z",
+    "viewport_px": 390,
+    "deployment": "PR#3/main before PR#4",
+    "scope": "Render/headings/visible alerts only; not semantic acceptance, full responsive geometry, or provider health"
+  }
+}

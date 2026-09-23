@@ -1,0 +1,32 @@
+{
+  "status": "PRE_DEPLOY_PASS",
+  "verified_at_utc": "2026-09-23T06:10:11.750868+00:00",
+  "production_read_only": {
+    "old_join_rows": 950,
+    "distinct_prediction_ids": 638,
+    "pre_cutoff_morning_rows": 528,
+    "pre_cutoff_dates": 24,
+    "pre_cutoff_scenario_rows": 528,
+    "pre_cutoff_scenario_dates": 24,
+    "pre_cutoff_buy_signals": 155,
+    "buy_signals_with_recorded_simulated_profit": 155,
+    "excluded": "one REFERENCE and four late-published MORNING sets; retained in DB",
+    "limits": "publication time is not email receipt or executable trade evidence"
+  },
+  "local_validation": {
+    "full_pytest": "1106 passed, 19 warnings in 146.97s",
+    "targeted_pytest": "53 passed after changed query/report modules",
+    "ruff": "PASS full repository",
+    "mypy": "PASS 159 CI-scoped source files; changed pages separately PASS",
+    "sqlite_migration": "scratch upgrade to 0007 head PASS",
+    "postgresql_migration": "separate scratch database upgrade to 0007 head PASS; database removed",
+    "live_app_test_read_only": {
+      "History": "0 exceptions, recent-week prediction count 66, BUY 22",
+      "Preview": "0 exceptions, archived research title",
+      "Sector Analysis": "0 exceptions",
+      "Backtest": "0 exceptions"
+    }
+  },
+  "deployment": "PENDING PR and Cloud semantic recheck",
+  "cloud_pre_deploy": "12 desktop pages and 12 mobile pages rendered; old Preview/History semantic failures preserved in 2026-09-21_streamlit_cloud_validation.json"
+}

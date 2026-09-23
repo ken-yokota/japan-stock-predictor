@@ -1,4 +1,4 @@
-"""Tomorrow's prediction, and which indicators actually reached it.
+"""Archived research preview, and which indicators actually reached it.
 
 Two questions are answered on one page because they are the same question. A
 prediction that lost its FX and futures inputs looks identical to one that used
@@ -17,15 +17,17 @@ the database.
 
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import streamlit as st
 
 from dashboard.catalog import sector_label, stock_label
 from dashboard.presenters import format_number, format_percent
 from dashboard.research_artifacts import load_artifact
-from dashboard.ui import configure_page, display_rows, render_header
+from dashboard.ui import configure_page, display_rows
 
 PREVIEW_PATH = Path("artifacts/preview/latest.json")
 
@@ -102,7 +104,8 @@ def _render_predictions(report: dict[str, Any]) -> None:
     headline[1].metric("BUY", f"{len(buys)} 銘柄")
     headline[2].metric("対象日", str(report.get("prediction_date", "—")))
     st.caption(
-        f"BUY条件: 予測リターン > {float(rule.get('return_threshold', 0)) * 100:.2f}% "
+        "資料作成時のBUY条件: "
+        f"予測リターン > {float(rule.get('return_threshold', 0)) * 100:.2f}% "
         f"かつ 上昇確率 >= {float(rule.get('probability_threshold', 0)) * 100:.0f}%。"
         "両方を同時に満たした銘柄だけがBUYです。"
     )
@@ -144,7 +147,7 @@ def _render_reasons(report: dict[str, Any]) -> None:
     st.subheader("なぜこの銘柄が買いなのか")
     st.caption(
         "予測リターンを指標ごとの寄与に分解したものです。寄与は"
-        "「その指標の係数 かける 今日の標準化した値」で、すべて足して切片を加えると"
+        "「その指標の係数 かける 算出時の標準化した値」で、すべて足して切片を加えると"
         "予測リターンそのものに戻ります。検算できる内訳です。"
     )
 
@@ -164,7 +167,7 @@ def _render_reasons(report: dict[str, Any]) -> None:
                         "寄与": format_percent(part["contribution"]),
                         "向き": "押し上げ" if part["contribution"] > 0 else "押し下げ",
                         "係数": format_number(part["coefficient"], digits=5),
-                        "今日の値(標準化)": format_number(
+                        "算出時の値(標準化)": format_number(
                             part["standardized_value"], digits=2
                         ),
                     }
@@ -181,8 +184,8 @@ def _render_reasons(report: dict[str, Any]) -> None:
                 )
             )
     st.caption(
-        "「今日の値(標準化)」は、学習期間の平均から標準偏差いくつ分離れているかです。"
-        "0に近い指標は、係数が大きくても今日の予測をほとんど動かしていません。"
+        "「算出時の値(標準化)」は、学習期間の平均から標準偏差いくつ分離れているかです。"
+        "0に近い指標は、係数が大きくてもこの予測をほとんど動かしていません。"
     )
 
 
@@ -242,9 +245,11 @@ def _render_indicators(report: dict[str, Any]) -> None:
 
 def main() -> None:
     configure_page("予測プレビュー", "🔭")
-    render_header(
-        "予測プレビュー",
-        "次の営業日の予測と、その予測に実際に使われた指標を表示します。",
+    # A static research artifact must not inherit the live prediction's date,
+    # READY badge or BUY count from render_header's production banner.
+    st.title("保存済み研究プレビュー")
+    st.caption(
+        "資料作成時の予測と使用指標を表示します。最新の公開済み予測はTodayで確認してください。"
     )
 
     report = load_artifact(PREVIEW_PATH)
@@ -255,10 +260,21 @@ def main() -> None:
         )
         return
 
-    generated = str(report.get("generated_at", ""))[:16].replace("T", " ")
-    st.caption(
-        f"算出 {generated} JST / 本番と同じコード・DB・設定で計算 / "
-        "**DBには保存していません**"
+    raw_generated = str(report.get("generated_at", ""))
+    try:
+        stamp = datetime.fromisoformat(raw_generated)
+        generated = (
+            stamp.astimezone(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d %H:%M JST")
+            if stamp.tzinfo is not None
+            else f"{raw_generated}（時刻帯未確認）"
+        )
+    except ValueError:
+        generated = "未確認"
+    st.info(
+        f"保存資料 / 対象日 {report.get('prediction_date', '未確認')} / "
+        f"算出 {generated}。"
+        "現在の予測・採用指標・BUY条件とは異なる場合があります。"
+        "表示時の再計算や本番予測への登録は行っていません。"
     )
 
     _render_predictions(report)
@@ -279,7 +295,7 @@ def main() -> None:
 
     st.divider()
     for caveat in report.get("caveats", []):
-        st.caption(f"注意: {caveat}")
+        st.caption(f"資料作成時の注記: {caveat}")
 
 
 if __name__ == "__main__":

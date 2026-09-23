@@ -120,7 +120,7 @@ def _render_progress(report: dict[str, Any], window: str) -> None:
 
     profit = cumulative_profit(rows)
     if profit and any(value != 0.0 for _, value in profit):
-        st.caption("③ 累積損益（BUYシグナルの想定損益を積み上げたもの）")
+        st.caption("③ 記録済み想定損益（BUYシグナルの保存済み評価を積算）")
         st.line_chart(
             pd.DataFrame(
                 {"日付": [day for day, _ in profit], "累積損益": [v for _, v in profit]}
@@ -128,8 +128,8 @@ def _render_progress(report: dict[str, Any], window: str) -> None:
             width="stretch",
         )
         st.caption(
-            "記録された建玉数から計算した想定値で、手数料・スリッページは含みません。"
-            "件数が少ないうちは証拠になりません。"
+            "保存済み戦略の費用仮定に従う想定値です。ゼロコストの戦略も含み、"
+            "実際の売買損益ではありません。件数が少ないうちは証拠になりません。"
         )
 
     _render_breakdown(rows, window)
@@ -150,7 +150,7 @@ def _render_progress(report: dict[str, Any], window: str) -> None:
                     "差(pt)": (
                         f"{row['edge'] * 100:+.1f}" if row["edge"] is not None else "—"
                     ),
-                    "純損益": format_yen(row["net_profit_jpy"]),
+                    "記録済み想定損益": format_yen(row["net_profit_jpy"]),
                 }
                 for row in versions
             ]
@@ -389,7 +389,10 @@ def main() -> None:
     # and a strip reporting today's prediction, status and hit rate answers a
     # different question at the top of it.
     st.title("実績")
-    st.caption("本番pipelineが公開した予測と、その後に観測された実績です。")
+    st.caption(
+        "本番pipelineが予測日の08:30までに公開した予測と、"
+        "その後に観測された実績です。遅延公開・事後作成分は集計から除外します。"
+    )
     st.info(
         "研究用の参考情報であり、投資助言ではありません。予測値・順位・BUY表示だけで"
         "売買判断をしないでください。"

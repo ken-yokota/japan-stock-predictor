@@ -35,22 +35,33 @@ def _direction_correct(predicted: float | None, actual: float | None) -> bool | 
 
 
 def _totals(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    traded = [row for row in rows if row["signal"] == "BUY" and row["net_profit_jpy"]]
+    traded = [
+        row
+        for row in rows
+        if row["signal"] == "BUY"
+        and row["profit_recorded"]
+        and row["actual_return"] is not None
+    ]
     wins = [row for row in traded if row["net_profit_jpy"] > 0.0]
     losses = [row for row in traded if row["net_profit_jpy"] < 0.0]
     gross_win = sum(row["net_profit_jpy"] for row in wins)
     gross_loss = -sum(row["net_profit_jpy"] for row in losses)
     resolved = [row for row in rows if row["direction_correct"] is not None]
+    buy_signals = sum(row["signal"] == "BUY" for row in rows)
     return {
         "predictions": len(rows),
-        "buy_signals": len([row for row in rows if row["signal"] == "BUY"]),
+        "buy_signals": buy_signals,
+        "recorded_trades": len(traded),
+        "unrecorded_buy_signals": buy_signals - len(traded),
         "wins": len(wins),
         "losses": len(losses),
         "win_rate": (len(wins) / len(traded)) if traded else None,
-        "gross_win_jpy": gross_win,
-        "gross_loss_jpy": gross_loss,
+        "gross_win_jpy": gross_win if traded else None,
+        "gross_loss_jpy": gross_loss if traded else None,
         "money_win_ratio": (gross_win / gross_loss) if gross_loss > 0.0 else None,
-        "net_profit_jpy": sum(row["net_profit_jpy"] for row in traded),
+        "net_profit_jpy": (
+            sum(row["net_profit_jpy"] for row in traded) if traded else None
+        ),
         "direction_accuracy": (
             sum(1 for row in resolved if row["direction_correct"]) / len(resolved)
             if resolved
@@ -67,7 +78,7 @@ def build_history_report(source: list[dict[str, Any]]) -> dict[str, Any]:
     """
 
     rows: list[dict[str, Any]] = []
-    thresholds: dict[str, float] = {}
+    threshold_values: dict[str, set[float | None]] = defaultdict(set)
     for record in source:
         predicted_return = _number(record.get("predicted_intraday_return"))
         actual_return = _number(record.get("actual_intraday_return"))
@@ -80,8 +91,7 @@ def build_history_report(source: list[dict[str, Any]]) -> dict[str, Any]:
             ("probability_threshold", "probability_threshold"),
         ):
             value = record.get(column)
-            if value is not None:
-                thresholds.setdefault(key, float(value))
+            threshold_values[key].add(float(value) if value is not None else None)
         rows.append(
             {
                 "date": str(record["prediction_date"]),
@@ -93,6 +103,8 @@ def build_history_report(source: list[dict[str, Any]]) -> dict[str, Any]:
                 "status": record.get("status"),
                 "predicted_return": predicted_return,
                 "probability_up": _number(record.get("probability_up")),
+                "return_threshold": _number(record.get("return_threshold")),
+                "probability_threshold": _number(record.get("probability_threshold")),
                 "reference_close": _number(record.get("reference_price")),
                 "morning_predicted_close": _number(record.get("predicted_close")),
                 "post_open_predicted_close": (
@@ -113,7 +125,8 @@ def build_history_report(source: list[dict[str, Any]]) -> dict[str, Any]:
                     predicted_return, actual_return
                 ),
                 "shares": int(record.get("shares") or 0),
-                "net_profit_jpy": _number(record.get("net_profit_jpy")) or 0.0,
+                "net_profit_jpy": _number(record.get("net_profit_jpy")),
+                "profit_recorded": record.get("net_profit_jpy") is not None,
                 "positive_factors": list(record.get("positive_factors") or []),
                 "negative_factors": list(record.get("negative_factors") or []),
             }
@@ -134,7 +147,17 @@ def build_history_report(source: list[dict[str, Any]]) -> dict[str, Any]:
             "to": dates[-1] if dates else "—",
             "training_window_sessions": "—",
         },
-        "rule": thresholds,
+        "rule": {
+            key: next(iter(values))
+            for key, values in threshold_values.items()
+            if len(values) == 1 and None not in values
+        },
+        "rule_scope": "PER_PREDICTION",
+        "mixed_rules": any(len(values) > 1 for values in threshold_values.values()),
+        "includes_zero_cost_strategy": any(
+            "zerocost" in str(row.get("strategy_version") or "").lower()
+            for row in rows
+        ),
         "totals": _totals(rows),
         "daily": daily,
         "predictions": rows,
@@ -142,8 +165,8 @@ def build_history_report(source: list[dict[str, Any]]) -> dict[str, Any]:
         "company_coefficients": [],
         "failures": {},
         "caveats": [
-            "本番pipelineが実際に公開した予測と、その後に観測された実績です。",
-            "研究用の検証結果とは別物で、こちらが唯一の実績記録です。",
+            "本番の朝08:30までに公開された予測と、その後に観測された実績です。",
+            "遅延公開や事後作成の予測は、この成績集計から除外しています。",
             "件数が少ないうちは、勝率も損益も有効性の証拠になりません。",
         ],
     }

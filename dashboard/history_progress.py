@@ -106,6 +106,8 @@ def cumulative_profit(rows: Iterable[Mapping[str, Any]]) -> list[tuple[str, floa
 
     by_date: dict[str, float] = defaultdict(float)
     for row in _settled(rows):
+        if not _is_buy(row) or row.get("profit_recorded") is False:
+            continue
         value = row.get("net_profit_jpy")
         if value is None:
             continue
