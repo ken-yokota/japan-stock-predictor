@@ -18,6 +18,25 @@ from dashboard.types import QueryResult, QueryState
 
 _Columns = Mapping[str, frozenset[str]]
 
+_LATEST_TIMELY_MORNING = """
+    WITH ranked_publications AS (
+        SELECT p.prediction_id,
+               ROW_NUMBER() OVER (
+                   PARTITION BY ps.prediction_date, p.ticker
+                   ORDER BY ps.published_at DESC,
+                            ps.prediction_set_id DESC, p.prediction_id DESC
+               ) AS publication_rank
+        FROM predictions AS p
+        JOIN prediction_sets AS ps
+          ON ps.prediction_set_id = p.prediction_set_id
+        JOIN daily_runs AS r ON r.run_id = ps.run_id
+        WHERE ps.status = 'READY'
+          AND r.run_type = 'MORNING'
+          AND ps.published_at <= ps.cutoff_at
+          AND p.status = 'SUCCESS'
+    )
+"""
+
 
 class DashboardQueryService:
     """Execute allow-listed SELECT statements against persisted results only."""
@@ -169,6 +188,7 @@ class DashboardQueryService:
                 ),
             },
             statement=f"""
+                {_LATEST_TIMELY_MORNING}
                 SELECT
                     s.prediction_date, s.model_version, s.feature_version,
                     s.strategy_version,
@@ -182,10 +202,10 @@ class DashboardQueryService:
                     a.actual_open, a.actual_close, a.actual_intraday_return,
                     a.actual_price_difference,
                     t.shares, t.net_profit_jpy
-                FROM predictions p
+                FROM ranked_publications latest
+                JOIN predictions p ON p.prediction_id = latest.prediction_id
                 JOIN prediction_sets s
                   ON s.prediction_set_id = p.prediction_set_id
-                JOIN daily_runs r ON r.run_id = s.run_id
                 LEFT JOIN actual_results a
                   ON a.prediction_id = p.prediction_id
                  AND a.result_version = (
@@ -197,9 +217,7 @@ class DashboardQueryService:
                   ON t.prediction_id = p.prediction_id
                  AND t.actual_result_id = a.actual_result_id
                  AND t.strategy_version = s.strategy_version
-                WHERE s.status = 'READY'
-                  AND r.run_type = 'MORNING'
-                  AND s.published_at <= s.cutoff_at
+                WHERE latest.publication_rank = 1
                 {clause}
                 ORDER BY s.prediction_date, p.ticker
             """,
@@ -575,7 +593,8 @@ class DashboardQueryService:
                     }
                 ),
             },
-            statement="""
+            statement=f"""
+                {_LATEST_TIMELY_MORNING}
                 SELECT
                     p.ticker,
                     ps.prediction_date,
@@ -585,15 +604,13 @@ class DashboardQueryService:
                     ar.actual_close,
                     ar.status AS outcome_status,
                     ar.result_version
-                FROM predictions AS p
+                FROM ranked_publications AS latest
+                JOIN predictions AS p ON p.prediction_id = latest.prediction_id
                 JOIN prediction_sets AS ps
                   ON ps.prediction_set_id = p.prediction_set_id
-                JOIN daily_runs AS r ON r.run_id = ps.run_id
                 JOIN actual_results AS ar
                   ON ar.prediction_id = p.prediction_id
-                WHERE ps.status = 'READY'
-                  AND r.run_type = 'MORNING'
-                  AND ps.published_at <= ps.cutoff_at
+                WHERE latest.publication_rank = 1
                   AND p.status = 'SUCCESS'
                   AND ar.status IN ('FINAL', 'CORRECTED')
                   AND ar.actual_open IS NOT NULL

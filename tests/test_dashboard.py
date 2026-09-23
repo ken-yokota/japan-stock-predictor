@@ -299,6 +299,52 @@ def test_published_history_uses_latest_outcome_and_original_strategy() -> None:
     assert scenario.first["ticker"] == "7203"
     assert scenario.first["actual_close"] == 102
 
+    # A successful retry published before the cutoff replaces the earlier
+    # decision. A failed retry or a publication after the cutoff must not win.
+    with engine.begin() as connection:
+        connection.exec_driver_sql(
+            """INSERT INTO prediction_sets VALUES
+                ('retry', 'morning', '2026-09-18',
+                 '2026-09-18 08:30', '2026-09-18 08:25', 'READY',
+                 'model-2', 'features-1', 'strategy-1'),
+                ('after-cutoff', 'morning', '2026-09-18',
+                 '2026-09-18 08:30', '2026-09-18 08:40', 'READY',
+                 'model-3', 'features-1', 'strategy-1'),
+                ('failed-retry', 'morning', '2026-09-18',
+                 '2026-09-18 08:30', '2026-09-18 08:28', 'READY',
+                 'model-4', 'features-1', 'strategy-1')"""
+        )
+        connection.exec_driver_sql(
+            """INSERT INTO predictions (
+                prediction_id,prediction_set_id,ticker,status,signal)
+                VALUES ('p5','retry','7203','SUCCESS','BUY'),
+                       ('p6','after-cutoff','7203','SUCCESS','BUY'),
+                       ('p7','failed-retry','7203','FAILED',NULL)"""
+        )
+        connection.exec_driver_sql(
+            """INSERT INTO actual_results VALUES
+                ('a5','p5',1,'FINAL',100,103,0.03,3),
+                ('a6','p6',1,'FINAL',100,104,0.04,4)"""
+        )
+        connection.exec_driver_sql(
+            """INSERT INTO simulated_trades VALUES
+                ('p5','a5','strategy-1',100,400),
+                ('p6','a6','strategy-1',100,500)"""
+        )
+
+    latest_history = service.published_prediction_history()
+    latest_scenario = service.oos_scenario_rows()
+    assert latest_history.state is QueryState.READY
+    assert len(latest_history.rows) == 1
+    assert latest_history.first is not None
+    assert latest_history.first["model_version"] == "model-2"
+    assert latest_history.first["actual_close"] == 103
+    assert latest_history.first["net_profit_jpy"] == 400
+    assert latest_scenario.state is QueryState.READY
+    assert len(latest_scenario.rows) == 1
+    assert latest_scenario.first is not None
+    assert latest_scenario.first["actual_close"] == 103
+
 
 def test_presenters_surface_cutoff_quality_and_pending_states() -> None:
     alerts = derive_operational_alerts(
