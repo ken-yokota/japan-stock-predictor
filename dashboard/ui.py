@@ -412,14 +412,14 @@ def render_query_state(
     *,
     empty_message: str = "保存済みデータはまだありません。",
 ) -> bool:
-    if result.state is QueryState.READY:
+    if result.state == QueryState.READY:
         return True
-    if result.state is QueryState.EMPTY:
+    if result.state == QueryState.EMPTY:
         st.info(f"PENDING: {empty_message}")
-    elif result.state is QueryState.SCHEMA_PENDING:
+    elif result.state == QueryState.SCHEMA_PENDING:
         st.warning(result.message)
     else:
-        st.error(result.message)
+        st.error(result.message or "DBの表示状態が不明です。再読み込みしてください。")
     return False
 
 
