@@ -26,7 +26,9 @@ class QueryResult:
 
     @property
     def ready(self) -> bool:
-        return self.state is QueryState.READY
+        # Streamlit can keep a cached result while reloading this module. An
+        # enum from the previous import has the same value but not identity.
+        return self.state == QueryState.READY
 
     @property
     def first(self) -> dict[str, Any] | None:

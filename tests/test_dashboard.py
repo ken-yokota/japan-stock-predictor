@@ -9,7 +9,9 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from decimal import Decimal
+from enum import StrEnum
 from pathlib import Path
+from typing import cast
 
 import pytest
 from sqlalchemy import create_engine, event
@@ -78,6 +80,30 @@ def test_query_result_states_are_serializable_and_safe() -> None:
     assert "daily_runs" in pending.message
     assert unavailable.state is QueryState.UNAVAILABLE
     assert "password" not in unavailable.message.lower()
+
+
+def test_cached_query_result_survives_enum_module_reload(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A Streamlit cache may retain the old enum class after source reload."""
+
+    from dashboard.ui import render_query_state
+
+    class PreviousQueryState(StrEnum):
+        READY = "READY"
+        EMPTY = "EMPTY"
+        UNKNOWN = "UNKNOWN"
+
+    errors: list[str] = []
+    monkeypatch.setattr("dashboard.ui.st.error", errors.append)
+    ready = QueryResult(cast(QueryState, PreviousQueryState.READY), rows=({"id": 1},))
+    assert ready.ready
+    assert render_query_state(ready)
+    assert errors == []
+    assert not render_query_state(
+        QueryResult(cast(QueryState, PreviousQueryState.UNKNOWN))
+    )
+    assert errors == ["DBの表示状態を確認できません。再読み込みしてください。"]
 
 
 def test_query_service_handles_empty_and_unmigrated_databases() -> None:
