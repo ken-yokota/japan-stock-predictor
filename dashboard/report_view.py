@@ -21,16 +21,83 @@ from dashboard.presenters import format_number, format_percent, format_yen
 from dashboard.ui import display_rows
 
 
+def _rule_caption(report: dict[str, Any]) -> str:
+    rule = report.get("rule", {})
+    threshold = rule.get("return_threshold")
+    probability = rule.get("probability_threshold")
+    if report.get("mixed_rules"):
+        return (
+            "BUY条件: 期間内に複数の条件があります。"
+            "各予測に保存された判定を表示します。"
+        )
+    if threshold is None or probability is None:
+        return "BUY条件: 保存資料では未確認。各予測に保存された判定を表示します。"
+    return (
+        f"BUY条件: 予測リターン > {float(threshold) * 100:.2f}% / "
+        f"上昇確率 >= {float(probability) * 100:g}%"
+    )
+
+
+def _cost_caption(
+    rule: dict[str, Any], *, production_history: bool = False
+) -> str:
+    if production_history:
+        return (
+            "想定損益は各予測に保存された戦略の費用仮定に従います。"
+            "実際の売買損益を示すものではありません。"
+        )
+
+    def value(key: str, unit: str) -> str:
+        number = rule.get(key)
+        return "未記録" if number is None else f"{float(number):g}{unit}"
+
+    return (
+        f"1銘柄あたり投資額 {value('capital_per_stock_jpy', '円')} / "
+        f"売買単位 {value('lot_size', '株')} / "
+        f"手数料 {value('commission_bps_per_side', 'bp/片側')} / "
+        f"スリッページ {value('slippage_bps_per_side', 'bp/片側')}。"
+        "未記録の費用を0とは扱いません。"
+    )
+
+
+def _trade_result(row: dict[str, Any]) -> str:
+    profit = row.get("net_profit_jpy")
+    if row.get("actual_return") is None:
+        return "未確定"
+    if row.get("profit_recorded") is False or profit is None:
+        return "損益未記録"
+    return "勝ち" if float(profit) > 0 else "負け" if float(profit) < 0 else "同値"
+
+
+def _miss_reason(row: dict[str, Any], rule: dict[str, Any]) -> str:
+    reasons = []
+    for value_key, rule_key, description in (
+        ("predicted_return", "return_threshold", "予測リターンが閾値以下"),
+        ("probability_up", "probability_threshold", "上昇確率が下限未満"),
+    ):
+        # A missing per-prediction value must not inherit another date's rule.
+        threshold = row[rule_key] if rule_key in row else rule.get(rule_key)
+        value = row.get(value_key)
+        if threshold is None or value is None:
+            reasons.append("判定条件または予測値が未記録")
+        elif (
+            float(value) <= float(threshold)
+            if value_key == "predicted_return"
+            else float(value) < float(threshold)
+        ):
+            reasons.append(description)
+    return " / ".join(dict.fromkeys(reasons)) or "その他の保存判定条件"
+
+
 def _render_headline(report: dict[str, Any]) -> None:
     totals = report.get("totals", {})
-    rule = report.get("rule", {})
     window = report.get("generated_for", {})
+    production_history = report.get("rule_scope") == "PER_PREDICTION"
+    profit_label = "記録済み想定損益" if production_history else "純損益"
 
     st.caption(
         f"学習: 各予測日の直前 {window.get('training_window_sessions', '—')} 営業日 / "
-        f"BUY条件: 予測リターン > "
-        f"{float(rule.get('return_threshold', 0)) * 100:.2f}% かつ 上昇確率 >= "
-        f"{float(rule.get('probability_threshold', 0)) * 100:.0f}%"
+        + _rule_caption(report)
     )
     chosen = report.get("feature_set")
     if chosen:
@@ -48,7 +115,7 @@ def _render_headline(report: dict[str, Any]) -> None:
         if totals.get("win_rate") is not None
         else "—",
     )
-    first[3].metric("純損益", format_yen(totals.get("net_profit_jpy")))
+    first[3].metric(profit_label, format_yen(totals.get("net_profit_jpy")))
 
     second = st.columns(4)
     second[0].metric("勝ち金額", format_yen(totals.get("gross_win_jpy")))
@@ -57,7 +124,13 @@ def _render_headline(report: dict[str, Any]) -> None:
         "金額ベース勝率",
         format_number(totals.get("money_win_ratio"), digits=3)
         if totals.get("money_win_ratio") is not None
-        else "負けなし",
+        else (
+            "負けなし"
+            if totals.get("gross_win_jpy") is not None
+            and totals.get("gross_win_jpy") > 0
+            and totals.get("gross_loss_jpy") == 0
+            else "—"
+        ),
     )
     second[3].metric(
         "方向的中率",
@@ -70,6 +143,16 @@ def _render_headline(report: dict[str, Any]) -> None:
         "勝ったときの合計が負けたときの合計を上回っていた、という意味になります。"
         "回数の勝率とは別物で、両方を見ないと判断できません。"
     )
+    if production_history and totals.get("unrecorded_buy_signals", 0):
+        st.warning(
+            f"BUY {totals['unrecorded_buy_signals']} 件は損益未記録です。"
+            "表示中の想定損益は記録済み分だけの合計です。"
+        )
+    if production_history and report.get("includes_zero_cost_strategy"):
+        st.warning(
+            "この期間には手数料・スリッページを0とした既存戦略が含まれます。"
+            "記録済み想定損益を実際の純損益として扱わないでください。"
+        )
 
     buy_signals = int(totals.get("buy_signals") or 0)
     if buy_signals < 20:
@@ -83,22 +166,12 @@ def _render_buy_list(report: dict[str, Any]) -> None:
     """List every stock the rule actually bought, and why it qualified."""
 
     rule = report.get("rule", {})
-    return_threshold = float(rule.get("return_threshold", 0.0))
-    probability_threshold = float(rule.get("probability_threshold", 0.0))
-
-    st.subheader("実際に買った銘柄")
-    st.info(
-        f"**買いの判断基準: 予測リターン > {return_threshold * 100:.2f}%　"
-        f"かつ　上昇確率 >= {probability_threshold * 100:.0f}%**\n\n"
-        "この2つを同時に満たした銘柄だけを、寄り付きで買って同日の大引けで売っています。"
-        "片方だけでは買いません。持ち越しもしません。"
-    )
+    st.subheader("BUY判定された銘柄（シミュレーション）")
+    st.info(_rule_caption(report))
     st.caption(
-        f"資金は1銘柄あたり {float(rule.get('capital_per_stock_jpy', 0)):,.0f}円、"
-        f"{int(rule.get('lot_size', 100))}株単位。"
-        f"手数料 {rule.get('commission_bps_per_side')} bps と"
-        f"スリッページ {rule.get('slippage_bps_per_side')} bps を"
-        "片側ずつ差し引いています。"
+        _cost_caption(
+            rule, production_history=report.get("rule_scope") == "PER_PREDICTION"
+        )
     )
 
     bought = [
@@ -113,7 +186,7 @@ def _render_buy_list(report: dict[str, Any]) -> None:
             {
                 "日付": row["date"],
                 "社名": stock_label(str(row["ticker"])),
-                "結果": "勝ち" if float(row["net_profit_jpy"]) > 0 else "負け",
+                "結果": _trade_result(row),
                 "予測リターン": format_percent(row["predicted_return"]),
                 "上昇確率": format_percent(row["probability_up"]),
                 "実績リターン": format_percent(row["actual_return"]),
@@ -124,7 +197,12 @@ def _render_buy_list(report: dict[str, Any]) -> None:
                 "買値(寄付)": format_number(row.get("actual_open"), digits=1),
                 "売値(大引)": format_number(row.get("actual_close"), digits=1),
                 "株数": int(row["shares"]),
-                "損益(合計)": format_yen(row["net_profit_jpy"]),
+                "損益(合計)": format_yen(
+                    row["net_profit_jpy"]
+                    if row.get("profit_recorded") is not False
+                    and row.get("actual_return") is not None
+                    else None
+                ),
             }
             for row in sorted(bought, key=lambda item: (item["date"], item["ticker"]))
         ]
@@ -134,9 +212,14 @@ def _render_buy_list(report: dict[str, Any]) -> None:
         skipped = [
             row for row in report.get("predictions", []) if row.get("signal") != "BUY"
         ]
-        near_miss = sorted(skipped, key=lambda item: -float(item["predicted_return"]))[
-            :15
-        ]
+        near_miss = sorted(
+            skipped,
+            key=lambda item: -(
+                float(item["predicted_return"])
+                if item.get("predicted_return") is not None
+                else float("-inf")
+            ),
+        )[:15]
         display_rows(
             [
                 {
@@ -144,27 +227,13 @@ def _render_buy_list(report: dict[str, Any]) -> None:
                     "銘柄": stock_label(str(row["ticker"])),
                     "予測リターン": format_percent(row["predicted_return"]),
                     "上昇確率": format_percent(row["probability_up"]),
-                    "外れた条件": " / ".join(
-                        filter(
-                            None,
-                            [
-                                "予測リターンが閾値以下"
-                                if float(row["predicted_return"]) <= return_threshold
-                                else "",
-                                "上昇確率が下限未満"
-                                if float(row["probability_up"]) < probability_threshold
-                                else "",
-                            ],
-                        )
-                    )
-                    or "—",
+                    "外れた条件": _miss_reason(row, rule),
                 }
                 for row in near_miss
             ]
         )
         st.caption(
-            "予測リターンが最も高かった順に15件です。"
-            "多くは上昇確率が60%に届かずに見送られています。"
+            "予測リターンが最も高かった順に15件です。条件は各予測の記録に基づきます。"
         )
 
 
@@ -175,6 +244,8 @@ def _render_daily(report: dict[str, Any]) -> None:
         return
 
     st.subheader("毎日の勝率と損益")
+    production_history = report.get("rule_scope") == "PER_PREDICTION"
+    profit_label = "記録済み想定損益" if production_history else "純損益"
     display_rows(
         [
             {
@@ -195,7 +266,7 @@ def _render_daily(report: dict[str, Any]) -> None:
                     if row.get("money_win_ratio") is not None
                     else "—"
                 ),
-                "純損益": format_yen(row.get("net_profit_jpy")),
+                profit_label: format_yen(row.get("net_profit_jpy")),
                 "方向的中率": format_percent(row.get("direction_accuracy")),
             }
             for row in daily
@@ -203,8 +274,10 @@ def _render_daily(report: dict[str, Any]) -> None:
     )
 
     frame = pd.DataFrame(daily)
-    if "net_profit_jpy" in frame.columns:
+    if "net_profit_jpy" in frame.columns and frame["net_profit_jpy"].notna().any():
         cumulative = frame.loc[:, ["date", "net_profit_jpy"]].copy()
+        if production_history:
+            st.caption("累積損益は損益の記録がある日だけを加算します。")
         cumulative["累積損益 (円)"] = cumulative["net_profit_jpy"].cumsum()
         st.line_chart(
             cumulative.set_index("date").loc[:, ["累積損益 (円)"]],
@@ -269,9 +342,18 @@ def _render_price_predictions(report: dict[str, Any], key_prefix: str) -> None:
                     row.get("post_open_predicted_close"), digits=1
                 ),
                 "実際の終値": format_number(row.get("actual_close"), digits=1),
-                "方向": "OK" if row["direction_correct"] else "NG",
+                "方向": (
+                    "未確定"
+                    if row["direction_correct"] is None
+                    else "OK" if row["direction_correct"] else "NG"
+                ),
                 "株数": int(row["shares"]),
-                "損益(合計)": format_yen(row["net_profit_jpy"]),
+                "損益(合計)": format_yen(
+                    row["net_profit_jpy"]
+                    if row.get("profit_recorded") is not False
+                    and row.get("actual_return") is not None
+                    else None
+                ),
             }
             for row in view.to_dict("records")
         ],

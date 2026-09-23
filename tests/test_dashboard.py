@@ -17,6 +17,7 @@ from sqlalchemy.engine import Connection
 
 from dashboard.catalog import STOCKS_BY_TICKER
 from dashboard.history import build_history_report
+from dashboard.history_progress import cumulative_profit
 from dashboard.presenters import (
     AlertLevel,
     derive_operational_alerts,
@@ -175,6 +176,102 @@ def test_all_dashboard_queries_match_the_migrated_schema() -> None:
         result.state not in {QueryState.SCHEMA_PENDING, QueryState.UNAVAILABLE}
         for result in results
     )
+
+
+def test_published_history_uses_latest_outcome_and_original_strategy() -> None:
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    with engine.begin() as connection:
+        connection.exec_driver_sql(
+            "CREATE TABLE daily_runs (run_id TEXT, run_type TEXT)"
+        )
+        connection.exec_driver_sql(
+            """CREATE TABLE prediction_sets (
+                prediction_set_id TEXT, run_id TEXT, prediction_date TEXT,
+                cutoff_at TEXT, published_at TEXT, status TEXT,
+                model_version TEXT, feature_version TEXT, strategy_version TEXT
+            )"""
+        )
+        connection.exec_driver_sql(
+            """CREATE TABLE predictions (
+                prediction_id TEXT, prediction_set_id TEXT, ticker TEXT,
+                status TEXT, signal TEXT, predicted_intraday_return REAL,
+                probability_up REAL, reference_price REAL, predicted_close REAL,
+                predicted_price_difference REAL, return_threshold REAL,
+                probability_threshold REAL, positive_factors TEXT,
+                negative_factors TEXT, return_distribution TEXT,
+                arm_predictions TEXT
+            )"""
+        )
+        connection.exec_driver_sql(
+            """CREATE TABLE actual_results (
+                actual_result_id TEXT, prediction_id TEXT, result_version INTEGER,
+                status TEXT,
+                actual_open REAL, actual_close REAL,
+                actual_intraday_return REAL, actual_price_difference REAL
+            )"""
+        )
+        connection.exec_driver_sql(
+            """CREATE TABLE simulated_trades (
+                prediction_id TEXT, actual_result_id TEXT, strategy_version TEXT,
+                shares INTEGER, net_profit_jpy REAL
+            )"""
+        )
+        connection.exec_driver_sql(
+            """INSERT INTO prediction_sets VALUES
+                ('published', 'morning', '2026-09-18',
+                 '2026-09-18 08:30', '2026-09-18 08:20', 'READY',
+                 'model-1', 'features-1', 'strategy-1'),
+                ('failed', 'morning', '2026-09-19',
+                 '2026-09-19 08:30', '2026-09-19 08:20', 'FAILED',
+                 'model-1', 'features-1', 'strategy-1'),
+                ('late', 'morning', '2026-09-20',
+                 '2026-09-20 08:30', '2026-09-20 08:40', 'READY',
+                 'model-1', 'features-1', 'strategy-1'),
+                ('reference', 'reference', '2026-09-21',
+                 '2026-09-21 08:30', '2026-09-21 08:20', 'READY',
+                 'model-1', 'features-1', 'strategy-1')"""
+        )
+        connection.exec_driver_sql(
+            "INSERT INTO daily_runs VALUES "
+            "('morning','MORNING'),('reference','REFERENCE')"
+        )
+        connection.exec_driver_sql(
+            """INSERT INTO predictions (
+                prediction_id,prediction_set_id,ticker,status,signal)
+                VALUES ('p1','published','7203','SUCCESS','BUY'),
+                       ('p2','failed','6758','SUCCESS','BUY'),
+                       ('p3','late','8058','SUCCESS','BUY'),
+                       ('p4','reference','8306','SUCCESS','BUY')"""
+        )
+        connection.exec_driver_sql(
+            """INSERT INTO actual_results VALUES
+                ('a1','p1',1,'FINAL',100,101,0.01,1),
+                ('a2','p1',2,'CORRECTED',100,102,0.02,2)"""
+        )
+        connection.exec_driver_sql(
+            """INSERT INTO simulated_trades VALUES
+                ('p1','a1','strategy-1',100,100),
+                ('p1','a2','strategy-1',100,200),
+                ('p1','a2','strategy-2',100,300)"""
+        )
+
+    service = DashboardQueryService(engine)
+    all_rows = service.published_prediction_history()
+    window = service.published_prediction_history("2026-09-19")
+    scenario = service.oos_scenario_rows()
+
+    assert all_rows.state is QueryState.READY
+    assert len(all_rows.rows) == 1
+    assert all_rows.first is not None
+    assert all_rows.first["ticker"] == "7203"
+    assert all_rows.first["actual_close"] == 102
+    assert all_rows.first["net_profit_jpy"] == 200
+    assert window.state is QueryState.EMPTY
+    assert scenario.state is QueryState.READY
+    assert len(scenario.rows) == 1
+    assert scenario.first is not None
+    assert scenario.first["ticker"] == "7203"
+    assert scenario.first["actual_close"] == 102
 
 
 def test_presenters_surface_cutoff_quality_and_pending_states() -> None:
@@ -617,7 +714,50 @@ def test_history_is_empty_without_predictions_rather_than_raising() -> None:
     report = build_history_report([])
     assert report["totals"]["predictions"] == 0
     assert report["totals"]["direction_accuracy"] is None
+    assert report["totals"]["net_profit_jpy"] is None
     assert report["predictions"] == []
+
+
+def test_history_does_not_present_unrecorded_profit_as_zero() -> None:
+    report = build_history_report(
+        [_history_row("2026-09-18", "7203", 0.01, 0.02)]
+    )
+    totals = report["totals"]
+    assert totals["buy_signals"] == 1
+    assert totals["recorded_trades"] == 0
+    assert totals["unrecorded_buy_signals"] == 1
+    assert totals["net_profit_jpy"] is None
+    assert report["predictions"][0]["net_profit_jpy"] is None
+    assert report["daily"][0]["net_profit_jpy"] is None
+
+
+def test_history_flags_zero_cost_valuation_as_simulation() -> None:
+    from dashboard.report_view import _cost_caption
+
+    row = _history_row(
+        "2026-09-18", "7203", 0.01, 0.02, net_profit_jpy=Decimal("100")
+    )
+    row["strategy_version"] = "intraday-zerocost-v1"
+    report = build_history_report([row])
+
+    assert report["includes_zero_cost_strategy"] is True
+    assert "実際の売買損益" in _cost_caption({}, production_history=True)
+
+
+def test_history_profit_series_excludes_unrecorded_and_non_buy_rows() -> None:
+    rows = [
+        {"date": "2026-09-18", "signal": "BUY", "actual_return": 0.01,
+         "direction_correct": True, "profit_recorded": True,
+         "net_profit_jpy": 100},
+        {"date": "2026-09-18", "signal": "BUY", "actual_return": 0.01,
+         "direction_correct": True, "profit_recorded": False,
+         "net_profit_jpy": 0},
+        {"date": "2026-09-18", "signal": "HOLD", "actual_return": 0.01,
+         "direction_correct": True, "profit_recorded": True,
+         "net_profit_jpy": 200},
+    ]
+
+    assert cumulative_profit(rows) == [("2026-09-18", 100.0)]
 
 
 def _session(day: str, ticker: str, signal: str, rose: bool) -> dict:
@@ -786,3 +926,49 @@ def test_progress_ignores_sessions_that_have_not_closed() -> None:
         }
     )
     assert [point.date for point in daily_points(rows)] == ["2026-08-10"]
+
+
+def test_history_keeps_each_predictions_rule_when_thresholds_change() -> None:
+    first = _history_row("2026-09-01", "7203", 0.01, 0.02)
+    second = _history_row("2026-09-02", "7203", 0.01, 0.02)
+    second["probability_threshold"] = Decimal("0.625")
+    report = build_history_report([first, second])
+    assert report["mixed_rules"] is True
+    assert "probability_threshold" not in report["rule"]
+    assert [r["probability_threshold"] for r in report["predictions"]] == [0.60, 0.625]
+    from dashboard.report_view import _miss_reason, _rule_caption
+
+    assert "複数" in _rule_caption(report)
+    row = report["predictions"][1] | {"probability_up": 0.61}
+    assert _miss_reason(row, {"probability_threshold": 0.60}) == "上昇確率が下限未満"
+
+
+def test_history_includes_recorded_flat_trades_but_excludes_unrecorded_profit() -> None:
+    report = build_history_report(
+        [
+            _history_row("2026-09-01", "7203", 0.01, 0.02, net_profit_jpy=100),
+            _history_row("2026-09-02", "7203", 0.01, 0.0, net_profit_jpy=0),
+            _history_row("2026-09-03", "7203", 0.01, 0.02),
+        ]
+    )
+    assert report["totals"]["win_rate"] == 0.5
+    assert report["totals"]["wins"] == 1
+    assert report["totals"]["losses"] == 0
+    from dashboard.report_view import _trade_result
+
+    assert [_trade_result(r) for r in report["predictions"]] == [
+        "勝ち",
+        "同値",
+        "損益未記録",
+    ]
+    assert _trade_result({"actual_return": None, "net_profit_jpy": 0}) == "未確定"
+
+
+def test_unknown_report_costs_are_not_claimed_as_zero_or_deducted() -> None:
+    from dashboard.report_view import _cost_caption
+
+    unknown = _cost_caption({})
+    assert "None" not in unknown
+    assert "0円" not in unknown
+    assert "未記録" in unknown
+    assert "手数料 0bp/片側" in _cost_caption({"commission_bps_per_side": 0})

@@ -103,14 +103,14 @@ class DashboardQueryService:
         )
 
     def published_prediction_history(self, since: str | None = None) -> QueryResult:
-        """Every published prediction in the window, with its settled outcome.
+        """Pre-cutoff morning predictions, with their latest settled outcome.
 
         Left joins on purpose: a prediction whose session has not closed yet
         must still appear, showing what was predicted and nothing else. Dropping
         it would make today's page look empty until the evening.
         """
 
-        clause = "WHERE s.prediction_date >= :since" if since else ""
+        clause = "AND s.prediction_date >= :since" if since else ""
         return self._read(
             required={
                 "predictions": frozenset(
@@ -137,7 +137,10 @@ class DashboardQueryService:
                 "prediction_sets": frozenset(
                     {
                         "prediction_set_id",
+                        "run_id",
                         "prediction_date",
+                        "cutoff_at",
+                        "published_at",
                         "status",
                         "model_version",
                         "feature_version",
@@ -146,7 +149,9 @@ class DashboardQueryService:
                 ),
                 "actual_results": frozenset(
                     {
+                        "actual_result_id",
                         "prediction_id",
+                        "result_version",
                         "actual_open",
                         "actual_close",
                         "actual_intraday_return",
@@ -154,7 +159,13 @@ class DashboardQueryService:
                     }
                 ),
                 "simulated_trades": frozenset(
-                    {"prediction_id", "shares", "net_profit_jpy"}
+                    {
+                        "prediction_id",
+                        "actual_result_id",
+                        "strategy_version",
+                        "shares",
+                        "net_profit_jpy",
+                    }
                 ),
             },
             statement=f"""
@@ -174,8 +185,21 @@ class DashboardQueryService:
                 FROM predictions p
                 JOIN prediction_sets s
                   ON s.prediction_set_id = p.prediction_set_id
-                LEFT JOIN actual_results a ON a.prediction_id = p.prediction_id
-                LEFT JOIN simulated_trades t ON t.prediction_id = p.prediction_id
+                JOIN daily_runs r ON r.run_id = s.run_id
+                LEFT JOIN actual_results a
+                  ON a.prediction_id = p.prediction_id
+                 AND a.result_version = (
+                     SELECT MAX(newer.result_version)
+                     FROM actual_results newer
+                     WHERE newer.prediction_id = p.prediction_id
+                 )
+                LEFT JOIN simulated_trades t
+                  ON t.prediction_id = p.prediction_id
+                 AND t.actual_result_id = a.actual_result_id
+                 AND t.strategy_version = s.strategy_version
+                WHERE s.status = 'READY'
+                  AND r.run_type = 'MORNING'
+                  AND s.published_at <= s.cutoff_at
                 {clause}
                 ORDER BY s.prediction_date, p.ticker
             """,
@@ -510,7 +534,7 @@ class DashboardQueryService:
         )
 
     def oos_scenario_rows(self, *, limit: int = 5000) -> QueryResult:
-        """Return finalized prediction/outcome pairs for scenario recomputation.
+        """Return pre-cutoff morning prediction/outcome pairs for recomputation.
 
         Only the newest ``result_version`` of each prediction is returned, and
         only once the outcome reached ``FINAL`` or ``CORRECTED``.  ``PENDING``
@@ -520,8 +544,16 @@ class DashboardQueryService:
 
         return self._read(
             required={
+                "daily_runs": frozenset({"run_id", "run_type"}),
                 "prediction_sets": frozenset(
-                    {"prediction_set_id", "prediction_date", "cutoff_at"}
+                    {
+                        "prediction_set_id",
+                        "run_id",
+                        "prediction_date",
+                        "cutoff_at",
+                        "published_at",
+                        "status",
+                    }
                 ),
                 "predictions": frozenset(
                     {
@@ -556,9 +588,13 @@ class DashboardQueryService:
                 FROM predictions AS p
                 JOIN prediction_sets AS ps
                   ON ps.prediction_set_id = p.prediction_set_id
+                JOIN daily_runs AS r ON r.run_id = ps.run_id
                 JOIN actual_results AS ar
                   ON ar.prediction_id = p.prediction_id
-                WHERE p.status = 'SUCCESS'
+                WHERE ps.status = 'READY'
+                  AND r.run_type = 'MORNING'
+                  AND ps.published_at <= ps.cutoff_at
+                  AND p.status = 'SUCCESS'
                   AND ar.status IN ('FINAL', 'CORRECTED')
                   AND ar.actual_open IS NOT NULL
                   AND ar.actual_close IS NOT NULL
