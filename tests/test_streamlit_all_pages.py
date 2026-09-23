@@ -9,6 +9,7 @@ from sqlalchemy.pool import StaticPool
 from streamlit.testing.v1 import AppTest
 
 from dashboard.query_service import DashboardQueryService
+from dashboard.types import QueryResult
 from database.models import Base
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,7 +31,37 @@ def test_streamlit_all_pages(page, migrated, monkeypatch):
     st.cache_resource.clear()
     app = AppTest.from_file(str(page), default_timeout=30).run()
     assert not app.exception, [(e.message, e.stack_trace) for e in app.exception]
-    # Streamlit runs the bodies of all st.tabs during each script execution.
-    # Empty tables must not trigger hidden tab exceptions.
+    # The initial selected tab must remain safe even with an empty schema.
+    engine.dispose()
+    st.cache_resource.clear()
+
+
+def test_history_only_reads_the_selected_window(monkeypatch):
+    """Hidden History tabs must not triple reads and chart work on page load."""
+
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    Base.metadata.create_all(engine)
+    service = DashboardQueryService(engine)
+    import dashboard.ui as ui
+
+    seen: list[str | None] = []
+
+    def history_window(
+        _service: DashboardQueryService, since: str | None
+    ) -> QueryResult:
+        seen.append(since)
+        return QueryResult.from_rows(())
+
+    monkeypatch.setattr(ui, "service_from_environment", lambda: service)
+    monkeypatch.setattr(ui, "cached_prediction_history_window", history_window)
+    st.cache_resource.clear()
+    app = AppTest.from_file(
+        str(ROOT / "pages" / "2_History.py"), default_timeout=30
+    ).run()
+    assert not app.exception
+    assert len(seen) == 1
+    assert seen[0] is not None
     engine.dispose()
     st.cache_resource.clear()

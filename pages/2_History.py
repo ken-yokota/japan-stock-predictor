@@ -408,9 +408,14 @@ def main() -> None:
     )
 
     today = date.today()
-    for tab, (label, days) in zip(
-        st.tabs([label for label, _ in WINDOWS]), WINDOWS, strict=True
-    ):
+    # History draws several charts and tables per window. Rendering every
+    # hidden tab triples database reads and chart work in the browser.
+    tabs = st.tabs(
+        [label for label, _ in WINDOWS], on_change="rerun", key="history_window"
+    )
+    for tab, (label, days) in zip(tabs, WINDOWS, strict=True):
+        if not tab.open:
+            continue
         with tab:
             since = (
                 (today - timedelta(days=days)).isoformat() if days is not None else None
