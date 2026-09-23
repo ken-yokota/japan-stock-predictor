@@ -72,7 +72,14 @@ def test_summary_restricts_every_arm_to_identical_ticker_sessions(
             actual = 0.01 if ticker == "A" else -0.01
             if day == "2026-07-02":
                 actual += 0.005
-            for name in ("champion_replay", "huber", "extra_trees"):
+            for name in (
+                "champion_replay",
+                "huber",
+                "extra_trees",
+                "zero_return",
+                "always_up",
+                "historical_frequency",
+            ):
                 status = (
                     "FAILED"
                     if (ticker, day, name) == ("B", "2026-07-02", "extra_trees")
@@ -85,8 +92,12 @@ def test_summary_restricts_every_arm_to_identical_ticker_sessions(
                         "model": name,
                         "status": status,
                         "actual_return": actual,
-                        "predicted_return": actual - 0.002,
-                        "probability_up": 0.7,
+                        "predicted_return": {
+                            "zero_return": 0.0,
+                            "always_up": 0.01,
+                            "historical_frequency": 0.001,
+                        }.get(name, actual - 0.002),
+                        "probability_up": 1.0 if name == "always_up" else 0.7,
                         "probability_source": "champion_logistic",
                         "features": ["signal"],
                         "training_start": "2026-01-01",
@@ -113,12 +124,19 @@ def test_summary_restricts_every_arm_to_identical_ticker_sessions(
         "champion_replay": 1,
         "huber": 1,
         "extra_trees": 0,
+        "zero_return": 1,
+        "always_up": 1,
+        "historical_frequency": 1,
     }
     assert report["non_ok_status_counts"]["extra_trees"] == {"FAILED": 1}
     assert report["paired_mae_difference"]["huber"]["candidate_minus_champion"] == 0
-    for metrics in report["metrics"].values():
+    for name in ("champion_replay", "huber", "extra_trees"):
+        metrics = report["metrics"][name]
         assert metrics["10"]["samples"] == 3
         assert metrics["10"]["trades"] == 2
+    assert report["metrics"]["zero_return"]["10"]["trades"] == 0
+    assert report["metrics"]["zero_return"]["10"]["pearson"] is None
+    assert report["metrics"]["always_up"]["10"]["trades"] == 3
     json.dumps(report, allow_nan=False)
 
     path = tmp_path / "A.json"

@@ -34,6 +34,11 @@ promote a model. Promotion still requires a separately registered, frozen
   hypothetical fixed round-trip costs of 0, 5, 10, 15 and 20 basis points.
   Report candidate-minus-champion paired MAE and its 95% date-bootstrap
   interval, resampling whole dates to retain within-day stock dependence.
+- Include three training-only negative controls on the same dates: zero return
+  with the prior 120-session up frequency; always-up with a positive point
+  forecast equal to the prior mean absolute return and probability one; and
+  prior mean return with the prior up frequency. These are diagnostics, not
+  model candidates or trading recommendations.
 
 The historical source is labelled `ESTIMATED_BACKFILL`: publication and
 first-observed times in backfilled EOD data are estimates, and this is neither

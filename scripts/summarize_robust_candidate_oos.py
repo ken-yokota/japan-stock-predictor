@@ -16,6 +16,7 @@ import pandas as pd
 
 from data.config import load_app_config
 from research.live_audit import evaluate
+from research.robust_candidates import BASELINE_NAMES
 
 
 def summarize(directory: Path) -> dict[str, object]:
@@ -45,7 +46,7 @@ def summarize(directory: Path) -> dict[str, object]:
     if window is None:
         raise ValueError("no study window was found")
 
-    models = ("champion_replay", *candidate_names)
+    models = ("champion_replay", *candidate_names, *BASELINE_NAMES)
     frame = pd.DataFrame(source)
     frame = frame.loc[frame.model.isin(models)].copy()
     valid = frame.loc[frame.status == "OK"].copy()

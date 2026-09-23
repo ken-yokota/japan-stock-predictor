@@ -57,6 +57,7 @@ def _model(name: str) -> Pipeline:
 
 
 NAMES = ("huber", "extra_trees")
+BASELINE_NAMES = ("zero_return", "always_up", "historical_frequency")
 
 
 def fit_candidate(

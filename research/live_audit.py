@@ -79,14 +79,17 @@ def evaluate(group: pd.DataFrame, cost_bp: int = 0) -> dict[str, object]:
     sd = float(daily.std(ddof=1)) if len(daily) > 1 else 0
     downside = float(np.sqrt(np.mean(np.minimum(daily, 0) ** 2))) if len(daily) else 0
     errors = prediction[good] - y[good]
+    variable = (
+        good.sum() > 2
+        and np.ptp(prediction[good]) > 0
+        and np.ptp(y[good]) > 0
+    )
     corr = (
-        pd.Series(prediction[good]).corr(pd.Series(y[good]))
-        if good.sum() > 2
-        else np.nan
+        pd.Series(prediction[good]).corr(pd.Series(y[good])) if variable else np.nan
     )
     rank = (
         pd.Series(prediction[good]).corr(pd.Series(y[good]), method="spearman")
-        if good.sum() > 2
+        if variable
         else np.nan
     )
     low = group.interval_low.to_numpy(float)

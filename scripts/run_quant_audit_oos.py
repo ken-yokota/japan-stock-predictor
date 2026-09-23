@@ -23,8 +23,8 @@ from data.config import load_app_config
 from database.connection import create_database_engine
 from models import train_ticker_model
 from research.nested_selection import FrozenSelection, nested_select
+from research.robust_candidates import BASELINE_NAMES, fit_candidate
 from research.robust_candidates import NAMES as ROBUST_CANDIDATES
-from research.robust_candidates import fit_candidate
 from services.dataset import PointInTimeDatasetBuilder
 from services.prediction import PredictionService
 
@@ -172,6 +172,47 @@ def run(
                             "train_mae": fitted_candidate.train_mae,
                         }
                     )
+                if candidate_names:
+                    history = train.intraday_return.to_numpy(float)
+                    historical_frequency = float((history > 0).mean())
+                    baselines = {
+                        "zero_return": (0.0, historical_frequency),
+                        "always_up": (float(np.abs(history).mean()), 1.0),
+                        "historical_frequency": (
+                            float(history.mean()),
+                            historical_frequency,
+                        ),
+                    }
+                    for name in BASELINE_NAMES:
+                        baseline = {
+                            "ticker": ticker,
+                            "date": str(current.iloc[0].market_date),
+                            "model": name,
+                            "training_start": str(train.iloc[0].market_date),
+                            "training_end": str(train.iloc[-1].market_date),
+                            "features": [],
+                            "actual_return": float(current.iloc[0].intraday_return),
+                            "selection_position": None,
+                            "probability_source": (
+                                "constant_one"
+                                if name == "always_up"
+                                else "prior_120_sessions"
+                            ),
+                        }
+                        if champion_probability is None:
+                            rows.append(
+                                {**baseline, "status": "NO_PREDICTION_MISSING"}
+                            )
+                            continue
+                        point, probability = baselines[name]
+                        rows.append(
+                            {
+                                **baseline,
+                                "status": "OK",
+                                "predicted_return": point,
+                                "probability_up": probability,
+                            }
+                        )
             target.write_text(
                 json.dumps(
                     {
