@@ -95,7 +95,7 @@ def _drivers(
     model: TickerModelBundle,
     dataset: ModelDataset,
     coefficients: dict[str, float],
-) -> tuple[tuple[str, ...], tuple[str, ...]]:
+) -> tuple[tuple[str, ...], tuple[str, ...], bool]:
     """Name the predictors that actually moved today's number, and by how much.
 
     Ranking by coefficient alone answers "what does this model weigh in
@@ -106,40 +106,40 @@ def _drivers(
     the intercept plus the sum of those contributions, so the parts add up to
     the whole and can be quoted in the same units.
 
-    Falls back to the coefficient ordering if the scaler statistics are
-    unavailable for any reason: a morning email with a weaker explanation is
-    better than a morning pipeline that fails while building one.
+    If the scaler statistics are unavailable, omit the daily explanation.
+    Coefficient sign alone cannot establish what moved this morning's forecast.
     """
-
-    def by_coefficient() -> tuple[tuple[str, ...], tuple[str, ...]]:
-        ordered = sorted(coefficients.items(), key=lambda item: item[1], reverse=True)
-        return (
-            tuple(name for name, value in ordered if value > 0.0)[:3],
-            tuple(name for name, value in reversed(ordered) if value < 0.0)[:3],
-        )
 
     try:
         statistics = model.scaler_statistics("regression")
         if statistics is None or dataset.current_frame.empty:
-            return by_coefficient()
+            return (), (), False
+        if any(
+            name not in statistics.means
+            or name not in statistics.scales
+            or name not in coefficients
+            for name in model.feature_names
+        ):
+            return (), (), False
         row = dataset.current_frame.iloc[0]
         contributions: list[tuple[str, float]] = []
         for name in model.feature_names:
             raw = row.get(name)
             value = float(raw) if isinstance(raw, int | float) else float("nan")
             if not math.isfinite(value):
-                # Imputed to the training median, so it standardizes to about
-                # zero and contributes about nothing. Reporting it as a driver
-                # would be inventing an explanation for a missing input.
-                continue
-            scale = statistics.scales.get(name) or 1.0
-            standardized = (value - statistics.means.get(name, 0.0)) / scale
-            contributions.append((name, coefficients.get(name, 0.0) * standardized))
+                return (), (), False
+            scale = statistics.scales[name]
+            mean = statistics.means[name]
+            coefficient = coefficients[name]
+            if not all(map(math.isfinite, (scale, mean, coefficient))) or scale <= 0:
+                return (), (), False
+            standardized = (value - mean) / scale
+            contributions.append((name, coefficient * standardized))
     except Exception:
-        return by_coefficient()
+        return (), (), False
 
     if not contributions:
-        return by_coefficient()
+        return (), (), False
     contributions.sort(key=lambda item: item[1], reverse=True)
     return (
         tuple(
@@ -152,6 +152,7 @@ def _drivers(
             for name, value in reversed(contributions)
             if value < 0.0
         )[:3],
+        True,
     )
 
 
@@ -369,7 +370,7 @@ class PredictionService:
                 include_sequence=self._config.model.models.include_sequence_arms,
             )
         coefficients = model.regression_coefficients()
-        positive, negative = _drivers(model, dataset, coefficients)
+        positive, negative, explained = _drivers(model, dataset, coefficients)
         reference = dataset.current_sample.reference_price
         difference = (
             reference * predicted.predicted_return if reference is not None else None
@@ -430,7 +431,12 @@ class PredictionService:
                 coefficients=coefficients,
                 positive_factors=positive,
                 negative_factors=negative,
-                warnings=dataset.current_sample.warnings,
+                warnings=dataset.current_sample.warnings
+                + (
+                    ("daily feature contributions unavailable",)
+                    if not explained
+                    else ()
+                ),
             ),
         )
 
