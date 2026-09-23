@@ -40,7 +40,8 @@ def recompute(database_url: str, output: Path) -> dict[str, object]:
                 connection.execute(
                     text(
                         """
-                    SELECT ps.prediction_date, ps.generated_at,
+                    SELECT ps.prediction_set_id, p.prediction_id,
+                           ps.prediction_date, ps.generated_at,
                            ps.published_at, ps.cutoff_at,
                            ps.status AS prediction_set_status, r.run_type,
                            p.ticker, p.status,

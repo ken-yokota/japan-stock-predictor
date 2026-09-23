@@ -60,6 +60,32 @@ def test_live_cohort_keeps_latest_pre_cutoff_decision() -> None:
     assert eligible_publications(source).prediction_id.tolist() == ["replacement"]
 
 
+def test_pending_replacement_does_not_revive_superseded_prediction() -> None:
+    source = pd.DataFrame(
+        [
+            _record(),
+            _record(
+                prediction_id="replacement-pending",
+                published_at="2026-08-27T23:20:00Z",
+                actual_intraday_return=None,
+            ),
+        ]
+    )
+
+    assert eligible_publications(source).empty
+
+
+def test_equal_publication_time_uses_stable_ids() -> None:
+    source = pd.DataFrame(
+        [
+            _record(prediction_set_id="retry", prediction_id="retry"),
+            _record(prediction_set_id="initial", prediction_id="initial"),
+        ]
+    )
+
+    assert eligible_publications(source).prediction_id.tolist() == ["retry"]
+
+
 def test_live_cohort_fails_closed_without_publication_metadata() -> None:
     source = pd.DataFrame([_record()]).drop(columns="published_at")
 

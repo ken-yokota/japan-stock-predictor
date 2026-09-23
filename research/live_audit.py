@@ -43,13 +43,22 @@ def eligible_publications(raw: pd.DataFrame) -> pd.DataFrame:
     cutoff = pd.to_datetime(raw.cutoff_at, utc=True, errors="coerce")
     valid = published.notna() & cutoff.notna() & (published <= cutoff)
     valid &= (raw.run_type == "MORNING") & (raw.prediction_set_status == "READY")
-    valid &= raw.actual_intraday_return.notna() & (raw.status == "SUCCESS")
+    valid &= raw.status == "SUCCESS"
     candidates = raw.loc[valid].copy()
     candidates["_publication_order"] = published.loc[valid]
-    return (
-        candidates.sort_values("_publication_order")
+    order = ["_publication_order"] + [
+        column
+        for column in ("prediction_set_id", "prediction_id")
+        if column in candidates.columns
+    ]
+    latest = (
+        candidates.sort_values(order, kind="stable")
         .drop_duplicates(["ticker", "prediction_date"], keep="last")
-        .drop(columns="_publication_order")
+    )
+    # A later published forecast supersedes an older one even while its
+    # outcome is pending. The old labelled row must not re-enter the cohort.
+    return latest.loc[latest.actual_intraday_return.notna()].drop(
+        columns="_publication_order"
     )
 
 
