@@ -103,7 +103,7 @@ def test_cached_query_result_survives_enum_module_reload(
     assert not render_query_state(
         QueryResult(cast(QueryState, PreviousQueryState.UNKNOWN))
     )
-    assert errors == ["DBの表示状態を確認できません。再読み込みしてください。"]
+    assert errors == ["DBの表示状態が不明です。再読み込みしてください。"]
 
 
 def test_query_service_handles_empty_and_unmigrated_databases() -> None:

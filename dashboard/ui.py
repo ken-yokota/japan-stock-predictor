@@ -419,7 +419,7 @@ def render_query_state(
     elif result.state == QueryState.SCHEMA_PENDING:
         st.warning(result.message)
     else:
-        st.error(result.message or "DBの表示状態を確認できません。再読み込みしてください。")
+        st.error(result.message or "DBの表示状態が不明です。再読み込みしてください。")
     return False
 
 
