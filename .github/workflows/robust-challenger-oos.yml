@@ -2,6 +2,11 @@ name: Compare fixed robust return challengers
 
 on:
   workflow_dispatch:
+    inputs:
+      diagnostic_ticker:
+        description: "Optional single ticker for failure diagnosis; no aggregate comparison"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -26,22 +31,27 @@ jobs:
         run: python -m pip install -e .
 
       - name: Compare on shared estimated-PIT windows in a read-only transaction
-        run: >-
-          python -m scripts.run_quant_audit_oos
-          --output "$RUNNER_TEMP/robust-candidate-oos"
-          --start 2026-01-01
-          --end 2026-09-18
-          --skip-compact
-          --candidate-names huber extra_trees
+        env:
+          DIAGNOSTIC_TICKER: ${{ inputs.diagnostic_ticker }}
+        run: |
+          args=(--output "$RUNNER_TEMP/robust-candidate-oos"
+            --start 2026-01-01 --end 2026-09-18
+            --skip-compact --candidate-names huber extra_trees)
+          if [[ -n "$DIAGNOSTIC_TICKER" ]]; then
+            [[ "$DIAGNOSTIC_TICKER" =~ ^[0-9]{4}$ ]] || exit 2
+            args+=(--tickers "$DIAGNOSTIC_TICKER")
+          fi
+          python -m scripts.run_quant_audit_oos "${args[@]}"
 
       - name: Summarize common cohort and fixed cost scenarios
+        if: ${{ inputs.diagnostic_ticker == '' }}
         run: >-
           python -m scripts.summarize_robust_candidate_oos
           --input "$RUNNER_TEMP/robust-candidate-oos"
           --output "$RUNNER_TEMP/robust-candidate-summary.json"
 
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: ${{ always() && inputs.diagnostic_ticker == '' }}
         with:
           name: robust-challenger-oos
           path: ${{ runner.temp }}/robust-candidate-summary.json
