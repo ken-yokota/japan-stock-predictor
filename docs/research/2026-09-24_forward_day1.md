@@ -42,6 +42,14 @@ paper-trading configuration assigns zero commission and slippage, so this
 reported net amount equals gross P/L and is not an estimate of executable
 after-cost performance. No broker orders were placed.
 
+A [post-close read-only cohort audit](https://github.com/ken-yokota/japan-stock-predictor/actions/runs/35969724997)
+on main source commit `fc68a81840d536c6c076ba0d795a18b50d4d295f` found 660 source
+rows and 550 eligible live rows across 25 settled sessions. The pre-close
+audit had 528 eligible rows across 24 sessions; the increase of 22 rows and
+one session agrees with this day's completed settlement. This database
+recomputation does not verify the public Streamlit Cloud running commit or
+repair its previously observed History cohort mismatch.
+
 This is one highly negative market session in a 20-session registration. It
 does not establish a persistent model or strategy effect, and no predictive
 settings are changed in response. The scheduled 17:00 JST result email and
