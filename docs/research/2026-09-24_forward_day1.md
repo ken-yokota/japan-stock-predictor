@@ -49,6 +49,10 @@ audit had 528 eligible rows across 24 sessions; the increase of 22 rows and
 one session agrees with this day's completed settlement. This database
 recomputation does not verify the public Streamlit Cloud running commit or
 repair its previously observed History cohort mismatch.
+The audit's champion group keyed by the registered configuration hash
+`c0e465e85040ec42757b1ea20308ca2a930f2f9efe067366df9f23584336be22`
+contains exactly 22 predictions, 11 BUY paper trades and one session; its
+MAE agrees with the independent day-one calculation above.
 
 This is one highly negative market session in a 20-session registration. It
 does not establish a persistent model or strategy effect, and no predictive
