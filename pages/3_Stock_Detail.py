@@ -223,7 +223,13 @@ def main() -> None:
     display_rows(list(reversed(record)), height=420)
 
     positive, issued, unsettled = buy_hit_ratio([dict(row) for row in selected])
-    st.metric("買いの的中", f"{positive}/{issued}")
+    if issued == 0:
+        hit_display = "—"
+    elif unsettled == issued:
+        hit_display = "未確定"
+    else:
+        hit_display = f"{positive}/{issued}"
+    st.metric("買いの的中", hit_display)
     st.caption(
         "実際にプラスになった日 / 買いシグナルが出た日。"
         "分母は出したシグナル全部で、未確定の日も含みます"
