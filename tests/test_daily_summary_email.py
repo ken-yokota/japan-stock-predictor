@@ -782,6 +782,7 @@ def test_the_trend_caveat_names_the_sample_it_rests_on() -> None:
     assert "2営業日" in note
     assert "買い5取引" in note
     assert "-200円" in note
+    assert "前向き登録の対象だけを集計した成績ではありません" in note
     assert "優位性の証拠ではありません" in note
 
 

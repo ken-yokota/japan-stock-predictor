@@ -664,6 +664,7 @@ def history_caveat(history: Sequence[DaySummary]) -> str:
     return (
         f"{len(history)}営業日・買い{trades}取引の累積で {total:+,.0f}円、"
         f"方向的中は{hits}/{predicted}（{rate:.0%}）です。"
+        "この推移はDB保存履歴であり、前向き登録の対象だけを集計した成績ではありません。"
         f"{len(history)}日では相場の地合いとモデルの優劣を分離できません。"
         "この図は方向を見るためのもので、優位性の証拠ではありません。"
     )
