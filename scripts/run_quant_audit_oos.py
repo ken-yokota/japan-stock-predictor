@@ -155,11 +155,19 @@ def run(
                             current.loc[:, all_names],
                         )
                     except (ValueError, RuntimeError) as failure:
+                        # Only emit a fixed diagnostic code. Third-party error
+                        # strings may include data from the private input.
+                        failure_reason = (
+                            "NONCONVERGENCE"
+                            if str(failure) == "candidate fit did not converge"
+                            else "OTHER_MODEL_ERROR"
+                        )
                         rows.append(
                             {
                                 **base,
                                 "status": "FAILED",
                                 "failure_type": type(failure).__name__,
+                                "failure_reason": failure_reason,
                             }
                         )
                         continue
@@ -200,9 +208,7 @@ def run(
                             ),
                         }
                         if champion_probability is None:
-                            rows.append(
-                                {**baseline, "status": "NO_PREDICTION_MISSING"}
-                            )
+                            rows.append({**baseline, "status": "NO_PREDICTION_MISSING"})
                             continue
                         point, probability = baselines[name]
                         rows.append(
@@ -231,8 +237,27 @@ def run(
             summary = []
             for name, group in pd.DataFrame(rows).groupby("model"):
                 good = group.loc[group.status == "OK"]
+                failures = (
+                    {
+                        str(reason): int(count)
+                        for reason, count in group.loc[
+                            group.status == "FAILED", "failure_reason"
+                        ]
+                        .value_counts()
+                        .items()
+                    }
+                    if "failure_reason" in group
+                    else {}
+                )
                 if good.empty:
-                    summary.append({"model": name, "n": 0, "status": "NO_PREDICTIONS"})
+                    summary.append(
+                        {
+                            "model": name,
+                            "n": 0,
+                            "status": "NO_PREDICTIONS",
+                            "failures": failures,
+                        }
+                    )
                     continue
                 error = good.predicted_return - good.actual_return
                 summary.append(
@@ -247,6 +272,7 @@ def run(
                             ).mean()
                         ),
                         "features": sorted({len(x) for x in group.features}),
+                        "failures": failures,
                     }
                 )
             print(
