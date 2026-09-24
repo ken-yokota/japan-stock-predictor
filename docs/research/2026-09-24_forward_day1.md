@@ -54,7 +54,19 @@ The audit's champion group keyed by the registered configuration hash
 contains exactly 22 predictions, 11 BUY paper trades and one session; its
 MAE agrees with the independent day-one calculation above.
 
+The delayed [scheduled close run](https://github.com/ken-yokota/japan-stock-predictor/actions/runs/35997356285)
+started at 21:10 JST and completed at 21:17 JST with `SUCCESS`, 22 finalized,
+zero pending, zero corrected and zero failed tickers. A subsequent read-only
+production DB query of the latest READY morning set found 22 predictions,
+11 BUY, 22 latest FINAL outcomes, no pending outcomes, maximum outcome version
+1, 11 FINAL paper trades and unchanged paper P/L of -138,950 JPY. The [evening summary
+run](https://github.com/ken-yokota/japan-stock-predictor/actions/runs/35978824789)
+completed at 18:04 JST. Its production `email_logs` row is `SENT` at 18:03:59
+JST. These are provider/DB send-side observations; inbox receipt is not
+verified. Its ten-day historical trend includes sessions before the forward
+registration, and [PR #20](https://github.com/ken-yokota/japan-stock-predictor/pull/20)
+added that distinction to both message formats.
+
 This is one highly negative market session in a 20-session registration. It
 does not establish a persistent model or strategy effect, and no predictive
-settings are changed in response. The scheduled 17:00 JST result email and
-its inbox delivery require separate verification.
+settings are changed in response.
