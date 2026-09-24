@@ -795,9 +795,8 @@ def _upcoming_section() -> str:
             min_width=480,
         ),
         holiday_note
-        or "すべて自動で実行されます。操作は不要です。"
-        "GitHub Actions のcronは定刻より30〜60分遅れて起動することがあり、"
-        "実測でもその範囲で遅れています。",
+        or "表の時刻は予定であり、実行済みを示しません。"
+        "GitHub Actions のcronは数時間遅延または欠落した実測があります。",
     )
 
 
