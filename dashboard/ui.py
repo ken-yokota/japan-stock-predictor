@@ -340,9 +340,15 @@ def render_latest_day_banner() -> None:
         # The denominator is every BUY issued, not only the settled ones.
         # Counting settled days alone quietly improves the ratio whenever a
         # close is missing, which is the opposite of what it is read for.
+        if buys == 0:
+            hit_display = "—"
+        elif settled == 0:
+            hit_display = "未確定"
+        else:
+            hit_display = f"{hits}/{buys}"
         columns[3].metric(
             "買いの的中",
-            "—" if buys == 0 else f"{hits}/{buys}",
+            hit_display,
             delta=None if settled == 0 else f"{profit:+,.0f}円",
             help=(
                 "実際にプラスになった日 / 買いシグナルが出た日。"
