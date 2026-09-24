@@ -3,6 +3,14 @@ name: Compare fixed robust return challengers
 on:
   workflow_dispatch:
     inputs:
+      analysis_arm:
+        description: "Fixed all-arm study or exploratory Extra Trees analysis after Huber failure"
+        required: true
+        default: fixed_all
+        type: choice
+        options:
+          - fixed_all
+          - extra_trees_postfailure
       diagnostic_ticker:
         description: "Optional single ticker for failure diagnosis; no aggregate comparison"
         required: false
@@ -32,11 +40,17 @@ jobs:
 
       - name: Compare on shared estimated-PIT windows in a read-only transaction
         env:
+          ANALYSIS_ARM: ${{ inputs.analysis_arm }}
           DIAGNOSTIC_TICKER: ${{ inputs.diagnostic_ticker }}
         run: |
           args=(--output "$RUNNER_TEMP/robust-candidate-oos"
             --start 2026-01-01 --end 2026-09-18
-            --skip-compact --candidate-names huber extra_trees)
+            --skip-compact)
+          case "$ANALYSIS_ARM" in
+            fixed_all) args+=(--candidate-names huber extra_trees) ;;
+            extra_trees_postfailure) args+=(--candidate-names extra_trees) ;;
+            *) exit 2 ;;
+          esac
           if [[ -n "$DIAGNOSTIC_TICKER" ]]; then
             [[ "$DIAGNOSTIC_TICKER" =~ ^[0-9]{4}$ ]] || exit 2
             args+=(--tickers "$DIAGNOSTIC_TICKER")
