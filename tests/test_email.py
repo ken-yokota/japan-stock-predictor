@@ -727,15 +727,30 @@ def test_progress_report_flags_a_stale_task_note(tmp_path: Path) -> None:
     assert "更新されていません" in stale
 
 
-def test_progress_report_lists_what_happens_next() -> None:
-    """The mail answers "今後" without the operator opening the app."""
+def test_progress_report_lists_what_happens_next(monkeypatch: Any) -> None:
+    """The next scheduled time is shown before and after the last run of the day."""
 
-    from scripts.send_progress_report import build_report, render
+    from scripts import send_progress_report as report
 
-    html_body = render(build_report(_snapshot(), None, 30))
+    def frozen_datetime(hour: int, minute: int) -> type[datetime]:
+        class FixedDatetime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                fixed = cls(2026, 9, 24, hour, minute, tzinfo=report.JST)
+                return fixed.astimezone(tz) if tz else fixed.replace(tzinfo=None)
 
-    assert "今後の予定" in html_body
-    assert any(clock in html_body for clock in ("07:15", "08:20", "08:45", "16:10"))
+        return FixedDatetime
+
+    for hour, minute, expected_clock in (
+        (8, 0, "08:10"),
+        (16, 15, "17:00"),
+        (18, 0, "07:10"),
+    ):
+        monkeypatch.setattr(report, "datetime", frozen_datetime(hour, minute))
+        html_body = report.render(report.build_report(_snapshot(), None, 30))
+
+        assert "今後の予定" in html_body
+        assert expected_clock in html_body
 
 
 def test_progress_report_plain_text_carries_the_same_facts() -> None:
