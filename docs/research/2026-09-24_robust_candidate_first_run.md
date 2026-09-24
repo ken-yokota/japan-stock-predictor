@@ -11,10 +11,13 @@ result artifact. Thus there is no common all-arm sample, cost comparison,
 confidence interval, or promotion result from this run. The per-ticker log
 metrics must not be treated as a paired common-cohort comparison.
 
-The runner's per-row output recorded only the exception class, so the precise
-Huber failure reason is not yet measured. A new diagnostic run will print
-counts of fixed, data-free failure categories for one ticker. It will use the
-same frozen candidate, inputs, and read-only query, and will skip aggregate
-scoring. Any subsequent Huber parameter or model change needs a new protocol
-version and a separate exploratory result; this failed run remains in the
-record. No production forecast model was changed.
+The first runner's per-row output recorded only the exception class. A second
+read-only [single-ticker diagnostic run](https://github.com/ken-yokota/japan-stock-predictor/actions/runs/35946507873)
+used the same frozen candidate and inputs, skipped aggregate scoring, and
+reported a fixed, data-free reason category: Huber had **39 NONCONVERGENCE
+failures in 39 scored opportunities** for ticker 9101. The champion and Extra
+Trees each had 39 forecasts there. This diagnoses one ticker; it does not
+prove every failure in the original 22-ticker run had the same cause. Any
+subsequent Huber parameter or model change needs a new protocol version and a
+separate exploratory result; this failed run remains in the record. No
+production forecast model was changed.
