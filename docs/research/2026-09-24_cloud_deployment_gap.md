@@ -31,3 +31,24 @@ open a fresh History session, refresh its DB cache, and confirm 528 predictions
 for the same database snapshot. Recheck Backtest and Sector Analysis because
 their live comparisons depend on the same pre-cutoff cohort. Until this passes,
 the public History metrics must not be cited as the corrected live result.
+
+## Later check on 2026-09-24
+
+At 11:21 JST, a new public browser session opened History → 全期間 and used
+`DB表示を更新`. The page showed **972 all-period predictions** before and after
+refresh: the previous 950 plus the 22 predictions displayed for 9/24. The
+[read-only recomputation](https://github.com/ken-yokota/japan-stock-predictor/actions/runs/35947062727)
+completed at 11:25 JST against the current database and found **660 source
+rows, 528 eligible rows, and 24 settled sessions** after its published-before-
+cutoff, READY MORNING, latest-ticker/date and outcome rules. The new 9/24
+session was not yet settled, so the eligible count stayed 528. The UI total
+and the recomputation use different outcome filters, but the difference cannot
+be explained by the 22 newly published predictions alone. This reinforces
+the deployment/query mismatch; it still does not identify the running commit.
+
+Backtest and Sector Analysis both rendered and showed the 9/24 READY set with
+11 BUY candidates. They did not verify the corrected historical cohort. On
+this unsettled morning they displayed a `0/11` buy-hit label; PR #15 changed
+the source to say `未確定` until an outcome settles, but its Cloud deployment
+has not been verified. The configured Cloud branch, build log and runtime
+commit still require a signed-in management check before deployment can pass.
