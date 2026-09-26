@@ -839,7 +839,8 @@ class DashboardQueryService:
             },
             statement="""
                 SELECT
-                    st.trade_id, p.ticker, ps.prediction_date, p.signal,
+                    st.trade_id, st.prediction_id, p.ticker,
+                    ps.prediction_date, p.signal,
                     st.status, st.is_simulated, st.capital_jpy, st.shares,
                     st.entry_price, st.exit_price, st.gross_profit_jpy,
                     st.commission_cost_jpy, st.slippage_cost_jpy,

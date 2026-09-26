@@ -204,6 +204,49 @@ def test_all_dashboard_queries_match_the_migrated_schema() -> None:
     )
 
 
+def test_simulated_trade_rows_include_prediction_id_for_day_scoreboard() -> None:
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    with engine.begin() as connection:
+        connection.exec_driver_sql(
+            "CREATE TABLE predictions (prediction_id TEXT, prediction_set_id TEXT, "
+            "ticker TEXT, signal TEXT)"
+        )
+        connection.exec_driver_sql(
+            "CREATE TABLE prediction_sets (prediction_set_id TEXT, "
+            "prediction_date TEXT)"
+        )
+        connection.exec_driver_sql(
+            """CREATE TABLE simulated_trades (
+                trade_id TEXT, prediction_id TEXT, status TEXT,
+                is_simulated INTEGER, capital_jpy REAL, shares INTEGER,
+                entry_price REAL, exit_price REAL, gross_profit_jpy REAL,
+                commission_cost_jpy REAL, slippage_cost_jpy REAL,
+                net_profit_jpy REAL, realized_return REAL, opened_at TEXT,
+                closed_at TEXT, strategy_version TEXT
+            )"""
+        )
+        connection.exec_driver_sql(
+            "INSERT INTO prediction_sets VALUES ('set-1', '2026-09-25')"
+        )
+        connection.exec_driver_sql(
+            "INSERT INTO predictions VALUES ('prediction-1', 'set-1', '7203', 'BUY')"
+        )
+        connection.exec_driver_sql(
+            """INSERT INTO simulated_trades (
+                trade_id, prediction_id, status, is_simulated, capital_jpy,
+                shares, net_profit_jpy, strategy_version
+            ) VALUES ('trade-1', 'prediction-1', 'FINAL', 1, 100000, 100,
+                      28800, 'strategy-1')"""
+        )
+
+    result = DashboardQueryService(engine).simulated_trades()
+
+    assert result.ready
+    assert result.first is not None
+    assert result.first["prediction_id"] == "prediction-1"
+    assert result.first["net_profit_jpy"] == 28800
+
+
 def test_published_history_uses_latest_outcome_and_original_strategy() -> None:
     engine = create_engine("sqlite+pysqlite:///:memory:")
     with engine.begin() as connection:
