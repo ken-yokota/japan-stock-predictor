@@ -37,8 +37,9 @@ from collections.abc import Sequence
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import asdict, dataclass
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
@@ -99,8 +100,11 @@ def _actuals(database_url: str, days: Sequence[date]) -> dict[tuple[str, str], f
         )
         for symbol, market_date, open_price, close in rows:
             ticker = str(symbol).split(".")[0]
-            out[(market_date.isoformat(), ticker)] = float(
-                (float(close) - float(open_price)) / float(open_price)
+            session_date = cast(date, market_date)
+            open_value = cast(Decimal | float, open_price)
+            close_value = cast(Decimal | float, close)
+            out[(session_date.isoformat(), ticker)] = float(
+                (float(close_value) - float(open_value)) / float(open_value)
             )
     engine.dispose()
     return out
