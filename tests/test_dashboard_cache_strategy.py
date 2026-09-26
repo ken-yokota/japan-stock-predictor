@@ -89,3 +89,34 @@ def test_streamlit_cache_invalidation_and_database_isolation():
     cached_latest_run.clear()
     assert cached_latest_run(one).first["run_id"] == "updated"
     cached_latest_run.clear()
+
+
+def test_day_scoreboard_does_not_report_zero_when_trade_is_missing() -> None:
+    from unittest.mock import Mock
+
+    from dashboard.query_service import DashboardQueryService
+    from dashboard.types import QueryResult
+    from dashboard.ui import cached_day_scoreboard
+
+    service = object.__new__(DashboardQueryService)
+    service.today_predictions = Mock(
+        return_value=QueryResult.from_rows(
+            ({"prediction_id": "p1", "prediction_date": "2026-09-25", "signal": "BUY"},)
+        )
+    )
+    service.actual_results = Mock(
+        return_value=QueryResult.from_rows(
+            ({"prediction_id": "p1", "actual_intraday_return": 0.01},)
+        )
+    )
+    service.simulated_trades = Mock(return_value=QueryResult.from_rows(()))
+
+    cached_day_scoreboard.clear()
+    assert cached_day_scoreboard(service, "2026-09-25") == (1, 1, 1, None)
+
+    service.simulated_trades.return_value = QueryResult.from_rows(
+        ({"prediction_id": "p1", "status": "FINAL", "net_profit_jpy": 28800},)
+    )
+    cached_day_scoreboard.clear()
+    assert cached_day_scoreboard(service, "2026-09-25") == (1, 1, 1, 28800.0)
+    cached_day_scoreboard.clear()

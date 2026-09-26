@@ -76,11 +76,12 @@ def cached_prediction_set(service: DashboardQueryService) -> QueryResult:
 )
 def cached_day_scoreboard(
     service: DashboardQueryService, prediction_date: str
-) -> tuple[int, int, int, float] | None:
+) -> tuple[int, int, int, float | None] | None:
     """Return (buy count, settled buys, correct buys, net yen) for one day.
 
-    Returns ``None`` when the schema or the data is not there yet, so the
-    banner degrades to "未確定" rather than showing a zero that reads as a loss.
+    Returns ``None`` when predictions are unavailable. The profit field is
+    ``None`` when a settled BUY lacks one recorded final trade, so an unknown
+    paper P/L is never displayed as zero.
     """
 
     predictions = service.today_predictions()
@@ -111,15 +112,22 @@ def cached_day_scoreboard(
     # construction, but the operator asked for the plain statement.
     correct = sum(1 for row in settled if float(realized[row["prediction_id"]]) > 0)
 
-    trades = service.simulated_trades()
     settled_ids = {row["prediction_id"] for row in settled}
-    profit = 0.0
-    if trades.ready:
-        profit = sum(
-            float(row.get("net_profit_jpy") or 0)
-            for row in trades.rows
-            if row.get("prediction_id") in settled_ids
-        )
+    trades = service.simulated_trades()
+    if not trades.ready:
+        return len(buys), len(settled), correct, None
+    recorded = [
+        row
+        for row in trades.rows
+        if row.get("prediction_id") in settled_ids and row.get("status") == "FINAL"
+    ]
+    if (
+        len(recorded) != len(settled_ids)
+        or {row["prediction_id"] for row in recorded} != settled_ids
+        or any(row.get("net_profit_jpy") is None for row in recorded)
+    ):
+        return len(buys), len(settled), correct, None
+    profit = sum(float(row["net_profit_jpy"]) for row in recorded)
     return len(buys), len(settled), correct, profit
 
 
@@ -349,7 +357,9 @@ def render_latest_day_banner() -> None:
         columns[3].metric(
             "買いの的中",
             hit_display,
-            delta=None if settled == 0 else f"{profit:+,.0f}円",
+            delta=(
+                None if settled == 0 or profit is None else f"{profit:+,.0f}円"
+            ),
             help=(
                 "実際にプラスになった日 / 買いシグナルが出た日。"
                 "分母は出したシグナル全部で、実績が未確定の日も含みます。"
@@ -360,6 +370,8 @@ def render_latest_day_banner() -> None:
                 f"買い{buys}銘柄のうち{buys - settled}銘柄は実績が未確定です"
                 "（分母には含めています）。"
             )
+        if settled and profit is None:
+            st.caption("紙上損益は未記録、または現在確認できません。")
     # Folded, not dropped. These are the prediction set's own notes -- free
     # ingestion was partial, old feature rows were pruned -- and they are the
     # same two or three every morning. Rendered inline they sat between the
