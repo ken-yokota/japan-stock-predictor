@@ -32,3 +32,24 @@ unverified.
 On 2026-09-26, the six registered configuration files matched their frozen
 SHA-256 values. This checks the local configuration files, not the running
 Streamlit Cloud commit. The public Cloud version remains unverified.
+
+## Public Cloud recheck on 2026-09-27 02:24–02:28 JST
+
+After reloading the public [History](https://japan-stock-predictor-ky1.streamlit.app/History)
+page, its one-week window showed 2 sessions, 44 predictions, 14 BUY decisions,
+and -110,150 JPY in saved paper P/L. These agree with the two registered
+sessions in the read-only database inspection. The full-period window displayed
+994 predictions across 28 sessions. Running the current History page's
+`published_prediction_history(None)` query against the locally configured
+reporting database returned 572 eligible rows across 26 sessions; the separate
+read-only cohort recomputation also found 572. The full-period difference is
+**422 rows and 2 sessions**. It remains unresolved whether the public Cloud
+app uses a different database, a different running commit, or another data
+path; recent-session agreement alone does not establish deployment identity.
+
+The public [System Status](https://japan-stock-predictor-ky1.streamlit.app/System_Status)
+page showed the latest prediction date as 9/25, 3 BUY candidates and 3/3
+correct BUY directions, but its header displayed **+0 JPY** for that settled
+day. The read-only database paper-trade sum is **+28,800 JPY**, and the History
+one-week total is consistent with that value. The conflicting header remains
+an open UI/data-source finding, not a corrected result.
