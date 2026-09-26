@@ -190,6 +190,52 @@ def through_streamlit(service: DashboardQueryService, names: Sequence[str]) -> i
     return failures
 
 
+def diagnose_scoreboard(service: DashboardQueryService) -> None:
+    """Report counts behind the latest-day banner without exposing row values.
+
+    The public Actions log must not contain prediction identifiers, tickers,
+    credentials, or individual trade amounts. Aggregate counts are enough to
+    tell whether the banner lost trades at the read or matching stage.
+    """
+
+    latest = service.latest_prediction_set()
+    predictions = service.today_predictions()
+    actuals = service.actual_results()
+    trades = service.simulated_trades()
+    date = str((latest.first or {}).get("prediction_date"))
+    buys = [
+        row
+        for row in predictions.rows
+        if row.get("signal") == "BUY" and str(row.get("prediction_date")) == date
+    ]
+    realized_ids = {
+        row["prediction_id"]
+        for row in actuals.rows
+        if row.get("actual_intraday_return") is not None
+    }
+    settled_ids = {row["prediction_id"] for row in buys} & realized_ids
+    matched = [row for row in trades.rows if row.get("prediction_id") in settled_ids]
+    final = [row for row in matched if row.get("status") == "FINAL"]
+    final_ids = {row["prediction_id"] for row in final}
+
+    print("")
+    print("latest-day scoreboard aggregates (no row values)")
+    for label, result in (
+        ("latest_prediction_set", latest),
+        ("today_predictions", predictions),
+        ("actual_results", actuals),
+        ("simulated_trades", trades),
+    ):
+        print(f"{label:30} state={result.state} rows={len(result.rows)}")
+    print(f"BUY predictions={len(buys)} settled={len(settled_ids)}")
+    print(
+        f"matching trade rows={len(matched)} FINAL={len(final)} "
+        f"missing FINAL={len(settled_ids - final_ids)} "
+        f"duplicate FINAL={len(final) - len(final_ids)} "
+        f"null FINAL profit={sum(row.get('net_profit_jpy') is None for row in final)}"
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--only", nargs="*", default=None, help="query names to run")
@@ -197,6 +243,11 @@ def main(argv: list[str] | None = None) -> int:
         "--streamlit",
         action="store_true",
         help="also exercise the real @st.cache_data decorator",
+    )
+    parser.add_argument(
+        "--scoreboard",
+        action="store_true",
+        help="print aggregate read/matching counts for the latest-day banner",
     )
     arguments = parser.parse_args(argv)
 
@@ -215,6 +266,8 @@ def main(argv: list[str] | None = None) -> int:
         through = through_streamlit(service, names)
         print("")
         print(f"uncacheable reads (st.cache_data): {through}")
+    if arguments.scoreboard:
+        diagnose_scoreboard(service)
     return 0
 
 

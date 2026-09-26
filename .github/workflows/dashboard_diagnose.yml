@@ -42,4 +42,4 @@ jobs:
             "streamlit>=1.36,<2"
 
       - name: Pickle every dashboard read, then cache it through Streamlit
-        run: python -m scripts.diagnose_dashboard_cache --streamlit
+        run: python -m scripts.diagnose_dashboard_cache --streamlit --scoreboard
