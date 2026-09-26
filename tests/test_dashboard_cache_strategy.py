@@ -120,3 +120,38 @@ def test_day_scoreboard_does_not_report_zero_when_trade_is_missing() -> None:
     cached_day_scoreboard.clear()
     assert cached_day_scoreboard(service, "2026-09-25") == (1, 1, 1, 28800.0)
     cached_day_scoreboard.clear()
+
+
+def test_scoreboard_diagnostic_reports_mismatch_without_row_values(capsys) -> None:
+    from unittest.mock import Mock
+
+    from dashboard.types import QueryResult
+    from scripts.diagnose_dashboard_cache import diagnose_scoreboard
+
+    service = Mock()
+    service.latest_prediction_set.return_value = QueryResult.from_rows(
+        ({"prediction_date": "2026-09-25"},)
+    )
+    service.today_predictions.return_value = QueryResult.from_rows(
+        (
+            {
+                "prediction_id": "sensitive-p1",
+                "prediction_date": "2026-09-25",
+                "signal": "BUY",
+            },
+        )
+    )
+    service.actual_results.return_value = QueryResult.from_rows(
+        ({"prediction_id": "sensitive-p1", "actual_intraday_return": 0.01},)
+    )
+    service.simulated_trades.return_value = QueryResult.from_rows(
+        ({"prediction_id": "sensitive-p1", "status": "OPEN", "net_profit_jpy": 12345},)
+    )
+
+    diagnose_scoreboard(service)
+
+    output = capsys.readouterr().out
+    assert "BUY predictions=1 settled=1" in output
+    assert "matching trade rows=1 FINAL=0 missing FINAL=1" in output
+    assert "sensitive-p1" not in output
+    assert "12345" not in output
