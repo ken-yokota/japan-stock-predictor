@@ -154,9 +154,9 @@ def _fetch_close_rows(
 def _latest_prediction_set(
     session: Session, prediction_date: date
 ) -> PredictionSet | None:
-    # Only a live morning is scored. A reference prediction names a session
-    # that never opened, so settling one would put a day the market was closed
-    # into the track record.
+    # Settle only the publication that qualified as a live morning. Late
+    # replays and references are useful diagnostics, but cannot enter the
+    # trading record shown by the dashboard and delivery watchdog.
     return session.scalar(
         select(PredictionSet)
         .join(DailyRun, DailyRun.run_id == PredictionSet.run_id)
@@ -164,8 +164,12 @@ def _latest_prediction_set(
             PredictionSet.prediction_date == prediction_date,
             PredictionSet.status.in_(("READY", "INSUFFICIENT_DATA")),
             DailyRun.run_type == "MORNING",
+            PredictionSet.published_at <= PredictionSet.cutoff_at,
         )
-        .order_by(PredictionSet.generated_at.desc())
+        .order_by(
+            PredictionSet.published_at.desc(),
+            PredictionSet.prediction_set_id.desc(),
+        )
         .limit(1)
     )
 
@@ -205,22 +209,37 @@ def _update_metrics(
     ticker: str,
     as_of_date: date,
 ) -> None:
-    predictions = list(
-        session.scalars(
-            select(Prediction)
+    candidates = list(
+        session.execute(
+            select(Prediction, PredictionSet.prediction_date)
             .join(PredictionSet)
+            .join(DailyRun, DailyRun.run_id == PredictionSet.run_id)
             .where(
                 Prediction.ticker == ticker,
                 Prediction.status == "SUCCESS",
                 PredictionSet.prediction_date <= as_of_date,
+                PredictionSet.status == "READY",
+                DailyRun.run_type == "MORNING",
+                PredictionSet.published_at <= PredictionSet.cutoff_at,
             )
-            .order_by(PredictionSet.prediction_date)
+            .order_by(
+                PredictionSet.prediction_date,
+                PredictionSet.published_at.desc(),
+                PredictionSet.prediction_set_id.desc(),
+                Prediction.prediction_id.desc(),
+            )
         )
     )
+    # The live dashboard ranks publications per ticker and session date. Pick
+    # that one first, then check for an actual; an older set with an actual
+    # must not replace an unsettled newer live publication in OOS metrics.
+    latest_by_date: dict[date, Prediction] = {}
+    for prediction, prediction_date in candidates:
+        latest_by_date.setdefault(prediction_date, prediction)
     actuals: list[ActualResult] = []
     prediction_rows: list[Prediction] = []
     trades: list[SimulatedTrade] = []
-    for prediction in predictions:
+    for prediction in latest_by_date.values():
         actual = _latest_actual(session, prediction.prediction_id)
         if actual is None or actual.status not in {"FINAL", "CORRECTED"}:
             continue

@@ -38,6 +38,8 @@ from database.models import (
     FeatureInput,
     FeatureValue,
     MarketData,
+    MetricSnapshot,
+    Prediction,
     PredictionSet,
     SimulatedTrade,
     StockPrice,
@@ -636,6 +638,73 @@ def test_close_retry_finalizes_costed_board_lot_and_is_revision_idempotent(
         assert results[-1].supersedes_actual_result_id == results[-2].actual_result_id
         assert session.scalar(select(func.count()).select_from(ActualResult)) == 3
         assert session.scalar(select(func.count()).select_from(SimulatedTrade)) == 2
+
+
+def test_close_skips_a_late_only_morning_publication(
+    sqlite_factory: sessionmaker[Session], app_config: AppConfig
+) -> None:
+    late_id = _seed_prediction_set(sqlite_factory, app_config, with_buy=True)
+    cutoff = prediction_cutoff(PREDICTION_DATE).astimezone(UTC)
+    with sqlite_factory() as session:
+        late = session.get(PredictionSet, late_id)
+        assert late is not None
+        late.published_at = cutoff + timedelta(minutes=15)
+        session.commit()
+
+    result = ClosePipeline(sqlite_factory, app_config, _environment()).run(
+        PREDICTION_DATE,
+        observed_at=datetime(2026, 8, 12, 7, 0, tzinfo=UTC),
+        fetch_data=False,
+    )
+    assert result.status == "NO_PREDICTION_SET"
+    with sqlite_factory() as session:
+        assert session.scalar(select(func.count()).select_from(ActualResult)) == 0
+
+
+def test_close_metrics_exclude_a_historical_late_publication(
+    sqlite_factory: sessionmaker[Session], app_config: AppConfig
+) -> None:
+    # An older software version may already have settled a publication that
+    # was later classified as late. A new snapshot must not count its actual.
+    old_id = _seed_prediction_set(sqlite_factory, app_config, with_buy=True)
+    observed_at = datetime(2026, 8, 12, 6, 55, tzinfo=UTC)
+    with sqlite_factory() as session:
+        session.add(
+            _stock_revision(
+                close="6060", raw_hash="a" * 64, first_observed_at=observed_at
+            )
+        )
+        session.commit()
+    pipeline = ClosePipeline(sqlite_factory, app_config, _environment())
+    assert (
+        pipeline.run(PREDICTION_DATE, observed_at=observed_at, fetch_data=False).status
+        == "SUCCESS"
+    )
+
+    cutoff = prediction_cutoff(PREDICTION_DATE).astimezone(UTC)
+    with sqlite_factory() as session:
+        old = session.get(PredictionSet, old_id)
+        assert old is not None
+        old.published_at = cutoff + timedelta(minutes=15)
+        session.commit()
+    new_id = _seed_prediction_set(sqlite_factory, app_config, with_buy=True)
+    result = pipeline.run(PREDICTION_DATE, observed_at=observed_at, fetch_data=False)
+    assert result.status == "SUCCESS"
+    assert result.finalized == 1
+    with sqlite_factory() as session:
+        settled_ids = set(
+            session.scalars(
+                select(Prediction.prediction_set_id)
+                .join(
+                    ActualResult, ActualResult.prediction_id == Prediction.prediction_id
+                )
+                .where(ActualResult.status == "FINAL")
+            )
+        )
+        assert settled_ids == {old_id, new_id}
+        snapshots = list(session.scalars(select(MetricSnapshot)))
+        assert len(snapshots) == 2
+        assert [row.prediction_count for row in snapshots] == [1, 1]
 
 
 class _FakeSender:
