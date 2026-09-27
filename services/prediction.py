@@ -9,8 +9,12 @@ from typing import Protocol
 
 import numpy as np
 
+from data.availability import eod_provider_lag_minutes
 from data.config import AppConfig
-from data.market_calendar import previous_japan_session
+from data.market_calendar import (
+    latest_completed_indicator_session,
+    previous_japan_session,
+)
 from models import (
     InsufficientTrainingData,
     ModelTrainingConfig,
@@ -263,6 +267,62 @@ class PredictionService:
                         prediction_date,
                         dataset,
                         "previous JPX session stock close unavailable at cutoff",
+                    ),
+                )
+            stale_eod: list[str] = []
+            for indicator in self._config.indicators.indicators:
+                if (
+                    not indicator.required
+                    or indicator.id not in dataset.expected_indicators
+                ):
+                    continue
+                source = next(
+                    (
+                        candidate
+                        for candidate in indicator.sources
+                        if candidate.status == "verified"
+                        and candidate.data_mode == "eod"
+                        and candidate.provider == "yahoo_finance"
+                    ),
+                    None,
+                )
+                if source is None:
+                    continue
+                assert source.market is not None
+                assert source.market_timezone is not None
+                assert source.market_close is not None
+                assert source.provider is not None
+                expected_session = latest_completed_indicator_session(
+                    dataset.current_sample.cutoff_at,
+                    market=source.market,
+                    market_timezone=source.market_timezone,
+                    market_close=source.market_close,
+                    availability_lag_minutes=eod_provider_lag_minutes(
+                        source.provider, source.market
+                    ),
+                )
+                latest_observed = max(
+                    (
+                        reference.market_date
+                        for name, references in dataset.current_sample.lineage.items()
+                        if name.startswith(f"{indicator.id}__")
+                        and name != f"{indicator.id}__snapshot_level"
+                        for reference in references
+                    ),
+                    default=None,
+                )
+                if latest_observed != expected_session:
+                    stale_eod.append(indicator.id)
+            if stale_eod:
+                return PredictionComputation(
+                    dataset,
+                    None,
+                    self._insufficient(
+                        ticker,
+                        prediction_date,
+                        dataset,
+                        "required EOD indicators stale at cutoff: "
+                        + ", ".join(stale_eod),
                     ),
                 )
         if dataset.missing_required_indicators:

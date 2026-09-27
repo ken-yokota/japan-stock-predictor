@@ -24,7 +24,11 @@ from zoneinfo import ZoneInfo
 import exchange_calendars as xcals
 from sqlalchemy.orm import Session
 
-from data.availability import parse_market_time, prediction_cutoff
+from data.availability import (
+    eod_provider_lag_minutes,
+    parse_market_time,
+    prediction_cutoff,
+)
 from data.config import (
     AppConfig,
     IndicatorSourceConfig,
@@ -33,6 +37,7 @@ from data.config import (
 )
 from data.env import EnvironmentSettings
 from data.logging import configure_logging
+from data.market_calendar import indicator_calendar_name
 from data.provider_router import (
     EodRouteCandidate,
     ProviderRouter,
@@ -50,9 +55,6 @@ from database.repository import MarketDataRepository, UpsertSummary
 
 LOGGER = logging.getLogger(__name__)
 UTC = UTC
-YAHOO_EOD_LAG_MINUTES = {"JP": 20, "US": 30}
-EODHD_EOD_LAG_MINUTES = {"US": 15}
-DEFAULT_EOD_LAG_MINUTES = 60
 
 
 @dataclass(frozen=True, slots=True)
@@ -238,20 +240,13 @@ def _store(
 # on every run and never stored a single row. Measured over two years of Yahoo
 # bars, XLON leaves no gap in any of the three, which is also the timezone the
 # FX sources are configured with.
-_MARKET_CALENDARS: dict[str, str] = {
-    "JP": "XTKS",
-    "FOREX": "XLON",
-}
-_DEFAULT_CALENDAR = "XNYS"
-
-
 def _sessions(
     start_date: date,
     end_date: date,
     *,
     market: str,
 ) -> tuple[date, ...]:
-    calendar_name = _MARKET_CALENDARS.get(market, _DEFAULT_CALENDAR)
+    calendar_name = indicator_calendar_name(market)
     try:
         calendar = xcals.get_calendar(calendar_name)
         sessions = calendar.sessions_in_range(start_date, end_date)
@@ -367,20 +362,18 @@ def _source_request(
         or source.market is None
         or source.market_timezone is None
         or source.market_close is None
+        or source.provider is None
     ):
         raise ValueError("verified EOD source lacks required metadata")
-    lag_map = (
-        EODHD_EOD_LAG_MINUTES
-        if source.provider == "eodhd_free"
-        else YAHOO_EOD_LAG_MINUTES
-    )
     return FetchRequest(
         canonical_symbol=target.canonical_symbol,
         provider_symbol=source.provider_symbol,
         market=source.market,
         market_timezone=source.market_timezone,
         market_close=source.market_close,
-        availability_lag_minutes=lag_map.get(source.market, DEFAULT_EOD_LAG_MINUTES),
+        availability_lag_minutes=eod_provider_lag_minutes(
+            source.provider, source.market
+        ),
         start_date=start_date,
         end_date=end_date,
     )
