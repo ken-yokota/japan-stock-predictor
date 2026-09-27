@@ -143,22 +143,25 @@ def load_morning_email_payload(
             )
         return _project_prediction_set(session, config, chosen, dashboard_url)
 
-    # A reference prediction is never mailed on the scheduled path: it names a
-    # session that does not open, and a message that looks like every other
-    # morning would be read as one.
+    # The scheduled mail must select the same live publication as the
+    # dashboard and delivery watchdog. A late replay is still available via
+    # the explicit preview path above, but must not be mailed as a morning tip.
     statement = (
         select(PredictionSet)
         .join(DailyRun, DailyRun.run_id == PredictionSet.run_id)
         .where(
             PredictionSet.status.in_(("READY", "INSUFFICIENT_DATA")),
             DailyRun.run_type == "MORNING",
+            PredictionSet.published_at <= PredictionSet.cutoff_at,
         )
     )
     if prediction_date is not None:
         statement = statement.where(PredictionSet.prediction_date == prediction_date)
     prediction_set = session.scalar(
         statement.order_by(
-            PredictionSet.prediction_date.desc(), PredictionSet.generated_at.desc()
+            PredictionSet.prediction_date.desc(),
+            PredictionSet.published_at.desc(),
+            PredictionSet.prediction_set_id.desc(),
         ).limit(1)
     )
     if prediction_set is None:

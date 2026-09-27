@@ -38,6 +38,7 @@ from database.models import (
     FeatureInput,
     FeatureValue,
     MarketData,
+    PredictionSet,
     SimulatedTrade,
     StockPrice,
 )
@@ -212,6 +213,11 @@ def _seed_prediction_set(
             status=terminal_status,
             expected_tickers=expected_tickers,
         )
+        # Keep this fixture a genuine pre-cutoff morning publication. The
+        # repository otherwise stamps publication with the test wall clock.
+        utc_cutoff = cutoff.astimezone(UTC)
+        prediction_set.generated_at = utc_cutoff - timedelta(minutes=10)
+        prediction_set.published_at = utc_cutoff - timedelta(minutes=5)
         market_repository.finish_run(run, status="SUCCESS")
         session.commit()
         return prediction_set.prediction_set_id
@@ -651,6 +657,12 @@ def test_email_payload_and_database_claim_allow_exactly_one_send(
     prediction_set_id = _seed_prediction_set(sqlite_factory, app_config, with_buy=True)
     environment = _environment()
     with sqlite_factory() as session:
+        saved = session.get(PredictionSet, prediction_set_id)
+        assert saved is not None
+        assert saved.published_at <= saved.cutoff_at, (
+            saved.published_at,
+            saved.cutoff_at,
+        )
         stored_set, payload = load_morning_email_payload(
             session,
             app_config,
@@ -690,6 +702,63 @@ def test_email_payload_and_database_claim_allow_exactly_one_send(
         assert log.status == "SENT"
         assert log.attempt_count == 1
         assert log.provider_message_id == "fake-message-1"
+
+
+def test_scheduled_email_ignores_late_morning_replay(
+    sqlite_factory: sessionmaker[Session],
+    app_config: AppConfig,
+) -> None:
+    timely_id = _seed_prediction_set(sqlite_factory, app_config, with_buy=True)
+    late_id = _seed_prediction_set(sqlite_factory, app_config, with_buy=True)
+    cutoff = prediction_cutoff(PREDICTION_DATE).astimezone(UTC)
+    with sqlite_factory() as session:
+        late = session.get(PredictionSet, late_id)
+        assert late is not None
+        late.generated_at = cutoff + timedelta(minutes=10)
+        late.published_at = cutoff + timedelta(minutes=15)
+        session.commit()
+
+    with sqlite_factory() as session:
+        chosen, _ = load_morning_email_payload(
+            session,
+            app_config,
+            prediction_date=PREDICTION_DATE,
+            dashboard_url="https://dashboard.example.com",
+        )
+        preview, _ = load_morning_email_payload(
+            session,
+            app_config,
+            prediction_date=PREDICTION_DATE,
+            dashboard_url="https://dashboard.example.com",
+            prediction_set_id=late_id,
+        )
+        assert chosen.prediction_set_id == timely_id
+        assert preview.prediction_set_id == late_id
+
+
+def test_scheduled_email_has_no_live_set_when_only_publication_is_late(
+    sqlite_factory: sessionmaker[Session],
+    app_config: AppConfig,
+) -> None:
+    late_id = _seed_prediction_set(sqlite_factory, app_config, with_buy=True)
+    cutoff = prediction_cutoff(PREDICTION_DATE).astimezone(UTC)
+    with sqlite_factory() as session:
+        late = session.get(PredictionSet, late_id)
+        assert late is not None
+        late.generated_at = cutoff + timedelta(minutes=10)
+        late.published_at = cutoff + timedelta(minutes=15)
+        session.commit()
+
+    with (
+        sqlite_factory() as session,
+        pytest.raises(ValueError, match="no terminal prediction set"),
+    ):
+        load_morning_email_payload(
+            session,
+            app_config,
+            prediction_date=PREDICTION_DATE,
+            dashboard_url="https://dashboard.example.com",
+        )
 
 
 def _pinned_python() -> str:
