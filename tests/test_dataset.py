@@ -11,6 +11,7 @@ from data.config import load_app_config
 from data.market_calendar import japan_session_close, japan_sessions_before
 from database.models import Base, MarketData, StockPrice
 from services.dataset import PointInTimeDatasetBuilder
+from services.prediction import PredictionService
 
 
 def _stock_row(session_date: date, index: int) -> StockPrice:
@@ -125,3 +126,37 @@ def test_dataset_uses_120_prior_sessions_and_excludes_future_revision() -> None:
             "1605", prediction_date
         )
         assert after.current_frame.equals(before.current_frame)
+
+
+def test_live_prediction_refuses_stale_stock_close() -> None:
+    prediction_date = date(2026, 8, 12)  # 8/11 is a JPX holiday; 8/10 is required.
+    sessions = japan_sessions_before(prediction_date, 145)
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        for index, session_date in enumerate(sessions):
+            if session_date != sessions[-1]:
+                session.add(_stock_row(session_date, index))
+            session.add(_indicator_row(session_date, index))
+        session.commit()
+
+        config = load_app_config()
+        service = PredictionService(PointInTimeDatasetBuilder(session, config), config)
+        stale = service.compute("1605", prediction_date)
+        assert stale.result.status == "INSUFFICIENT_DATA"
+        assert (
+            "previous JPX session stock close unavailable at cutoff"
+            in stale.result.warnings
+        )
+        assert stale.dataset.current_sample.reference_source is not None
+        assert stale.dataset.current_sample.reference_source.market_date == sessions[-2]
+
+        session.add(_stock_row(sessions[-1], len(sessions) - 1))
+        session.commit()
+        fresh = PredictionService(
+            PointInTimeDatasetBuilder(session, config), config
+        ).compute("1605", prediction_date)
+        assert (
+            "previous JPX session stock close unavailable at cutoff"
+            not in fresh.result.warnings
+        )
