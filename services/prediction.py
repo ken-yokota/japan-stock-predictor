@@ -10,6 +10,7 @@ from typing import Protocol
 import numpy as np
 
 from data.config import AppConfig
+from data.market_calendar import previous_japan_session
 from models import (
     InsufficientTrainingData,
     ModelTrainingConfig,
@@ -247,6 +248,23 @@ class PredictionService:
             dataset = self.build_dataset(
                 ticker, prediction_date, operational=operational
             )
+        if operational:
+            expected_stock_session = previous_japan_session(prediction_date)
+            source_reference = dataset.current_sample.reference_source
+            if (
+                source_reference is None
+                or source_reference.market_date != expected_stock_session
+            ):
+                return PredictionComputation(
+                    dataset,
+                    None,
+                    self._insufficient(
+                        ticker,
+                        prediction_date,
+                        dataset,
+                        "previous JPX session stock close unavailable at cutoff",
+                    ),
+                )
         if dataset.missing_required_indicators:
             return PredictionComputation(
                 dataset,
