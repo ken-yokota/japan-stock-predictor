@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 
 import pytest
+from sqlalchemy import create_engine, text
 
 from scripts.verify_daily_delivery import (
     JST,
@@ -16,6 +17,7 @@ from scripts.verify_daily_delivery import (
     Check,
     Outcome,
     _alert_bodies,
+    _prediction_set,
     automation_check,
     capacity_band,
     email_check,
@@ -92,6 +94,51 @@ def test_a_window_that_is_not_due_does_not_alert() -> None:
 def test_a_holiday_does_not_alert() -> None:
     outcome = _outcome(verdict="NON_TRADING_DAY", automation=True)
     assert not outcome.alerting
+
+
+def test_watchdog_uses_only_timely_live_morning_publication() -> None:
+    """A reference or late retry cannot stand in for the 08:30 decision."""
+
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    with engine.begin() as connection:
+        connection.execute(
+            text("CREATE TABLE daily_runs (run_id TEXT PRIMARY KEY, run_type TEXT)")
+        )
+        connection.execute(
+            text(
+                "CREATE TABLE prediction_sets ("
+                "prediction_set_id TEXT PRIMARY KEY, run_id TEXT, "
+                "prediction_date TEXT, status TEXT, generated_at TEXT, "
+                "published_at TEXT, cutoff_at TEXT)"
+            )
+        )
+        connection.execute(
+            text(
+                "INSERT INTO daily_runs VALUES "
+                "('timely', 'MORNING'), ('late', 'MORNING'), "
+                "('reference', 'REFERENCE')"
+            )
+        )
+        connection.execute(
+            text(
+                "INSERT INTO prediction_sets VALUES "
+                "('timely', 'timely', '2026-08-12', 'READY', "
+                "'2026-08-12 08:20', '2026-08-12 08:25', '2026-08-12 08:30'), "
+                "('late', 'late', '2026-08-12', 'READY', "
+                "'2026-08-12 08:25', '2026-08-12 08:31', '2026-08-12 08:30'), "
+                "('reference', 'reference', '2026-08-12', 'READY', "
+                "'2026-08-12 08:26', '2026-08-12 08:27', '2026-08-12 08:30')"
+            )
+        )
+        chosen = _prediction_set(connection, TODAY)
+        assert chosen is not None
+        assert chosen["prediction_set_id"] == "timely"
+
+        connection.execute(
+            text("DELETE FROM prediction_sets WHERE prediction_set_id = 'timely'")
+        )
+        assert _prediction_set(connection, TODAY) is None
+    engine.dispose()
 
 
 # --- email --------------------------------------------------------------
