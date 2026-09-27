@@ -185,6 +185,7 @@ def test_a_missing_prediction_is_mailed_rather_than_raised(monkeypatch) -> None:
 
     assert len(sent) == 1
     assert "2026-08-10" in sent[0].subject
+    assert "締切内に公開された朝の予測" in sent[0].text
     assert sent[0].idempotency_key == "missing-prediction/2026-08-10"
     assert result == {
         "notification_status": "SENT",

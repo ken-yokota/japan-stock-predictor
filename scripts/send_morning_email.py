@@ -82,7 +82,7 @@ def _parser() -> argparse.ArgumentParser:
 def _notify_missing(
     environment: EnvironmentSettings, target: date
 ) -> dict[str, str | None]:
-    """Mail a plain notice that no prediction exists and return its outcome.
+    """Mail a plain notice that no timely prediction exists and return its outcome.
 
     Reuses the same sender factory the real mail uses, so provider choice,
     credentials, retries, and timeouts stay in one place. Building a client by
@@ -99,12 +99,12 @@ def _notify_missing(
     label = target.isoformat()
     stamp = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d %H:%M")
     body = (
-        f"{label} の予測が見つかりませんでした。\n\n"
-        "朝のpipelineが完走していない可能性があります。以下を確認してください。\n"
+        f"{label} の締切内に公開された朝の予測が見つかりませんでした。\n\n"
+        "朝のpipelineの失敗または公開遅延の可能性があります。以下を確認してください。\n"
         "  GitHub Actions の Morning prediction 実行結果\n"
         "  17:00 の日次サマリーメール (実行状況が入ります)\n\n"
-        "本メールは、予測が無いこと自体をお知らせするためのものです。\n"
-        "予測が作られていれば通常の予測メールが届きます。"
+        "本メールは、有効な朝の予測を送れなかったことをお知らせするものです。\n"
+        "締切後に予測が作られても通常の朝の予測メールは送りません。"
     )
     try:
         sender_address, recipient = environment.require_email_addresses()
