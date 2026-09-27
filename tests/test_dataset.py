@@ -2,13 +2,18 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from data.availability import prediction_cutoff
 from data.config import load_app_config
-from data.market_calendar import japan_session_close, japan_sessions_before
+from data.market_calendar import (
+    japan_session_close,
+    japan_sessions_before,
+    latest_completed_indicator_session,
+)
 from database.models import Base, MarketData, StockPrice
 from services.dataset import PointInTimeDatasetBuilder
 from services.prediction import PredictionService
@@ -206,3 +211,14 @@ def test_live_prediction_refuses_stale_required_eod_despite_old_features() -> No
             and "sp500_futures" in warning
             for warning in fresh.result.warnings
         )
+
+
+def test_required_us_eod_skips_labor_day_at_tokyo_morning_cutoff() -> None:
+    cutoff = datetime(2026, 9, 8, 8, 30, tzinfo=ZoneInfo("Asia/Tokyo"))
+    assert latest_completed_indicator_session(
+        cutoff,
+        market="FUTURES",
+        market_timezone="America/New_York",
+        market_close="17:00",
+        availability_lag_minutes=60,
+    ) == date(2026, 9, 4)
