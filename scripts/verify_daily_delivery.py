@@ -282,14 +282,27 @@ def _completeness(connection: Connection, for_date: date) -> Check:
 
 
 def _prediction_set(connection: Connection, for_date: date) -> dict[str, object] | None:
+    """Select the latest live morning set published by its decision cutoff.
+
+    Reference and late replay sets stay in the audit database, but neither can
+    satisfy delivery of an actionable 08:30 morning prediction. Match the
+    dashboard's publication boundary so the watchdog and visible live record
+    judge the same set.
+    """
+
     row = (
         connection.execute(
             text(
                 """
-                SELECT prediction_set_id, status, generated_at, published_at
-                FROM prediction_sets
-                WHERE prediction_date = :for_date
-                ORDER BY generated_at DESC
+                SELECT ps.prediction_set_id, ps.status, ps.generated_at,
+                       ps.published_at
+                FROM prediction_sets AS ps
+                JOIN daily_runs AS r ON r.run_id = ps.run_id
+                WHERE ps.prediction_date = :for_date
+                  AND r.run_type = 'MORNING'
+                  AND ps.status IN ('READY', 'INSUFFICIENT_DATA')
+                  AND ps.published_at <= ps.cutoff_at
+                ORDER BY ps.published_at DESC, ps.prediction_set_id DESC
                 LIMIT 1
                 """
             ),
@@ -428,7 +441,11 @@ def verify(
             published = _prediction_set(connection, for_date)
             if published is None:
                 outcome.checks.append(
-                    Check("prediction", False, f"{for_date} の予測セットがありません")
+                    Check(
+                        "prediction",
+                        False,
+                        f"{for_date} の08:30締切内MORNING予測セットがありません",
+                    )
                 )
                 return outcome
 
