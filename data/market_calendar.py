@@ -5,12 +5,21 @@ from __future__ import annotations
 from datetime import UTC, date, datetime, timedelta
 from functools import lru_cache
 from typing import Any, cast
+from zoneinfo import ZoneInfo
 
 import exchange_calendars as xcals
+
+from data.availability import parse_market_time
 
 
 class MarketCalendarError(RuntimeError):
     """Raised when the exchange calendar cannot answer safely."""
+
+
+def indicator_calendar_name(market: str) -> str:
+    """Map an indicator's configured market to its ingestion calendar."""
+
+    return {"JP": "XTKS", "FOREX": "XLON"}.get(market, "XNYS")
 
 
 @lru_cache(maxsize=4)
@@ -113,6 +122,46 @@ def japan_session_open(value: date) -> datetime:
         if isinstance(exc, MarketCalendarError):
             raise
         raise MarketCalendarError(f"session-open lookup failed for {value}") from exc
+
+
+def latest_completed_indicator_session(
+    cutoff_at: datetime,
+    *,
+    market: str,
+    market_timezone: str,
+    market_close: str,
+    availability_lag_minutes: int,
+) -> date:
+    """Return the latest configured EOD session knowable by the cutoff.
+
+    This uses the same exchange mapping and conservative close/lag convention
+    as EOD ingestion. Calendar lookup failures must stop a live prediction.
+    """
+
+    if cutoff_at.tzinfo is None or cutoff_at.utcoffset() is None:
+        raise ValueError("cutoff_at must be timezone-aware")
+    if availability_lag_minutes < 0:
+        raise ValueError("availability_lag_minutes must be non-negative")
+    zone = ZoneInfo(market_timezone)
+    local_date = cutoff_at.astimezone(zone).date()
+    calendar_name = indicator_calendar_name(market)
+    try:
+        sessions = _calendar(calendar_name).sessions_in_range(
+            local_date - timedelta(days=21), local_date
+        )
+        close_time = parse_market_time(market_close)
+        for stamp in reversed(sessions):
+            session_date = cast(date, stamp.date())
+            available_at = datetime.combine(session_date, close_time, zone) + timedelta(
+                minutes=availability_lag_minutes
+            )
+            if available_at <= cutoff_at:
+                return session_date
+    except Exception as exc:
+        if isinstance(exc, (MarketCalendarError, ValueError)):
+            raise
+        raise MarketCalendarError("indicator session lookup failed") from exc
+    raise MarketCalendarError("no completed indicator session before cutoff")
 
 
 # How far back to look for a session before giving up. Long enough to clear the

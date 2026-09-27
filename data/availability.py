@@ -9,6 +9,19 @@ from data.schemas import AvailabilityMethod
 
 UTC = UTC
 
+_YAHOO_EOD_LAG_MINUTES = {"JP": 20, "US": 30}
+_EODHD_EOD_LAG_MINUTES = {"US": 15}
+_DEFAULT_EOD_LAG_MINUTES = 60
+
+
+def eod_provider_lag_minutes(provider: str, market: str) -> int:
+    """Use the same conservative provider lag for ingestion and live scoring."""
+
+    lag_map = (
+        _EODHD_EOD_LAG_MINUTES if provider == "eodhd_free" else _YAHOO_EOD_LAG_MINUTES
+    )
+    return lag_map.get(market, _DEFAULT_EOD_LAG_MINUTES)
+
 
 class AvailabilityError(ValueError):
     """Raised when availability cannot be derived safely."""

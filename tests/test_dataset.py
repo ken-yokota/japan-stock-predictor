@@ -2,13 +2,18 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from data.availability import prediction_cutoff
 from data.config import load_app_config
-from data.market_calendar import japan_session_close, japan_sessions_before
+from data.market_calendar import (
+    japan_session_close,
+    japan_sessions_before,
+    latest_completed_indicator_session,
+)
 from database.models import Base, MarketData, StockPrice
 from services.dataset import PointInTimeDatasetBuilder
 from services.prediction import PredictionService
@@ -160,3 +165,60 @@ def test_live_prediction_refuses_stale_stock_close() -> None:
             "previous JPX session stock close unavailable at cutoff"
             not in fresh.result.warnings
         )
+
+
+def test_live_prediction_refuses_stale_required_eod_despite_old_features() -> None:
+    prediction_date = date(2026, 8, 12)
+    sessions = japan_sessions_before(prediction_date, 145)
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        for index, session_date in enumerate(sessions):
+            session.add(_stock_row(session_date, index))
+            session.add(_indicator_row(session_date, index))
+        session.commit()
+
+        config = load_app_config()
+        service = PredictionService(PointInTimeDatasetBuilder(session, config), config)
+        stale = service.compute("1605", prediction_date)
+        assert stale.dataset.current_sample.reference_source is not None
+        assert stale.dataset.current_sample.reference_source.market_date == sessions[-1]
+        assert "sp500_futures" in stale.dataset.observed_indicators
+        assert "sp500_futures" not in stale.dataset.missing_required_indicators
+        assert stale.result.status == "INSUFFICIENT_DATA"
+        assert any(
+            "required EOD indicators stale at cutoff: " in warning
+            and "sp500_futures" in warning
+            for warning in stale.result.warnings
+        )
+
+        # 8/11 is a JPX holiday but a completed US session by the 8/12
+        # 08:30 JST cutoff. Restoring that daily bar clears this specific gate.
+        restored = _indicator_row(prediction_date, 999)
+        restored.timestamp = datetime(2026, 8, 11, 21, 0, tzinfo=UTC)
+        restored.source_timestamp = restored.timestamp
+        restored.available_timestamp = restored.timestamp + timedelta(hours=1)
+        restored.first_observed_at = restored.available_timestamp
+        restored.retrieved_at = restored.available_timestamp
+        restored.last_seen_at = restored.available_timestamp
+        session.add(restored)
+        session.commit()
+        fresh = PredictionService(
+            PointInTimeDatasetBuilder(session, config), config
+        ).compute("1605", prediction_date)
+        assert not any(
+            "required EOD indicators stale at cutoff:" in warning
+            and "sp500_futures" in warning
+            for warning in fresh.result.warnings
+        )
+
+
+def test_required_us_eod_skips_labor_day_at_tokyo_morning_cutoff() -> None:
+    cutoff = datetime(2026, 9, 8, 8, 30, tzinfo=ZoneInfo("Asia/Tokyo"))
+    assert latest_completed_indicator_session(
+        cutoff,
+        market="FUTURES",
+        market_timezone="America/New_York",
+        market_close="17:00",
+        availability_lag_minutes=60,
+    ) == date(2026, 9, 4)
