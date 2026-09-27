@@ -45,6 +45,7 @@ TREASURY_XML_PATH = "/resource-center/data-chart-center/interest-rates/pages/xml
 TREASURY_DATASET = "daily_treasury_yield_curve"
 TREASURY_MARKET_TIMEZONE = "America/New_York"
 TREASURY_MARKET = "US_TREASURY"
+TREASURY_PUBLISHED_CLOSE = "18:00"
 PUBLISHED_SCHEDULE_ESTIMATE_FLAG = "published_schedule_estimate"
 EARLY_FIRST_OBSERVED_FLAG = "first_observed_before_published_schedule"
 
@@ -56,7 +57,7 @@ _TENOR_FIELDS: dict[str, str] = {
 _TENOR_ORDER = {tenor: index for index, tenor in enumerate(TREASURY_TENORS)}
 _EASTERN = ZoneInfo(TREASURY_MARKET_TIMEZONE)
 _MARKET_EVENT_TIME = wall_time(15, 30)
-_PUBLISHED_SCHEDULE_TIME = wall_time(18, 0)
+_PUBLISHED_SCHEDULE_TIME = wall_time.fromisoformat(TREASURY_PUBLISHED_CLOSE)
 
 
 def _utc_now() -> datetime:
