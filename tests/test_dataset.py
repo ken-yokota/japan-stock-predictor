@@ -89,6 +89,44 @@ def _indicator_row(session_date: date, index: int) -> MarketData:
     )
 
 
+def _treasury_row(session_date: date, index: int) -> MarketData:
+    event_at = datetime.combine(
+        session_date, time(15, 30), ZoneInfo("America/New_York")
+    )
+    available_at = datetime.combine(
+        session_date, time(18), ZoneInfo("America/New_York")
+    )
+    rate = Decimal("4.00") + Decimal(index) / 100
+    return MarketData(
+        canonical_symbol="us_10y_yield",
+        symbol="TREASURY:US_10Y_YIELD",
+        provider="us_treasury",
+        market="US_TREASURY",
+        market_timezone="America/New_York",
+        market_date=session_date,
+        timestamp=event_at,
+        source_timestamp=event_at,
+        available_timestamp=available_at,
+        first_observed_at=available_at,
+        retrieved_at=available_at,
+        last_seen_at=available_at,
+        interval="eod",
+        availability_method="scheduled_publication_estimate",
+        data_quality="OFFICIAL",
+        is_realtime=False,
+        is_delayed=True,
+        open=rate,
+        high=rate,
+        low=rate,
+        close=rate,
+        adjusted_close=rate,
+        volume=None,
+        currency="PERCENT",
+        raw_hash=f"{index + 20_000:064x}",
+        quality_flags=[],
+    )
+
+
 def test_dataset_uses_120_prior_sessions_and_excludes_future_revision() -> None:
     prediction_date = date(2026, 8, 10)
     sessions = japan_sessions_before(prediction_date, 145)
@@ -222,3 +260,76 @@ def test_required_us_eod_skips_labor_day_at_tokyo_morning_cutoff() -> None:
         market_close="17:00",
         availability_lag_minutes=60,
     ) == date(2026, 9, 4)
+
+
+def test_required_treasury_skips_labor_day_at_tokyo_morning_cutoff() -> None:
+    cutoff = datetime(2026, 9, 8, 8, 30, tzinfo=ZoneInfo("Asia/Tokyo"))
+    assert latest_completed_indicator_session(
+        cutoff,
+        market="US_TREASURY",
+        market_timezone="America/New_York",
+        market_close="18:00",
+        availability_lag_minutes=0,
+    ) == date(2026, 9, 4)
+
+
+def test_live_prediction_refuses_stale_required_treasury_despite_old_level() -> None:
+    prediction_date = date(2026, 8, 12)
+    sessions = japan_sessions_before(prediction_date, 145)
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        for index, session_date in enumerate(sessions):
+            session.add(_stock_row(session_date, index))
+            session.add(_indicator_row(session_date, index))
+        current_futures = _indicator_row(prediction_date, 999)
+        current_futures.timestamp = datetime(2026, 8, 11, 21, 0, tzinfo=UTC)
+        current_futures.source_timestamp = current_futures.timestamp
+        current_futures.available_timestamp = current_futures.timestamp + timedelta(
+            hours=1
+        )
+        current_futures.first_observed_at = current_futures.available_timestamp
+        current_futures.retrieved_at = current_futures.available_timestamp
+        current_futures.last_seen_at = current_futures.available_timestamp
+        session.add(current_futures)
+        session.add(_treasury_row(date(2026, 8, 10), 1))
+        session.commit()
+
+        config = load_app_config()
+        # Isolate this source's freshness gate from unrelated indicators that
+        # are absent in the small synthetic dataset.
+        config = config.model_copy(
+            update={
+                "indicators": config.indicators.model_copy(
+                    update={
+                        "indicators": [
+                            item.model_copy(
+                                update={"required": item.id == "us_10y_yield"}
+                            )
+                            for item in config.indicators.indicators
+                        ]
+                    }
+                )
+            }
+        )
+        service = PredictionService(PointInTimeDatasetBuilder(session, config), config)
+        stale = service.compute("1605", prediction_date)
+        assert "us_10y_yield" in stale.dataset.observed_indicators
+        assert "us_10y_yield" not in stale.dataset.missing_required_indicators
+        assert stale.result.status == "INSUFFICIENT_DATA"
+        assert any(
+            "required Treasury indicators stale at cutoff:" in warning
+            and "us_10y_yield" in warning
+            for warning in stale.result.warnings
+        ), stale.result.warnings
+
+        session.add(_treasury_row(date(2026, 8, 11), 2))
+        session.commit()
+        fresh = PredictionService(
+            PointInTimeDatasetBuilder(session, config), config
+        ).compute("1605", prediction_date)
+        assert not any(
+            "required Treasury indicators stale at cutoff:" in warning
+            and "us_10y_yield" in warning
+            for warning in fresh.result.warnings
+        )

@@ -15,6 +15,7 @@ from data.market_calendar import (
     latest_completed_indicator_session,
     previous_japan_session,
 )
+from data.providers.treasury import TREASURY_PUBLISHED_CLOSE
 from models import (
     InsufficientTrainingData,
     ModelTrainingConfig,
@@ -323,6 +324,57 @@ class PredictionService:
                         dataset,
                         "required EOD indicators stale at cutoff: "
                         + ", ".join(stale_eod),
+                    ),
+                )
+            stale_treasury: list[str] = []
+            for indicator in self._config.indicators.indicators:
+                if (
+                    not indicator.required
+                    or indicator.id not in dataset.expected_indicators
+                ):
+                    continue
+                source = next(
+                    (
+                        candidate
+                        for candidate in indicator.sources
+                        if candidate.status == "verified"
+                        and candidate.data_mode == "yield_curve"
+                        and candidate.provider == "us_treasury"
+                    ),
+                    None,
+                )
+                if source is None:
+                    continue
+                assert source.market is not None
+                assert source.market_timezone is not None
+                expected_session = latest_completed_indicator_session(
+                    dataset.current_sample.cutoff_at,
+                    market=source.market,
+                    market_timezone=source.market_timezone,
+                    market_close=TREASURY_PUBLISHED_CLOSE,
+                    availability_lag_minutes=0,
+                )
+                latest_observed = max(
+                    (
+                        reference.market_date
+                        for name, references in dataset.current_sample.lineage.items()
+                        if name.startswith(f"{indicator.id}__")
+                        for reference in references
+                    ),
+                    default=None,
+                )
+                if latest_observed != expected_session:
+                    stale_treasury.append(indicator.id)
+            if stale_treasury:
+                return PredictionComputation(
+                    dataset,
+                    None,
+                    self._insufficient(
+                        ticker,
+                        prediction_date,
+                        dataset,
+                        "required Treasury indicators stale at cutoff: "
+                        + ", ".join(stale_treasury),
                     ),
                 )
         if dataset.missing_required_indicators:

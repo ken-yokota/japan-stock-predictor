@@ -45,7 +45,7 @@ from data.provider_router import (
 )
 from data.providers.base import MarketDataProvider, ProviderError
 from data.providers.eodhd import EODHDFreeProvider
-from data.providers.treasury import TreasuryProvider
+from data.providers.treasury import TREASURY_PUBLISHED_CLOSE, TreasuryProvider
 from data.providers.yahoo import YahooFinanceProvider
 from data.schemas import DataInterval, FetchRequest, MarketBar, SnapshotRequest
 from data.snapshot import FreshnessStatus
@@ -651,7 +651,7 @@ def execute_fetch_plan(
             end_date,
             market="US",
             market_timezone="America/New_York",
-            market_close="18:00",
+            market_close=TREASURY_PUBLISHED_CLOSE,
             availability_lag_minutes=0,
             cutoff_at=cutoff_at,
         )
