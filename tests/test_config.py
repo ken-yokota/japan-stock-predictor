@@ -115,6 +115,31 @@ EXPECTED_YAHOO_INDICATOR_SYMBOLS = {
     "^NDX",
     "^VIX",
 }
+EXPECTED_COMPANY_YAHOO = {
+    "0267.HK": ("HK", "Asia/Hong_Kong", "16:10"),
+    "5016.T": ("JP", "Asia/Tokyo", "15:30"),
+    "AGGG.L": ("UK", "Europe/London", "16:35"),
+    "AUDUSD=X": ("FOREX", "Europe/London", "23:59"),
+    "BAY.BK": ("TH", "Asia/Bangkok", "17:00"),
+    "BRLJPY=X": ("FOREX", "Europe/London", "23:59"),
+    "CT=F": ("US", "America/New_York", "14:20"),
+    "EIDO": ("US", "America/New_York", "16:00"),
+    "HRC=F": ("US", "America/New_York", "17:00"),
+    "INDA": ("US", "America/New_York", "16:00"),
+    "INRJPY=X": ("FOREX", "Europe/London", "23:59"),
+    "JEF": ("US", "America/New_York", "16:00"),
+    "KCE": ("US", "America/New_York", "16:00"),
+    "KIE": ("US", "America/New_York", "16:00"),
+    "MARUTI.NS": ("IN", "Asia/Kolkata", "15:30"),
+    "MS": ("US", "America/New_York", "16:00"),
+    "MXNJPY=X": ("FOREX", "Europe/London", "23:59"),
+    "PA=F": ("US", "America/New_York", "17:00"),
+    "RB=F": ("US", "America/New_York", "17:00"),
+    "XLY": ("US", "America/New_York", "16:00"),
+    "ZC=F": ("US", "America/New_York", "14:20"),
+    "ZS=F": ("US", "America/New_York", "14:20"),
+    "^NSEBANK": ("IN", "Asia/Kolkata", "15:30"),
+}
 EXPECTED_YAHOO_SNAPSHOT_MAX_AGE = {
     "AUDJPY=X": 10,
     "BZ=F": 40,
@@ -171,6 +196,9 @@ def test_indicator_config_has_common_and_all_five_sector_groups() -> None:
     config = load_indicators_config()
     indicator_ids = {indicator.id for indicator in config.indicators}
     assigned_ids = set(config.common)
+    assigned_ids.update(
+        indicator.id for indicator in config.indicators if indicator.applies_to_tickers
+    )
     for group in config.sectors.values():
         assigned_ids.update(group.indicators)
 
@@ -246,14 +274,21 @@ def test_officially_confirmed_symbols_and_endpoints_are_verified() -> None:
         if source.provider == "eodhd_free" and source.provider_symbol is not None
     }
 
-    assert yahoo_symbols == EXPECTED_YAHOO_INDICATOR_SYMBOLS
+    assert yahoo_symbols == EXPECTED_YAHOO_INDICATOR_SYMBOLS | set(
+        EXPECTED_COMPANY_YAHOO
+    )
     assert eodhd_symbols == EXPECTED_EODHD_FALLBACK_SYMBOLS
 
     for source in verified_sources:
         if source.data_mode == "derived":
             assert source.session_policy == "derived_from_inputs"
             continue
-        assert source.provider in {"yahoo_finance", "us_treasury", "eodhd_free"}
+        assert source.provider in {
+            "yahoo_finance",
+            "us_treasury",
+            "eodhd_free",
+            "public_factors",
+        }
         assert source.market is not None
         assert source.market_timezone is not None
         assert source.endpoint is not None
@@ -264,6 +299,14 @@ def test_officially_confirmed_symbols_and_endpoints_are_verified() -> None:
                 "/eod/{ticker}",
                 "yfinance.Ticker.history",
             }
+            if source.provider_symbol in EXPECTED_COMPANY_YAHOO:
+                assert (
+                    source.market,
+                    source.market_timezone,
+                    source.market_close,
+                ) == EXPECTED_COMPANY_YAHOO[source.provider_symbol]
+                assert source.session_policy == "previous_completed_session"
+                continue
             assert source.market in {"US", "US_INDEX", "FOREX", "FUTURES"}
             # The daily index Yahoo returns is stamped in the venue's own
             # timezone, and reading it in any other one moves a bar onto the
@@ -289,7 +332,7 @@ def test_officially_confirmed_symbols_and_endpoints_are_verified() -> None:
             assert source.session_policy == "latest_at_or_before_cutoff"
             assert source.is_proxy is False
         elif source.data_mode == "yield_curve":
-            assert source.provider in {"us_treasury", "eodhd_free"}
+            assert source.provider in {"us_treasury", "eodhd_free", "public_factors"}
             assert source.availability_at_0830 == "conditional"
             assert source.session_policy == "provider_published_at_or_before_cutoff"
 

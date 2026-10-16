@@ -1,0 +1,2731 @@
+# Reviewed 2026-10-15; activation specification 2026-10-16.
+# Missing factors remain explicit; coefficients refit daily with all specified factors.
+version: 1
+profiles:
+- ticker: '9101'
+  name: 日本郵船
+  valid_from: 2026-10-16
+  thesis: ONE持分のコンテナ、ドライバルク、自動車船、LNGなどのエネルギー輸送と物流を別の収益経路として扱う。2025年8月のNCA移管後、航空価格はYusen Logistics等のフォワーディング需給・仕入価格の代理であり航空会社利益の代理ではない。
+  evidence: docs/research/company-indicators-2026-10-15-shipping-energy.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 日本株全体のリスク選好・先物の寄り前情報を共通市場要因として分離する。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "NIY=F", "verification_status": "LOCAL_CONFIG_ONLY",
+      "ingestion_tested": false, "cost_access": "既存無料経路。商用利用権/品質は別途確認"} 公表時刻: 前完了セッションEOD、または実際に08:30までに観測したsnapshot。過去snapshotをEODから捏造しない。'
+    source_urls:
+    - https://www.nyk.com/english/ir/library/fact/
+    - https://www.nyk.com/english/ir/library/nyk/
+    - https://www.nyk.com/english/news/2025/20250801_0.html
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: ドル建て運賃/利益の円換算とドル建て費用のnet exposure。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "JPY=X", "verification_status": "LOCAL_CONFIG_ONLY",
+      "ingestion_tested": false, "cost_access": "既存無料経路"} 公表時刻: 08:30までに観測済みの値、または前完了日EOD。'
+    source_urls:
+    - https://www.nyk.com/english/ir/library/fact/
+    - https://www.nyk.com/english/ir/library/nyk/
+    - https://www.nyk.com/english/news/2025/20250801_0.html
+  - id: container_freight_fbx
+    label: コンテナ運賃FBX
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: ONEのスポット市況とコンテナ需給が持分利益見通しに波及。
+    acquisition: '未接続。スポット40ft運賃。ONEの長期契約、航路構成、燃料サーチャージ、運賃認識の時間差がある。複数航路を群数に加算しない。 取得先候補: {"provider":
+      "Freightos / Baltic Exchange", "instrument": "FBX Global または固定ONE航路構成のFBX01/03/11バスケットを1群", "verification_status":
+      "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED", "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"}
+      公表時刻: FBXは公式FAQで14:00 UTC公表（23:00 JST）。前日公表分を翌08:30に使用。週次FBXと混在不可。'
+    source_urls:
+    - https://www.freightos.com/enterprise/terminal/
+    - https://www.freightos.com/enterprise/terminal/pricing/
+    - https://www.nyk.com/english/ir/library/fact/
+    - https://www.nyk.com/english/ir/library/nyk/
+    - https://www.nyk.com/english/news/2025/20250801_0.html
+  - id: baltic_dry_index_spot
+    label: 実物ドライバルク運賃BDI
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: ドライバルク船の貨物需要と船腹需給を直接測る。
+    acquisition: '未接続。既存baltic_dry_indexはBDRY先物ETFなので別ID。長期契約船の収益はスポットに即時比例しない。 取得先候補: {"provider": "Baltic
+      Exchange", "instrument": "Baltic Dry Index spot composite", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://www.balticexchange.com/en/data-services/market-information0/indices.html
+    - https://www.balticexchange.com/en/apply-page.html
+    - https://www.nyk.com/english/ir/library/fact/
+    - https://www.nyk.com/english/ir/library/nyk/
+    - https://www.nyk.com/english/news/2025/20250801_0.html
+  - id: lng_shipping_rate
+    label: LNG船スポット用船料
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: LNG船の需給・更改運賃・船価期待。
+    acquisition: '未接続。LNG価格JKMとは別。長期用船が主体なら短期損益感応度は弱い。船型変更・旧BLNGコードとの接続を確認。 取得先候補: {"provider": "Baltic
+      Exchange", "instrument": "太平洋LNG輸送ルート：現行LNG1-174/BLNG系の接続仕様要確認", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://www.balticexchange.com/en/data-services/market-information0/indices.html
+    - https://www.balticexchange.com/en/data-services/market-information0/gas-services.html
+    - https://www.balticexchange.com/en/apply-page.html
+    - https://www.nyk.com/english/ir/library/fact/
+    - https://www.nyk.com/english/ir/library/nyk/
+    - https://www.nyk.com/english/news/2025/20250801_0.html
+  - id: euro_auto_equity
+    label: 欧州自動車株指数（輸送需要の代理）
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 自動車船・自動車物流の荷主需要期待を欧州OEM株で近似。
+    acquisition: '未接続。自動車メーカーへの需要期待の株式代理。実際の完成車輸出台数・PCC運賃ではなく、欧州偏重と株式市場共通因子がある。 取得先候補: {"provider": "STOXX",
+      "instrument": "EURO STOXX Automobiles & Parts, SXAK", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://stoxx.com/index/sxak/
+    - https://www.nyk.com/english/ir/library/fact/
+    - https://www.nyk.com/english/ir/library/nyk/
+    - https://www.nyk.com/english/news/2025/20250801_0.html
+  - id: airfreight_fax
+    label: 航空貨物運賃FAX
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 航空フォワーディングの数量需要/仕入運賃環境。
+    acquisition: '未接続。Baltic Air Freight BAIは週次なので代用しない。フォワーダーには仕入運賃高でもあり符号は条件付き。 取得先候補: {"provider":
+      "Freightos", "instrument": "Freightos Air Index: fixed Asia export basket as one group", "verification_status":
+      "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED", "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"}
+      公表時刻: 日次更新は確認。FAX固有の公表時刻は未確認。保存済み公表タイムスタンプが前08:30以前の最新値だけを使用。'
+    source_urls:
+    - https://www.freightos.com/enterprise/terminal/
+    - https://www.freightos.com/enterprise/terminal/pricing/
+    - https://www.nyk.com/english/ir/library/fact/
+    - https://www.nyk.com/english/ir/library/nyk/
+    - https://www.nyk.com/english/news/2025/20250801_0.html
+  - id: bunker_vlsfo
+    label: 船舶燃料VLSFO
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 船舶運航の燃料費とサーチャージの時間差。
+    acquisition: '未接続。原油とは精製・港湾需給・規制の差がある。燃油サーチャージとヘッジが転嫁を緩和。LNG燃料価格は別途週次。 取得先候補: {"provider": "RIM Intelligence",
+      "instrument": "Singapore VLSFO; 航路構成固定なら主要港バスケットを1群", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://eng.rim-intelligence.co.jp/report/bunker-en/
+    - https://www.rim-intelligence.co.jp/eng/contents/historical.html
+    - https://www.nyk.com/english/ir/library/fact/
+    - https://www.nyk.com/english/ir/library/nyk/
+    - https://www.nyk.com/english/news/2025/20250801_0.html
+- ticker: '9104'
+  name: 商船三井
+  valid_from: 2026-10-16
+  thesis: ONEとドライバルクに加え、LNG、原油・製品タンカー、化学品輸送/タンクターミナル、Daibiru不動産を持つ。Phase 2の安定収益ポートフォリオを踏まえ輸送モードを分離し、化学品専用運賃が未取得である事実も残す。
+  evidence: docs/research/company-indicators-2026-10-15-shipping-energy.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 日本株全体のリスク選好・先物の寄り前情報を共通市場要因として分離する。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "NIY=F", "verification_status": "LOCAL_CONFIG_ONLY",
+      "ingestion_tested": false, "cost_access": "既存無料経路。商用利用権/品質は別途確認"} 公表時刻: 前完了セッションEOD、または実際に08:30までに観測したsnapshot。過去snapshotをEODから捏造しない。'
+    source_urls:
+    - https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf
+    - https://www.mol.co.jp/en/pr/2026/26026.html
+    - https://ir.mol.co.jp/en/ir/library/integrated_report.html
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: ドル建て運賃/利益の円換算とドル建て費用のnet exposure。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "JPY=X", "verification_status": "LOCAL_CONFIG_ONLY",
+      "ingestion_tested": false, "cost_access": "既存無料経路"} 公表時刻: 08:30までに観測済みの値、または前完了日EOD。'
+    source_urls:
+    - https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf
+    - https://www.mol.co.jp/en/pr/2026/26026.html
+    - https://ir.mol.co.jp/en/ir/library/integrated_report.html
+  - id: container_freight_fbx
+    label: コンテナ運賃FBX
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: ONEの持分利益と世界コンテナ市況。
+    acquisition: '未接続。スポット40ft運賃。ONEの長期契約、航路構成、燃料サーチャージ、運賃認識の時間差がある。複数航路を群数に加算しない。 取得先候補: {"provider":
+      "Freightos / Baltic Exchange", "instrument": "FBX Global または固定ONE航路構成のFBX01/03/11バスケットを1群", "verification_status":
+      "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED", "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"}
+      公表時刻: FBXは公式FAQで14:00 UTC公表（23:00 JST）。前日公表分を翌08:30に使用。週次FBXと混在不可。'
+    source_urls:
+    - https://www.freightos.com/enterprise/terminal/
+    - https://www.freightos.com/enterprise/terminal/pricing/
+    - https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf
+    - https://www.mol.co.jp/en/pr/2026/26026.html
+    - https://ir.mol.co.jp/en/ir/library/integrated_report.html
+  - id: baltic_dry_index_spot
+    label: 実物ドライバルク運賃BDI
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: ドライバルクの短中期需給・傭船採算。
+    acquisition: '未接続。既存baltic_dry_indexはBDRY先物ETFなので別ID。長期契約船の収益はスポットに即時比例しない。 取得先候補: {"provider": "Baltic
+      Exchange", "instrument": "Baltic Dry Index spot composite", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://www.balticexchange.com/en/data-services/market-information0/indices.html
+    - https://www.balticexchange.com/en/apply-page.html
+    - https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf
+    - https://www.mol.co.jp/en/pr/2026/26026.html
+    - https://ir.mol.co.jp/en/ir/library/integrated_report.html
+  - id: lng_shipping_rate
+    label: LNG船スポット用船料
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: LNG船とLNGインフラの更改・新規投資の期待採算。
+    acquisition: '未接続。LNG価格JKMとは別。長期用船が主体なら短期損益感応度は弱い。船型変更・旧BLNGコードとの接続を確認。 取得先候補: {"provider": "Baltic
+      Exchange", "instrument": "太平洋LNG輸送ルート：現行LNG1-174/BLNG系の接続仕様要確認", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://www.balticexchange.com/en/data-services/market-information0/indices.html
+    - https://www.balticexchange.com/en/data-services/market-information0/gas-services.html
+    - https://www.balticexchange.com/en/apply-page.html
+    - https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf
+    - https://www.mol.co.jp/en/pr/2026/26026.html
+    - https://ir.mol.co.jp/en/ir/library/integrated_report.html
+  - id: dirty_tanker_freight
+    label: 原油タンカー運賃
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 原油輸送の運賃・タンカー需給。
+    acquisition: '未接続。原油商品価格と運賃を区別。TCEは燃料コストを内包するためbunkerと二重計上に注意。 取得先候補: {"provider": "Baltic Exchange",
+      "instrument": "BDTI / TD3C MEG-China TCE; 定義を固定", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://www.balticexchange.com/en/data-services/market-information0/indices.html
+    - https://www.balticexchange.com/en/data-services/market-information0/tankers-services.html
+    - https://www.balticexchange.com/en/apply-page.html
+    - https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf
+    - https://www.mol.co.jp/en/pr/2026/26026.html
+    - https://ir.mol.co.jp/en/ir/library/integrated_report.html
+  - id: clean_tanker_freight
+    label: 石油製品タンカー運賃
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 製品タンカーの需給を独立して捉える。
+    acquisition: '未接続。実在する製品輸送ドライバー。化学品船の専用市況を表すものではなくBCAA欠落は別に残す。 取得先候補: {"provider": "Baltic Exchange",
+      "instrument": "BCTI / TC1 or TC5 MEG-Japan; 定義を固定", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://www.balticexchange.com/en/data-services/market-information0/indices.html
+    - https://www.balticexchange.com/en/data-services/market-information0/tankers-services.html
+    - https://www.balticexchange.com/en/apply-page.html
+    - https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf
+    - https://www.mol.co.jp/en/pr/2026/26026.html
+    - https://ir.mol.co.jp/en/ir/library/integrated_report.html
+  - id: bunker_vlsfo
+    label: 船舶燃料VLSFO
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 各船種の燃料費と転嫁タイミング。
+    acquisition: '未接続。原油とは精製・港湾需給・規制の差がある。燃油サーチャージとヘッジが転嫁を緩和。LNG燃料価格は別途週次。 取得先候補: {"provider": "RIM Intelligence",
+      "instrument": "Singapore VLSFO; 航路構成固定なら主要港バスケットを1群", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://eng.rim-intelligence.co.jp/report/bunker-en/
+    - https://www.rim-intelligence.co.jp/eng/contents/historical.html
+    - https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf
+    - https://www.mol.co.jp/en/pr/2026/26026.html
+    - https://ir.mol.co.jp/en/ir/library/integrated_report.html
+  - id: tse_reit_office
+    label: 東証REITオフィス指数
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: Daibiru等のオフィス不動産価値・キャップレート期待。
+    acquisition: '未接続。Daibiruのオフィス資産価値・割引率の代理。上場REITと非上場の海外物件収益は同一ではない。 取得先候補: {"provider": "JPX", "instrument":
+      "TSE REIT Office Index", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED", "ingestion_tested":
+      false, "cost_access": "公開表示あり。長期履歴・機械利用はライセンス/ベンダー条件確認"} 公表時刻: 日本株前営業日の確定終値のみ。'
+    source_urls:
+    - https://www.jpx.co.jp/english/markets/indices/line-up/files/e_fac2_11_reitsec.pdf
+    - https://www.jpx.co.jp/english/markets/indices/realvalues/index.html
+    - https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf
+    - https://www.mol.co.jp/en/pr/2026/26026.html
+    - https://ir.mol.co.jp/en/ir/library/integrated_report.html
+- ticker: '9107'
+  name: 川崎汽船
+  valid_from: 2026-10-16
+  thesis: 成長の柱である自動車船・石炭鉄鉱石船・LNG船に、ONE持分を分けて対応する。石炭鉄鉱石の長期安定収益を踏まえ、鉱価上昇をそのまま利益増と決め付けない。
+  evidence: docs/research/company-indicators-2026-10-15-shipping-energy.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 日本株全体のリスク選好・先物の寄り前情報を共通市場要因として分離する。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "NIY=F", "verification_status": "LOCAL_CONFIG_ONLY",
+      "ingestion_tested": false, "cost_access": "既存無料経路。商用利用権/品質は別途確認"} 公表時刻: 前完了セッションEOD、または実際に08:30までに観測したsnapshot。過去snapshotをEODから捏造しない。'
+    source_urls:
+    - https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf
+    - https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: ドル建て運賃/利益の円換算とドル建て費用のnet exposure。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "JPY=X", "verification_status": "LOCAL_CONFIG_ONLY",
+      "ingestion_tested": false, "cost_access": "既存無料経路"} 公表時刻: 08:30までに観測済みの値、または前完了日EOD。'
+    source_urls:
+    - https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf
+    - https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html
+  - id: container_freight_fbx
+    label: コンテナ運賃FBX
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: ONEの市況・持分利益期待。
+    acquisition: '未接続。スポット40ft運賃。ONEの長期契約、航路構成、燃料サーチャージ、運賃認識の時間差がある。複数航路を群数に加算しない。 取得先候補: {"provider":
+      "Freightos / Baltic Exchange", "instrument": "FBX Global または固定ONE航路構成のFBX01/03/11バスケットを1群", "verification_status":
+      "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED", "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"}
+      公表時刻: FBXは公式FAQで14:00 UTC公表（23:00 JST）。前日公表分を翌08:30に使用。週次FBXと混在不可。'
+    source_urls:
+    - https://www.freightos.com/enterprise/terminal/
+    - https://www.freightos.com/enterprise/terminal/pricing/
+    - https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf
+    - https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html
+  - id: baltic_capesize_index
+    label: ケープサイズ運賃
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 大型鉄鉱石等の船腹需給・更改価格。
+    acquisition: '未接続。既存IDはpending。既存BDRYでこの固有市況を黙って置き換えない。 取得先候補: {"provider": "Baltic Exchange", "instrument":
+      "Baltic Capesize Index / 5TC（同一群で整合する定義を固定）", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://www.balticexchange.com/en/data-services/market-information0/indices.html
+    - https://www.balticexchange.com/en/apply-page.html
+    - https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf
+    - https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html
+  - id: iron_ore
+    label: 鉄鉱石価格
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 鉄鋼原料荷主の需要と鉄鉱石輸送数量の期待。
+    acquisition: '未接続。海運会社は鉱山会社ではない。鉱価上昇が供給障害なら貨物量に逆風となる。FXIや銅で鉄鉱石輸送固有の信号を置換しない。 取得先候補: {"provider": "SGX
+      / licensed iron ore assessment provider", "instrument": "62% Fe iron ore futures daily settlement;
+      契約・code・roll未確定", "verification_status": "INSTRUMENT_DOCUMENTED_EXACT_FEED_UNVERIFIED", "ingestion_tested":
+      false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://www.sgx.com/
+    - https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf
+    - https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html
+  - id: euro_auto_equity
+    label: 欧州自動車株指数（輸送需要の代理）
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 完成車・High & Heavy輸送の荷主需要期待。
+    acquisition: '未接続。自動車メーカーへの需要期待の株式代理。実際の完成車輸出台数・PCC運賃ではなく、欧州偏重と株式市場共通因子がある。 取得先候補: {"provider": "STOXX",
+      "instrument": "EURO STOXX Automobiles & Parts, SXAK", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://stoxx.com/index/sxak/
+    - https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf
+    - https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html
+  - id: lng_shipping_rate
+    label: LNG船スポット用船料
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: LNG輸送の新規/更改採算・船腹需給。
+    acquisition: '未接続。LNG価格JKMとは別。長期用船が主体なら短期損益感応度は弱い。船型変更・旧BLNGコードとの接続を確認。 取得先候補: {"provider": "Baltic
+      Exchange", "instrument": "太平洋LNG輸送ルート：現行LNG1-174/BLNG系の接続仕様要確認", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://www.balticexchange.com/en/data-services/market-information0/indices.html
+    - https://www.balticexchange.com/en/data-services/market-information0/gas-services.html
+    - https://www.balticexchange.com/en/apply-page.html
+    - https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf
+    - https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html
+  - id: bunker_vlsfo
+    label: 船舶燃料VLSFO
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 自動車船/バルク等の燃料費。
+    acquisition: '未接続。原油とは精製・港湾需給・規制の差がある。燃油サーチャージとヘッジが転嫁を緩和。LNG燃料価格は別途週次。 取得先候補: {"provider": "RIM Intelligence",
+      "instrument": "Singapore VLSFO; 航路構成固定なら主要港バスケットを1群", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://eng.rim-intelligence.co.jp/report/bunker-en/
+    - https://www.rim-intelligence.co.jp/eng/contents/historical.html
+    - https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf
+    - https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html
+- ticker: '1605'
+  name: INPEX
+  valid_from: 2026-10-16
+  thesis: 原油・LNG上流企業。豪州IchthysではLNGだけでなくLPG・コンデンセートを生産するため、原油、北東アジアLNG、LPG、豪ドル操業費を分離する。油価/為替感応度は公式に開示されるが長期契約と税制で日次感応度は薄まる。
+  evidence: docs/research/company-indicators-2026-10-15-shipping-energy.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 日本株全体のリスク選好・先物の寄り前情報を共通市場要因として分離する。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "NIY=F", "verification_status": "LOCAL_CONFIG_ONLY",
+      "ingestion_tested": false, "cost_access": "既存無料経路。商用利用権/品質は別途確認"} 公表時刻: 前完了セッションEOD、または実際に08:30までに観測したsnapshot。過去snapshotをEODから捏造しない。'
+    source_urls:
+    - https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf
+    - https://www.inpex.com/english/ir/risk.html
+    - https://www.inpex.com/english/business/project/ichthys.html
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: ドル建て油ガス販売収入の円換算とUSD資産負債評価。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "JPY=X", "verification_status": "LOCAL_CONFIG_ONLY",
+      "ingestion_tested": false, "cost_access": "既存無料経路"} 公表時刻: 08:30までに観測済みの値、または前完了日EOD。'
+    source_urls:
+    - https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf
+    - https://www.inpex.com/english/ir/risk.html
+    - https://www.inpex.com/english/business/project/ichthys.html
+  - id: brent
+    label: Brent原油先物
+    series_id: brent
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 上流の原油・コンデンセート販売単価と油価連動LNG契約。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      現物Dubaiや全社実現油価そのものではない。 取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "BZ=F", "verification_status":
+      "LOCAL_CONFIG_ONLY", "ingestion_tested": false, "cost_access": "既存無料経路"} 公表時刻: 前完了セッションEOD、または08:30以前に観測済みsnapshot。rollと調整方針を固定。'
+    source_urls:
+    - https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf
+    - https://www.inpex.com/english/ir/risk.html
+    - https://www.inpex.com/english/business/project/ichthys.html
+  - id: lng_jkm
+    label: 北東アジアLNG価格JKM
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 北東アジアLNG需給とスポット/契約更新価値、国内輸入LNG原料費。
+    acquisition: '未接続。米Henry Hub（既存natural_gas）とは異なる。長期油価連動LNG契約やヘッジで即時感応度は小さくなる。 取得先候補: {"provider":
+      "S&P Global Platts", "instrument": "JKM spot assessment, Northeast Asia delivered LNG", "verification_status":
+      "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED", "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"}
+      公表時刻: 公表方式は16:30 Singapore（17:30 JST）。予測日の前公表営業日分を08:30に使用。現在の配信契約時刻を再確認。'
+    source_urls:
+    - https://press.spglobal.com/2020-06-01-S-P-Global-Platts-Launches-eWindow-for-Platts-JKM-LNG-Derivatives
+    - https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf
+    - https://www.inpex.com/english/ir/risk.html
+    - https://www.inpex.com/english/business/project/ichthys.html
+  - id: lpg_afei
+    label: 極東LPG価格AFEI
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: IchthysのLPG副産物販売とアジアLPG需給。
+    acquisition: '未接続。LNGとLPGは別商品。Ichthysの実現価格・長期契約価格そのものではない。 取得先候補: {"provider": "Argus", "instrument":
+      "AFEI propane/butane; 販売構成が確認できる場合のみ固定バスケット1群", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://www.argusmedia.com/en/methodology/key-commodity-prices/argus-far-east-index-afei
+    - https://www.argusmedia.com/en/solutions/products/argus-international-lpg
+    - https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf
+    - https://www.inpex.com/english/ir/risk.html
+    - https://www.inpex.com/english/business/project/ichthys.html
+  - id: audusd
+    label: 豪ドル/米ドル
+    series_id: audusd
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 豪州操業・建設のAUDコストをUSD販売収入と比較。
+    acquisition: '接続設定: AUDUSD=X。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。AUD建て操業費をUSD収入と対比する通貨ドライバー。AUDJPYとUSDJPYの二重計上を避け独立した定義にする。
+      取得先候補: {"provider": "Reserve Bank of Australia", "instrument": "Units of USD per AUD, daily table",
+      "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED", "ingestion_tested": false, "cost_access":
+      "公式公開表無料。規約・履歴ファイル・自動取得可否は確認"} 公表時刻: 豪州前営業日公表分。予測当日の豪州午後値を朝に使わない。'
+    source_urls:
+    - https://www.rba.gov.au/statistics/frequency/exchange-rates.html
+    - https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf
+    - https://www.inpex.com/english/ir/risk.html
+    - https://www.inpex.com/english/business/project/ichthys.html
+    - https://finance.yahoo.com/quote/AUDUSD=X/history/
+  - id: us_10y_yield
+    label: 米10年国債利回り
+    series_id: us_10y_yield
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 長期大型油ガス投資の割引率・USD資金調達環境。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。資金調達・割引率の代理。企業固有の借入金利/信用スプレッドではない。 取得先候補: {"provider": "US Treasury",
+      "instrument": "Daily Treasury Par Yield Curve: 10 Yr", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "公式CSV/XML無料"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?page=0&type=daily_treasury_yield_curve
+    - https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf
+    - https://www.inpex.com/english/ir/risk.html
+    - https://www.inpex.com/english/business/project/ichthys.html
+- ticker: '5020'
+  name: ENEOSホールディングス
+  valid_from: 2026-10-16
+  thesis: 国内石油精製販売のマージンと原油在庫、石化、電力/LNG、持分法JX金属を分ける。2025年3月以後のJX金属は完全連結ではないため、古い銅中心のモデルを機械的に継承しない。
+  evidence: docs/research/company-indicators-2026-10-15-shipping-energy.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 日本株全体のリスク選好・先物の寄り前情報を共通市場要因として分離する。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "NIY=F", "verification_status": "LOCAL_CONFIG_ONLY",
+      "ingestion_tested": false, "cost_access": "既存無料経路。商用利用権/品質は別途確認"} 公表時刻: 前完了セッションEOD、または実際に08:30までに観測したsnapshot。過去snapshotをEODから捏造しない。'
+    source_urls:
+    - https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html
+    - https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/
+    - https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 輸入原油の円コスト、在庫評価、海外利益換算・販売価格転嫁の時間差。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "JPY=X", "verification_status": "LOCAL_CONFIG_ONLY",
+      "ingestion_tested": false, "cost_access": "既存無料経路"} 公表時刻: 08:30までに観測済みの値、または前完了日EOD。'
+    source_urls:
+    - https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html
+    - https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/
+    - https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf
+  - id: dubai_crude
+    label: ドバイ原油価格
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 輸入原油調達・在庫評価・E&P採算の共通油価水準。
+    acquisition: '未接続。輸入原油コスト・在庫効果と上流収益の両方向。Brent/WTIとは油種・地域basisが異なる。 取得先候補: {"provider": "RIM / Platts",
+      "instrument": "Dubai crude daily assessment", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://eng.rim-intelligence.co.jp/report/crude-condensate-en/
+    - https://www.rim-intelligence.co.jp/eng/contents/historical.html
+    - https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html
+    - https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/
+    - https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf
+  - id: japan_refining_margin
+    label: 日本の石油製品・原油マージン
+    series_id: null
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内ガソリン等の販売価格と原料コスト差が精製販売採算を左右。
+    acquisition: '未接続。研究用gross margin proxy。製品歩留まり、通貨/単位、税・補助金、販売時差を明示。会社実績マージンを日次補間して未来情報を混ぜない。各製品を別群として数えない。
+      取得先候補: {"provider": "RIM Intelligence", "instrument": "日本ガソリン/灯油/軽油の固定製品構成価格 − lagged Dubai/JCC代替調達原価
+      − 輸送費", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED", "ingestion_tested": false,
+      "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://eng.rim-intelligence.co.jp/report/products-en/
+    - https://eng.rim-intelligence.co.jp/report/crude-condensate-en/
+    - https://www.rim-intelligence.co.jp/eng/contents/historical.html
+    - https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html
+    - https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/
+    - https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf
+  - id: px_naphtha_spread
+    label: パラキシレン・ナフサ価格差
+    series_id: null
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 芳香族などアジア石化の製品原料spread。
+    acquisition: '未接続。石化のgross spread代理で石油燃料の精製マージンとは別。grade/feed codesと個社の実際の製品構成は取得前に確認。 取得先候補: {"provider":
+      "RIM / Platts", "instrument": "アジアPX価格 − 同時点ナフサ価格（同一通貨/単位、場所・歩留まりを確認）", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://eng.rim-intelligence.co.jp/report/petrochemicals-en/
+    - https://eng.rim-intelligence.co.jp/report/products-en/
+    - https://www.rim-intelligence.co.jp/eng/contents/historical.html
+    - https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html
+    - https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/
+    - https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf
+  - id: jepx_spot
+    label: 日本卸電力スポット価格
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 電力の発電・小売に対する国内卸売価格環境。
+    acquisition: '未接続。発電の売電にはプラス、固定単価の小売調達にはマイナス。発電/小売のnet position、燃料費調整・FIT/FIP・PPAに依存。 取得先候補: {"provider":
+      "JEPX", "instrument": "System Price / disclosed operating-area fixed mix, 30-min values aggregated
+      to one daily group", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED", "ingestion_tested":
+      false, "cost_access": "公式公開データ。機械利用条件と履歴取得を要確認"} 公表時刻: 受渡日と公表日を区別。08:30時点で既に公表されていた受渡日の価格のみ。保守的初期運用は前受渡日の確定値。'
+    source_urls:
+    - https://www.jepx.jp/electricpower/market-data/spot/
+    - https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html
+    - https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/
+    - https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf
+  - id: lng_jkm
+    label: 北東アジアLNG価格JKM
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: LNG原料調達/電源コストと上流ガス価値。
+    acquisition: '未接続。米Henry Hub（既存natural_gas）とは異なる。長期油価連動LNG契約やヘッジで即時感応度は小さくなる。 取得先候補: {"provider":
+      "S&P Global Platts", "instrument": "JKM spot assessment, Northeast Asia delivered LNG", "verification_status":
+      "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED", "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"}
+      公表時刻: 公表方式は16:30 Singapore（17:30 JST）。予測日の前公表営業日分を08:30に使用。現在の配信契約時刻を再確認。'
+    source_urls:
+    - https://press.spglobal.com/2020-06-01-S-P-Global-Platts-Launches-eWindow-for-Platts-JKM-LNG-Derivatives
+    - https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html
+    - https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/
+    - https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf
+  - id: jx_advanced_metals_equity
+    label: JX金属株価
+    series_id: jx_advanced_metals_equity
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 持分法投資JX金属の事業価値・資本配分期待。
+    acquisition: '接続設定: 5016.T。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。持分法投資の価値変化の代理。ENEOSがJX金属を完全連結する前提は禁止。保有比率変更をas-of管理。
+      取得先候補: {"provider": "JPX / licensed Japanese equity data provider", "instrument": "東京証券取引所 5016（Yahooコードは未検証）",
+      "verification_status": "BUSINESS_LINK_VERIFIED_PRICE_FEED_UNVERIFIED", "ingestion_tested": false,
+      "cost_access": "市場データの既存利用権を確認。新API取得は未実施"} 公表時刻: 日本株前営業日の確定終値のみ。上場前系列は存在せず後方補間しない。'
+    source_urls:
+    - https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html
+    - https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf
+    - https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/
+    - https://finance.yahoo.com/quote/5016.T/history/
+- ticker: '5019'
+  name: 出光興産
+  valid_from: 2026-10-16
+  thesis: 国内精製販売に加えて豪州石炭、海外油ガス、基礎化学、潤滑油など機能材、電力を持つ。ENEOS/コスモと同じ原油一式にせず、豪州一般炭とAUDコスト、エチレン原料spreadを含める。
+  evidence: docs/research/company-indicators-2026-10-15-shipping-energy.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 日本株全体のリスク選好・先物の寄り前情報を共通市場要因として分離する。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "NIY=F", "verification_status": "LOCAL_CONFIG_ONLY",
+      "ingestion_tested": false, "cost_access": "既存無料経路。商用利用権/品質は別途確認"} 公表時刻: 前完了セッションEOD、または実際に08:30までに観測したsnapshot。過去snapshotをEODから捏造しない。'
+    source_urls:
+    - https://www.idemitsu.com/en/ir/management/risk/index.html
+    - https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html
+    - https://www.idemitsu.com/en/ir/library/annual/index.html
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 輸入原油の円コスト、在庫評価、海外利益換算・販売価格転嫁の時間差。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "JPY=X", "verification_status": "LOCAL_CONFIG_ONLY",
+      "ingestion_tested": false, "cost_access": "既存無料経路"} 公表時刻: 08:30までに観測済みの値、または前完了日EOD。'
+    source_urls:
+    - https://www.idemitsu.com/en/ir/management/risk/index.html
+    - https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html
+    - https://www.idemitsu.com/en/ir/library/annual/index.html
+  - id: brent
+    label: Brent原油先物
+    series_id: brent
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: ノルウェー等の上流販売価格・原油在庫の広域基準。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      現物Dubaiや全社実現油価そのものではない。 取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "BZ=F", "verification_status":
+      "LOCAL_CONFIG_ONLY", "ingestion_tested": false, "cost_access": "既存無料経路"} 公表時刻: 前完了セッションEOD、または08:30以前に観測済みsnapshot。rollと調整方針を固定。'
+    source_urls:
+    - https://www.idemitsu.com/en/ir/management/risk/index.html
+    - https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html
+    - https://www.idemitsu.com/en/ir/library/annual/index.html
+  - id: japan_refining_margin
+    label: 日本の石油製品・原油マージン
+    series_id: null
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内燃料販売価格と調達原価の差。
+    acquisition: '未接続。研究用gross margin proxy。製品歩留まり、通貨/単位、税・補助金、販売時差を明示。会社実績マージンを日次補間して未来情報を混ぜない。各製品を別群として数えない。
+      取得先候補: {"provider": "RIM Intelligence", "instrument": "日本ガソリン/灯油/軽油の固定製品構成価格 − lagged Dubai/JCC代替調達原価
+      − 輸送費", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED", "ingestion_tested": false,
+      "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://eng.rim-intelligence.co.jp/report/products-en/
+    - https://eng.rim-intelligence.co.jp/report/crude-condensate-en/
+    - https://www.rim-intelligence.co.jp/eng/contents/historical.html
+    - https://www.idemitsu.com/en/ir/management/risk/index.html
+    - https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html
+    - https://www.idemitsu.com/en/ir/library/annual/index.html
+  - id: ethylene_naphtha_spread
+    label: エチレン・ナフサ価格差
+    series_id: null
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: アジア基礎化学の需給とクラッカー採算。
+    acquisition: '未接続。エチレン系設備の採算代理。中国設備過剰・副産物・定修により単純差と利益は一致しない。 取得先候補: {"provider": "RIM / Platts", "instrument":
+      "CFR Northeast Asia ethylene − CFR Japan naphtha（原料歩留まり/単位調整）", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://eng.rim-intelligence.co.jp/report/petrochemicals-en/
+    - https://eng.rim-intelligence.co.jp/report/products-en/
+    - https://www.rim-intelligence.co.jp/eng/contents/historical.html
+    - https://www.idemitsu.com/en/ir/management/risk/index.html
+    - https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html
+    - https://www.idemitsu.com/en/ir/library/annual/index.html
+  - id: thermal_coal_newcastle
+    label: 豪州一般炭Newcastle価格
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 豪州自社炭鉱の一般炭販売価格。
+    acquisition: '未接続。最終決済の月平均を日次価格と混同しない。発熱量/灰分・販売契約・限月roll・操業費で個社損益が変わる。 取得先候補: {"provider": "ICE /
+      globalCOAL", "instrument": "Newcastle Coal Futures front-month daily settlement or licensed NEWC
+      daily physical; choose one", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://www.ice.com/products/1137/globalCOAL-
+    - https://www.globalcoal.com/coalprices/newcindex.cfm
+    - https://www.idemitsu.com/en/ir/management/risk/index.html
+    - https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html
+    - https://www.idemitsu.com/en/ir/library/annual/index.html
+  - id: audusd
+    label: 豪ドル/米ドル
+    series_id: audusd
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 豪州炭鉱のAUD操業費に対するUSD商品収入。
+    acquisition: '接続設定: AUDUSD=X。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。AUD建て操業費をUSD収入と対比する通貨ドライバー。AUDJPYとUSDJPYの二重計上を避け独立した定義にする。
+      取得先候補: {"provider": "Reserve Bank of Australia", "instrument": "Units of USD per AUD, daily table",
+      "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED", "ingestion_tested": false, "cost_access":
+      "公式公開表無料。規約・履歴ファイル・自動取得可否は確認"} 公表時刻: 豪州前営業日公表分。予測当日の豪州午後値を朝に使わない。'
+    source_urls:
+    - https://www.rba.gov.au/statistics/frequency/exchange-rates.html
+    - https://www.idemitsu.com/en/ir/management/risk/index.html
+    - https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html
+    - https://www.idemitsu.com/en/ir/library/annual/index.html
+    - https://finance.yahoo.com/quote/AUDUSD=X/history/
+  - id: jepx_spot
+    label: 日本卸電力スポット価格
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 電力/再エネ事業の売電・調達環境。
+    acquisition: '未接続。発電の売電にはプラス、固定単価の小売調達にはマイナス。発電/小売のnet position、燃料費調整・FIT/FIP・PPAに依存。 取得先候補: {"provider":
+      "JEPX", "instrument": "System Price / disclosed operating-area fixed mix, 30-min values aggregated
+      to one daily group", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED", "ingestion_tested":
+      false, "cost_access": "公式公開データ。機械利用条件と履歴取得を要確認"} 公表時刻: 受渡日と公表日を区別。08:30時点で既に公表されていた受渡日の価格のみ。保守的初期運用は前受渡日の確定値。'
+    source_urls:
+    - https://www.jepx.jp/electricpower/market-data/spot/
+    - https://www.idemitsu.com/en/ir/management/risk/index.html
+    - https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html
+    - https://www.idemitsu.com/en/ir/library/annual/index.html
+- ticker: '5021'
+  name: コスモエネルギーホールディングス
+  valid_from: 2026-10-16
+  thesis: 国内の石油精製販売と石化、UAEの油田、再エネを組み合わせる。原油価格の上流利益と精製原料/在庫影響を分け、PX採算・電力市場・国内金利を含める。SAFは事業開始を確認したが、利益規模と日次価格系列が未確定なので7群の水増しには使わない。
+  evidence: docs/research/company-indicators-2026-10-15-shipping-energy.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 日本株全体のリスク選好・先物の寄り前情報を共通市場要因として分離する。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "NIY=F", "verification_status": "LOCAL_CONFIG_ONLY",
+      "ingestion_tested": false, "cost_access": "既存無料経路。商用利用権/品質は別途確認"} 公表時刻: 前完了セッションEOD、または実際に08:30までに観測したsnapshot。過去snapshotをEODから捏造しない。'
+    source_urls:
+    - https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf
+    - https://www.cosmo-energy.co.jp/en/ir/library/annual.html
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 輸入原油の円コスト、在庫評価、海外利益換算・販売価格転嫁の時間差。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。
+      取得先候補: {"provider": "Yahoo Finance（既存設定）", "instrument": "JPY=X", "verification_status": "LOCAL_CONFIG_ONLY",
+      "ingestion_tested": false, "cost_access": "既存無料経路"} 公表時刻: 08:30までに観測済みの値、または前完了日EOD。'
+    source_urls:
+    - https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf
+    - https://www.cosmo-energy.co.jp/en/ir/library/annual.html
+  - id: dubai_crude
+    label: ドバイ原油価格
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: UAE上流販売の地域原油水準と輸入原油調達・在庫。
+    acquisition: '未接続。輸入原油コスト・在庫効果と上流収益の両方向。Brent/WTIとは油種・地域basisが異なる。 取得先候補: {"provider": "RIM / Platts",
+      "instrument": "Dubai crude daily assessment", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://eng.rim-intelligence.co.jp/report/crude-condensate-en/
+    - https://www.rim-intelligence.co.jp/eng/contents/historical.html
+    - https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf
+    - https://www.cosmo-energy.co.jp/en/ir/library/annual.html
+  - id: japan_refining_margin
+    label: 日本の石油製品・原油マージン
+    series_id: null
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内精製販売の製品価格と原料原価の差。
+    acquisition: '未接続。研究用gross margin proxy。製品歩留まり、通貨/単位、税・補助金、販売時差を明示。会社実績マージンを日次補間して未来情報を混ぜない。各製品を別群として数えない。
+      取得先候補: {"provider": "RIM Intelligence", "instrument": "日本ガソリン/灯油/軽油の固定製品構成価格 − lagged Dubai/JCC代替調達原価
+      − 輸送費", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED", "ingestion_tested": false,
+      "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://eng.rim-intelligence.co.jp/report/products-en/
+    - https://eng.rim-intelligence.co.jp/report/crude-condensate-en/
+    - https://www.rim-intelligence.co.jp/eng/contents/historical.html
+    - https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf
+    - https://www.cosmo-energy.co.jp/en/ir/library/annual.html
+  - id: px_naphtha_spread
+    label: パラキシレン・ナフサ価格差
+    series_id: null
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 石油化学の芳香族/PX需給と原料spread。
+    acquisition: '未接続。石化のgross spread代理で石油燃料の精製マージンとは別。grade/feed codesと個社の実際の製品構成は取得前に確認。 取得先候補: {"provider":
+      "RIM / Platts", "instrument": "アジアPX価格 − 同時点ナフサ価格（同一通貨/単位、場所・歩留まりを確認）", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+      "ingestion_tested": false, "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"} 公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://eng.rim-intelligence.co.jp/report/petrochemicals-en/
+    - https://eng.rim-intelligence.co.jp/report/products-en/
+    - https://www.rim-intelligence.co.jp/eng/contents/historical.html
+    - https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf
+    - https://www.cosmo-energy.co.jp/en/ir/library/annual.html
+  - id: jepx_spot
+    label: 日本卸電力スポット価格
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 風力等の再エネと電力販売の卸売価格環境。
+    acquisition: '未接続。発電の売電にはプラス、固定単価の小売調達にはマイナス。発電/小売のnet position、燃料費調整・FIT/FIP・PPAに依存。 取得先候補: {"provider":
+      "JEPX", "instrument": "System Price / disclosed operating-area fixed mix, 30-min values aggregated
+      to one daily group", "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED", "ingestion_tested":
+      false, "cost_access": "公式公開データ。機械利用条件と履歴取得を要確認"} 公表時刻: 受渡日と公表日を区別。08:30時点で既に公表されていた受渡日の価格のみ。保守的初期運用は前受渡日の確定値。'
+    source_urls:
+    - https://www.jepx.jp/electricpower/market-data/spot/
+    - https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf
+    - https://www.cosmo-energy.co.jp/en/ir/library/annual.html
+  - id: jgb_10y_yield
+    label: 日本10年国債利回り
+    series_id: jgb_10y_yield
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内製油所/再エネの長期投資割引率・円資金調達環境。
+    acquisition: '接続設定: MOF:10Y。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。国内長期資金・割引率の代理。実際の借入満期・固定変動比率による。米2年利回りで穴埋めしない。
+      取得先候補: {"provider": "Ministry of Finance Japan", "instrument": "10年定残存国債利回り（日次系列の正式URL/コードは未検証）",
+      "verification_status": "CANDIDATE_UNVERIFIED", "ingestion_tested": false, "cost_access": "公式公開統計を候補。系列・取得経路の確認が必要"}
+      公表時刻: 前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。'
+    source_urls:
+    - https://www.mof.go.jp/english/policy/jgbs/
+    - https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf
+    - https://www.cosmo-energy.co.jp/en/ir/library/annual.html
+    - https://www.mof.go.jp/jgbs/reference/interest_rate/data/jgbcm_all.csv
+- ticker: '7203'
+  name: トヨタ自動車
+  valid_from: 2026-10-16
+  thesis: 地域分散した自動車・HEVの商品力と販売金融を分離する。輸出FX、地域需要、無リスク金利、信用スプレッド、燃料と鋼材を別の経済経路として持つ。
+  evidence: docs/research/company-indicators-2026-10-15-auto.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内上場株の共通リスクを取り除き、事業因子の追加寄与を見る。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。共通市場因子は原則この1群。S&P先物/Nasdaq/VIXを数合わせで追加しない。 取得先候補: CME Nikkei
+      225 JPY futures NIY。既存Yahoo NIY=Fは既存設定の対応を継続。 公表時刻: 前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。'
+    source_urls:
+    - https://www.cmegroup.com/markets/equities/files/trade-japanese-equity-index-futures-fact-card.pdf
+    - https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf
+    - https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf
+  - id: usdjpy
+    label: ドル円（円/米ドル）
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 円安は日本輸出の採算・米国利益の円換算を押し上げ得る。現地生産とヘッジで変わる。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。 取得先候補: ECB
+      EUR/JPY と EUR/USD の参照値。JPY per USD = JPY per EUR / USD per EUR 公表時刻: ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30
+      JSTまでに実受信した値のみ。取引可能なスポット値とは区別。'
+    source_urls:
+    - https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html
+    - https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf
+    - https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf
+  - id: eurjpy
+    label: ユーロ円（円/ユーロ）
+    series_id: eurjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 欧州の販売/金融利益と日本からの輸出採算を表す。USD一本では欧州通貨変動を落とす。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。 取得先候補: ECB
+      EUR/JPY reference rate 公表時刻: ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30 JSTまでに実受信した値のみ。取引可能なスポット値とは区別。'
+    source_urls:
+    - https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html
+    - https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf
+    - https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf
+  - id: fxi
+    label: 中国株ETF FXI（景況代理）
+    series_id: fxi
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 中国自動車市場・JV競争環境に対する広い景況代理。中国固有の弱さを米株指数と分ける。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。 取得先候補: 米国上場ETF
+      FXI の調整済み日次終値 公表時刻: 前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。'
+    source_urls:
+    - https://www.ishares.com/us/products/239536/ishares-china-largecap-etf?periodCd=d
+    - https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf
+    - https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf
+  - id: xly
+    label: 米消費裁量株ETF XLY（需要代理）
+    series_id: xly
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 北米の家計が高額耐久財を購入する余力を表す市場代理。
+    acquisition: '接続設定: XLY。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。
+      取得先候補: 米国上場ETF XLY の調整済み日次終値 公表時刻: 前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。'
+    source_urls:
+    - https://www.ssga.com/us/en/individual/etfs/state-street-consumer-discretionary-select-sector-spdr-etf-xly
+    - https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf
+    - https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf
+    - https://finance.yahoo.com/quote/XLY/history/
+  - id: us_2y_yield
+    label: 米2年国債利回り
+    series_id: us_2y_yield
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 車両ローン負担・販売奨励金と販売金融の調達費用の金利成分。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。車両ローン金利そのものではない。水準・前年差ではなく日次bp変化を主特徴にする。 取得先候補: US Treasury Daily
+      Par Yield Curve 2-year 公表時刻: 米国市場観測時刻は概ね15:30 ET。観測時刻を公表時刻と見なさず、公式配信の実受信が08:30以前かを確認。'
+    source_urls:
+    - https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics
+    - https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf
+    - https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf
+  - id: us_ig_credit_oas
+    label: 米投資適格社債OAS
+    series_id: us_ig_credit_oas
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: TMCC等の資本市場調達の無リスク金利以外の信用環境。
+    acquisition: '接続設定: BAMLC0A0CM。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。個社信用スプレッドや自動車ローンABSの直接データではない。2026年4月から公開履歴は3年に制限。権利条件と過去版を確認。
+      取得先候補: FRED/ICE BofA OAS BAMLC0A0CM 日次終値。変化はbp単位 公表時刻: 観測日ではなくFRED公表/実受信日で利用判定。確認例:10/13観測を10/14
+      10:26 CDTに更新。翌朝に前々米営業日の値しかない場合がある。'
+    source_urls:
+    - https://fred.stlouisfed.org/series/BAMLC0A0CM
+    - https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf
+    - https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf
+    - https://fred.stlouisfed.org/graph/fredgraph.csv
+  - id: rbob_gasoline
+    label: 米RBOBガソリン先物
+    series_id: rbob_gasoline
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 燃料高は新車需要に逆風だがHEVの相対魅力を高めるため、原油一本の負符号を強制しない。
+    acquisition: '接続設定: RB=F。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。消費者小売価格ではなく卸売先物。季節性・精製マージン・ロールの影響。原油WTI/Brentで無断代替しない。
+      取得先候補: CME NYMEX RBOB gasoline futures RB 公表時刻: 前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。'
+    source_urls:
+    - https://www.cmegroup.com/markets/energy/refined-products/rbob-gasoline.contractSpecs.html
+    - https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf
+    - https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf
+    - https://finance.yahoo.com/quote/RB=F/history/
+  - id: us_hrc_steel
+    label: 米熱延コイルHRC価格（鋼材費代理）
+    series_id: us_hrc_steel
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 北米製造の車体材料・サプライヤー費用の圧力。
+    acquisition: '接続設定: HRC=F。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。取引の薄い限月の停止価格に注意。各社契約調達価格でもアジア鋼材価格でもない。CME/許諾ベンダーの履歴取得未実装。
+      取得先候補: CME US Midwest Domestic Hot-Rolled Coil Steel (CRU) Index futures HRC 公表時刻: 前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。'
+    source_urls:
+    - https://www.cmegroup.com/markets/metals/ferrous/hrc-steel.contractSpecs.html
+    - https://www.cmegroup.com/trading/metals/files/us-midwest-domestic-hot-rolled-coil-steel-futures-and-options.pdf
+    - https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf
+    - https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf
+    - https://finance.yahoo.com/quote/HRC=F/history/
+- ticker: '7267'
+  name: 本田技研工業
+  valid_from: 2026-10-16
+  thesis: 北米四輪・販売金融に加えて、インド/東南アジア/ブラジル二輪を独立に測る。二輪の収益源を米国自動車の共通リストへ埋没させない。
+  evidence: docs/research/company-indicators-2026-10-15-auto.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内上場株の市場共通成分。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。共通市場因子は原則この1群。S&P先物/Nasdaq/VIXを数合わせで追加しない。 取得先候補: CME Nikkei
+      225 JPY futures NIY。既存Yahoo NIY=Fは既存設定の対応を継続。 公表時刻: 前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。'
+    source_urls:
+    - https://www.cmegroup.com/markets/equities/files/trade-japanese-equity-index-futures-fact-card.pdf
+    - https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf
+    - https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf
+  - id: usdjpy
+    label: ドル円（円/米ドル）
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 北米四輪/金融の円換算、日本輸出と現地コストの相対価値。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。 取得先候補: ECB
+      EUR/JPY と EUR/USD の参照値。JPY per USD = JPY per EUR / USD per EUR 公表時刻: ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30
+      JSTまでに実受信した値のみ。取引可能なスポット値とは区別。'
+    source_urls:
+    - https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html
+    - https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf
+    - https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf
+  - id: xly
+    label: 米消費裁量株ETF XLY（需要代理）
+    series_id: xly
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 北米四輪需要の市場代理。二輪の地域需要とは区別する。
+    acquisition: '接続設定: XLY。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。
+      取得先候補: 米国上場ETF XLY の調整済み日次終値 公表時刻: 前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。'
+    source_urls:
+    - https://www.ssga.com/us/en/individual/etfs/state-street-consumer-discretionary-select-sector-spdr-etf-xly
+    - https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf
+    - https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf
+    - https://finance.yahoo.com/quote/XLY/history/
+  - id: us_2y_yield
+    label: 米2年国債利回り
+    series_id: us_2y_yield
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 北米顧客のローン負担と金融子会社の金利調達費用。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。車両ローン金利そのものではない。水準・前年差ではなく日次bp変化を主特徴にする。 取得先候補: US Treasury Daily
+      Par Yield Curve 2-year 公表時刻: 米国市場観測時刻は概ね15:30 ET。観測時刻を公表時刻と見なさず、公式配信の実受信が08:30以前かを確認。'
+    source_urls:
+    - https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics
+    - https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf
+    - https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf
+  - id: us_ig_credit_oas
+    label: 米投資適格社債OAS
+    series_id: us_ig_credit_oas
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 自動車販売を支える小売金融/リースの信用・資金調達条件。
+    acquisition: '接続設定: BAMLC0A0CM。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。個社信用スプレッドや自動車ローンABSの直接データではない。2026年4月から公開履歴は3年に制限。権利条件と過去版を確認。
+      取得先候補: FRED/ICE BofA OAS BAMLC0A0CM 日次終値。変化はbp単位 公表時刻: 観測日ではなくFRED公表/実受信日で利用判定。確認例:10/13観測を10/14
+      10:26 CDTに更新。翌朝に前々米営業日の値しかない場合がある。'
+    source_urls:
+    - https://fred.stlouisfed.org/series/BAMLC0A0CM
+    - https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf
+    - https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf
+    - https://fred.stlouisfed.org/graph/fredgraph.csv
+  - id: inda
+    label: インド株ETF INDA（景況代理）
+    series_id: inda
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: インド二輪顧客の所得・消費環境に対する市場代理。
+    acquisition: '接続設定: INDA。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。
+      取得先候補: 米国上場ETF INDA の調整済み日次終値 公表時刻: 前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。'
+    source_urls:
+    - https://www.ishares.com/us/products/239659/ishares-msci-india-etf?periodCd=m
+    - https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf
+    - https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf
+    - https://finance.yahoo.com/quote/INDA/history/
+  - id: eido
+    label: インドネシア株ETF EIDO（二輪需要の粗い代理）
+    series_id: eido
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 大きな二輪市場であるインドネシア固有の内需と金融環境。
+    acquisition: '接続設定: EIDO。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。
+      取得先候補: 米国上場ETF EIDO の調整済み日次終値 公表時刻: 前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。'
+    source_urls:
+    - https://www.ishares.com/us/products/239661/ishares-msci-indonesia-etf
+    - https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf
+    - https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf
+    - https://finance.yahoo.com/quote/EIDO/history/
+  - id: brljpy
+    label: ブラジルレアル円（円/BRL）
+    series_id: brljpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: ブラジル二輪事業の利益換算・通貨/輸入部材条件。
+    acquisition: '接続設定: BRLJPY=X。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。
+      取得先候補: ECB EUR/JPY と EUR/BRL の参照値。JPY per BRL = JPY per EUR / BRL per EUR 公表時刻: ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30
+      JSTまでに実受信した値のみ。取引可能なスポット値とは区別。'
+    source_urls:
+    - https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html
+    - https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf
+    - https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf
+    - https://finance.yahoo.com/quote/BRLJPY=X/history/
+  - id: fxi
+    label: 中国株ETF FXI（景況代理）
+    series_id: fxi
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 中国四輪需要・競争環境を北米と切り分ける。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。 取得先候補: 米国上場ETF
+      FXI の調整済み日次終値 公表時刻: 前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。'
+    source_urls:
+    - https://www.ishares.com/us/products/239536/ishares-china-largecap-etf?periodCd=d
+    - https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf
+    - https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf
+  - id: rbob_gasoline
+    label: 米RBOBガソリン先物
+    series_id: rbob_gasoline
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 北米四輪の保有コスト・ハイブリッド選好。二輪の燃費優位を同じ固定係数で決め付けない。
+    acquisition: '接続設定: RB=F。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。消費者小売価格ではなく卸売先物。季節性・精製マージン・ロールの影響。原油WTI/Brentで無断代替しない。
+      取得先候補: CME NYMEX RBOB gasoline futures RB 公表時刻: 前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。'
+    source_urls:
+    - https://www.cmegroup.com/markets/energy/refined-products/rbob-gasoline.contractSpecs.html
+    - https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf
+    - https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf
+    - https://finance.yahoo.com/quote/RB=F/history/
+- ticker: '7201'
+  name: 日産自動車
+  valid_from: 2026-10-16
+  thesis: 再建・流動性制約の下で、米国/メキシコ生産販売と中国競争を分ける。為替だけでなく、信用環境と値引きが必要になる需要環境を扱う。
+  evidence: docs/research/company-indicators-2026-10-15-auto.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内株式の共通市場要因。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。共通市場因子は原則この1群。S&P先物/Nasdaq/VIXを数合わせで追加しない。 取得先候補: CME Nikkei
+      225 JPY futures NIY。既存Yahoo NIY=Fは既存設定の対応を継続。 公表時刻: 前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。'
+    source_urls:
+    - https://www.cmegroup.com/markets/equities/files/trade-japanese-equity-index-futures-fact-card.pdf
+    - https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf
+    - https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf
+  - id: usdjpy
+    label: ドル円（円/米ドル）
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 米ドル売上・日本輸出と利益換算。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。 取得先候補: ECB
+      EUR/JPY と EUR/USD の参照値。JPY per USD = JPY per EUR / USD per EUR 公表時刻: ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30
+      JSTまでに実受信した値のみ。取引可能なスポット値とは区別。'
+    source_urls:
+    - https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html
+    - https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf
+    - https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf
+  - id: mxnjpy
+    label: メキシコペソ円（円/MXN）
+    series_id: mxnjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: メキシコ生産のコストと現地販売利益の換算。
+    acquisition: '接続設定: MXNJPY=X。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。
+      取得先候補: ECB EUR/JPY と EUR/MXN の参照値。JPY per MXN = JPY per EUR / MXN per EUR 公表時刻: ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30
+      JSTまでに実受信した値のみ。取引可能なスポット値とは区別。'
+    source_urls:
+    - https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html
+    - https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf
+    - https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf
+    - https://finance.yahoo.com/quote/MXNJPY=X/history/
+  - id: fxi
+    label: 中国株ETF FXI（景況代理）
+    series_id: fxi
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 中国市場の需要・現地競争圧力を表す広い代理。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。 取得先候補: 米国上場ETF
+      FXI の調整済み日次終値 公表時刻: 前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。'
+    source_urls:
+    - https://www.ishares.com/us/products/239536/ishares-china-largecap-etf?periodCd=d
+    - https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf
+    - https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf
+  - id: xly
+    label: 米消費裁量株ETF XLY（需要代理）
+    series_id: xly
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 北米顧客の購買余力・販売奨励金必要性。
+    acquisition: '接続設定: XLY。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。
+      取得先候補: 米国上場ETF XLY の調整済み日次終値 公表時刻: 前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。'
+    source_urls:
+    - https://www.ssga.com/us/en/individual/etfs/state-street-consumer-discretionary-select-sector-spdr-etf-xly
+    - https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf
+    - https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf
+    - https://finance.yahoo.com/quote/XLY/history/
+  - id: us_2y_yield
+    label: 米2年国債利回り
+    series_id: us_2y_yield
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: ローン負担と販売金融の無リスク資金調達金利。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。車両ローン金利そのものではない。水準・前年差ではなく日次bp変化を主特徴にする。 取得先候補: US Treasury Daily
+      Par Yield Curve 2-year 公表時刻: 米国市場観測時刻は概ね15:30 ET。観測時刻を公表時刻と見なさず、公式配信の実受信が08:30以前かを確認。'
+    source_urls:
+    - https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics
+    - https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf
+    - https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf
+  - id: us_hy_credit_spread
+    label: 米ハイイールド社債OAS
+    series_id: us_hy_credit_oas
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 再建中の資金調達環境/市場の信用リスク許容度を広い信用指数で表す。
+    acquisition: '接続設定: BAMLH0A0HYM2。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。個社信用スプレッドや自動車ローンABSの直接データではない。2026年4月から公開履歴は3年に制限。権利条件と過去版を確認。
+      取得先候補: FRED/ICE BofA OAS BAMLH0A0HYM2 日次終値。変化はbp単位 公表時刻: 観測日ではなくFRED公表/実受信日で利用判定。確認例:10/13観測を10/14
+      10:26 CDTに更新。翌朝に前々米営業日の値しかない場合がある。'
+    source_urls:
+    - https://fred.stlouisfed.org/series/BAMLH0A0HYM2
+    - https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf
+    - https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf
+    - https://fred.stlouisfed.org/graph/fredgraph.csv
+  - id: rbob_gasoline
+    label: 米RBOBガソリン先物
+    series_id: rbob_gasoline
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 米国の車両保有費・ICE/SUVと省燃費車の選好。
+    acquisition: '接続設定: RB=F。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。消費者小売価格ではなく卸売先物。季節性・精製マージン・ロールの影響。原油WTI/Brentで無断代替しない。
+      取得先候補: CME NYMEX RBOB gasoline futures RB 公表時刻: 前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。'
+    source_urls:
+    - https://www.cmegroup.com/markets/energy/refined-products/rbob-gasoline.contractSpecs.html
+    - https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf
+    - https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf
+    - https://finance.yahoo.com/quote/RB=F/history/
+  - id: us_hrc_steel
+    label: 米熱延コイルHRC価格（鋼材費代理）
+    series_id: us_hrc_steel
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 北米生産・部品調達の鋼材コスト。再建コスト削減と区別。
+    acquisition: '接続設定: HRC=F。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。取引の薄い限月の停止価格に注意。各社契約調達価格でもアジア鋼材価格でもない。CME/許諾ベンダーの履歴取得未実装。
+      取得先候補: CME US Midwest Domestic Hot-Rolled Coil Steel (CRU) Index futures HRC 公表時刻: 前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。'
+    source_urls:
+    - https://www.cmegroup.com/markets/metals/ferrous/hrc-steel.contractSpecs.html
+    - https://www.cmegroup.com/trading/metals/files/us-midwest-domestic-hot-rolled-coil-steel-futures-and-options.pdf
+    - https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf
+    - https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf
+    - https://finance.yahoo.com/quote/HRC=F/history/
+- ticker: '7269'
+  name: スズキ
+  valid_from: 2026-10-16
+  thesis: 日本小型車とインドのMarutiを中心に、ルピー、現地金利、子会社の固有評価、欧州、輸入燃料・軽量材料を測る。米国自動車比重の高い他社と同じ指標にしない。
+  evidence: docs/research/company-indicators-2026-10-15-auto.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内小型車事業と上場株式市場の共通環境。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。共通市場因子は原則この1群。S&P先物/Nasdaq/VIXを数合わせで追加しない。 取得先候補: CME Nikkei
+      225 JPY futures NIY。既存Yahoo NIY=Fは既存設定の対応を継続。 公表時刻: 前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。'
+    source_urls:
+    - https://www.cmegroup.com/markets/equities/files/trade-japanese-equity-index-futures-fact-card.pdf
+    - https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf
+    - https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf
+    - https://www.globalsuzuki.com/globalnews/2026/0929.html
+  - id: inrjpy
+    label: インドルピー円（円/INR）
+    series_id: inrjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: インド事業利益の円換算、輸入部材コストとルピー購買力。
+    acquisition: '接続設定: INRJPY=X。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。
+      取得先候補: ECB EUR/JPY と EUR/INR の参照値。JPY per INR = JPY per EUR / INR per EUR 公表時刻: ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30
+      JSTまでに実受信した値のみ。取引可能なスポット値とは区別。'
+    source_urls:
+    - https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html
+    - https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf
+    - https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf
+    - https://www.globalsuzuki.com/globalnews/2026/0929.html
+    - https://finance.yahoo.com/quote/INRJPY=X/history/
+  - id: maruti_suzuki
+    label: Maruti Suzuki株価
+    series_id: maruti_suzuki
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 上場主要子会社に固有の販売/新車/設備投資/競争に対する情報。
+    acquisition: '接続設定: MARUTI.NS。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。親会社自社株テクニカルではなくインド上場子会社情報。INDAとの重複は係数安定性で監査。必要なら過去窓のみで市場成分を分離。
+      取得先候補: NSE equity MARUTI 調整済み日次終値 公表時刻: 前の完了したインド通常取引日の確定終値。取引所カレンダー、配当/分割、受信時刻を保存。'
+    source_urls:
+    - https://www.nseindia.com/get-quote/equity/MARUTI/Maruti-Suzuki-India-Limited
+    - https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf
+    - https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf
+    - https://www.globalsuzuki.com/globalnews/2026/0929.html
+    - https://finance.yahoo.com/quote/MARUTI.NS/history/
+  - id: inda
+    label: インド株ETF INDA（景況代理）
+    series_id: inda
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: Maruti以外も含むインド家計・設備投資の景況。子会社固有情報と区別する。
+    acquisition: '接続設定: INDA。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。
+      取得先候補: 米国上場ETF INDA の調整済み日次終値 公表時刻: 前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。'
+    source_urls:
+    - https://www.ishares.com/us/products/239659/ishares-msci-india-etf?periodCd=m
+    - https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf
+    - https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf
+    - https://www.globalsuzuki.com/globalnews/2026/0929.html
+    - https://finance.yahoo.com/quote/INDA/history/
+  - id: india_10y_yield
+    label: インド10年国債利回り
+    series_id: null
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 小型車の購買ローン条件・現地増産投資の資本コスト。
+    acquisition: '未接続。車両ローン金利の代理。日次履歴の定義を固定し、ベンチマーク交代ジャンプを処理。 取得先候補: CCIL Daily Market Analytics G-Sec
+      10-Year yield（benchmark債とconstant maturityの定義を固定） 公表時刻: 日次公表の実時刻を確認して08:30以前の最新値を使用。参考資料で日次表の存在のみ確認し、当日公開時刻/最新APIは未検証。'
+    source_urls:
+    - https://www.ccilindia.com/documents/43866/111510/CCIL_DAILY_ANALYSIS_31_12_25.pdf/3ce30f58-5aa4-26e0-043d-62e45bd64c34?download=true&t=1767186871028&version=1.0
+    - https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf
+    - https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf
+    - https://www.globalsuzuki.com/globalnews/2026/0929.html
+  - id: eurjpy
+    label: ユーロ円（円/ユーロ）
+    series_id: eurjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 欧州自動車/二輪販売の換算・日本輸出採算。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。 取得先候補: ECB
+      EUR/JPY reference rate 公表時刻: ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30 JSTまでに実受信した値のみ。取引可能なスポット値とは区別。'
+    source_urls:
+    - https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html
+    - https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf
+    - https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf
+    - https://www.globalsuzuki.com/globalnews/2026/0929.html
+  - id: brent
+    label: Brent原油先物
+    series_id: brent
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: インドの輸入燃料・石油化学原料・物流費と消費者負担。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。インド現地CNG・ガソリン小売価格とは異なる。 取得先候補: CME NYMEX Brent Oil Last Day futures
+      BZ。現行Brent系列を使用。 公表時刻: 前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。'
+    source_urls:
+    - https://www.cmegroup.com/daily_bulletin/current/Section61_Energy_Futures_Products.pdf
+    - https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf
+    - https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf
+    - https://www.globalsuzuki.com/globalnews/2026/0929.html
+  - id: lme_aluminium
+    label: LMEアルミ価格
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 小型軽量車の材料・部品原価の広い代理。
+    acquisition: '未接続。スズキがアルミ単独感応度を公表したという意味ではない。原材料費/軽量車の機構からの仮説。権利・履歴取得未確認。 取得先候補: LME Aluminium Official
+      Cash Settlement USD/t 公表時刻: LME公表は概ね12:20–13:25 London。公開画面はday-delayedであり、当日清算値と同時利用不可。配信経路ごとの公表時刻と遅延を保存。'
+    source_urls:
+    - https://www.lme.com/Market-data/Reports-and-data/LME-Official-Prices
+    - https://www.lme.com/en/Market-data/Reports-and-data
+    - https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf
+    - https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf
+    - https://www.globalsuzuki.com/globalnews/2026/0929.html
+- ticker: '7270'
+  name: SUBARU
+  valid_from: 2026-10-16
+  thesis: 北米に集中するICE/HEV・SUV事業の需要、消費者金融、燃料、鋼材、触媒貴金属を優先する。中国やインドの指標を数合わせで含めない。
+  evidence: docs/research/company-indicators-2026-10-15-auto.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内上場市場の共通変動。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。共通市場因子は原則この1群。S&P先物/Nasdaq/VIXを数合わせで追加しない。 取得先候補: CME Nikkei
+      225 JPY futures NIY。既存Yahoo NIY=Fは既存設定の対応を継続。 公表時刻: 前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。'
+    source_urls:
+    - https://www.cmegroup.com/markets/equities/files/trade-japanese-equity-index-futures-fact-card.pdf
+    - https://www.subaru.co.jp/en/ir/finance/latest-results.html
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf
+  - id: usdjpy
+    label: ドル円（円/米ドル）
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 日本生産から北米への輸出と米国利益換算。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。 取得先候補: ECB
+      EUR/JPY と EUR/USD の参照値。JPY per USD = JPY per EUR / USD per EUR 公表時刻: ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30
+      JSTまでに実受信した値のみ。取引可能なスポット値とは区別。'
+    source_urls:
+    - https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html
+    - https://www.subaru.co.jp/en/ir/finance/latest-results.html
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf
+  - id: xly
+    label: 米消費裁量株ETF XLY（需要代理）
+    series_id: xly
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 主要米国顧客の高額耐久財購入余力・奨励金圧力。
+    acquisition: '接続設定: XLY。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。
+      取得先候補: 米国上場ETF XLY の調整済み日次終値 公表時刻: 前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。'
+    source_urls:
+    - https://www.ssga.com/us/en/individual/etfs/state-street-consumer-discretionary-select-sector-spdr-etf-xly
+    - https://www.subaru.co.jp/en/ir/finance/latest-results.html
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf
+    - https://finance.yahoo.com/quote/XLY/history/
+  - id: us_2y_yield
+    label: 米2年国債利回り
+    series_id: us_2y_yield
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 米国顧客のローン/リース負担と販売支援費。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。車両ローン金利そのものではない。水準・前年差ではなく日次bp変化を主特徴にする。 取得先候補: US Treasury Daily
+      Par Yield Curve 2-year 公表時刻: 米国市場観測時刻は概ね15:30 ET。観測時刻を公表時刻と見なさず、公式配信の実受信が08:30以前かを確認。'
+    source_urls:
+    - https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics
+    - https://www.subaru.co.jp/en/ir/finance/latest-results.html
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf
+  - id: us_ig_credit_oas
+    label: 米投資適格社債OAS
+    series_id: us_ig_credit_oas
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 金利とは独立した米国消費金融・信用供給の市場代理。
+    acquisition: '接続設定: BAMLC0A0CM。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。個社信用スプレッドや自動車ローンABSの直接データではない。2026年4月から公開履歴は3年に制限。権利条件と過去版を確認。
+      取得先候補: FRED/ICE BofA OAS BAMLC0A0CM 日次終値。変化はbp単位 公表時刻: 観測日ではなくFRED公表/実受信日で利用判定。確認例:10/13観測を10/14
+      10:26 CDTに更新。翌朝に前々米営業日の値しかない場合がある。'
+    source_urls:
+    - https://fred.stlouisfed.org/series/BAMLC0A0CM
+    - https://www.subaru.co.jp/en/ir/finance/latest-results.html
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf
+    - https://fred.stlouisfed.org/graph/fredgraph.csv
+  - id: rbob_gasoline
+    label: 米RBOBガソリン先物
+    series_id: rbob_gasoline
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 北米SUVの維持費とICEからHEVへの商品選好。
+    acquisition: '接続設定: RB=F。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。消費者小売価格ではなく卸売先物。季節性・精製マージン・ロールの影響。原油WTI/Brentで無断代替しない。
+      取得先候補: CME NYMEX RBOB gasoline futures RB 公表時刻: 前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。'
+    source_urls:
+    - https://www.cmegroup.com/markets/energy/refined-products/rbob-gasoline.contractSpecs.html
+    - https://www.subaru.co.jp/en/ir/finance/latest-results.html
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf
+    - https://finance.yahoo.com/quote/RB=F/history/
+  - id: us_hrc_steel
+    label: 米熱延コイルHRC価格（鋼材費代理）
+    series_id: us_hrc_steel
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 米国現地生産・部品仕入の鋼材価格圧力。
+    acquisition: '接続設定: HRC=F。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。取引の薄い限月の停止価格に注意。各社契約調達価格でもアジア鋼材価格でもない。CME/許諾ベンダーの履歴取得未実装。
+      取得先候補: CME US Midwest Domestic Hot-Rolled Coil Steel (CRU) Index futures HRC 公表時刻: 前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。'
+    source_urls:
+    - https://www.cmegroup.com/markets/metals/ferrous/hrc-steel.contractSpecs.html
+    - https://www.cmegroup.com/trading/metals/files/us-midwest-domestic-hot-rolled-coil-steel-futures-and-options.pdf
+    - https://www.subaru.co.jp/en/ir/finance/latest-results.html
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf
+    - https://finance.yahoo.com/quote/HRC=F/history/
+  - id: palladium
+    label: パラジウム価格（触媒費代理）
+    series_id: palladium
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 会社が指摘する貴金属費用を触媒用途の代表価格で追う。
+    acquisition: '接続設定: PA=F。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。SUBARU資料は貴金属市況を特定するがパラジウム単独感応度は非開示。プラチナ代替・契約ヘッジで符号/遅延は変わる。
+      取得先候補: CME NYMEX palladium futures PA 公表時刻: 前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。'
+    source_urls:
+    - https://www.cmegroup.com/markets/metals/precious/palladium.contractSpecs.html
+    - https://www.cmegroup.com/content/dam/cmegroup/notices/ser/2020/10/SER-8668.pdf
+    - https://www.subaru.co.jp/en/ir/finance/latest-results.html
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf
+    - https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf
+    - https://finance.yahoo.com/quote/PA=F/history/
+- ticker: '8306'
+  name: 三菱UFJフィナンシャル・グループ
+  valid_from: 2026-10-16
+  thesis: 国内の預貸・預金収益に、米ドル業務、Morgan Stanleyとの収益連携、タイ/インドネシア銀行事業を分ける。金利3年限とFXだけの共通セットではこの違いを表せない。
+  evidence: docs/research/company-indicators-2026-10-15-financials.md
+  factors:
+  - id: jgb_2y_yield
+    label: 日本2年国債利回り
+    series_id: jgb_2y_yield
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 円の預貸再価格付け・預金基盤の収益環境。短めのJGBは政策金利期待の代理。
+    acquisition: '接続設定: MOF:2Y。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。公式公表時刻確認済み。CSVパーサー、改訂履歴、受信時刻保存は未実装。2510.Tの債券価格を同一金利として代用しない。
+      取得先候補: 財務省定残存2年国債金利（CSV列） 公表時刻: 観測日15時価格→翌日本営業日09:30公表。08:30には前日観測は不可、通常t-2以前の最新公表済み値。休業日も公表カレンダーで判定。'
+    source_urls:
+    - https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/qa.htm
+    - https://www.mof.go.jp/jgbs/reference/interest_rate/index.htm
+    - https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf
+    - https://www.mufg.jp/english/ir/presentation/2026/index.html
+    - https://www.mof.go.jp/jgbs/reference/interest_rate/data/jgbcm_all.csv
+  - id: us_2y_yield
+    label: 米2年国債利回り
+    series_id: us_2y_yield
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: ドル貸出/調達の再価格付け環境。円金利とは別通貨の営業収益。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。ドル短期金利期待・再価格付けの代理。米10年/30年/スプレッドを追加して同じ群を水増ししない。 今回の接続/履歴再取得は未実施。
+      取得先候補: Official Daily Treasury Par Yield Curve 2Y 公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://home.treasury.gov/resource-center-data-chart-center/interest-rates
+    - https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}
+    - https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf
+    - https://www.mufg.jp/english/ir/presentation/2026/index.html
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外利益・資本の円換算と為替業務。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。海外損益換算と外貨負債の経路。 今回の接続/履歴再取得は未実施。 取得先候補: JPY=X 公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf
+    - https://www.mufg.jp/english/ir/presentation/2026/index.html
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内顧客資産価値、証券/WM手数料、保有株式評価の市場代理。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。TOPIXそのものではない。企業が保有する株式/AUMの国内市場価格代理。 今回の接続/履歴再取得は未実施。 取得先候補:
+      NIY=F 公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf
+    - https://www.mufg.jp/english/ir/presentation/2026/index.html
+  - id: us_ig_credit_oas
+    label: 米投資適格社債OAS
+    series_id: us_ig_credit_oas
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外企業貸出/債券・資本市場の信用環境。
+    acquisition: '接続設定: BAMLC0A0CM。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。系列定義・頻度・公表日時確認済み。ICE利用条件、2026年4月以降3年窓、過去vintage要確認。KRE/XLFは信用スプレッドではない。
+      取得先候補: ICE BofA US Corporate OAS / FRED BAMLC0A0CM 公表時刻: 公表/初回取得が08:30 JST以前の最新観測。10/13観測が10/14
+      10:26 CDT（10/15 00:26 JST）更新の実例。直前米国終値と決め打ちしない。'
+    source_urls:
+    - https://fred.stlouisfed.org/series/BAMLC0A0CM
+    - https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf
+    - https://www.mufg.jp/english/ir/presentation/2026/index.html
+    - https://fred.stlouisfed.org/graph/fredgraph.csv
+  - id: morgan_stanley_equity
+    label: Morgan Stanley株価（出資・協業先）
+    series_id: morgan_stanley_equity
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: MSの証券・資産運用業績期待と協業価値を米銀行一般から区別。
+    acquisition: '接続設定: MS。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。実在銘柄/商品は一次資料で確認。Yahoo/EODHD等のプロバイダsymbolと全履歴可用性は未テスト。
+      取得先候補: NYSE: MS 公表時刻: 直近完了米国セッションの価格、公式取引所・タイムゾーン・企業行動・受信時刻を確認後に使用。08:30以降の訂正を遡及適用しない。'
+    source_urls:
+    - https://www.morganstanley.com/about-us-ir
+    - https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf
+    - https://www.mufg.jp/english/ir/presentation/2026/index.html
+    - https://finance.yahoo.com/quote/MS/history/
+  - id: krungsri_equity
+    label: タイKrungsri株価
+    series_id: krungsri_equity
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: タイの個人・自動車金融/銀行業の子会社収益期待。
+    acquisition: '接続設定: BAY.BK。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。子会社業績期待の代理。低流動性/同値連続/取引停止を欠損とゼロ変化で区別し、未取引価格を新情報にしない。
+      取得先候補: SET: BAY（プロバイダsymbol未確定） 公表時刻: 前日までの完了現地セッション。Asia/Bangkok、終値確定/受信を08:30 JSTより前に確認。'
+    source_urls:
+    - https://www.krungsri.com/en/about-krungsri
+    - https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf
+    - https://www.mufg.jp/english/ir/presentation/2026/index.html
+    - https://finance.yahoo.com/quote/BAY.BK/history/
+  - id: danamon_equity
+    label: インドネシアDanamon株価
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: インドネシア銀行・自動車金融事業の子会社収益期待。
+    acquisition: '未接続。子会社業績期待の代理。浮動株/取引頻度・企業行動を検査し、薄商いによる同値継続を記録。 取得先候補: IDX: BDMN（プロバイダsymbol未確定） 公表時刻:
+      前日までの完了現地セッション。Asia/Jakarta、終値確定/受信を08:30 JSTより前に確認。'
+    source_urls:
+    - https://www.danamon.co.id/tentang-danamon/profile-perusahaan/tentang-bank-danamon
+    - https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf
+    - https://www.mufg.jp/english/ir/presentation/2026/index.html
+  - id: usd_jpy_cross_currency_basis
+    label: 円ドル通貨ベーシス（外貨調達費用）
+    series_id: null
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 円調達をドルへ交換する際の追加資金費用。金利差そのものではない。
+    acquisition: '未接続。BISは経済機構の一次資料。BIS統計が日次ベーシス価格APIを提供すると主張しない。Bloomberg/LSEG等の提供可否・費用は要確認、未契約。 取得先候補:
+      同一期限・同一通貨脚/担保条件のUSDJPY通貨ベーシス（例3か月、ベンダー識別子は未確認） 公表時刻: 締切前の固定fixだけを使用。期限、basisの符号規約、bid/ask、中値、休日、時刻、初回受信を保存。'
+    source_urls:
+    - https://www.bis.org/publications/qr-201609/covered-interest-parity-lost-understanding-cross-currency-basis
+    - https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf
+    - https://www.mufg.jp/english/ir/presentation/2026/index.html
+- ticker: '8316'
+  name: 三井住友フィナンシャルグループ
+  valid_from: 2026-10-16
+  thesis: 国内預貸に加えOlive/カード決済、Jefferies協業、YES BANKとインド消費者金融を分離する。決済取扱高は日次契約データが必要で、米金融ETFで補わない。
+  evidence: docs/research/company-indicators-2026-10-15-financials.md
+  factors:
+  - id: jgb_2y_yield
+    label: 日本2年国債利回り
+    series_id: jgb_2y_yield
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内預金/貸出の再価格付けとOliveで拡充する預金の収益化。
+    acquisition: '接続設定: MOF:2Y。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。公式公表時刻確認済み。CSVパーサー、改訂履歴、受信時刻保存は未実装。2510.Tの債券価格を同一金利として代用しない。
+      取得先候補: 財務省定残存2年国債金利（CSV列） 公表時刻: 観測日15時価格→翌日本営業日09:30公表。08:30には前日観測は不可、通常t-2以前の最新公表済み値。休業日も公表カレンダーで判定。'
+    source_urls:
+    - https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/qa.htm
+    - https://www.mof.go.jp/jgbs/reference/interest_rate/index.htm
+    - https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf
+    - https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf
+    - https://www.mof.go.jp/jgbs/reference/interest_rate/data/jgbcm_all.csv
+  - id: us_2y_yield
+    label: 米2年国債利回り
+    series_id: us_2y_yield
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: グローバル法人融資のドル資産・負債利回り。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。ドル短期金利期待・再価格付けの代理。米10年/30年/スプレッドを追加して同じ群を水増ししない。 今回の接続/履歴再取得は未実施。
+      取得先候補: Official Daily Treasury Par Yield Curve 2Y 公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://home.treasury.gov/resource-center-data-chart-center/interest-rates
+    - https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}
+    - https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf
+    - https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外融資・持分利益の円換算、顧客為替取引。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。海外損益換算と外貨負債の経路。 今回の接続/履歴再取得は未実施。 取得先候補: JPY=X 公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf
+    - https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内WM資産残高と顧客の資本取引意欲。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。TOPIXそのものではない。企業が保有する株式/AUMの国内市場価格代理。 今回の接続/履歴再取得は未実施。 取得先候補:
+      NIY=F 公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf
+    - https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf
+  - id: us_ig_credit_oas
+    label: 米投資適格社債OAS
+    series_id: us_ig_credit_oas
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外貸出信用費用と引受/資金調達市場。
+    acquisition: '接続設定: BAMLC0A0CM。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。系列定義・頻度・公表日時確認済み。ICE利用条件、2026年4月以降3年窓、過去vintage要確認。KRE/XLFは信用スプレッドではない。
+      取得先候補: ICE BofA US Corporate OAS / FRED BAMLC0A0CM 公表時刻: 公表/初回取得が08:30 JST以前の最新観測。10/13観測が10/14
+      10:26 CDT（10/15 00:26 JST）更新の実例。直前米国終値と決め打ちしない。'
+    source_urls:
+    - https://fred.stlouisfed.org/series/BAMLC0A0CM
+    - https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf
+    - https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf
+    - https://fred.stlouisfed.org/graph/fredgraph.csv
+  - id: jefferies_equity
+    label: Jefferies株価（出資・協業先）
+    series_id: jefferies_equity
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 出資/協業先のIB・S&T期待を反映。
+    acquisition: '接続設定: JEF。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。実在銘柄/商品は一次資料で確認。Yahoo/EODHD等のプロバイダsymbolと全履歴可用性は未テスト。
+      取得先候補: NYSE: JEF 公表時刻: 直近完了米国セッションの価格、公式取引所・タイムゾーン・企業行動・受信時刻を確認後に使用。08:30以降の訂正を遡及適用しない。'
+    source_urls:
+    - https://ir.jefferies.com/overview/
+    - https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf
+    - https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf
+    - https://finance.yahoo.com/quote/JEF/history/
+  - id: india_bank_index
+    label: インド銀行株指数
+    series_id: india_bank_index
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: YES BANK/SMFG India Creditに関係するインド信用需要・銀行株評価。
+    acquisition: '接続設定: ^NSEBANK。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。YES BANK/SMFG India Creditの業績そのものではない地域信用・銀行事業代理。中国FXIを代用しない。
+      取得先候補: NSE Indices Nifty Bank（契約データ識別子未確定） 公表時刻: Asia/Kolkataの完了セッション終値、公開/取得が08:30 JST以前。利用権と履歴公表時刻を検証。'
+    source_urls:
+    - https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-bank
+    - https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf
+    - https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf
+    - https://finance.yahoo.com/quote/^NSEBANK/history/
+  - id: japan_card_transaction_value
+    label: 国内カード決済取扱高
+    series_id: null
+    transform: level
+    frequency: daily
+    max_age_days: 7
+    mechanism: SMCC/Olive決済取扱高から加盟店・決済手数料へ。
+    acquisition: '未接続。無料公開の連続日次データは未確認。月次統計を日次に前方埋めして日次観測があると扱わない。取得契約ができなければ未取得のまま。 取得先候補: 加盟店/カード処理の日次集計（匿名化パネルまたはSMCC等の提供契約。公開の確定日次symbolなし）
+      公表時刻: 日次集計の対象日・集計完了/発表時刻を別に記録。速報が08:30までに届かなければ前の公表済み日。'
+    source_urls:
+    - https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf
+    - https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf
+- ticker: '8411'
+  name: みずほフィナンシャルグループ
+  valid_from: 2026-10-16
+  thesis: 国内預貸だけでなく、米州FICC/DCMとMizuho-Greenhillを含むグローバルCIB、国内証券顧客の売買活動、ドル調達費用を区別する。
+  evidence: docs/research/company-indicators-2026-10-15-financials.md
+  factors:
+  - id: jgb_2y_yield
+    label: 日本2年国債利回り
+    series_id: jgb_2y_yield
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内円建て利鞘と政策金利期待。
+    acquisition: '接続設定: MOF:2Y。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。公式公表時刻確認済み。CSVパーサー、改訂履歴、受信時刻保存は未実装。2510.Tの債券価格を同一金利として代用しない。
+      取得先候補: 財務省定残存2年国債金利（CSV列） 公表時刻: 観測日15時価格→翌日本営業日09:30公表。08:30には前日観測は不可、通常t-2以前の最新公表済み値。休業日も公表カレンダーで判定。'
+    source_urls:
+    - https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/qa.htm
+    - https://www.mof.go.jp/jgbs/reference/interest_rate/index.htm
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf
+    - https://www.mof.go.jp/jgbs/reference/interest_rate/data/jgbcm_all.csv
+  - id: us_10y_yield
+    label: 米10年国債利回り
+    series_id: us_10y_yield
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 米州Rates/FICC取引とドル債引受の価格環境。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。米ドル長期資産運用・金利市場の基準。日本金利の代用品ではない。 今回の接続/履歴再取得は未実施。 取得先候補: Official
+      Daily Treasury Par Yield Curve 10Y 公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://home.treasury.gov/resource-center-data-chart-center/interest-rates
+    - https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外CIB利益の換算とFX顧客フロー。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。海外損益換算と外貨負債の経路。 今回の接続/履歴再取得は未実施。 取得先候補: JPY=X 公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内顧客株式資産、WM・企業資本政策需要の市場価格代理。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。TOPIXそのものではない。企業が保有する株式/AUMの国内市場価格代理。 今回の接続/履歴再取得は未実施。 取得先候補:
+      NIY=F 公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf
+  - id: us_ig_credit_oas
+    label: 米投資適格社債OAS
+    series_id: us_ig_credit_oas
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: DCM/クレジットFICCと海外企業貸出の信用価格。
+    acquisition: '接続設定: BAMLC0A0CM。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。系列定義・頻度・公表日時確認済み。ICE利用条件、2026年4月以降3年窓、過去vintage要確認。KRE/XLFは信用スプレッドではない。
+      取得先候補: ICE BofA US Corporate OAS / FRED BAMLC0A0CM 公表時刻: 公表/初回取得が08:30 JST以前の最新観測。10/13観測が10/14
+      10:26 CDT（10/15 00:26 JST）更新の実例。直前米国終値と決め打ちしない。'
+    source_urls:
+    - https://fred.stlouisfed.org/series/BAMLC0A0CM
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf
+    - https://fred.stlouisfed.org/graph/fredgraph.csv
+  - id: us_capital_markets_etf
+    label: 米資本市場業ETF KCE
+    series_id: us_capital_markets_etf
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 米投資銀行/証券業の手数料・取引環境をKCEで代理。
+    acquisition: '接続設定: KCE。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。実在銘柄/商品は一次資料で確認。Yahoo/EODHD等のプロバイダsymbolと全履歴可用性は未テスト。
+      取得先候補: State Street KCE 公表時刻: 直近完了米国セッションの価格、公式取引所・タイムゾーン・企業行動・受信時刻を確認後に使用。08:30以降の訂正を遡及適用しない。'
+    source_urls:
+    - https://www.ssga.com/us/en/intermediary/etfs/state-street-spdr-sp-capital-markets-etf-kce
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf
+    - https://finance.yahoo.com/quote/KCE/history/
+  - id: japan_equity_turnover
+    label: 東証株式市場の日次売買代金
+    series_id: null
+    transform: level
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内証券・リテールの取引量に伴うフロー収益。
+    acquisition: '未接続。日報入口確認。日次値の抽出・初回配信時刻・履歴revision検証は未実施。株価リターンと異なる取引活動経路。 取得先候補: JPX株式日報の市場別売買代金（対象市場/売買区分を固定）
+      公表時刻: t-1引け後の発表済み日報を08:30前に取得。公表時刻が実証できない過去版は保守的なラグを設定。'
+    source_urls:
+    - https://www.jpx.co.jp/english/markets/statistics-equities/index.html
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf
+  - id: usd_jpy_cross_currency_basis
+    label: 円ドル通貨ベーシス（外貨調達費用）
+    series_id: null
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外資産を支える円ドル交換による調達プレミアム。
+    acquisition: '未接続。BISは経済機構の一次資料。BIS統計が日次ベーシス価格APIを提供すると主張しない。Bloomberg/LSEG等の提供可否・費用は要確認、未契約。 取得先候補:
+      同一期限・同一通貨脚/担保条件のUSDJPY通貨ベーシス（例3か月、ベンダー識別子は未確認） 公表時刻: 締切前の固定fixだけを使用。期限、basisの符号規約、bid/ask、中値、休日、時刻、初回受信を保存。'
+    source_urls:
+    - https://www.bis.org/publications/qr-201609/covered-interest-parity-lost-understanding-cross-currency-basis
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf
+    - https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf
+- ticker: '8604'
+  name: 野村ホールディングス
+  valid_from: 2026-10-16
+  thesis: 銀行の預貸利鞘より、国内WM顧客資産、買収後を含む世界の運用AUM、Wholesaleの株式/信用取引、取引量と変動率に重点を置く。
+  evidence: docs/research/company-indicators-2026-10-15-financials.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内WM顧客資産と担保価値・資産連動報酬。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。TOPIXそのものではない。企業が保有する株式/AUMの国内市場価格代理。 今回の接続/履歴再取得は未実施。 取得先候補:
+      NIY=F 公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf
+    - https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html
+    - https://www.nomuraholdings.com/en/news/nr/news20250422.html
+  - id: sp500_futures
+    label: 米国株式市場（既存S&P500先物）
+    series_id: sp500_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外株式AUM・米株関連顧客事業の市場価値。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。海外株式AUMとリスク選好の代理で、全世界株指数とは同一でない。 今回の接続/履歴再取得は未実施。 取得先候補: ES=F
+      公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf
+    - https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html
+    - https://www.nomuraholdings.com/en/news/nr/news20250422.html
+  - id: global_aggregate_bond_etf
+    label: 世界債券ETF（AGGG候補）
+    series_id: global_aggregate_bond_etf
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 買収事業を含む債券AUM価値と運用報酬。
+    acquisition: '接続設定: AGGG.L。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。商品と運用対象確認済み、取引所別provider symbol/価格・分配履歴は未検証。米国債1本で世界AUMを置き換えない。
+      取得先候補: iShares Core Global Aggregate Bond UCITS ETF AGGG・USD分配型 公表時刻: 取引所別商品/通貨/終値時刻を確定して完了セッションを使用。NAVは公表時刻が別なので混同しない。'
+    source_urls:
+    - https://www.ishares.com/uk/individual/en/products/291773/ishares-global-aggregate-bond-ucits-etf-fund
+    - https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf
+    - https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html
+    - https://www.nomuraholdings.com/en/news/nr/news20250422.html
+    - https://finance.yahoo.com/quote/AGGG.L/history/
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外収益/外貨建て顧客資産の円換算。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。海外損益換算と外貨負債の経路。 今回の接続/履歴再取得は未実施。 取得先候補: JPY=X 公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf
+    - https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html
+    - https://www.nomuraholdings.com/en/news/nr/news20250422.html
+  - id: japan_equity_turnover
+    label: 東証株式市場の日次売買代金
+    series_id: null
+    transform: level
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内WM/証券執行のフロー収益。
+    acquisition: '未接続。日報入口確認。日次値の抽出・初回配信時刻・履歴revision検証は未実施。株価リターンと異なる取引活動経路。 取得先候補: JPX株式日報の市場別売買代金（対象市場/売買区分を固定）
+      公表時刻: t-1引け後の発表済み日報を08:30前に取得。公表時刻が実証できない過去版は保守的なラグを設定。'
+    source_urls:
+    - https://www.jpx.co.jp/english/markets/statistics-equities/index.html
+    - https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf
+    - https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html
+    - https://www.nomuraholdings.com/en/news/nr/news20250422.html
+  - id: vix
+    label: 米株オプション市場の予想変動率
+    series_id: vix
+    transform: level
+    frequency: daily
+    max_age_days: 7
+    mechanism: 株式デリバティブ・顧客ヘッジ需要とポジションリスク。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。水準/変化/移動平均を複数指標と数えない。 今回の接続/履歴再取得は未実施。 取得先候補: ^VIX 公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf
+    - https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html
+    - https://www.nomuraholdings.com/en/news/nr/news20250422.html
+  - id: us_ig_credit_oas
+    label: 米投資適格社債OAS
+    series_id: us_ig_credit_oas
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 信用商品の評価・引受/資金調達・担保環境。
+    acquisition: '接続設定: BAMLC0A0CM。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。系列定義・頻度・公表日時確認済み。ICE利用条件、2026年4月以降3年窓、過去vintage要確認。KRE/XLFは信用スプレッドではない。
+      取得先候補: ICE BofA US Corporate OAS / FRED BAMLC0A0CM 公表時刻: 公表/初回取得が08:30 JST以前の最新観測。10/13観測が10/14
+      10:26 CDT（10/15 00:26 JST）更新の実例。直前米国終値と決め打ちしない。'
+    source_urls:
+    - https://fred.stlouisfed.org/series/BAMLC0A0CM
+    - https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf
+    - https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html
+    - https://www.nomuraholdings.com/en/news/nr/news20250422.html
+    - https://fred.stlouisfed.org/graph/fredgraph.csv
+  - id: us_capital_markets_etf
+    label: 米資本市場業ETF KCE
+    series_id: us_capital_markets_etf
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外証券/資産運用業の業績期待とセクター評価。
+    acquisition: '接続設定: KCE。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。実在銘柄/商品は一次資料で確認。Yahoo/EODHD等のプロバイダsymbolと全履歴可用性は未テスト。
+      取得先候補: State Street KCE 公表時刻: 直近完了米国セッションの価格、公式取引所・タイムゾーン・企業行動・受信時刻を確認後に使用。08:30以降の訂正を遡及適用しない。'
+    source_urls:
+    - https://www.ssga.com/us/en/intermediary/etfs/state-street-spdr-sp-capital-markets-etf-kce
+    - https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf
+    - https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html
+    - https://www.nomuraholdings.com/en/news/nr/news20250422.html
+    - https://finance.yahoo.com/quote/KCE/history/
+- ticker: '8766'
+  name: 東京海上ホールディングス
+  valid_from: 2026-10-16
+  thesis: 国内外の損保引受リスクと日米の資産運用を銀行から分離する。自然災害は発行当時の予報/速報に限定し、事後損害額の混入を防ぐ。
+  evidence: docs/research/company-indicators-2026-10-15-financials.md
+  factors:
+  - id: jgb_20y_yield
+    label: 日本20年国債利回り
+    series_id: jgb_20y_yield
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内生命保険の長期資産負債・再投資と国内保険資産の金利環境。
+    acquisition: '接続設定: MOF:20Y。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。公式公表時刻確認済み。CSVパーサー、改訂履歴、受信時刻保存は未実装。2510.Tの債券価格を同一金利として代用しない。
+      取得先候補: 財務省定残存20年国債金利（CSV列） 公表時刻: 観測日15時価格→翌日本営業日09:30公表。08:30には前日観測は不可、通常t-2以前の最新公表済み値。休業日も公表カレンダーで判定。'
+    source_urls:
+    - https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/qa.htm
+    - https://www.mof.go.jp/jgbs/reference/interest_rate/index.htm
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf
+    - https://www.mof.go.jp/jgbs/reference/interest_rate/data/jgbcm_all.csv
+  - id: us_10y_yield
+    label: 米10年国債利回り
+    series_id: us_10y_yield
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 北米の保険負債を裏付ける運用資産・再投資利回り。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。米ドル長期資産運用・金利市場の基準。日本金利の代用品ではない。 今回の接続/履歴再取得は未実施。 取得先候補: Official
+      Daily Treasury Par Yield Curve 10Y 公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://home.treasury.gov/resource-center-data-chart-center/interest-rates
+    - https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外保険利益の円換算と国内の外貨建て支払備金。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。海外損益換算と外貨負債の経路。 今回の接続/履歴再取得は未実施。 取得先候補: JPY=X 公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 売却進行中の国内政策保有株式の価格/売却利益の代理。
+    acquisition: '既存カタログ経路のみ接続（当日充足は別判定）。TOPIXそのものではない。企業が保有する株式/AUMの国内市場価格代理。 今回の接続/履歴再取得は未実施。 取得先候補:
+      NIY=F 公表時刻: configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30
+      JST以前。'
+    source_urls:
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf
+  - id: us_ig_credit_oas
+    label: 米投資適格社債OAS
+    series_id: us_ig_credit_oas
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 北米債券/ローン資産の信用評価・期待信用損失。
+    acquisition: '接続設定: BAMLC0A0CM。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。系列定義・頻度・公表日時確認済み。ICE利用条件、2026年4月以降3年窓、過去vintage要確認。KRE/XLFは信用スプレッドではない。
+      取得先候補: ICE BofA US Corporate OAS / FRED BAMLC0A0CM 公表時刻: 公表/初回取得が08:30 JST以前の最新観測。10/13観測が10/14
+      10:26 CDT（10/15 00:26 JST）更新の実例。直前米国終値と決め打ちしない。'
+    source_urls:
+    - https://fred.stlouisfed.org/series/BAMLC0A0CM
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf
+    - https://fred.stlouisfed.org/graph/fredgraph.csv
+  - id: us_insurance_equity_etf
+    label: 米保険株ETF KIE
+    series_id: us_insurance_equity_etf
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外引受収益・保険料サイクルに対する保険セクター評価。
+    acquisition: '接続設定: KIE。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。実在銘柄/商品は一次資料で確認。Yahoo/EODHD等のプロバイダsymbolと全履歴可用性は未テスト。
+      取得先候補: State Street KIE 公表時刻: 直近完了米国セッションの価格、公式取引所・タイムゾーン・企業行動・受信時刻を確認後に使用。08:30以降の訂正を遡及適用しない。'
+    source_urls:
+    - https://www.ssga.com/us/en/intermediary/etfs/state-street-spdr-sp-insurance-etf-kie
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf
+    - https://finance.yahoo.com/quote/KIE/history/
+  - id: us_hurricane_risk
+    label: 北米ハリケーン予報リスク
+    series_id: null
+    transform: level
+    frequency: event
+    max_age_days: 1
+    mechanism: 北米自然災害による保険金支払/再保険期待の変化。
+    acquisition: '未接続。公的アーカイブの存在確認。120営業日以上の完全性、保険エクスポージャとのマッピング、無警報ゼロ/未取得NAを区別する仕様が必要。日次保険損失そのものではない。
+      取得先候補: NOAA NHC発行当時の予報・警報（事前定義した米沿岸リスクスコア） 公表時刻: 08:30前の発行/取得電文のみ。事後確定Best Track/被害総額/Tropical Cyclone
+      Reportを予報時点に戻さない。'
+    source_urls:
+    - https://www.nhc.noaa.gov/data/?exception=true&iap=false
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf
+  - id: japan_natural_catastrophe_risk
+    label: 国内自然災害速報・警報リスク
+    series_id: null
+    transform: level
+    frequency: event
+    max_age_days: 1
+    mechanism: 国内火災・風水害・地震関連損害の速報/事前警戒。
+    acquisition: '未接続。公開Atomは直近10分または数日で120日分はない。過去の発行時点アーカイブ取得か今後の蓄積が必須。自然災害なしと取得欠落は別。実保有保険契約の損害額推定ではない。
+      取得先候補: 気象庁防災XMLの台風/洪水等と発表済み地震情報を事前定義ルールで集約 公表時刻: 各電文の発表/発見/取得が08:30以前。事後の確定震度・確定被害額は未来情報として排除。'
+    source_urls:
+    - https://xml.kishou.go.jp/xmlpull.html
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf
+    - https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf
+- ticker: '8058'
+  name: 三菱商事
+  valid_from: 2026-10-16
+  thesis: 原料炭・銅・LNGの資源収益と、ローソン・ASEAN自動車の消費関連収益を分ける。米2年金利一本ではこの構造を表現できない。
+  evidence: docs/research/company-indicators-2026-10-15-trading.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内株式市場の共通変動を調整する。企業固有の成長指標ではない。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。先物ロールと公表時刻を維持。
+    source_urls:
+    - https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/
+    - https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf
+    - https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外利益の円換算と輸入コストの両方に作用。方向は純外貨収益とヘッジ次第。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。08:30以前のみ。
+    source_urls:
+    - https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/
+    - https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf
+    - https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf
+  - id: steelmaking_coal
+    label: 豪州原料炭価格
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 製鉄用原料炭の権益利益に対応。一般炭・原油とは用途も市況も異なる。
+    acquisition: 未接続。Platts/Argus/取引所の原料炭系列。履歴/API/利用料金は未確認。
+    source_urls:
+    - https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/
+    - https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf
+    - https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf
+  - id: copper
+    label: 銅価格
+    series_id: copper
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 銅権益の採算・世界需要を捉える。現行COMEX先物は現物実現価格そのものではない。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存COMEX経路。権益別実現価格との基差は残る。
+    source_urls:
+    - https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/
+    - https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf
+    - https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf
+  - id: iron_ore
+    label: 鉄鉱石62%Fe価格
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 鉄鉱石権益の実現価格と採算に対応。豪州の生産費・品位差も影響。
+    acquisition: 未接続。現行カタログはpending。SGX/CME等の価格ライセンス・履歴・ロールを検証する。
+    source_urls:
+    - https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/
+    - https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf
+    - https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf
+  - id: brent
+    label: Brent原油先物
+    series_id: brent
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 上流資産・原油連動契約の収益要因。価格上昇が全セグメントに有利とは限らない。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。LNG現物の代用とは扱わない。
+    source_urls:
+    - https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/
+    - https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf
+    - https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf
+  - id: lng_jkm
+    label: アジアLNG・JKM
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: LNG販売・トレーディングの市況。長期油価連動契約と時間差があり単純な即時比例ではない。
+    acquisition: 未接続。Platts JKMまたは対応先物。利用権・公表時刻・系列定義を確認する。
+    source_urls:
+    - https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/
+    - https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf
+    - https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf
+  - id: audjpy
+    label: 豪ドル円
+    series_id: audjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 豪州資産の現地コスト・円換算を捉える。売上USD/費用AUDとの関係で符号は一定でない。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。
+    source_urls:
+    - https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/
+    - https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf
+    - https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf
+  - id: lawson_same_store_sales
+    label: ローソン既存店売上前年比
+    series_id: null
+    transform: level
+    frequency: monthly
+    max_age_days: 75
+    mechanism: 生活産業・消費接点の需要を捉え、資源価格だけでは説明しない非資源部門を表す。
+    acquisition: 未接続。ローソン等の公式月次資料を収集。JFA業界統計は粗い代理であり同一視しない。
+    source_urls:
+    - https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/
+    - https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf
+    - https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf
+  - id: asean_auto_sales
+    label: タイ・インドネシア自動車販売
+    series_id: null
+    transform: level
+    frequency: monthly
+    max_age_days: 75
+    mechanism: ASEANの自動車販売網・生産販売事業の需要。国別固定ウェイトを事前定義する。
+    acquisition: 未接続。各国自動車工業会。2国の同時点公表済み前年比を固定ウェイト合成、履歴・公表日時を保存。
+    source_urls:
+    - https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/
+    - https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf
+    - https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf
+- ticker: '8031'
+  name: 三井物産
+  valid_from: 2026-10-16
+  thesis: 鉄鉱石・LNGの投資/取引機能に、米ガス調達とヘルスケアを加える。将来開発案件を既存生産量として扱わない。
+  evidence: docs/research/company-indicators-2026-10-15-trading.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内株式市場の共通変動を調整する。企業固有の成長指標ではない。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。先物ロールと公表時刻を維持。
+    source_urls:
+    - https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf
+    - https://www.mitsui.com/jp/en/ir/library/online2026/case_study/
+    - https://www.mitsui.com/jp/en/company/business/area/index.html
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外利益の円換算と輸入コストの両方に作用。方向は純外貨収益とヘッジ次第。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。08:30以前のみ。
+    source_urls:
+    - https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf
+    - https://www.mitsui.com/jp/en/ir/library/online2026/case_study/
+    - https://www.mitsui.com/jp/en/company/business/area/index.html
+  - id: iron_ore
+    label: 鉄鉱石62%Fe価格
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 鉄鉱石権益の実現価格と採算に対応。豪州の生産費・品位差も影響。
+    acquisition: 未接続。現行カタログはpending。SGX/CME等の価格ライセンス・履歴・ロールを検証する。
+    source_urls:
+    - https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf
+    - https://www.mitsui.com/jp/en/ir/library/online2026/case_study/
+    - https://www.mitsui.com/jp/en/company/business/area/index.html
+  - id: brent
+    label: Brent原油先物
+    series_id: brent
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 上流資産・原油連動契約の収益要因。価格上昇が全セグメントに有利とは限らない。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。LNG現物の代用とは扱わない。
+    source_urls:
+    - https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf
+    - https://www.mitsui.com/jp/en/ir/library/online2026/case_study/
+    - https://www.mitsui.com/jp/en/company/business/area/index.html
+  - id: lng_jkm
+    label: アジアLNG・JKM
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: LNG販売・トレーディングの市況。長期油価連動契約と時間差があり単純な即時比例ではない。
+    acquisition: 未接続。Platts JKMまたは対応先物。利用権・公表時刻・系列定義を確認する。
+    source_urls:
+    - https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf
+    - https://www.mitsui.com/jp/en/ir/library/online2026/case_study/
+    - https://www.mitsui.com/jp/en/company/business/area/index.html
+  - id: natural_gas
+    label: 米Henry Hub天然ガス
+    series_id: natural_gas
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 米国ガス・LNG調達原価に対応。アジア販売価格JKMとは別の経済変数。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。JKMと混同しない。
+    source_urls:
+    - https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf
+    - https://www.mitsui.com/jp/en/ir/library/online2026/case_study/
+    - https://www.mitsui.com/jp/en/company/business/area/index.html
+  - id: copper
+    label: 銅価格
+    series_id: copper
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 銅権益の採算・世界需要を捉える。現行COMEX先物は現物実現価格そのものではない。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存COMEX経路。権益別実現価格との基差は残る。
+    source_urls:
+    - https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf
+    - https://www.mitsui.com/jp/en/ir/library/online2026/case_study/
+    - https://www.mitsui.com/jp/en/company/business/area/index.html
+  - id: audjpy
+    label: 豪ドル円
+    series_id: audjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 豪州資産の現地コスト・円換算を捉える。売上USD/費用AUDとの関係で符号は一定でない。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。
+    source_urls:
+    - https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf
+    - https://www.mitsui.com/jp/en/ir/library/online2026/case_study/
+    - https://www.mitsui.com/jp/en/company/business/area/index.html
+  - id: ihh_patient_revenue
+    label: IHH医療サービス売上成長
+    series_id: null
+    transform: level
+    frequency: quarterly
+    max_age_days: 180
+    mechanism: ヘルスケア投資先の患者需要・診療収益を捉える。資源価格とは異なる収益要因。
+    acquisition: 未接続。IHH公式決算。公表日からのみ使用、改訂前の履歴を保持。日次情報量は少ない。
+    source_urls:
+    - https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf
+    - https://www.mitsui.com/jp/en/ir/library/online2026/case_study/
+    - https://www.mitsui.com/jp/en/company/business/area/index.html
+- ticker: '8001'
+  name: 伊藤忠商事
+  valid_from: 2026-10-16
+  thesis: 生活消費・中国投資・ITなど非資源事業を中心に、鉄鉱石・エネルギー・繊維・パルプの収益要因を分ける。
+  evidence: docs/research/company-indicators-2026-10-15-trading.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内株式市場の共通変動を調整する。企業固有の成長指標ではない。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。先物ロールと公表時刻を維持。
+    source_urls:
+    - https://www.itochu.co.jp/en/files/ar2026E.pdf
+    - https://www.itochu.co.jp/en/ir/doc/annual_report/index.html
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外利益の円換算と輸入コストの両方に作用。方向は純外貨収益とヘッジ次第。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。08:30以前のみ。
+    source_urls:
+    - https://www.itochu.co.jp/en/files/ar2026E.pdf
+    - https://www.itochu.co.jp/en/ir/doc/annual_report/index.html
+  - id: familymart_same_store_sales
+    label: ファミリーマート既存店売上前年比
+    series_id: null
+    transform: level
+    frequency: monthly
+    max_age_days: 75
+    mechanism: 消費者接点・食品流通の需要。店舗数増加と既存店成長を混同しない。
+    acquisition: 未接続。ファミリーマート公式月次。対象月末でなく発表時刻から有効。
+    source_urls:
+    - https://www.itochu.co.jp/en/files/ar2026E.pdf
+    - https://www.itochu.co.jp/en/ir/doc/annual_report/index.html
+  - id: citic_equity
+    label: CITIC株価
+    series_id: citic_equity
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 中国の重要投資先の評価変動。持分利益や配当とは一致せず市場代理として使う。
+    acquisition: '接続設定: 0267.HK。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。香港上場の正確な株式種類・配当調整・前営業日終値を検証。Yahooの識別子は未登録。'
+    source_urls:
+    - https://www.itochu.co.jp/en/files/ar2026E.pdf
+    - https://www.itochu.co.jp/en/ir/doc/annual_report/index.html
+    - https://finance.yahoo.com/quote/0267.HK/history/
+  - id: iron_ore
+    label: 鉄鉱石62%Fe価格
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 鉄鉱石権益の実現価格と採算に対応。豪州の生産費・品位差も影響。
+    acquisition: 未接続。現行カタログはpending。SGX/CME等の価格ライセンス・履歴・ロールを検証する。
+    source_urls:
+    - https://www.itochu.co.jp/en/files/ar2026E.pdf
+    - https://www.itochu.co.jp/en/ir/doc/annual_report/index.html
+  - id: cotton
+    label: 綿花価格
+    series_id: cotton
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 繊維原料コスト・在庫評価を捉える。小売価格への転嫁やヘッジで方向が変わる。
+    acquisition: '接続設定: CT=F。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。ICE等の先物履歴。配信識別子・利用条件・連続系列を検証。'
+    source_urls:
+    - https://www.itochu.co.jp/en/files/ar2026E.pdf
+    - https://www.itochu.co.jp/en/ir/doc/annual_report/index.html
+    - https://finance.yahoo.com/quote/CT=F/history/
+  - id: domestic_it_sales
+    label: 国内情報サービス売上成長（業界代理）
+    series_id: null
+    transform: level
+    frequency: monthly
+    max_age_days: 75
+    mechanism: CTC/SCSK等に関連する企業IT投資需要。汎用NASDAQとは異なる国内サービス活動。
+    acquisition: 未接続。経産省の情報サービス関連統計。統計改廃・公表遅延・過去改訂を確認する。
+    source_urls:
+    - https://www.itochu.co.jp/en/files/ar2026E.pdf
+    - https://www.itochu.co.jp/en/ir/doc/annual_report/index.html
+  - id: pulp_price
+    label: 広葉樹パルプ価格
+    series_id: null
+    transform: return_1d
+    frequency: weekly
+    max_age_days: 21
+    mechanism: パルプ権益・流通の採算と供給需要。銅・原油による代替はしない。
+    acquisition: 未接続。Fastmarkets等のパルプ価格。指標地域・品種・価格単位・契約要件を確認する。
+    source_urls:
+    - https://www.itochu.co.jp/en/files/ar2026E.pdf
+    - https://www.itochu.co.jp/en/ir/doc/annual_report/index.html
+  - id: brent
+    label: Brent原油先物
+    series_id: brent
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 上流資産・原油連動契約の収益要因。価格上昇が全セグメントに有利とは限らない。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。LNG現物の代用とは扱わない。
+    source_urls:
+    - https://www.itochu.co.jp/en/files/ar2026E.pdf
+    - https://www.itochu.co.jp/en/ir/doc/annual_report/index.html
+- ticker: '8002'
+  name: 丸紅
+  valid_from: 2026-10-16
+  thesis: 穀物取引とHelena農業資材、銅・一般炭、IPP、航空機リースという事業構成を反映する。
+  evidence: docs/research/company-indicators-2026-10-15-trading.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内株式市場の共通変動を調整する。企業固有の成長指標ではない。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。先物ロールと公表時刻を維持。
+    source_urls:
+    - https://www.marubeni.com/en/ir/individual/number/
+    - https://www.marubeni.com/en/ir/reports/integrated_report/
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外利益の円換算と輸入コストの両方に作用。方向は純外貨収益とヘッジ次第。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。08:30以前のみ。
+    source_urls:
+    - https://www.marubeni.com/en/ir/individual/number/
+    - https://www.marubeni.com/en/ir/reports/integrated_report/
+  - id: corn
+    label: トウモロコシ価格
+    series_id: corn
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 穀物集荷・販売と農家の投入余力を捉える。商流マージンは価格の上昇だけでは決まらない。
+    acquisition: '接続設定: ZC=F。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。CBOT先物。無料配信経路は識別子・過去連続系列を確認して登録。'
+    source_urls:
+    - https://www.marubeni.com/en/ir/individual/number/
+    - https://www.marubeni.com/en/ir/reports/integrated_report/
+    - https://finance.yahoo.com/quote/ZC=F/history/
+  - id: soybean
+    label: 大豆価格
+    series_id: soybean
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 油糧種子の集荷・貿易と農業資材需要。穀物を一括にせず作物の違いを捉える。
+    acquisition: '接続設定: ZS=F。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。CBOT先物。コーンとは別作物だが共線性は毎回診断する。'
+    source_urls:
+    - https://www.marubeni.com/en/ir/individual/number/
+    - https://www.marubeni.com/en/ir/reports/integrated_report/
+    - https://finance.yahoo.com/quote/ZS=F/history/
+  - id: copper
+    label: 銅価格
+    series_id: copper
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 銅権益の採算・世界需要を捉える。現行COMEX先物は現物実現価格そのものではない。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存COMEX経路。権益別実現価格との基差は残る。
+    source_urls:
+    - https://www.marubeni.com/en/ir/individual/number/
+    - https://www.marubeni.com/en/ir/reports/integrated_report/
+  - id: power_generation_margin
+    label: 発電スプレッド
+    series_id: null
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 電力販売価格から燃料費を引いた採算。IPPの長期契約割合により感応度は変わる。
+    acquisition: 未接続。保有資産地域を固定した電力・燃料・効率による合成。地域ウェイトと熱効率は別途確定が必要。
+    source_urls:
+    - https://www.marubeni.com/en/ir/individual/number/
+    - https://www.marubeni.com/en/ir/reports/integrated_report/
+  - id: agriculture_input_sales
+    label: 米農業資材販売・投入需要
+    series_id: null
+    transform: level
+    frequency: monthly
+    max_age_days: 75
+    mechanism: Helenaの農薬・肥料・種子需要。穀物価格に加えて販売数量や作付け意思を捉える。
+    acquisition: 未接続。USDA等の作付け/投入費公開資料から系列を確定。日次化せず公表済み値を保持。
+    source_urls:
+    - https://www.marubeni.com/en/ir/individual/number/
+    - https://www.marubeni.com/en/ir/reports/integrated_report/
+  - id: thermal_coal_newcastle
+    label: 豪州一般炭Newcastle価格
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 燃料炭権益の採算。原料炭とは別の需要市場。
+    acquisition: 未接続。Newcastle等、資産に対応する品位・地域の先物または査定価格。履歴ライセンス確認。
+    source_urls:
+    - https://www.marubeni.com/en/ir/individual/number/
+    - https://www.marubeni.com/en/ir/reports/integrated_report/
+  - id: aircastle_lease_yield
+    label: Aircastleのリース利回り
+    series_id: null
+    transform: level
+    frequency: quarterly
+    max_age_days: 180
+    mechanism: 航空機リースの需給・契約収益率を捉える。資金調達コストとは分ける。
+    acquisition: 未接続。当該投資先の賃料収益/平均航空機資産で定義する四半期値。取得可能な開示粒度・持分範囲の確定が必要。他社の利回りを同じ系列として使わない。
+    source_urls:
+    - https://www.marubeni.com/en/ir/individual/number/
+    - https://www.marubeni.com/en/ir/reports/integrated_report/
+- ticker: '8053'
+  name: 住友商事
+  valid_from: 2026-10-16
+  thesis: 2026年のSCSK完全子会社化・Air Lease取得を踏まえIT/リースを厚くする。Ambatovy全持分売却済みのためニッケルを主要ドライバーから外す。
+  evidence: docs/research/company-indicators-2026-10-15-trading.md
+  factors:
+  - id: nikkei225_futures
+    label: 日経225先物
+    series_id: nikkei225_futures
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内株式市場の共通変動を調整する。企業固有の成長指標ではない。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。先物ロールと公表時刻を維持。
+    source_urls:
+    - https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en
+    - https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026
+    - https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970
+  - id: usdjpy
+    label: ドル円
+    series_id: usdjpy
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外利益の円換算と輸入コストの両方に作用。方向は純外貨収益とヘッジ次第。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存取得経路。08:30以前のみ。
+    source_urls:
+    - https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en
+    - https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026
+    - https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970
+  - id: copper
+    label: 銅価格
+    series_id: copper
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 銅権益の採算・世界需要を捉える。現行COMEX先物は現物実現価格そのものではない。
+    acquisition: 既存カタログ経路のみ接続（当日充足は別判定）。既存COMEX経路。権益別実現価格との基差は残る。
+    source_urls:
+    - https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en
+    - https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026
+    - https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970
+  - id: us_rig_count
+    label: 米国稼働リグ数
+    series_id: null
+    transform: level
+    frequency: weekly
+    max_age_days: 21
+    mechanism: 油井管の需要量の代理。原油価格と設備投資は異なるため活動量を使う。
+    acquisition: 未接続。Baker Hughes公式週次。発表後から有効。油井管受注との時間差を検証。
+    source_urls:
+    - https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en
+    - https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026
+    - https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970
+  - id: domestic_it_sales
+    label: 国内情報サービス売上成長（業界代理）
+    series_id: null
+    transform: level
+    frequency: monthly
+    max_age_days: 75
+    mechanism: CTC/SCSK等に関連する企業IT投資需要。汎用NASDAQとは異なる国内サービス活動。
+    acquisition: 未接続。経産省の情報サービス関連統計。統計改廃・公表遅延・過去改訂を確認する。
+    source_urls:
+    - https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en
+    - https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026
+    - https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970
+  - id: sumitomo_aircraft_lease_yield
+    label: 住友商事系航空機のリース利回り
+    series_id: null
+    transform: level
+    frequency: quarterly
+    max_age_days: 180
+    mechanism: 航空機リースの需給・契約収益率を捉える。資金調達コストとは分ける。
+    acquisition: 未接続。当該投資先の賃料収益/平均航空機資産で定義する四半期値。取得可能な開示粒度・持分範囲の確定が必要。他社の利回りを同じ系列として使わない。
+    source_urls:
+    - https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en
+    - https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026
+    - https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970
+  - id: us_ig_credit_oas
+    label: 米投資適格社債OAS
+    series_id: us_ig_credit_oas
+    transform: difference_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 海外リース等の資金調達・信用環境。拡大はコスト上昇や評価圧迫の仮説。
+    acquisition: '接続設定: BAMLC0A0CM。日次取得時に公表時刻・鮮度・学習履歴を別途検証。未接続。ICE BofA/FRED等。観測日と公開時刻の差、利用権を検証。'
+    source_urls:
+    - https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en
+    - https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026
+    - https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970
+    - https://fred.stlouisfed.org/graph/fredgraph.csv
+  - id: jp_reit_index
+    label: 東証REIT指数
+    series_id: null
+    transform: return_1d
+    frequency: daily
+    max_age_days: 7
+    mechanism: 国内不動産評価・資本コストの市場代理。保有物件収益そのものではない。
+    acquisition: 未接続。JPX公式指数または検証済み連動商品。前営業日終値。
+    source_urls:
+    - https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en
+    - https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026
+    - https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970
+  - id: construction_machinery_orders
+    label: 建機受注・出荷成長
+    series_id: null
+    transform: level
+    frequency: monthly
+    max_age_days: 75
+    mechanism: 建機販売・レンタルの設備投資需要。一般製造業株での置換はしない。
+    acquisition: 未接続。日本建設機械工業会等の地域別出荷統計。公開時刻・在庫循環を検証。
+    source_urls:
+    - https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en
+    - https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026
+    - https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970

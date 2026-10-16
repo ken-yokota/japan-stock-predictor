@@ -1,0 +1,532 @@
+{
+  "schema_version": "1.0",
+  "research_requested_date": "2026-10-15",
+  "last_verified_date": "2026-10-16",
+  "scope": "専門指標の公開取得・契約要件。調査のみ。DB、アプリコード、GitHub変更なし。",
+  "status_legend": {
+    "PUBLIC_DOWNLOAD_VERIFIED": "実データ本体を匿名取得し形式・期間・行数を確認。DB投入済みを意味しない。",
+    "PUBLIC_ROUTE_DOCUMENTED_FETCH_BLOCKED": "公式ファイルリンクは確認したが当環境で取得失敗。",
+    "SUBSCRIPTION_REQUIRED_NO_HISTORY_ACQUIRED": "公式サービスあり、必要な歴史データ契約・認証・実データは未確保。",
+    "SUBSCRIPTION_API_AUTH_REQUIRED": "公式API仕様あり、匿名アクセス401。",
+    "COMPONENT_CONTRACT_AND_FORMULA_REQUIRED": "成分データと計算定義の両方が必要。",
+    "EXACT_INSTRUMENT_AND_HISTORY_UNRESOLVED": "採用instrumentと歴史取得経路が未確定。",
+    "PUBLIC_DOCUMENTS_AVAILABLE_NOT_DAILY_REPLACEMENT": "公開IR資料あり。日次系列の代替ではない。"
+  },
+  "inpex_readiness": {
+    "ticker": "1605",
+    "required_ids": [
+      "nikkei225_futures",
+      "usdjpy",
+      "brent",
+      "lng_jkm",
+      "lpg_afei",
+      "audusd",
+      "us_10y_yield"
+    ],
+    "status": "INSUFFICIENT_DATA",
+    "blockers": [
+      "JKM現物の歴史＋日次配信権限未確保",
+      "AFEIの歴史＋日次配信権限未確保",
+      "AUDUSDのRBA公式ルートは疎通403。別の同一通貨ペアの正規取得経路の可用性は統合側で確認が必要。"
+    ],
+    "conclusion": "この調査だけで10月16日からINPEXの7要因が全て揃うとは報告できない。JKM/AFEIを他のガス価格や月次値に黙って交換しない。既存4要因のDB品質は本調査範囲外。"
+  },
+  "factors": [
+    {
+      "id": "lng_jkm",
+      "label": "アジアLNG現物価格・Platts JKM",
+      "acquisition_status": "SUBSCRIPTION_REQUIRED_NO_HISTORY_ACQUIRED",
+      "frequency": "営業日日次",
+      "route": "S&P Global Energy LNG Market DataのJKM現物評価・履歴。配信契約後に対象評価コード、API又はファイル仕様、内部モデル利用権を確定する。公開された無認証の同一日次履歴URLは未確認。",
+      "source_urls": [
+        "https://www.spglobal.com/energy/en/products-solutions/lng/lng-market-data",
+        "https://energy.spglobal.com/platts-market-data.html",
+        "https://press.spglobal.com/2020-06-01-S-P-Global-Platts-Launches-eWindow-for-Platts-JKM-LNG-Derivatives"
+      ],
+      "blocker": "JKM現物の歴史データと日次更新の権限未確保。公開の商品案内だけでは学習データにならない。",
+      "publication_time": "2020-06-01公式案内の評価時刻16:30 Singapore=17:30 JST。現行の休日・訂正・配信時刻は契約仕様の再確認が必要。",
+      "probe": [],
+      "notes": [
+        "15年以上のJKM履歴の提供案内を確認したが取得年数・件数の実測ではない。",
+        "Henry Hub、TTF、JKM先物、月次輸入LNG平均価格は同一データではない。INPEXの長期LNG契約全量がスポットJKMに即時連動するわけではない。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "lpg_afei",
+      "label": "東アジア着LPG価格・Argus AFEI",
+      "acquisition_status": "SUBSCRIPTION_REQUIRED_NO_HISTORY_ACQUIRED",
+      "frequency": "営業日日次",
+      "route": "Argus International LPG。公式配信変更通知には ftp.argusmedia.com のDLPGフォルダ、dpg.csv が記載される。認証済み配信であり匿名FTPの実取得はしていない。",
+      "source_urls": [
+        "https://www.argusmedia.com/en/methodology/key-commodity-prices/argus-far-east-index-afei",
+        "https://www.argusmedia.com/en/solutions/products/argus-international-lpg",
+        "https://www1.argusmedia.com/ArgusStaticContent/Resources/data/announcements/pdf/20250915lpg.pdf",
+        "https://www.argusmedia.com/-/media/project/argusmedia/mainsite/english/documents-and-files/methodology/argus-international-lpg.pdf"
+      ],
+      "blocker": "日次履歴・更新契約未確保。プロパン／ブタン、価格評価コード、単位、mid/bid/ask、受渡条件を採用時に固定する。",
+      "publication_time": null,
+      "probe": [],
+      "notes": [
+        "2025-09-15付公式配信通知を確認。現行の時刻と履歴取得APIは未確認。",
+        "米国Mont BelvieuプロパンやSaudi CPをAFEIと同一扱いしない。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "audusd",
+      "label": "豪ドル／米ドル",
+      "acquisition_status": "PUBLIC_ROUTE_DOCUMENTED_FETCH_BLOCKED",
+      "frequency": "日次",
+      "route": "RBA公式F11.1の日次CSV・XLS。CSV https://www.rba.gov.au/statistics/tables/csv/f11.1-data.csv 、XLS https://www.rba.gov.au/statistics/tables/xls-hist/2023-current.xls 。",
+      "source_urls": [
+        "https://www.rba.gov.au/statistics/tables/",
+        "https://www.rba.gov.au/statistics/tables/csv/f11.1-data.csv",
+        "https://www.rba.gov.au/statistics/tables/xls-hist/2023-current.xls",
+        "https://www.rba.gov.au/statistics/tables/frequency-statistical-releases.html"
+      ],
+      "blocker": "公式ダウンロードリンクは実在するが当環境の無認証HTTP取得は403。取得済み件数は0、運用経路としての疎通確認が必要。",
+      "publication_time": "公式頻度表はDaily 5:00pm。Sydneyの夏時間を含む時差を適用し、08:30 JSTでは直近の公開済み値を使用。",
+      "probe": [
+        {
+          "method": "GET",
+          "url": "https://www.rba.gov.au/statistics/tables/csv/f11.1-data.csv",
+          "result": "HTTP 403",
+          "checked_on": "2026-10-15/16"
+        },
+        {
+          "method": "GET",
+          "url": "https://www.rba.gov.au/statistics/tables/xls-hist/2023-current.xls",
+          "result": "HTTP 403",
+          "checked_on": "2026-10-15/16"
+        }
+      ],
+      "notes": [
+        "USD per 1 AUDを使い、逆数のAUD per USDと混同しない。日中の定時参考値と市場終値は観測時刻が異なる。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "container_freight_fbx",
+      "label": "コンテナ運賃・Freightos Baltic Index",
+      "acquisition_status": "SUBSCRIPTION_API_AUTH_REQUIRED",
+      "frequency": "営業日日次",
+      "route": "Freightos Terminal及びFBX API。公開ドキュメント https://apidocs.freightos.com/reference/get_fbx-data 。対象グローバル／航路tickerと期間queryは契約仕様で固定。",
+      "source_urls": [
+        "https://www.freightos.com/enterprise/terminal/pricing/",
+        "https://www.freightos.com/enterprise/terminal/freightos-baltic-index-global-container-pricing-index/",
+        "https://apidocs.freightos.com/reference/get_fbx-data"
+      ],
+      "blocker": "APIキーと歴史データ利用権未確保。ウェブ掲載の最新値・短期チャートを完全な日次履歴とみなさない。",
+      "publication_time": "公式料金ページFAQ: 算出06:00 UTC、公開14:00 UTC=23:00 JST。翌朝のカットオフには直近公表分。",
+      "probe": [
+        {
+          "method": "GET",
+          "url": "https://api.freightos.com/fd_external_apis/fbx/data",
+          "result": "HTTP 401 Unauthorized",
+          "checked_on": "2026-10-15/16"
+        }
+      ],
+      "notes": [
+        "Terminalの個人プラン価格とAPI契約価格・必要履歴範囲は同一とは限らない。価格見積や申込みは未実施。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "airfreight_fax",
+      "label": "航空貨物運賃・Freightos Air Index",
+      "acquisition_status": "SUBSCRIPTION_API_AUTH_REQUIRED",
+      "frequency": "日次",
+      "route": "Freightos FAX APIのbig_regions / global。実在ドキュメント https://apidocs.freightos.com/reference/get_fax-big-regions 。",
+      "source_urls": [
+        "https://www.freightos.com/enterprise/terminal/fax-global-freightos-air-index/",
+        "https://www.freightos.com/enterprise/terminal/pricing/",
+        "https://apidocs.freightos.com/reference/get_fax-big-regions"
+      ],
+      "blocker": "API認証・対象航路・履歴契約未確保。",
+      "publication_time": "FAX独自の正確な公表時刻は未確認。FBXの14:00 UTCを流用しない。",
+      "probe": [
+        {
+          "method": "GET",
+          "url": "https://api.freightos.com/fd_external_apis/fax/big_regions",
+          "result": "HTTP 401 Unauthorized",
+          "checked_on": "2026-10-15/16"
+        }
+      ],
+      "notes": [
+        "Baltic Air Freight Index BAIは週次で、日次FAXの代替取得とは数えない。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "baltic_dry_index_spot",
+      "label": "バルチック海運指数・現物BDI",
+      "acquisition_status": "SUBSCRIPTION_REQUIRED_NO_HISTORY_ACQUIRED",
+      "frequency": "営業日日次",
+      "route": "Baltic Exchange購読・履歴・APIサービス。対象指数又は航路評価を固定した上で配信契約を取得。",
+      "source_urls": [
+        "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+        "https://www.balticexchange.com/en/apply-page.html"
+      ],
+      "blocker": "匿名の同一歴史系列ダウンロードは未確認。APIエンドポイント、認証、保持できる履歴範囲は未確保。",
+      "publication_time": "評価ごとに公表時刻・休日を契約仕様で確認。forwardの17:00 Londonをspotに流用しない。",
+      "probe": [],
+      "notes": [
+        "BDRYは貨物先物ETFであり現物BDIではない。",
+        "LNGはLNG1-174等の航路・船型変更履歴、航海日数及び$/dayか$/MMBtuかを固定する。",
+        "化学品・植物油BCAAは週次であり、日次clean tankerと同一ではない。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "baltic_capesize_index",
+      "label": "ケープサイズ運賃・BCI",
+      "acquisition_status": "SUBSCRIPTION_REQUIRED_NO_HISTORY_ACQUIRED",
+      "frequency": "営業日日次",
+      "route": "Baltic Exchange購読・履歴・APIサービス。対象指数又は航路評価を固定した上で配信契約を取得。",
+      "source_urls": [
+        "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+        "https://www.balticexchange.com/en/apply-page.html"
+      ],
+      "blocker": "匿名の同一歴史系列ダウンロードは未確認。APIエンドポイント、認証、保持できる履歴範囲は未確保。",
+      "publication_time": "評価ごとに公表時刻・休日を契約仕様で確認。forwardの17:00 Londonをspotに流用しない。",
+      "probe": [],
+      "notes": [
+        "BDRYは貨物先物ETFであり現物BDIではない。",
+        "LNGはLNG1-174等の航路・船型変更履歴、航海日数及び$/dayか$/MMBtuかを固定する。",
+        "化学品・植物油BCAAは週次であり、日次clean tankerと同一ではない。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "lng_shipping_rate",
+      "label": "LNG船運賃・Baltic LNG",
+      "acquisition_status": "SUBSCRIPTION_REQUIRED_NO_HISTORY_ACQUIRED",
+      "frequency": "営業日日次",
+      "route": "Baltic Exchange購読・履歴・APIサービス。対象指数又は航路評価を固定した上で配信契約を取得。",
+      "source_urls": [
+        "https://www.balticexchange.com/en/data-services/market-information0/gas-services.html",
+        "https://www.balticexchange.com/en/apply-page.html"
+      ],
+      "blocker": "匿名の同一歴史系列ダウンロードは未確認。APIエンドポイント、認証、保持できる履歴範囲は未確保。",
+      "publication_time": "評価ごとに公表時刻・休日を契約仕様で確認。forwardの17:00 Londonをspotに流用しない。",
+      "probe": [],
+      "notes": [
+        "BDRYは貨物先物ETFであり現物BDIではない。",
+        "LNGはLNG1-174等の航路・船型変更履歴、航海日数及び$/dayか$/MMBtuかを固定する。",
+        "化学品・植物油BCAAは週次であり、日次clean tankerと同一ではない。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "dirty_tanker_freight",
+      "label": "原油タンカー運賃・Baltic Dirty",
+      "acquisition_status": "SUBSCRIPTION_REQUIRED_NO_HISTORY_ACQUIRED",
+      "frequency": "営業日日次",
+      "route": "Baltic Exchange購読・履歴・APIサービス。対象指数又は航路評価を固定した上で配信契約を取得。",
+      "source_urls": [
+        "https://www.balticexchange.com/en/data-services/market-information0/tankers-services.html",
+        "https://www.balticexchange.com/en/apply-page.html"
+      ],
+      "blocker": "匿名の同一歴史系列ダウンロードは未確認。APIエンドポイント、認証、保持できる履歴範囲は未確保。",
+      "publication_time": "評価ごとに公表時刻・休日を契約仕様で確認。forwardの17:00 Londonをspotに流用しない。",
+      "probe": [],
+      "notes": [
+        "BDRYは貨物先物ETFであり現物BDIではない。",
+        "LNGはLNG1-174等の航路・船型変更履歴、航海日数及び$/dayか$/MMBtuかを固定する。",
+        "化学品・植物油BCAAは週次であり、日次clean tankerと同一ではない。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "clean_tanker_freight",
+      "label": "石油製品タンカー運賃・Baltic Clean",
+      "acquisition_status": "SUBSCRIPTION_REQUIRED_NO_HISTORY_ACQUIRED",
+      "frequency": "営業日日次",
+      "route": "Baltic Exchange購読・履歴・APIサービス。対象指数又は航路評価を固定した上で配信契約を取得。",
+      "source_urls": [
+        "https://www.balticexchange.com/en/data-services/market-information0/tankers-services.html",
+        "https://www.balticexchange.com/en/apply-page.html"
+      ],
+      "blocker": "匿名の同一歴史系列ダウンロードは未確認。APIエンドポイント、認証、保持できる履歴範囲は未確保。",
+      "publication_time": "評価ごとに公表時刻・休日を契約仕様で確認。forwardの17:00 Londonをspotに流用しない。",
+      "probe": [],
+      "notes": [
+        "BDRYは貨物先物ETFであり現物BDIではない。",
+        "LNGはLNG1-174等の航路・船型変更履歴、航海日数及び$/dayか$/MMBtuかを固定する。",
+        "化学品・植物油BCAAは週次であり、日次clean tankerと同一ではない。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "bunker_vlsfo",
+      "label": "船舶燃料油・VLSFO",
+      "acquisition_status": "SUBSCRIPTION_REQUIRED_NO_HISTORY_ACQUIRED",
+      "frequency": "営業日日次",
+      "route": "RIM Bunker及び有料historical data。Singapore等の港、0.5%硫黄VLSFO、単位USD/tonne、供給条件を固定。",
+      "source_urls": [
+        "https://eng.rim-intelligence.co.jp/report/bunker-en/",
+        "https://www.rim-intelligence.co.jp/eng/contents/historical.html"
+      ],
+      "blocker": "公式レポートは会員・購読案内。無認証の全履歴CSV/APIは未確認。",
+      "publication_time": "正確な定刻未確認。日々の公開タイムスタンプでカットオフを判定。",
+      "probe": [],
+      "notes": [
+        "RIMは380cst/VLSFO/LSMGO等を掲載。LNGバンカーは週次であり別系列。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "dubai_crude",
+      "label": "Dubai原油現物価格",
+      "acquisition_status": "SUBSCRIPTION_REQUIRED_NO_HISTORY_ACQUIRED",
+      "frequency": "営業日日次",
+      "route": "RIM Crude/Condensate又はPlatts Dubaiの契約済み評価。出所を固定して歴史データ購入・配信仕様を確認。",
+      "source_urls": [
+        "https://eng.rim-intelligence.co.jp/report/crude-condensate-en/",
+        "https://www.rim-intelligence.co.jp/eng/contents/historical.html"
+      ],
+      "blocker": "同一定義の日次履歴未確保。",
+      "publication_time": "正確な公表時刻未確認。",
+      "probe": [],
+      "notes": [
+        "月次Dubai平均やTOCOM Dubai先物は現物の日次評価と異なる。明示的な設計変更なしに同一IDへ挿入しない。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "japan_refining_margin",
+      "label": "日本の石油精製マージン",
+      "acquisition_status": "COMPONENT_CONTRACT_AND_FORMULA_REQUIRED",
+      "frequency": "日次成分から計算／企業実績は四半期",
+      "route": "RIM ProductsとCrude/Condensate等の整合した成分から事前固定式を計算する。会社公表の実現マージンそのものが日次であるとは確認していない。",
+      "source_urls": [
+        "https://eng.rim-intelligence.co.jp/report/products-en/",
+        "https://eng.rim-intelligence.co.jp/report/crude-condensate-en/",
+        "https://www.rim-intelligence.co.jp/eng/contents/historical.html"
+      ],
+      "blocker": "製品構成比、原油バスケット、歩留まり、単位、運賃・税・補助金・為替処理と過去成分が未確定。",
+      "publication_time": "成分のうち最も遅い公開時刻をavailable_atとする。",
+      "probe": [],
+      "notes": [
+        "製品価格−原油価格という単純式を、企業の実現利益率と表示しない。US gasoline-WTIを日本精製マージンに代替しない。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "px_naphtha_spread",
+      "label": "パラキシレン・ナフサ価格差",
+      "acquisition_status": "COMPONENT_CONTRACT_AND_FORMULA_REQUIRED",
+      "frequency": "日次評価成分から計算",
+      "route": "RIM Petrochemicalsの対象アジアPXと、同じ受渡地域・基準日のnaphtha評価からUSD/tonne差を計算。",
+      "source_urls": [
+        "https://eng.rim-intelligence.co.jp/report/petrochemicals-en/",
+        "https://eng.rim-intelligence.co.jp/report/products-en/",
+        "https://www.rim-intelligence.co.jp/eng/contents/historical.html"
+      ],
+      "blocker": "成分の対象グレード・CFR/FOB、履歴、利用権未確保。",
+      "publication_time": "双方が公開された後のみ使用。",
+      "probe": [],
+      "notes": [
+        "企業の稼働率、原料歩留まり、販売条件まで表す日次実現利益ではない。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "ethylene_naphtha_spread",
+      "label": "エチレン・ナフサ価格差",
+      "acquisition_status": "COMPONENT_CONTRACT_AND_FORMULA_REQUIRED",
+      "frequency": "日次評価成分から計算",
+      "route": "RIM Petrochemicalsの対象アジアethyleneと、同じ受渡地域・基準日のnaphtha評価からUSD/tonne差を計算。",
+      "source_urls": [
+        "https://eng.rim-intelligence.co.jp/report/petrochemicals-en/",
+        "https://eng.rim-intelligence.co.jp/report/products-en/",
+        "https://www.rim-intelligence.co.jp/eng/contents/historical.html"
+      ],
+      "blocker": "成分の対象グレード・CFR/FOB、履歴、利用権未確保。",
+      "publication_time": "双方が公開された後のみ使用。",
+      "probe": [],
+      "notes": [
+        "企業の稼働率、原料歩留まり、販売条件まで表す日次実現利益ではない。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "thermal_coal_newcastle",
+      "label": "豪州Newcastle一般炭価格",
+      "acquisition_status": "SUBSCRIPTION_REQUIRED_NO_HISTORY_ACQUIRED",
+      "frequency": "NEWC指数は営業日日次／先物月次決済と区別",
+      "route": "globalCOAL NEWC Indexの契約。ICEのNewcastle先物は別instrumentとしてのみ検討可能。",
+      "source_urls": [
+        "https://www.globalcoal.com/coalprices/newcindex.cfm",
+        "https://www.ice.com/products/1137/globalCOAL-"
+      ],
+      "blocker": "同一仕様の匿名日次歴史データ未確保。",
+      "publication_time": "現行のNEWC公表時刻は未確認。",
+      "probe": [],
+      "notes": [
+        "熱量・水分・受渡条件を固定。月次World Bank石炭価格を日次へ水増ししない。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "iron_ore",
+      "label": "鉄鉱石価格",
+      "acquisition_status": "EXACT_INSTRUMENT_AND_HISTORY_UNRESOLVED",
+      "frequency": "現物評価又は先物営業日日次",
+      "route": "SGX鉄鉱石デリバティブ又はS&P現物IODEXの公式サービス。2026年のPlatts IODEXは61%Feであり、品位とspot/futuresを設計で確定する。",
+      "source_urls": [
+        "https://www.sgx.com/derivatives/products/iron-ore",
+        "https://www.spglobal.com/energy/en/pricing-benchmarks/assessments/metals/iron-ore-index-iodex-price-explained",
+        "https://www.spglobal.com/energy/en/pricing-benchmarks/our-methodology/subscriber-notes/070125-platts-to-update-iodex-quality-specifications-to-reflect-61-fe-effective-jan-2-2026"
+      ],
+      "blocker": "現行IDだけでは商品が曖昧。匿名の完全な同一歴史系列取得は未検証。",
+      "publication_time": "商品確定後に取引所・評価機関の公表時刻を設定。",
+      "probe": [],
+      "notes": [
+        "取引所トップの遅延価格表示は履歴取得成功の証拠ではない。",
+        "重要: Platts IODEXは2026-01-02から標準品位が62%Feから61%Feへ変更。現行公式評価コードIODBZ00。SGXの品位・清算指標と混同せず、歴史の仕様変更を記録する。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "jepx_spot",
+      "label": "JEPXスポット電力価格",
+      "acquisition_status": "PUBLIC_DOWNLOAD_VERIFIED",
+      "frequency": "一日前市場、受渡日ごと48コマ、日次集計可能",
+      "route": "公式CSV: POST https://www.jepx.jp/_download.php ; application/x-www-form-urlencoded body dir=spot_summary&file=spot_summary_YYYY.csv ; Referer https://www.jepx.jp/electricpower/market-data/spot/ 。GET https://www.jepx.jp/js/csv_read.php?dir=spot_summary&file=spot_summary_YYYY.csv も同Referer付きで成功。",
+      "source_urls": [
+        "https://www.jepx.jp/electricpower/market-data/spot/",
+        "https://www.jepx.jp/js/spot_summary.js",
+        "https://www.jepx.jp/js/get_graph_year.php?dir=spot_summary",
+        "https://www.jepx.jp/electricpower/outline/",
+        "https://www.jepx.jp/_download.php"
+      ],
+      "blocker": "アクセス経路は確保。DB未投入、元ファイル保存・品質検査・公表時刻の確定は未実装。",
+      "publication_time": "一日前の受渡価格。日付列は公表日ではなく受渡日。正確なサイト公開定刻は本調査では未確認。",
+      "probe": [
+        {
+          "method": "GET",
+          "url": "https://www.jepx.jp/js/get_graph_year.php?dir=spot_summary",
+          "result": "200 body 2026,2005",
+          "checked_on": "2026-10-16"
+        },
+        {
+          "method": "POST_DOWNLOAD",
+          "url": "https://www.jepx.jp/_download.php",
+          "form": {
+            "dir": "spot_summary",
+            "file": "spot_summary_2025.csv"
+          },
+          "result": "200 CSV; 2265696 bytes; 17520 data rows; 2025-04-01 to 2026-03-31",
+          "checked_on": "2026-10-16"
+        },
+        {
+          "method": "POST_DOWNLOAD",
+          "url": "https://www.jepx.jp/_download.php",
+          "form": {
+            "dir": "spot_summary",
+            "file": "spot_summary_2026.csv"
+          },
+          "result": "200 CSV; 1260156 bytes; 9600 data rows; 2026-04-01 to 2026-10-17",
+          "checked_on": "2026-10-16"
+        },
+        {
+          "method": "GET",
+          "url": "https://www.jepx.jp/js/csv_read.php?dir=spot_summary&file=spot_summary_2026.csv",
+          "headers": {
+            "Referer": "https://www.jepx.jp/electricpower/market-data/spot/",
+            "Cache-Control": "no-cache"
+          },
+          "result": "200 CSV; 9600 data rows. Earlier GET without Referer returned empty body; exact cause not isolated.",
+          "checked_on": "2026-10-16"
+        }
+      ],
+      "notes": [
+        "UTF-8又はCP932を判定。列: 受渡日, 時刻コード, 売り入札量(kWh), 買い入札量(kWh), 約定総量(kWh), システムプライス(円/kWh), 各9エリア価格等。",
+        "年度は4月起点。日次system価格=48コマの等時間算術平均と定義し、48件・コード1..48・欠損重複を検査。エリア価格とsystem価格を混在させない。",
+        "10月16日に取得したCSVに10月17日受渡分があることは、10月16日08:30時点で公表済みだった証拠にはならない。過去backtestには公表時刻保存又は保守的ラグが必要。"
+      ],
+      "data_ingested": false
+    },
+    {
+      "id": "company_monthly_fundamentals",
+      "label": "会社固有の月次・四半期実績",
+      "acquisition_status": "PUBLIC_DOCUMENTS_AVAILABLE_NOT_DAILY_REPLACEMENT",
+      "frequency": "月次・四半期・年次、資料ごとに異なる",
+      "route": "NYK公式IR Data BookのPDF/ZIP、MOL公式Market Data PDF、各社決算資料を公開日単位で収集する。",
+      "source_urls": [
+        "https://www.nyk.com/english/ir/library/fact/",
+        "https://ir.mol.co.jp/en/ir/library/market.html",
+        "https://www.inpex.com/english/ir/library/"
+      ],
+      "blocker": "公開資料は確認。各社各系列の表・単位・公開日時を固定した自動化は未実装。会社の生産量や平均実現価格が毎日更新されるわけではない。",
+      "publication_time": "NYK 2026-08-05公開、MOL 2026-10-13更新を公式掲載で確認。時刻不明の資料は翌営業日から利用する保守的ルールを推奨。",
+      "probe": [],
+      "notes": [
+        "期末や月末に遡及して既知にしない。available_at以後のみas-of joinで保有し、age_daysを保存。日次へforward-fillしても独立した日次新規観測とは数えない。",
+        "MOLのmonthly平均運賃やNYKのquarterly実績は事業検証に使えるが、未確保のFBX/BDI/JKM等と同一ではない。"
+      ],
+      "data_ingested": false
+    }
+  ],
+  "implementation_rules": [
+    "HTTP200だけでは取得成功にしない。CSVヘッダ、非空データ、日付範囲、重複、数値単位を検査する。",
+    "event_date、publication_at、retrieved_at、source_id、versionを別フィールドで保存。08:30JST予測へはpublication_at<=cutoffのみ結合。",
+    "履歴ファイルの現在取得を、当時リアルタイムに入手できた証拠として扱わない。",
+    "欠損は未確保とする。無関係な共通マクロや自社テクニカルで7〜10群を埋めない。",
+    "日々全群の係数を再推定しても、固定群のintraday予測力が実証されたことにはならない。"
+  ],
+  "no_actions": [
+    "No subscription signup or purchase",
+    "No credential or secret access",
+    "No DB writes",
+    "No code/config edits",
+    "No GitHub changes"
+  ],
+  "monthly_fundamental_followups": [
+    {
+      "id": "lawson_same_store_sales",
+      "source_urls": [
+        "https://www.lawson.co.jp/company/ir/"
+      ],
+      "status": "PUBLIC_MONTHLY_LIBRARY_CONFIRMED_NOT_PARSED",
+      "note": "上場廃止後も日本語サイトに月次情報へのリンクあり。英語IRは2024年時点で止まるため最新ソースとして使わない。"
+    },
+    {
+      "id": "familymart_same_store_sales",
+      "source_urls": [
+        "https://www.family.co.jp/company/familymart/monthly_sales/flash.html",
+        "https://www.family.co.jp/company/familymart/monthly_sales/transition.html"
+      ],
+      "status": "PUBLIC_HTML_TABLE_CONFIRMED_NOT_INGESTED",
+      "note": "公式ページ2026-10-13更新、2026年9月度の既存店日商前年比101.6%。毎月10日前後公表。カード・チケット除外。100基準指数と+1.6%変化率の違いを固定。"
+    },
+    {
+      "id": "domestic_it_sales",
+      "source_urls": [
+        "https://www.meti.go.jp/statistics/tyo/tokusabido/index.html",
+        "https://www.stat.go.jp/data/mbss/index.html",
+        "https://www.stat.go.jp/data/mbss/kekka.html"
+      ],
+      "status": "PUBLIC_STATISTICS_WITH_SERIES_BREAK",
+      "note": "経産省旧特定サービス産業動態統計は2024年12月で終了。2025年1月から総務省サービス産業動態統計へ統合。情報サービス業の定義・基準・接続係数を確認せず継ぎ足さない。会社固有のCTC/SCSK売上そのものではない。"
+    },
+    {
+      "id": "construction_machinery_orders",
+      "source_urls": [
+        "https://www.cema.or.jp/general/statistics/"
+      ],
+      "status": "PUBLIC_MONTHLY_XLS_LINKS_DOCUMENTED_NOT_DOWNLOADED",
+      "note": "日本建設機械工業会は出荷金額・国内出荷台数の年度別Excelを公開。出荷実績は受注とは異なるのでIDの指標定義を固定する。"
+    },
+    {
+      "id": "agriculture_input_sales",
+      "source_urls": [
+        "https://www.marubeni.com/en/ir/reports/integrated_report/"
+      ],
+      "status": "EXACT_MONTHLY_COMPANY_SERIES_NOT_SECURED",
+      "note": "Helenaの会社固有月次販売系列はこの調査で確保できなかった。米農業統計や穀物先物を同一実績にしない。"
+    }
+  ]
+}

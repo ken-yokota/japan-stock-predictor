@@ -40,15 +40,21 @@ from data.logging import configure_logging
 from data.market_calendar import indicator_calendar_name
 from data.provider_router import (
     EodRouteCandidate,
+    ProviderAttempt,
     ProviderRouter,
+    SeriesSelection,
     SnapshotRouteCandidate,
 )
 from data.providers.base import MarketDataProvider, ProviderError
 from data.providers.eodhd import EODHDFreeProvider
+from data.providers.public_factors import (
+    PublicFactorsProvider,
+    latest_expected_observation,
+)
 from data.providers.treasury import TREASURY_PUBLISHED_CLOSE, TreasuryProvider
 from data.providers.yahoo import YahooFinanceProvider
 from data.schemas import DataInterval, FetchRequest, MarketBar, SnapshotRequest
-from data.snapshot import FreshnessStatus
+from data.snapshot import FreshnessStatus, SelectionRole
 from data.treasury_features import build_treasury_features
 from database.connection import create_database_engine, create_session_factory
 from database.repository import MarketDataRepository, UpsertSummary
@@ -86,6 +92,7 @@ class FetchPlan:
     treasury_symbols: tuple[str, ...]
     unresolved_required: tuple[str, ...]
     stock_provider_key: str = "yahoo_finance"
+    published_series: tuple[IndicatorTarget, ...] = ()
 
     @property
     def external_target_count(self) -> int:
@@ -94,6 +101,7 @@ class FetchPlan:
             + len(self.eod)
             + len(self.snapshots)
             + len(self.treasury_symbols)
+            + len(self.published_series)
         )
 
 
@@ -155,14 +163,46 @@ def _verified_source(
     return next(iter(_verified_sources(sources, provider)), None)
 
 
-def build_fetch_plan(config: AppConfig) -> FetchPlan:
+def build_fetch_plan(
+    config: AppConfig, *, prediction_date: date | None = None
+) -> FetchPlan:
     """Build a Yahoo-first plan; unsupported factors remain explicitly absent."""
 
     eod: list[IndicatorTarget] = []
     snapshots: list[SnapshotTarget] = []
     treasury_symbols: list[str] = []
     unresolved: list[str] = []
+    published: list[IndicatorTarget] = []
+    active_series: set[str] | None = None
+    if prediction_date is not None:
+        profiles = [
+            config.company_profiles.resolve(stock.ticker, prediction_date)
+            for stock in config.stocks.stocks
+            if stock.enabled
+        ]
+        if profiles and all(profile is not None for profile in profiles):
+            active_series = set()
+            for profile in profiles:
+                assert profile is not None
+                for factor in profile.factors:
+                    if factor.series_id is None:
+                        unresolved.append(factor.id)
+                    else:
+                        active_series.add(factor.series_id)
     for indicator in config.indicators.indicators:
+        if active_series is not None and indicator.id not in active_series:
+            continue
+        if active_series is not None and (
+            not indicator.enabled or indicator.resolution_status != "resolved"
+        ):
+            unresolved.append(indicator.id)
+            continue
+        public = _verified_source(indicator.sources, "public_factors")
+        if public is not None:
+            published.append(
+                IndicatorTarget(indicator.id, indicator.name, True, public)
+            )
+            continue
         derived = _verified_source(indicator.sources, "internal")
         treasury = _verified_source(indicator.sources, "us_treasury")
         yahoo_sources = _verified_sources(indicator.sources, "yahoo_finance")
@@ -198,7 +238,7 @@ def build_fetch_plan(config: AppConfig) -> FetchPlan:
                     fallback if fallback and fallback.data_mode == "eod" else None,
                 )
             )
-        if yahoo_snapshot is not None:
+        if yahoo_snapshot is not None and active_series is None:
             snapshots.append(
                 SnapshotTarget(
                     indicator.id,
@@ -212,8 +252,9 @@ def build_fetch_plan(config: AppConfig) -> FetchPlan:
         eod=tuple(eod),
         snapshots=tuple(snapshots),
         treasury_symbols=tuple(sorted(treasury_symbols)),
-        unresolved_required=tuple(sorted(unresolved)),
+        unresolved_required=tuple(sorted(set(unresolved))),
         stock_provider_key=config.settings.provider.primary,
+        published_series=tuple(published),
     )
 
 
@@ -642,6 +683,96 @@ def execute_fetch_plan(
                 selection.selected_provider
             )
 
+    for target in plan.published_series:
+        source = target.primary
+        try:
+            provider = market_providers.get(source.provider or "")
+            if provider is None or source.provider_symbol is None:
+                raise ValueError("published-series provider is not configured")
+            # A small overlap catches changed publications without downloading
+            # all history each morning. Availability is assigned by the public
+            # provider's release calendar, not an equity-market closing time.
+            fetch_start = start_date
+            if target.canonical_symbol in coverage:
+                fetch_start = max(
+                    start_date, coverage[target.canonical_symbol] - timedelta(days=14)
+                )
+            rows = provider.fetch_eod(
+                FetchRequest(
+                    canonical_symbol=target.canonical_symbol,
+                    provider_symbol=source.provider_symbol,
+                    market=source.market or "PUBLIC",
+                    market_timezone=source.market_timezone or "UTC",
+                    market_close="00:00",
+                    availability_lag_minutes=0,
+                    start_date=fetch_start,
+                    end_date=end_date,
+                )
+            )
+            if any(
+                row.canonical_symbol != target.canonical_symbol
+                or row.provider != provider.name
+                for row in rows
+            ):
+                raise ValueError("published-series provider returned mixed provenance")
+            visible = [
+                row
+                for row in rows
+                if row.available_timestamp <= cutoff_at
+                and (
+                    not operational_run
+                    or (
+                        row.first_observed_at <= cutoff_at
+                        and row.retrieved_at <= cutoff_at
+                    )
+                )
+            ]
+            if not visible:
+                raise ValueError("published series has no data available at cutoff")
+            visible.sort(key=lambda row: (row.market_date, row.timestamp))
+            latest = visible[-1]
+            expected = latest_expected_observation(cutoff_at, target.canonical_symbol)
+            if (operational_run and latest.market_date < expected) or (
+                not operational_run
+                and (min(end_date, expected) - latest.market_date).days > 7
+            ):
+                raise ValueError("published series is stale at cutoff")
+            _store(repository, visible, report)
+            selection = SeriesSelection(
+                tuple(visible),
+                source.provider,
+                provider.name,
+                SelectionRole.PRIMARY,
+                (
+                    ProviderAttempt(
+                        source.provider or "",
+                        provider.name,
+                        True,
+                        "published observations available before cutoff",
+                        latest.data_quality,
+                        FreshnessStatus.FRESH,
+                    ),
+                ),
+            )
+            _record_selection(
+                repository,
+                run_id=run_id,
+                canonical_symbol=target.canonical_symbol,
+                interval=DataInterval.EOD.value,
+                cutoff_at=cutoff_at,
+                selection=selection,
+                actual_session=latest.market_date,
+                details={
+                    "availability": "provider_publication_calendar",
+                    "source_kind": source.kind,
+                },
+            )
+        except (ProviderError, ValueError) as exc:
+            report.failed_sources[target.canonical_symbol] = str(exc)
+        else:
+            report.succeeded_sources += 1
+            report.selected_providers[target.canonical_symbol] = provider.name
+
     if plan.treasury_symbols:
         # Treasury publishes its same-day curve at about 18:00 Eastern.  The
         # XNYS calendar is also used by the existing freshness gate so a
@@ -1028,12 +1159,18 @@ def main(argv: list[str] | None = None) -> int:
                 "historical_indicators": len(plan.eod),
                 "snapshot_indicators": len(plan.snapshots),
                 "treasury_tenors": len(plan.treasury_symbols),
+                "published_indicators": len(plan.published_series),
                 "unresolved_required_indicators": list(plan.unresolved_required),
             }
         )
         return 0
 
     yahoo, treasury, eodhd = _providers(config, environment)
+    public = PublicFactorsProvider(
+        timeout_seconds=environment.http_timeout_seconds,
+        max_retries=config.settings.provider.max_retries,
+        backoff_seconds=config.settings.provider.backoff_initial_seconds,
+    )
     try:
         if args.command == "verify-yahoo":
             _print_json(verify_yahoo(config, yahoo))
@@ -1073,6 +1210,7 @@ def main(argv: list[str] | None = None) -> int:
                 ZoneInfo(config.settings.application.timezone)
             ).date()
             prediction_date = args.prediction_date or today_jst
+            plan = build_fetch_plan(config, prediction_date=prediction_date)
             cutoff_at = prediction_cutoff(
                 prediction_date,
                 cutoff_time=config.settings.schedule.prediction_cutoff,
@@ -1094,6 +1232,7 @@ def main(argv: list[str] | None = None) -> int:
                 plan,
                 market_providers={
                     "yahoo_finance": yahoo,
+                    "public_factors": public,
                     **({"eodhd_free": eodhd} if eodhd is not None else {}),
                 },
                 treasury_provider=treasury,
@@ -1146,6 +1285,7 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         yahoo.close()
         treasury.close()
+        public.close()
         if eodhd is not None:
             eodhd.close()
 

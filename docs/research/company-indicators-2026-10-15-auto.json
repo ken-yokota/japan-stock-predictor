@@ -1,0 +1,2510 @@
+{
+  "as_of": "2026-10-15",
+  "scope": "automotive_5_tickers",
+  "schema_version": 1,
+  "company_count": 5,
+  "companies": [
+    {
+      "ticker": "7203",
+      "name": "トヨタ自動車",
+      "thesis": "地域分散した自動車・HEVの商品力と販売金融を分離する。輸出FX、地域需要、無リスク金利、信用スプレッド、燃料と鋼材を別の経済経路として持つ。",
+      "business_facts": [
+        "FY2026 20-Fは米国金融子会社TMCCによる小売/リース/卸売金融と社債・CP等による調達を記載。",
+        "欧州を含む地域販売、HEV/BEVのマルチパスウェイ、鋼材・非鉄・燃料価格のリスクを開示。"
+      ],
+      "source_keys": [
+        "toyota_20f",
+        "toyota_integrated"
+      ],
+      "source_urls": [
+        "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+        "https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf"
+      ],
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日本株市場・翌朝の市場環境",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "CME Nikkei 225 JPY futures NIY。既存Yahoo NIY=Fは既存設定の対応を継続。",
+          "exchange_symbol": "NIY",
+          "provider_symbol": null,
+          "is_proxy": false,
+          "source_keys": [
+            "nikkei"
+          ],
+          "source_urls": [
+            "https://www.cmegroup.com/markets/equities/files/trade-japanese-equity-index-futures-fact-card.pdf",
+            "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+            "https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "共通市場因子は原則この1群。S&P先物/Nasdaq/VIXを数合わせで追加しない。",
+          "mechanism": "国内上場株の共通リスクを取り除き、事業因子の追加寄与を見る。",
+          "tentative_sign": "通常＋、日中は寄り付きへの織込み次第",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "toyota_20f",
+            "toyota_integrated"
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円（円/米ドル）",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "ECB EUR/JPY と EUR/USD の参照値。JPY per USD = JPY per EUR / USD per EUR",
+          "exchange_symbol": null,
+          "provider_symbol": null,
+          "is_proxy": false,
+          "source_keys": [
+            "ecb"
+          ],
+          "source_urls": [
+            "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html",
+            "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+            "https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30 JSTまでに実受信した値のみ。取引可能なスポット値とは区別。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。",
+          "mechanism": "円安は日本輸出の採算・米国利益の円換算を押し上げ得る。現地生産とヘッジで変わる。",
+          "tentative_sign": "円/ドル上昇は原則＋、固定しない",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "toyota_20f",
+            "toyota_integrated"
+          ]
+        },
+        {
+          "id": "eurjpy",
+          "canonical_id": "eurjpy",
+          "label": "ユーロ円（円/ユーロ）",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "ECB EUR/JPY reference rate",
+          "exchange_symbol": null,
+          "provider_symbol": null,
+          "is_proxy": false,
+          "source_keys": [
+            "ecb"
+          ],
+          "source_urls": [
+            "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html",
+            "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+            "https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30 JSTまでに実受信した値のみ。取引可能なスポット値とは区別。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。",
+          "mechanism": "欧州の販売/金融利益と日本からの輸出採算を表す。USD一本では欧州通貨変動を落とす。",
+          "tentative_sign": "円/ユーロ上昇は原則＋、現地費用で相殺",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "toyota_20f",
+            "toyota_integrated"
+          ]
+        },
+        {
+          "id": "fxi",
+          "canonical_id": "fxi",
+          "label": "中国景況・販売環境",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "米国上場ETF FXI の調整済み日次終値",
+          "exchange_symbol": "FXI",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "fxi"
+          ],
+          "source_urls": [
+            "https://www.ishares.com/us/products/239536/ishares-china-largecap-etf?periodCd=d",
+            "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+            "https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。",
+          "mechanism": "中国自動車市場・JV競争環境に対する広い景況代理。中国固有の弱さを米株指数と分ける。",
+          "tentative_sign": "景況改善は＋、中国競合優位なら逆もある",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "toyota_20f",
+            "toyota_integrated"
+          ]
+        },
+        {
+          "id": "xly",
+          "canonical_id": "xly",
+          "label": "米国家計の耐久財購買環境",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "米国上場ETF XLY の調整済み日次終値",
+          "exchange_symbol": "XLY",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "xly"
+          ],
+          "source_urls": [
+            "https://www.ssga.com/us/en/individual/etfs/state-street-consumer-discretionary-select-sector-spdr-etf-xly",
+            "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+            "https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。",
+          "mechanism": "北米の家計が高額耐久財を購入する余力を表す市場代理。",
+          "tentative_sign": "通常＋、ETFの非自動車構成が限界",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "toyota_20f",
+            "toyota_integrated"
+          ]
+        },
+        {
+          "id": "us_2y_yield",
+          "canonical_id": "us_2y_yield",
+          "label": "米国短中期金利・ローン条件",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "US Treasury Daily Par Yield Curve 2-year",
+          "exchange_symbol": null,
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "treasury"
+          ],
+          "source_urls": [
+            "https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics",
+            "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+            "https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "米国市場観測時刻は概ね15:30 ET。観測時刻を公表時刻と見なさず、公式配信の実受信が08:30以前かを確認。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "車両ローン金利そのものではない。水準・前年差ではなく日次bp変化を主特徴にする。",
+          "mechanism": "車両ローン負担・販売奨励金と販売金融の調達費用の金利成分。",
+          "tentative_sign": "金利上昇は通常−、利ざや/景気で条件付き",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "toyota_20f",
+            "toyota_integrated"
+          ]
+        },
+        {
+          "id": "us_ig_credit_spread",
+          "canonical_id": "us_ig_credit_spread",
+          "label": "米国投資適格信用スプレッド",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "FRED/ICE BofA OAS BAMLC0A0CM 日次終値。変化はbp単位",
+          "exchange_symbol": "BAMLC0A0CM",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "ig_spread"
+          ],
+          "source_urls": [
+            "https://fred.stlouisfed.org/series/BAMLC0A0CM",
+            "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+            "https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "観測日ではなくFRED公表/実受信日で利用判定。確認例:10/13観測を10/14 10:26 CDTに更新。翌朝に前々米営業日の値しかない場合がある。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "個社信用スプレッドや自動車ローンABSの直接データではない。2026年4月から公開履歴は3年に制限。権利条件と過去版を確認。",
+          "mechanism": "TMCC等の資本市場調達の無リスク金利以外の信用環境。",
+          "tentative_sign": "拡大は通常−、自社スプレッドではない",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "toyota_20f",
+            "toyota_integrated"
+          ]
+        },
+        {
+          "id": "rbob_gasoline",
+          "canonical_id": "rbob_gasoline",
+          "label": "米国ガソリン価格・燃費選好",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "CME NYMEX RBOB gasoline futures RB",
+          "exchange_symbol": "RB",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "rbob"
+          ],
+          "source_urls": [
+            "https://www.cmegroup.com/markets/energy/refined-products/rbob-gasoline.contractSpecs.html",
+            "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+            "https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "消費者小売価格ではなく卸売先物。季節性・精製マージン・ロールの影響。原油WTI/Brentで無断代替しない。",
+          "mechanism": "燃料高は新車需要に逆風だがHEVの相対魅力を高めるため、原油一本の負符号を強制しない。",
+          "tentative_sign": "総需要− / HEVミックス＋の競合",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "toyota_20f",
+            "toyota_integrated"
+          ]
+        },
+        {
+          "id": "us_hrc_steel",
+          "canonical_id": "us_hrc_steel",
+          "label": "北米自動車用鋼材コストの代理",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "CME US Midwest Domestic Hot-Rolled Coil Steel (CRU) Index futures HRC",
+          "exchange_symbol": "HRC",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "hrc",
+            "hrc_code"
+          ],
+          "source_urls": [
+            "https://www.cmegroup.com/markets/metals/ferrous/hrc-steel.contractSpecs.html",
+            "https://www.cmegroup.com/trading/metals/files/us-midwest-domestic-hot-rolled-coil-steel-futures-and-options.pdf",
+            "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+            "https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf"
+          ],
+          "source_dates": [
+            null,
+            "2015"
+          ],
+          "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "取引の薄い限月の停止価格に注意。各社契約調達価格でもアジア鋼材価格でもない。CME/許諾ベンダーの履歴取得未実装。",
+          "mechanism": "北米製造の車体材料・サプライヤー費用の圧力。",
+          "tentative_sign": "上昇は通常−、価格転嫁・契約遅延で変化",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "toyota_20f",
+            "toyota_integrated"
+          ]
+        }
+      ],
+      "indicator_count": 9,
+      "limitations": [
+        "Toyota ADR(TM)は候補保留。既存設定で無効化済み。為替換算/ADR比率を調整した寄り前価格差は主にギャップを説明し得るため日中能力と区別。",
+        "9群の全てを毎朝再推定。符号の事前固定・予測精度向上の保証はしない。"
+      ],
+      "valid_from": "2026-10-15",
+      "profile_policy": "FIXED_COMPANY_GROUPS_DAILY_REFIT",
+      "production_status": "RESEARCH_PROFILE_REQUIRES_DATA"
+    },
+    {
+      "ticker": "7267",
+      "name": "本田技研工業",
+      "thesis": "北米四輪・販売金融に加えて、インド/東南アジア/ブラジル二輪を独立に測る。二輪の収益源を米国自動車の共通リストへ埋没させない。",
+      "business_facts": [
+        "2026-08-05資料は四輪・二輪・金融を別セグメントとして示し、二輪利益の伸びをインドとブラジルに結びつける。",
+        "四輪は北米増販と中国での苦戦を開示。前年事業報告はインドネシアを主要二輪市場に含める。"
+      ],
+      "source_keys": [
+        "honda_q1",
+        "honda_business"
+      ],
+      "source_urls": [
+        "https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf",
+        "https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf"
+      ],
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日本株市場・翌朝の市場環境",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "CME Nikkei 225 JPY futures NIY。既存Yahoo NIY=Fは既存設定の対応を継続。",
+          "exchange_symbol": "NIY",
+          "provider_symbol": null,
+          "is_proxy": false,
+          "source_keys": [
+            "nikkei"
+          ],
+          "source_urls": [
+            "https://www.cmegroup.com/markets/equities/files/trade-japanese-equity-index-futures-fact-card.pdf",
+            "https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf",
+            "https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "共通市場因子は原則この1群。S&P先物/Nasdaq/VIXを数合わせで追加しない。",
+          "mechanism": "国内上場株の市場共通成分。",
+          "tentative_sign": "通常＋",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "honda_q1",
+            "honda_business"
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円（円/米ドル）",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "ECB EUR/JPY と EUR/USD の参照値。JPY per USD = JPY per EUR / USD per EUR",
+          "exchange_symbol": null,
+          "provider_symbol": null,
+          "is_proxy": false,
+          "source_keys": [
+            "ecb"
+          ],
+          "source_urls": [
+            "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html",
+            "https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf",
+            "https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30 JSTまでに実受信した値のみ。取引可能なスポット値とは区別。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。",
+          "mechanism": "北米四輪/金融の円換算、日本輸出と現地コストの相対価値。",
+          "tentative_sign": "原則＋、ヘッジ次第",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "honda_q1",
+            "honda_business"
+          ]
+        },
+        {
+          "id": "xly",
+          "canonical_id": "xly",
+          "label": "米国家計の耐久財購買環境",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "米国上場ETF XLY の調整済み日次終値",
+          "exchange_symbol": "XLY",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "xly"
+          ],
+          "source_urls": [
+            "https://www.ssga.com/us/en/individual/etfs/state-street-consumer-discretionary-select-sector-spdr-etf-xly",
+            "https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf",
+            "https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。",
+          "mechanism": "北米四輪需要の市場代理。二輪の地域需要とは区別する。",
+          "tentative_sign": "通常＋、代理誤差あり",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "honda_q1",
+            "honda_business"
+          ]
+        },
+        {
+          "id": "us_2y_yield",
+          "canonical_id": "us_2y_yield",
+          "label": "米国短中期金利・ローン条件",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "US Treasury Daily Par Yield Curve 2-year",
+          "exchange_symbol": null,
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "treasury"
+          ],
+          "source_urls": [
+            "https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics",
+            "https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf",
+            "https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "米国市場観測時刻は概ね15:30 ET。観測時刻を公表時刻と見なさず、公式配信の実受信が08:30以前かを確認。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "車両ローン金利そのものではない。水準・前年差ではなく日次bp変化を主特徴にする。",
+          "mechanism": "北米顧客のローン負担と金融子会社の金利調達費用。",
+          "tentative_sign": "上昇は通常−、利ざや次第",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "honda_q1",
+            "honda_business"
+          ]
+        },
+        {
+          "id": "us_ig_credit_spread",
+          "canonical_id": "us_ig_credit_spread",
+          "label": "米国投資適格信用スプレッド",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "FRED/ICE BofA OAS BAMLC0A0CM 日次終値。変化はbp単位",
+          "exchange_symbol": "BAMLC0A0CM",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "ig_spread"
+          ],
+          "source_urls": [
+            "https://fred.stlouisfed.org/series/BAMLC0A0CM",
+            "https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf",
+            "https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "観測日ではなくFRED公表/実受信日で利用判定。確認例:10/13観測を10/14 10:26 CDTに更新。翌朝に前々米営業日の値しかない場合がある。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "個社信用スプレッドや自動車ローンABSの直接データではない。2026年4月から公開履歴は3年に制限。権利条件と過去版を確認。",
+          "mechanism": "自動車販売を支える小売金融/リースの信用・資金調達条件。",
+          "tentative_sign": "拡大は通常−",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "honda_q1",
+            "honda_business"
+          ]
+        },
+        {
+          "id": "inda",
+          "canonical_id": "inda",
+          "label": "インド家計・景況環境",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "米国上場ETF INDA の調整済み日次終値",
+          "exchange_symbol": "INDA",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "inda"
+          ],
+          "source_urls": [
+            "https://www.ishares.com/us/products/239659/ishares-msci-india-etf?periodCd=m",
+            "https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf",
+            "https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。",
+          "mechanism": "インド二輪顧客の所得・消費環境に対する市場代理。",
+          "tentative_sign": "通常＋、二輪実売の直接測定ではない",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "honda_q1",
+            "honda_business"
+          ]
+        },
+        {
+          "id": "eido",
+          "canonical_id": "eido",
+          "label": "インドネシア二輪需要の景況代理",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "米国上場ETF EIDO の調整済み日次終値",
+          "exchange_symbol": "EIDO",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "eido"
+          ],
+          "source_urls": [
+            "https://www.ishares.com/us/products/239661/ishares-msci-indonesia-etf",
+            "https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf",
+            "https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。",
+          "mechanism": "大きな二輪市場であるインドネシア固有の内需と金融環境。",
+          "tentative_sign": "通常＋、銀行/資源株偏重に注意",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "honda_q1",
+            "honda_business"
+          ]
+        },
+        {
+          "id": "brljpy",
+          "canonical_id": "brljpy",
+          "label": "ブラジルレアル円（円/BRL）",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "ECB EUR/JPY と EUR/BRL の参照値。JPY per BRL = JPY per EUR / BRL per EUR",
+          "exchange_symbol": null,
+          "provider_symbol": null,
+          "is_proxy": false,
+          "source_keys": [
+            "ecb"
+          ],
+          "source_urls": [
+            "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html",
+            "https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf",
+            "https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30 JSTまでに実受信した値のみ。取引可能なスポット値とは区別。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。",
+          "mechanism": "ブラジル二輪事業の利益換算・通貨/輸入部材条件。",
+          "tentative_sign": "BRL高の換算＋と費用/需要効果が競合",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "honda_q1",
+            "honda_business"
+          ]
+        },
+        {
+          "id": "fxi",
+          "canonical_id": "fxi",
+          "label": "中国景況・販売環境",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "米国上場ETF FXI の調整済み日次終値",
+          "exchange_symbol": "FXI",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "fxi"
+          ],
+          "source_urls": [
+            "https://www.ishares.com/us/products/239536/ishares-china-largecap-etf?periodCd=d",
+            "https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf",
+            "https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。",
+          "mechanism": "中国四輪需要・競争環境を北米と切り分ける。",
+          "tentative_sign": "景況＋と競合販売増−が競合",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "honda_q1",
+            "honda_business"
+          ]
+        },
+        {
+          "id": "rbob_gasoline",
+          "canonical_id": "rbob_gasoline",
+          "label": "米国ガソリン価格・燃費選好",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "CME NYMEX RBOB gasoline futures RB",
+          "exchange_symbol": "RB",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "rbob"
+          ],
+          "source_urls": [
+            "https://www.cmegroup.com/markets/energy/refined-products/rbob-gasoline.contractSpecs.html",
+            "https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf",
+            "https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "消費者小売価格ではなく卸売先物。季節性・精製マージン・ロールの影響。原油WTI/Brentで無断代替しない。",
+          "mechanism": "北米四輪の保有コスト・ハイブリッド選好。二輪の燃費優位を同じ固定係数で決め付けない。",
+          "tentative_sign": "条件付き",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "honda_q1",
+            "honda_business"
+          ]
+        }
+      ],
+      "indicator_count": 10,
+      "limitations": [
+        "Honda ADR(HMC)は既存設定で無効化済みのため固定10群に数えない。再採用は独立した寄り付きギャップ対日中の検証が必要。",
+        "INDA/EIDOは二輪販売の代理として弱い。月次国別二輪販売と突合し、無効なら根拠付きプロファイル改訂を行う。"
+      ],
+      "valid_from": "2026-10-15",
+      "profile_policy": "FIXED_COMPANY_GROUPS_DAILY_REFIT",
+      "production_status": "RESEARCH_PROFILE_REQUIRES_DATA"
+    },
+    {
+      "ticker": "7201",
+      "name": "日産自動車",
+      "thesis": "再建・流動性制約の下で、米国/メキシコ生産販売と中国競争を分ける。為替だけでなく、信用環境と値引きが必要になる需要環境を扱う。",
+      "business_facts": [
+        "FY2025台数資料は米国、中国、メキシコを含む北米の重要性を示す。",
+        "株主総会資料はRe:Nissanのコスト削減、米関税への生産/物流対応、負の自動車フリーキャッシュフローを記載。"
+      ],
+      "source_keys": [
+        "nissan_business",
+        "nissan_volume"
+      ],
+      "source_urls": [
+        "https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf",
+        "https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf"
+      ],
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日本株市場・翌朝の市場環境",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "CME Nikkei 225 JPY futures NIY。既存Yahoo NIY=Fは既存設定の対応を継続。",
+          "exchange_symbol": "NIY",
+          "provider_symbol": null,
+          "is_proxy": false,
+          "source_keys": [
+            "nikkei"
+          ],
+          "source_urls": [
+            "https://www.cmegroup.com/markets/equities/files/trade-japanese-equity-index-futures-fact-card.pdf",
+            "https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf",
+            "https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "共通市場因子は原則この1群。S&P先物/Nasdaq/VIXを数合わせで追加しない。",
+          "mechanism": "国内株式の共通市場要因。",
+          "tentative_sign": "通常＋",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "nissan_business",
+            "nissan_volume"
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円（円/米ドル）",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "ECB EUR/JPY と EUR/USD の参照値。JPY per USD = JPY per EUR / USD per EUR",
+          "exchange_symbol": null,
+          "provider_symbol": null,
+          "is_proxy": false,
+          "source_keys": [
+            "ecb"
+          ],
+          "source_urls": [
+            "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html",
+            "https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf",
+            "https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30 JSTまでに実受信した値のみ。取引可能なスポット値とは区別。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。",
+          "mechanism": "米ドル売上・日本輸出と利益換算。",
+          "tentative_sign": "原則＋、現地生産/調達を考慮",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "nissan_business",
+            "nissan_volume"
+          ]
+        },
+        {
+          "id": "mxnjpy",
+          "canonical_id": "mxnjpy",
+          "label": "メキシコペソ円（円/MXN）",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "ECB EUR/JPY と EUR/MXN の参照値。JPY per MXN = JPY per EUR / MXN per EUR",
+          "exchange_symbol": null,
+          "provider_symbol": null,
+          "is_proxy": false,
+          "source_keys": [
+            "ecb"
+          ],
+          "source_urls": [
+            "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html",
+            "https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf",
+            "https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30 JSTまでに実受信した値のみ。取引可能なスポット値とは区別。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。",
+          "mechanism": "メキシコ生産のコストと現地販売利益の換算。",
+          "tentative_sign": "MXN高は輸出採算−と換算＋が競合",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "nissan_business",
+            "nissan_volume"
+          ]
+        },
+        {
+          "id": "fxi",
+          "canonical_id": "fxi",
+          "label": "中国景況・販売環境",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "米国上場ETF FXI の調整済み日次終値",
+          "exchange_symbol": "FXI",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "fxi"
+          ],
+          "source_urls": [
+            "https://www.ishares.com/us/products/239536/ishares-china-largecap-etf?periodCd=d",
+            "https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf",
+            "https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。",
+          "mechanism": "中国市場の需要・現地競争圧力を表す広い代理。",
+          "tentative_sign": "需要回復＋、競合優位なら逆",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "nissan_business",
+            "nissan_volume"
+          ]
+        },
+        {
+          "id": "xly",
+          "canonical_id": "xly",
+          "label": "米国家計の耐久財購買環境",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "米国上場ETF XLY の調整済み日次終値",
+          "exchange_symbol": "XLY",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "xly"
+          ],
+          "source_urls": [
+            "https://www.ssga.com/us/en/individual/etfs/state-street-consumer-discretionary-select-sector-spdr-etf-xly",
+            "https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf",
+            "https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。",
+          "mechanism": "北米顧客の購買余力・販売奨励金必要性。",
+          "tentative_sign": "通常＋、日産固有シェア低下は別途確認",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "nissan_business",
+            "nissan_volume"
+          ]
+        },
+        {
+          "id": "us_2y_yield",
+          "canonical_id": "us_2y_yield",
+          "label": "米国短中期金利・ローン条件",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "US Treasury Daily Par Yield Curve 2-year",
+          "exchange_symbol": null,
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "treasury"
+          ],
+          "source_urls": [
+            "https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics",
+            "https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf",
+            "https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "米国市場観測時刻は概ね15:30 ET。観測時刻を公表時刻と見なさず、公式配信の実受信が08:30以前かを確認。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "車両ローン金利そのものではない。水準・前年差ではなく日次bp変化を主特徴にする。",
+          "mechanism": "ローン負担と販売金融の無リスク資金調達金利。",
+          "tentative_sign": "上昇は通常−",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "nissan_business",
+            "nissan_volume"
+          ]
+        },
+        {
+          "id": "us_hy_credit_spread",
+          "canonical_id": "us_hy_credit_spread",
+          "label": "米国ハイイールド信用スプレッド",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "FRED/ICE BofA OAS BAMLH0A0HYM2 日次終値。変化はbp単位",
+          "exchange_symbol": "BAMLH0A0HYM2",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "hy_spread"
+          ],
+          "source_urls": [
+            "https://fred.stlouisfed.org/series/BAMLH0A0HYM2",
+            "https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf",
+            "https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "観測日ではなくFRED公表/実受信日で利用判定。確認例:10/13観測を10/14 10:26 CDTに更新。翌朝に前々米営業日の値しかない場合がある。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "個社信用スプレッドや自動車ローンABSの直接データではない。2026年4月から公開履歴は3年に制限。権利条件と過去版を確認。",
+          "mechanism": "再建中の資金調達環境/市場の信用リスク許容度を広い信用指数で表す。",
+          "tentative_sign": "拡大は通常−。日産格付や個社OASの代用値とは呼ばない",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "nissan_business",
+            "nissan_volume"
+          ]
+        },
+        {
+          "id": "rbob_gasoline",
+          "canonical_id": "rbob_gasoline",
+          "label": "米国ガソリン価格・燃費選好",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "CME NYMEX RBOB gasoline futures RB",
+          "exchange_symbol": "RB",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "rbob"
+          ],
+          "source_urls": [
+            "https://www.cmegroup.com/markets/energy/refined-products/rbob-gasoline.contractSpecs.html",
+            "https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf",
+            "https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "消費者小売価格ではなく卸売先物。季節性・精製マージン・ロールの影響。原油WTI/Brentで無断代替しない。",
+          "mechanism": "米国の車両保有費・ICE/SUVと省燃費車の選好。",
+          "tentative_sign": "通常需要−、車種ミックスで変化",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "nissan_business",
+            "nissan_volume"
+          ]
+        },
+        {
+          "id": "us_hrc_steel",
+          "canonical_id": "us_hrc_steel",
+          "label": "北米自動車用鋼材コストの代理",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "CME US Midwest Domestic Hot-Rolled Coil Steel (CRU) Index futures HRC",
+          "exchange_symbol": "HRC",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "hrc",
+            "hrc_code"
+          ],
+          "source_urls": [
+            "https://www.cmegroup.com/markets/metals/ferrous/hrc-steel.contractSpecs.html",
+            "https://www.cmegroup.com/trading/metals/files/us-midwest-domestic-hot-rolled-coil-steel-futures-and-options.pdf",
+            "https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf",
+            "https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf"
+          ],
+          "source_dates": [
+            null,
+            "2015"
+          ],
+          "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "取引の薄い限月の停止価格に注意。各社契約調達価格でもアジア鋼材価格でもない。CME/許諾ベンダーの履歴取得未実装。",
+          "mechanism": "北米生産・部品調達の鋼材コスト。再建コスト削減と区別。",
+          "tentative_sign": "通常−、関税/転嫁/調達契約で条件付き",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "nissan_business",
+            "nissan_volume"
+          ]
+        }
+      ],
+      "indicator_count": 9,
+      "limitations": [
+        "市場系列は工場閉鎖・資産売却・提携・新車不振そのものを観測しない。公式開示/イベント時刻の取得を別途要求し、金融リスクの説明を補う。",
+        "メキシコFXは輸出費用と現地需要の両面があり負符号を固定しない。"
+      ],
+      "valid_from": "2026-10-15",
+      "profile_policy": "FIXED_COMPANY_GROUPS_DAILY_REFIT",
+      "production_status": "RESEARCH_PROFILE_REQUIRES_DATA"
+    },
+    {
+      "ticker": "7269",
+      "name": "スズキ",
+      "thesis": "日本小型車とインドのMarutiを中心に、ルピー、現地金利、子会社の固有評価、欧州、輸入燃料・軽量材料を測る。米国自動車比重の高い他社と同じ指標にしない。",
+      "business_facts": [
+        "FY2026 Q1資料はインドを大きな地域別収益源として示し、北米自動車収益は部品・用品と注記する。",
+        "インド投資とCNG/バイオガスへの取り組みが示され、2026-09-29の月次発表もインドの販売・生産を個別開示する。"
+      ],
+      "source_keys": [
+        "suzuki_q1",
+        "suzuki_cng",
+        "suzuki_monthly"
+      ],
+      "source_urls": [
+        "https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf",
+        "https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf",
+        "https://www.globalsuzuki.com/globalnews/2026/0929.html"
+      ],
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日本株市場・翌朝の市場環境",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "CME Nikkei 225 JPY futures NIY。既存Yahoo NIY=Fは既存設定の対応を継続。",
+          "exchange_symbol": "NIY",
+          "provider_symbol": null,
+          "is_proxy": false,
+          "source_keys": [
+            "nikkei"
+          ],
+          "source_urls": [
+            "https://www.cmegroup.com/markets/equities/files/trade-japanese-equity-index-futures-fact-card.pdf",
+            "https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf",
+            "https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf",
+            "https://www.globalsuzuki.com/globalnews/2026/0929.html"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "共通市場因子は原則この1群。S&P先物/Nasdaq/VIXを数合わせで追加しない。",
+          "mechanism": "国内小型車事業と上場株式市場の共通環境。",
+          "tentative_sign": "通常＋",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "suzuki_q1",
+            "suzuki_cng",
+            "suzuki_monthly"
+          ]
+        },
+        {
+          "id": "inrjpy",
+          "canonical_id": "inrjpy",
+          "label": "インドルピー円（円/INR）",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "ECB EUR/JPY と EUR/INR の参照値。JPY per INR = JPY per EUR / INR per EUR",
+          "exchange_symbol": null,
+          "provider_symbol": null,
+          "is_proxy": false,
+          "source_keys": [
+            "ecb"
+          ],
+          "source_urls": [
+            "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html",
+            "https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf",
+            "https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf",
+            "https://www.globalsuzuki.com/globalnews/2026/0929.html"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30 JSTまでに実受信した値のみ。取引可能なスポット値とは区別。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。",
+          "mechanism": "インド事業利益の円換算、輸入部材コストとルピー購買力。",
+          "tentative_sign": "INR高の換算は＋、輸出/調達との条件付き",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "suzuki_q1",
+            "suzuki_cng",
+            "suzuki_monthly"
+          ]
+        },
+        {
+          "id": "maruti_suzuki",
+          "canonical_id": "maruti_suzuki",
+          "label": "主要子会社Maruti固有の市場評価",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "NSE equity MARUTI 調整済み日次終値",
+          "exchange_symbol": "MARUTI",
+          "provider_symbol": null,
+          "is_proxy": false,
+          "source_keys": [
+            "maruti"
+          ],
+          "source_urls": [
+            "https://www.nseindia.com/get-quote/equity/MARUTI/Maruti-Suzuki-India-Limited",
+            "https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf",
+            "https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf",
+            "https://www.globalsuzuki.com/globalnews/2026/0929.html"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了したインド通常取引日の確定終値。取引所カレンダー、配当/分割、受信時刻を保存。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "親会社自社株テクニカルではなくインド上場子会社情報。INDAとの重複は係数安定性で監査。必要なら過去窓のみで市場成分を分離。",
+          "mechanism": "上場主要子会社に固有の販売/新車/設備投資/競争に対する情報。",
+          "tentative_sign": "通常＋、親子上場評価差は変動",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "suzuki_q1",
+            "suzuki_cng",
+            "suzuki_monthly"
+          ]
+        },
+        {
+          "id": "inda",
+          "canonical_id": "inda",
+          "label": "インド家計・景況環境",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "米国上場ETF INDA の調整済み日次終値",
+          "exchange_symbol": "INDA",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "inda"
+          ],
+          "source_urls": [
+            "https://www.ishares.com/us/products/239659/ishares-msci-india-etf?periodCd=m",
+            "https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf",
+            "https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf",
+            "https://www.globalsuzuki.com/globalnews/2026/0929.html"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。",
+          "mechanism": "Maruti以外も含むインド家計・設備投資の景況。子会社固有情報と区別する。",
+          "tentative_sign": "通常＋。Marutiとの共線性を検証",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "suzuki_q1",
+            "suzuki_cng",
+            "suzuki_monthly"
+          ]
+        },
+        {
+          "id": "india_10y_yield",
+          "canonical_id": "india_10y_yield",
+          "label": "インド自動車ローン・設備投資の金利環境",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "CCIL Daily Market Analytics G-Sec 10-Year yield（benchmark債とconstant maturityの定義を固定）",
+          "exchange_symbol": null,
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "ccil"
+          ],
+          "source_urls": [
+            "https://www.ccilindia.com/documents/43866/111510/CCIL_DAILY_ANALYSIS_31_12_25.pdf/3ce30f58-5aa4-26e0-043d-62e45bd64c34?download=true&t=1767186871028&version=1.0",
+            "https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf",
+            "https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf",
+            "https://www.globalsuzuki.com/globalnews/2026/0929.html"
+          ],
+          "source_dates": [
+            "2025-12-31"
+          ],
+          "cutoff_policy": "日次公表の実時刻を確認して08:30以前の最新値を使用。参考資料で日次表の存在のみ確認し、当日公開時刻/最新APIは未検証。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "車両ローン金利の代理。日次履歴の定義を固定し、ベンチマーク交代ジャンプを処理。",
+          "mechanism": "小型車の購買ローン条件・現地増産投資の資本コスト。",
+          "tentative_sign": "通常−、景気上昇要因なら混合",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "suzuki_q1",
+            "suzuki_cng",
+            "suzuki_monthly"
+          ]
+        },
+        {
+          "id": "eurjpy",
+          "canonical_id": "eurjpy",
+          "label": "ユーロ円（円/ユーロ）",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "ECB EUR/JPY reference rate",
+          "exchange_symbol": null,
+          "provider_symbol": null,
+          "is_proxy": false,
+          "source_keys": [
+            "ecb"
+          ],
+          "source_urls": [
+            "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html",
+            "https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf",
+            "https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf",
+            "https://www.globalsuzuki.com/globalnews/2026/0929.html"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30 JSTまでに実受信した値のみ。取引可能なスポット値とは区別。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。",
+          "mechanism": "欧州自動車/二輪販売の換算・日本輸出採算。",
+          "tentative_sign": "通常＋、欧州現地費用で相殺",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "suzuki_q1",
+            "suzuki_cng",
+            "suzuki_monthly"
+          ]
+        },
+        {
+          "id": "brent",
+          "canonical_id": "brent",
+          "label": "輸入燃料・石油化学コスト",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "CME NYMEX Brent Oil Last Day futures BZ。現行Brent系列を使用。",
+          "exchange_symbol": "BZ",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "brent"
+          ],
+          "source_urls": [
+            "https://www.cmegroup.com/daily_bulletin/current/Section61_Energy_Futures_Products.pdf",
+            "https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf",
+            "https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf",
+            "https://www.globalsuzuki.com/globalnews/2026/0929.html"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "インド現地CNG・ガソリン小売価格とは異なる。",
+          "mechanism": "インドの輸入燃料・石油化学原料・物流費と消費者負担。",
+          "tentative_sign": "通常−、低燃費/CNGへの需要シフトは＋",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "suzuki_q1",
+            "suzuki_cng",
+            "suzuki_monthly"
+          ]
+        },
+        {
+          "id": "lme_aluminium",
+          "canonical_id": "lme_aluminium",
+          "label": "軽量化部材・アルミ調達コスト",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "LME Aluminium Official Cash Settlement USD/t",
+          "exchange_symbol": null,
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "aluminium",
+            "lme_delay"
+          ],
+          "source_urls": [
+            "https://www.lme.com/Market-data/Reports-and-data/LME-Official-Prices",
+            "https://www.lme.com/en/Market-data/Reports-and-data",
+            "https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf",
+            "https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf",
+            "https://www.globalsuzuki.com/globalnews/2026/0929.html"
+          ],
+          "source_dates": [
+            null,
+            null
+          ],
+          "cutoff_policy": "LME公表は概ね12:20–13:25 London。公開画面はday-delayedであり、当日清算値と同時利用不可。配信経路ごとの公表時刻と遅延を保存。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "スズキがアルミ単独感応度を公表したという意味ではない。原材料費/軽量車の機構からの仮説。権利・履歴取得未確認。",
+          "mechanism": "小型軽量車の材料・部品原価の広い代理。",
+          "tentative_sign": "通常−、購買契約と価格転嫁で遅れる",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "suzuki_q1",
+            "suzuki_cng",
+            "suzuki_monthly"
+          ]
+        }
+      ],
+      "indicator_count": 8,
+      "limitations": [
+        "米国自動車需要や米長短金利を7群確保のために足さない。MarutiとINDAは同じ国の2指数ではなく子会社固有情報と市場環境だが、重複寄与の監査は必要。",
+        "CNG相対燃料費は重要な別候補だが価格改定が不定期で日次変動が乏しいため固定8群に数えず補助状態/イベントとして別途取得する。"
+      ],
+      "valid_from": "2026-10-15",
+      "profile_policy": "FIXED_COMPANY_GROUPS_DAILY_REFIT",
+      "production_status": "RESEARCH_PROFILE_REQUIRES_DATA"
+    },
+    {
+      "ticker": "7270",
+      "name": "SUBARU",
+      "thesis": "北米に集中するICE/HEV・SUV事業の需要、消費者金融、燃料、鋼材、触媒貴金属を優先する。中国やインドの指標を数合わせで含めない。",
+      "business_facts": [
+        "FYE2026参考表では北米販売708千台、全世界896千台で北米約79%。",
+        "最新Q1説明は販売奨励金・原材料費、米関税、貴金属市況、ICE/HEVと提携BEVを挙げる。"
+      ],
+      "source_keys": [
+        "subaru_q1",
+        "subaru_reference",
+        "subaru_qa"
+      ],
+      "source_urls": [
+        "https://www.subaru.co.jp/en/ir/finance/latest-results.html",
+        "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf",
+        "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf"
+      ],
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日本株市場・翌朝の市場環境",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "CME Nikkei 225 JPY futures NIY。既存Yahoo NIY=Fは既存設定の対応を継続。",
+          "exchange_symbol": "NIY",
+          "provider_symbol": null,
+          "is_proxy": false,
+          "source_keys": [
+            "nikkei"
+          ],
+          "source_urls": [
+            "https://www.cmegroup.com/markets/equities/files/trade-japanese-equity-index-futures-fact-card.pdf",
+            "https://www.subaru.co.jp/en/ir/finance/latest-results.html",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "共通市場因子は原則この1群。S&P先物/Nasdaq/VIXを数合わせで追加しない。",
+          "mechanism": "国内上場市場の共通変動。",
+          "tentative_sign": "通常＋",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "subaru_q1",
+            "subaru_reference",
+            "subaru_qa"
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円（円/米ドル）",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "ECB EUR/JPY と EUR/USD の参照値。JPY per USD = JPY per EUR / USD per EUR",
+          "exchange_symbol": null,
+          "provider_symbol": null,
+          "is_proxy": false,
+          "source_keys": [
+            "ecb"
+          ],
+          "source_urls": [
+            "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html",
+            "https://www.subaru.co.jp/en/ir/finance/latest-results.html",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30 JSTまでに実受信した値のみ。取引可能なスポット値とは区別。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "現行USD/JPY・EUR/JPY系列とECB系列はフィキシング時刻が異なるため無記録に混在させない。",
+          "mechanism": "日本生産から北米への輸出と米国利益換算。",
+          "tentative_sign": "原則＋、米国現地生産が相殺",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "subaru_q1",
+            "subaru_reference",
+            "subaru_qa"
+          ]
+        },
+        {
+          "id": "xly",
+          "canonical_id": "xly",
+          "label": "米国家計の耐久財購買環境",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "米国上場ETF XLY の調整済み日次終値",
+          "exchange_symbol": "XLY",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "xly"
+          ],
+          "source_urls": [
+            "https://www.ssga.com/us/en/individual/etfs/state-street-consumer-discretionary-select-sector-spdr-etf-xly",
+            "https://www.subaru.co.jp/en/ir/finance/latest-results.html",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "国/消費セクター株の代理であり当該企業の販売台数ではない。構成銘柄偏りと通貨・米株市場要因を併せて評価。",
+          "mechanism": "主要米国顧客の高額耐久財購入余力・奨励金圧力。",
+          "tentative_sign": "通常＋、SUV需要の直接測定ではない",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "subaru_q1",
+            "subaru_reference",
+            "subaru_qa"
+          ]
+        },
+        {
+          "id": "us_2y_yield",
+          "canonical_id": "us_2y_yield",
+          "label": "米国短中期金利・ローン条件",
+          "catalog_status": "existing",
+          "acquisition_status": "EXISTING_CATALOG_PIT_CHECK_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "US Treasury Daily Par Yield Curve 2-year",
+          "exchange_symbol": null,
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "treasury"
+          ],
+          "source_urls": [
+            "https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics",
+            "https://www.subaru.co.jp/en/ir/finance/latest-results.html",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "米国市場観測時刻は概ね15:30 ET。観測時刻を公表時刻と見なさず、公式配信の実受信が08:30以前かを確認。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "車両ローン金利そのものではない。水準・前年差ではなく日次bp変化を主特徴にする。",
+          "mechanism": "米国顧客のローン/リース負担と販売支援費。",
+          "tentative_sign": "上昇は通常−",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "subaru_q1",
+            "subaru_reference",
+            "subaru_qa"
+          ]
+        },
+        {
+          "id": "us_ig_credit_spread",
+          "canonical_id": "us_ig_credit_spread",
+          "label": "米国投資適格信用スプレッド",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "FRED/ICE BofA OAS BAMLC0A0CM 日次終値。変化はbp単位",
+          "exchange_symbol": "BAMLC0A0CM",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "ig_spread"
+          ],
+          "source_urls": [
+            "https://fred.stlouisfed.org/series/BAMLC0A0CM",
+            "https://www.subaru.co.jp/en/ir/finance/latest-results.html",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "観測日ではなくFRED公表/実受信日で利用判定。確認例:10/13観測を10/14 10:26 CDTに更新。翌朝に前々米営業日の値しかない場合がある。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "個社信用スプレッドや自動車ローンABSの直接データではない。2026年4月から公開履歴は3年に制限。権利条件と過去版を確認。",
+          "mechanism": "金利とは独立した米国消費金融・信用供給の市場代理。",
+          "tentative_sign": "拡大は通常−、個社販売金融の実測ではない",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "subaru_q1",
+            "subaru_reference",
+            "subaru_qa"
+          ]
+        },
+        {
+          "id": "rbob_gasoline",
+          "canonical_id": "rbob_gasoline",
+          "label": "米国ガソリン価格・燃費選好",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "CME NYMEX RBOB gasoline futures RB",
+          "exchange_symbol": "RB",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "rbob"
+          ],
+          "source_urls": [
+            "https://www.cmegroup.com/markets/energy/refined-products/rbob-gasoline.contractSpecs.html",
+            "https://www.subaru.co.jp/en/ir/finance/latest-results.html",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf"
+          ],
+          "source_dates": [
+            null
+          ],
+          "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "消費者小売価格ではなく卸売先物。季節性・精製マージン・ロールの影響。原油WTI/Brentで無断代替しない。",
+          "mechanism": "北米SUVの維持費とICEからHEVへの商品選好。",
+          "tentative_sign": "総需要− / HEV選好＋の競合",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "subaru_q1",
+            "subaru_reference",
+            "subaru_qa"
+          ]
+        },
+        {
+          "id": "us_hrc_steel",
+          "canonical_id": "us_hrc_steel",
+          "label": "北米自動車用鋼材コストの代理",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "CME US Midwest Domestic Hot-Rolled Coil Steel (CRU) Index futures HRC",
+          "exchange_symbol": "HRC",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "hrc",
+            "hrc_code"
+          ],
+          "source_urls": [
+            "https://www.cmegroup.com/markets/metals/ferrous/hrc-steel.contractSpecs.html",
+            "https://www.cmegroup.com/trading/metals/files/us-midwest-domestic-hot-rolled-coil-steel-futures-and-options.pdf",
+            "https://www.subaru.co.jp/en/ir/finance/latest-results.html",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf"
+          ],
+          "source_dates": [
+            null,
+            "2015"
+          ],
+          "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "取引の薄い限月の停止価格に注意。各社契約調達価格でもアジア鋼材価格でもない。CME/許諾ベンダーの履歴取得未実装。",
+          "mechanism": "米国現地生産・部品仕入の鋼材価格圧力。",
+          "tentative_sign": "通常−、長期契約で遅延",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "subaru_q1",
+            "subaru_reference",
+            "subaru_qa"
+          ]
+        },
+        {
+          "id": "palladium",
+          "canonical_id": "palladium",
+          "label": "触媒用貴金属コストの代理",
+          "catalog_status": "proposed",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "source_verification": "VERIFIED",
+          "verification_scope": "公式資料で商品・系列の存在を確認。API取得、履歴完全性、利用権、08:30までの実受信は未検証。",
+          "frequency": "daily",
+          "candidate_daily_source": "CME NYMEX palladium futures PA",
+          "exchange_symbol": "PA",
+          "provider_symbol": null,
+          "is_proxy": true,
+          "source_keys": [
+            "palladium",
+            "palladium_code"
+          ],
+          "source_urls": [
+            "https://www.cmegroup.com/markets/metals/precious/palladium.contractSpecs.html",
+            "https://www.cmegroup.com/content/dam/cmegroup/notices/ser/2020/10/SER-8668.pdf",
+            "https://www.subaru.co.jp/en/ir/finance/latest-results.html",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf",
+            "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf"
+          ],
+          "source_dates": [
+            null,
+            "2020-10"
+          ],
+          "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+          "availability_at_0830": "CONDITIONAL",
+          "history_status": "NOT_CHECKED",
+          "limitations": "SUBARU資料は貴金属市況を特定するがパラジウム単独感応度は非開示。プラチナ代替・契約ヘッジで符号/遅延は変わる。",
+          "mechanism": "会社が指摘する貴金属費用を触媒用途の代表価格で追う。",
+          "tentative_sign": "通常−、PGM組成・ヘッジ・代替で変化",
+          "business_hypothesis_status": "HYPOTHESIS",
+          "intraday_skill_status": "NOT_VALIDATED",
+          "required": true,
+          "business_source_keys": [
+            "subaru_q1",
+            "subaru_reference",
+            "subaru_qa"
+          ]
+        }
+      ],
+      "indicator_count": 8,
+      "limitations": [
+        "航空宇宙事業を存在するだけの理由で独立株指数1群にしない。規模・日次感応度の追加証拠なし。",
+        "貴金属全体をパラジウム一つで完全再現はできない。Pt/Pd購買比率・ヘッジの確認を依頼。"
+      ],
+      "valid_from": "2026-10-15",
+      "profile_policy": "FIXED_COMPANY_GROUPS_DAILY_REFIT",
+      "production_status": "RESEARCH_PROFILE_REQUIRES_DATA"
+    }
+  ],
+  "acquisition_requests": [
+    {
+      "id": "inrjpy",
+      "tickers": [
+        "7269"
+      ],
+      "required_for_profile": true,
+      "priority": "P1",
+      "request": "ECB EUR/JPY と EUR/INR の参照値。JPY per INR = JPY per EUR / INR per EUR の日次履歴と時点情報を取得。最低120学習営業日＋特徴量ウォームアップ20営業日、さらに未使用評価期間を確保。",
+      "source_urls": [
+        "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html"
+      ],
+      "source_verification": "VERIFIED",
+      "provider_symbol": null,
+      "exchange_symbol": null,
+      "frequency": "daily",
+      "cutoff_policy": "ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30 JSTまでに実受信した値のみ。取引可能なスポット値とは区別。",
+      "acceptance": [
+        "観測日・公表日時・実受信日時・出所・原データハッシュを保存",
+        "通貨/単位/価格定義/休日/改訂/配当分割または先物ロールを固定",
+        "先読みのない日次行を作成して全必須群の履歴・当日カバレッジを確認",
+        "利用条件/必要な契約を調査。契約・購入・アカウント作成は未実施"
+      ],
+      "fallback": "別の既存マクロへ自動代替しない。未取得なら新プロファイルはINSUFFICIENT_DATA。"
+    },
+    {
+      "id": "brljpy",
+      "tickers": [
+        "7267"
+      ],
+      "required_for_profile": true,
+      "priority": "P1",
+      "request": "ECB EUR/JPY と EUR/BRL の参照値。JPY per BRL = JPY per EUR / BRL per EUR の日次履歴と時点情報を取得。最低120学習営業日＋特徴量ウォームアップ20営業日、さらに未使用評価期間を確保。",
+      "source_urls": [
+        "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html"
+      ],
+      "source_verification": "VERIFIED",
+      "provider_symbol": null,
+      "exchange_symbol": null,
+      "frequency": "daily",
+      "cutoff_policy": "ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30 JSTまでに実受信した値のみ。取引可能なスポット値とは区別。",
+      "acceptance": [
+        "観測日・公表日時・実受信日時・出所・原データハッシュを保存",
+        "通貨/単位/価格定義/休日/改訂/配当分割または先物ロールを固定",
+        "先読みのない日次行を作成して全必須群の履歴・当日カバレッジを確認",
+        "利用条件/必要な契約を調査。契約・購入・アカウント作成は未実施"
+      ],
+      "fallback": "別の既存マクロへ自動代替しない。未取得なら新プロファイルはINSUFFICIENT_DATA。"
+    },
+    {
+      "id": "mxnjpy",
+      "tickers": [
+        "7201"
+      ],
+      "required_for_profile": true,
+      "priority": "P1",
+      "request": "ECB EUR/JPY と EUR/MXN の参照値。JPY per MXN = JPY per EUR / MXN per EUR の日次履歴と時点情報を取得。最低120学習営業日＋特徴量ウォームアップ20営業日、さらに未使用評価期間を確保。",
+      "source_urls": [
+        "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html"
+      ],
+      "source_verification": "VERIFIED",
+      "provider_symbol": null,
+      "exchange_symbol": null,
+      "frequency": "daily",
+      "cutoff_policy": "ECBの同一公表日のEUR建て参照値からクロス算出。欧州営業日の16:00頃公表後、08:30 JSTまでに実受信した値のみ。取引可能なスポット値とは区別。",
+      "acceptance": [
+        "観測日・公表日時・実受信日時・出所・原データハッシュを保存",
+        "通貨/単位/価格定義/休日/改訂/配当分割または先物ロールを固定",
+        "先読みのない日次行を作成して全必須群の履歴・当日カバレッジを確認",
+        "利用条件/必要な契約を調査。契約・購入・アカウント作成は未実施"
+      ],
+      "fallback": "別の既存マクロへ自動代替しない。未取得なら新プロファイルはINSUFFICIENT_DATA。"
+    },
+    {
+      "id": "inda",
+      "tickers": [
+        "7267",
+        "7269"
+      ],
+      "required_for_profile": true,
+      "priority": "P1",
+      "request": "米国上場ETF INDA の調整済み日次終値 の日次履歴と時点情報を取得。最低120学習営業日＋特徴量ウォームアップ20営業日、さらに未使用評価期間を確保。",
+      "source_urls": [
+        "https://www.ishares.com/us/products/239659/ishares-msci-india-etf?periodCd=m"
+      ],
+      "source_verification": "VERIFIED",
+      "provider_symbol": null,
+      "exchange_symbol": "INDA",
+      "frequency": "daily",
+      "cutoff_policy": "前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。",
+      "acceptance": [
+        "観測日・公表日時・実受信日時・出所・原データハッシュを保存",
+        "通貨/単位/価格定義/休日/改訂/配当分割または先物ロールを固定",
+        "先読みのない日次行を作成して全必須群の履歴・当日カバレッジを確認",
+        "利用条件/必要な契約を調査。契約・購入・アカウント作成は未実施"
+      ],
+      "fallback": "別の既存マクロへ自動代替しない。未取得なら新プロファイルはINSUFFICIENT_DATA。"
+    },
+    {
+      "id": "eido",
+      "tickers": [
+        "7267"
+      ],
+      "required_for_profile": true,
+      "priority": "P1",
+      "request": "米国上場ETF EIDO の調整済み日次終値 の日次履歴と時点情報を取得。最低120学習営業日＋特徴量ウォームアップ20営業日、さらに未使用評価期間を確保。",
+      "source_urls": [
+        "https://www.ishares.com/us/products/239661/ishares-msci-indonesia-etf"
+      ],
+      "source_verification": "VERIFIED",
+      "provider_symbol": null,
+      "exchange_symbol": "EIDO",
+      "frequency": "daily",
+      "cutoff_policy": "前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。",
+      "acceptance": [
+        "観測日・公表日時・実受信日時・出所・原データハッシュを保存",
+        "通貨/単位/価格定義/休日/改訂/配当分割または先物ロールを固定",
+        "先読みのない日次行を作成して全必須群の履歴・当日カバレッジを確認",
+        "利用条件/必要な契約を調査。契約・購入・アカウント作成は未実施"
+      ],
+      "fallback": "別の既存マクロへ自動代替しない。未取得なら新プロファイルはINSUFFICIENT_DATA。"
+    },
+    {
+      "id": "xly",
+      "tickers": [
+        "7203",
+        "7267",
+        "7201",
+        "7270"
+      ],
+      "required_for_profile": true,
+      "priority": "P1",
+      "request": "米国上場ETF XLY の調整済み日次終値 の日次履歴と時点情報を取得。最低120学習営業日＋特徴量ウォームアップ20営業日、さらに未使用評価期間を確保。",
+      "source_urls": [
+        "https://www.ssga.com/us/en/individual/etfs/state-street-consumer-discretionary-select-sector-spdr-etf-xly"
+      ],
+      "source_verification": "VERIFIED",
+      "provider_symbol": null,
+      "exchange_symbol": "XLY",
+      "frequency": "daily",
+      "cutoff_policy": "前の完了した米国通常取引日の終値。米16:00=日本翌05:00/06:00が目安。終値確定・実受信を08:30までに確認。",
+      "acceptance": [
+        "観測日・公表日時・実受信日時・出所・原データハッシュを保存",
+        "通貨/単位/価格定義/休日/改訂/配当分割または先物ロールを固定",
+        "先読みのない日次行を作成して全必須群の履歴・当日カバレッジを確認",
+        "利用条件/必要な契約を調査。契約・購入・アカウント作成は未実施"
+      ],
+      "fallback": "別の既存マクロへ自動代替しない。未取得なら新プロファイルはINSUFFICIENT_DATA。"
+    },
+    {
+      "id": "us_ig_credit_spread",
+      "tickers": [
+        "7203",
+        "7267",
+        "7270"
+      ],
+      "required_for_profile": true,
+      "priority": "P1",
+      "request": "FRED/ICE BofA OAS BAMLC0A0CM 日次終値。変化はbp単位 の日次履歴と時点情報を取得。最低120学習営業日＋特徴量ウォームアップ20営業日、さらに未使用評価期間を確保。",
+      "source_urls": [
+        "https://fred.stlouisfed.org/series/BAMLC0A0CM"
+      ],
+      "source_verification": "VERIFIED",
+      "provider_symbol": null,
+      "exchange_symbol": "BAMLC0A0CM",
+      "frequency": "daily",
+      "cutoff_policy": "観測日ではなくFRED公表/実受信日で利用判定。確認例:10/13観測を10/14 10:26 CDTに更新。翌朝に前々米営業日の値しかない場合がある。",
+      "acceptance": [
+        "観測日・公表日時・実受信日時・出所・原データハッシュを保存",
+        "通貨/単位/価格定義/休日/改訂/配当分割または先物ロールを固定",
+        "先読みのない日次行を作成して全必須群の履歴・当日カバレッジを確認",
+        "利用条件/必要な契約を調査。契約・購入・アカウント作成は未実施"
+      ],
+      "fallback": "別の既存マクロへ自動代替しない。未取得なら新プロファイルはINSUFFICIENT_DATA。"
+    },
+    {
+      "id": "us_hy_credit_spread",
+      "tickers": [
+        "7201"
+      ],
+      "required_for_profile": true,
+      "priority": "P1",
+      "request": "FRED/ICE BofA OAS BAMLH0A0HYM2 日次終値。変化はbp単位 の日次履歴と時点情報を取得。最低120学習営業日＋特徴量ウォームアップ20営業日、さらに未使用評価期間を確保。",
+      "source_urls": [
+        "https://fred.stlouisfed.org/series/BAMLH0A0HYM2"
+      ],
+      "source_verification": "VERIFIED",
+      "provider_symbol": null,
+      "exchange_symbol": "BAMLH0A0HYM2",
+      "frequency": "daily",
+      "cutoff_policy": "観測日ではなくFRED公表/実受信日で利用判定。確認例:10/13観測を10/14 10:26 CDTに更新。翌朝に前々米営業日の値しかない場合がある。",
+      "acceptance": [
+        "観測日・公表日時・実受信日時・出所・原データハッシュを保存",
+        "通貨/単位/価格定義/休日/改訂/配当分割または先物ロールを固定",
+        "先読みのない日次行を作成して全必須群の履歴・当日カバレッジを確認",
+        "利用条件/必要な契約を調査。契約・購入・アカウント作成は未実施"
+      ],
+      "fallback": "別の既存マクロへ自動代替しない。未取得なら新プロファイルはINSUFFICIENT_DATA。"
+    },
+    {
+      "id": "rbob_gasoline",
+      "tickers": [
+        "7203",
+        "7267",
+        "7201",
+        "7270"
+      ],
+      "required_for_profile": true,
+      "priority": "P1",
+      "request": "CME NYMEX RBOB gasoline futures RB の日次履歴と時点情報を取得。最低120学習営業日＋特徴量ウォームアップ20営業日、さらに未使用評価期間を確保。",
+      "source_urls": [
+        "https://www.cmegroup.com/markets/energy/refined-products/rbob-gasoline.contractSpecs.html"
+      ],
+      "source_verification": "VERIFIED",
+      "provider_symbol": null,
+      "exchange_symbol": "RB",
+      "frequency": "daily",
+      "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+      "acceptance": [
+        "観測日・公表日時・実受信日時・出所・原データハッシュを保存",
+        "通貨/単位/価格定義/休日/改訂/配当分割または先物ロールを固定",
+        "先読みのない日次行を作成して全必須群の履歴・当日カバレッジを確認",
+        "利用条件/必要な契約を調査。契約・購入・アカウント作成は未実施"
+      ],
+      "fallback": "別の既存マクロへ自動代替しない。未取得なら新プロファイルはINSUFFICIENT_DATA。"
+    },
+    {
+      "id": "us_hrc_steel",
+      "tickers": [
+        "7203",
+        "7201",
+        "7270"
+      ],
+      "required_for_profile": true,
+      "priority": "P1",
+      "request": "CME US Midwest Domestic Hot-Rolled Coil Steel (CRU) Index futures HRC の日次履歴と時点情報を取得。最低120学習営業日＋特徴量ウォームアップ20営業日、さらに未使用評価期間を確保。",
+      "source_urls": [
+        "https://www.cmegroup.com/markets/metals/ferrous/hrc-steel.contractSpecs.html",
+        "https://www.cmegroup.com/trading/metals/files/us-midwest-domestic-hot-rolled-coil-steel-futures-and-options.pdf"
+      ],
+      "source_verification": "VERIFIED",
+      "provider_symbol": null,
+      "exchange_symbol": "HRC",
+      "frequency": "daily",
+      "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+      "acceptance": [
+        "観測日・公表日時・実受信日時・出所・原データハッシュを保存",
+        "通貨/単位/価格定義/休日/改訂/配当分割または先物ロールを固定",
+        "先読みのない日次行を作成して全必須群の履歴・当日カバレッジを確認",
+        "利用条件/必要な契約を調査。契約・購入・アカウント作成は未実施"
+      ],
+      "fallback": "別の既存マクロへ自動代替しない。未取得なら新プロファイルはINSUFFICIENT_DATA。"
+    },
+    {
+      "id": "palladium",
+      "tickers": [
+        "7270"
+      ],
+      "required_for_profile": true,
+      "priority": "P1",
+      "request": "CME NYMEX palladium futures PA の日次履歴と時点情報を取得。最低120学習営業日＋特徴量ウォームアップ20営業日、さらに未使用評価期間を確保。",
+      "source_urls": [
+        "https://www.cmegroup.com/markets/metals/precious/palladium.contractSpecs.html",
+        "https://www.cmegroup.com/content/dam/cmegroup/notices/ser/2020/10/SER-8668.pdf"
+      ],
+      "source_verification": "VERIFIED",
+      "provider_symbol": null,
+      "exchange_symbol": "PA",
+      "frequency": "daily",
+      "cutoff_policy": "前の完了した取引日の確定清算値を使用。限月・ロールと公表時刻を保存。08:30時点の進行中日足や事後更新値は禁止。",
+      "acceptance": [
+        "観測日・公表日時・実受信日時・出所・原データハッシュを保存",
+        "通貨/単位/価格定義/休日/改訂/配当分割または先物ロールを固定",
+        "先読みのない日次行を作成して全必須群の履歴・当日カバレッジを確認",
+        "利用条件/必要な契約を調査。契約・購入・アカウント作成は未実施"
+      ],
+      "fallback": "別の既存マクロへ自動代替しない。未取得なら新プロファイルはINSUFFICIENT_DATA。"
+    },
+    {
+      "id": "lme_aluminium",
+      "tickers": [
+        "7269"
+      ],
+      "required_for_profile": true,
+      "priority": "P1",
+      "request": "LME Aluminium Official Cash Settlement USD/t の日次履歴と時点情報を取得。最低120学習営業日＋特徴量ウォームアップ20営業日、さらに未使用評価期間を確保。",
+      "source_urls": [
+        "https://www.lme.com/Market-data/Reports-and-data/LME-Official-Prices",
+        "https://www.lme.com/en/Market-data/Reports-and-data"
+      ],
+      "source_verification": "VERIFIED",
+      "provider_symbol": null,
+      "exchange_symbol": null,
+      "frequency": "daily",
+      "cutoff_policy": "LME公表は概ね12:20–13:25 London。公開画面はday-delayedであり、当日清算値と同時利用不可。配信経路ごとの公表時刻と遅延を保存。",
+      "acceptance": [
+        "観測日・公表日時・実受信日時・出所・原データハッシュを保存",
+        "通貨/単位/価格定義/休日/改訂/配当分割または先物ロールを固定",
+        "先読みのない日次行を作成して全必須群の履歴・当日カバレッジを確認",
+        "利用条件/必要な契約を調査。契約・購入・アカウント作成は未実施"
+      ],
+      "fallback": "別の既存マクロへ自動代替しない。未取得なら新プロファイルはINSUFFICIENT_DATA。"
+    },
+    {
+      "id": "maruti_suzuki",
+      "tickers": [
+        "7269"
+      ],
+      "required_for_profile": true,
+      "priority": "P1",
+      "request": "NSE equity MARUTI 調整済み日次終値 の日次履歴と時点情報を取得。最低120学習営業日＋特徴量ウォームアップ20営業日、さらに未使用評価期間を確保。",
+      "source_urls": [
+        "https://www.nseindia.com/get-quote/equity/MARUTI/Maruti-Suzuki-India-Limited"
+      ],
+      "source_verification": "VERIFIED",
+      "provider_symbol": null,
+      "exchange_symbol": "MARUTI",
+      "frequency": "daily",
+      "cutoff_policy": "前の完了したインド通常取引日の確定終値。取引所カレンダー、配当/分割、受信時刻を保存。",
+      "acceptance": [
+        "観測日・公表日時・実受信日時・出所・原データハッシュを保存",
+        "通貨/単位/価格定義/休日/改訂/配当分割または先物ロールを固定",
+        "先読みのない日次行を作成して全必須群の履歴・当日カバレッジを確認",
+        "利用条件/必要な契約を調査。契約・購入・アカウント作成は未実施"
+      ],
+      "fallback": "別の既存マクロへ自動代替しない。未取得なら新プロファイルはINSUFFICIENT_DATA。"
+    },
+    {
+      "id": "india_10y_yield",
+      "tickers": [
+        "7269"
+      ],
+      "required_for_profile": true,
+      "priority": "P1",
+      "request": "CCIL Daily Market Analytics G-Sec 10-Year yield（benchmark債とconstant maturityの定義を固定） の日次履歴と時点情報を取得。最低120学習営業日＋特徴量ウォームアップ20営業日、さらに未使用評価期間を確保。",
+      "source_urls": [
+        "https://www.ccilindia.com/documents/43866/111510/CCIL_DAILY_ANALYSIS_31_12_25.pdf/3ce30f58-5aa4-26e0-043d-62e45bd64c34?download=true&t=1767186871028&version=1.0"
+      ],
+      "source_verification": "VERIFIED",
+      "provider_symbol": null,
+      "exchange_symbol": null,
+      "frequency": "daily",
+      "cutoff_policy": "日次公表の実時刻を確認して08:30以前の最新値を使用。参考資料で日次表の存在のみ確認し、当日公開時刻/最新APIは未検証。",
+      "acceptance": [
+        "観測日・公表日時・実受信日時・出所・原データハッシュを保存",
+        "通貨/単位/価格定義/休日/改訂/配当分割または先物ロールを固定",
+        "先読みのない日次行を作成して全必須群の履歴・当日カバレッジを確認",
+        "利用条件/必要な契約を調査。契約・購入・アカウント作成は未実施"
+      ],
+      "fallback": "別の既存マクロへ自動代替しない。未取得なら新プロファイルはINSUFFICIENT_DATA。"
+    },
+    {
+      "id": "india_cng_affordability",
+      "tickers": [
+        "7269"
+      ],
+      "required_for_profile": false,
+      "priority": "P2_BUSINESS_STATE",
+      "request": "IGL Delhi CNG/kgとIndianOil Delhi petrol/litreの改定履歴・公表時刻。Suzukiが示す車種別燃費を固定した相対保有費、または基準日を固定した価格指数比を作る。",
+      "source_urls": [
+        "https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf",
+        "https://www.iglonline.net//cng-png-prices",
+        "https://iocl.com/petrol-diesel-price"
+      ],
+      "source_verification": "VERIFIED",
+      "frequency": "daily observation; irregular price revisions",
+      "cutoff_policy": "IndianOilは06:00 IST=09:30 JSTに当日価格改定。08:30予測で当日改定値を使わず前日まで。将来日付のCNG価格は公表時刻を分ける。",
+      "acquisition_status": "NEW_HISTORY_AND_TIMESTAMPS_REQUIRED",
+      "reason_not_in_fixed_groups": "価格が変わらない期間が長く独立した日次係数を識別できない可能性。日次変動を捏造しない。"
+    },
+    {
+      "id": "auto_company_events",
+      "tickers": [
+        "7203",
+        "7267",
+        "7201",
+        "7269",
+        "7270"
+      ],
+      "required_for_profile": false,
+      "priority": "P2_EXPLANATION",
+      "request": "会社公式の国別月次販売/生産、HEV/CNG比率、新車、工場停止、関税影響、再建、金融損失等を発表時刻付きで保存。月次/四半期数字を日次観測と偽装しない。",
+      "source_urls": [
+        "https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf",
+        "https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf",
+        "https://www.globalsuzuki.com/globalnews/2026/0929.html",
+        "https://www.subaru.co.jp/en/ir/finance/latest-results.html",
+        "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf"
+      ],
+      "frequency": "event/monthly/quarterly",
+      "acquisition_status": "NEW_EVENT_HISTORY_REQUIRED"
+    }
+  ],
+  "sources": {
+    "toyota_20f": {
+      "title": "Toyota FY2026 Form 20-F",
+      "date": "2026-06-10",
+      "url": "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "toyota_integrated": {
+      "title": "Toyota Integrated Report 2025",
+      "date": "2026-02-27",
+      "url": "https://global.toyota/pages/global_toyota/ir/library/annual/2025_001_integrated_en.pdf",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "honda_q1": {
+      "title": "Honda FYE2027 Q1 presentation",
+      "date": "2026-08-05",
+      "url": "https://global.honda/en/investors/library/financialresult/main/010/teaserItems3/015/linkList/00/link/FYE202703_1Q_financial_presentation_e_1.pdf",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "honda_business": {
+      "title": "Honda 102nd fiscal year business report",
+      "date": "2026-06",
+      "url": "https://global.honda/en/investors/library/filings/auto_20260602560203/pdfFile.pdf",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "nissan_business": {
+      "title": "Nissan 127th shareholders meeting business report",
+      "date": "2026-06",
+      "url": "https://www.nissan-global.com/EN/IR/STOCK/SHAREHOLDER/127/ASSETS/PDF/shousyu2026.pdf",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "nissan_volume": {
+      "title": "Nissan FY2025 global volume information",
+      "date": "2026-05-13",
+      "url": "https://www.nissan-global.com/EN/IR/FINANCIAL_RESULTS/ASSETS/DATA/2025/20254th_summary_863_e.pdf",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "suzuki_q1": {
+      "title": "Suzuki FY2026 Q1 presentation",
+      "date": "2026-08-05",
+      "url": "https://www.globalsuzuki.com/ir/library/financialresults/pdf/2026/financial_presentation_1q.pdf",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "suzuki_cng": {
+      "title": "Suzuki India business presentation, CNG economics p.34",
+      "date": "2026-03-17",
+      "url": "https://www.globalsuzuki.com/ir/library/financialpresentation/pdf/2026/ibp_20260317.pdf",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "suzuki_monthly": {
+      "title": "Suzuki August 2026 production and sales",
+      "date": "2026-09-29",
+      "url": "https://www.globalsuzuki.com/globalnews/2026/0929.html",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "subaru_q1": {
+      "title": "Subaru latest results and forecast, FYE2027 Q1",
+      "date": "2026-08-05",
+      "url": "https://www.subaru.co.jp/en/ir/finance/latest-results.html",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "subaru_reference": {
+      "title": "Subaru FYE2026 results reference",
+      "date": "2026-05-15",
+      "url": "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_rm_e.pdf",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "subaru_qa": {
+      "title": "Subaru FYE2026 analyst Q&A",
+      "date": "2026-05-15",
+      "url": "https://www.subaru.co.jp/en/ir/library/pdf/fr/2026/2026_4qf_qa_e.pdf",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "ecb": {
+      "title": "ECB euro reference exchange rates",
+      "date": null,
+      "url": "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "treasury": {
+      "title": "US Treasury interest-rate statistics and methodology",
+      "date": null,
+      "url": "https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "nikkei": {
+      "title": "CME Japanese equity index futures product card",
+      "date": null,
+      "url": "https://www.cmegroup.com/markets/equities/files/trade-japanese-equity-index-futures-fact-card.pdf",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "fxi": {
+      "title": "iShares China Large-Cap ETF FXI",
+      "date": null,
+      "url": "https://www.ishares.com/us/products/239536/ishares-china-largecap-etf?periodCd=d",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "inda": {
+      "title": "iShares MSCI India ETF INDA",
+      "date": null,
+      "url": "https://www.ishares.com/us/products/239659/ishares-msci-india-etf?periodCd=m",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "eido": {
+      "title": "iShares MSCI Indonesia ETF EIDO",
+      "date": null,
+      "url": "https://www.ishares.com/us/products/239661/ishares-msci-indonesia-etf",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "xly": {
+      "title": "State Street Consumer Discretionary Select Sector SPDR ETF XLY",
+      "date": null,
+      "url": "https://www.ssga.com/us/en/individual/etfs/state-street-consumer-discretionary-select-sector-spdr-etf-xly",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "ig_spread": {
+      "title": "FRED ICE BofA US Corporate OAS BAMLC0A0CM",
+      "date": null,
+      "url": "https://fred.stlouisfed.org/series/BAMLC0A0CM",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "hy_spread": {
+      "title": "FRED ICE BofA US High Yield OAS BAMLH0A0HYM2",
+      "date": null,
+      "url": "https://fred.stlouisfed.org/series/BAMLH0A0HYM2",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "rbob": {
+      "title": "CME RBOB gasoline futures contract specifications",
+      "date": null,
+      "url": "https://www.cmegroup.com/markets/energy/refined-products/rbob-gasoline.contractSpecs.html",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "hrc": {
+      "title": "CME US Midwest HRC steel futures contract specifications",
+      "date": null,
+      "url": "https://www.cmegroup.com/markets/metals/ferrous/hrc-steel.contractSpecs.html",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "hrc_code": {
+      "title": "CME HRC steel product card",
+      "date": "2015",
+      "url": "https://www.cmegroup.com/trading/metals/files/us-midwest-domestic-hot-rolled-coil-steel-futures-and-options.pdf",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "palladium": {
+      "title": "CME palladium futures contract specifications",
+      "date": null,
+      "url": "https://www.cmegroup.com/markets/metals/precious/palladium.contractSpecs.html",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "palladium_code": {
+      "title": "CME SER-8668 identifying PA futures",
+      "date": "2020-10",
+      "url": "https://www.cmegroup.com/content/dam/cmegroup/notices/ser/2020/10/SER-8668.pdf",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "aluminium": {
+      "title": "LME Official Prices",
+      "date": null,
+      "url": "https://www.lme.com/Market-data/Reports-and-data/LME-Official-Prices",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "lme_delay": {
+      "title": "LME reports and data: day-delayed public prices",
+      "date": null,
+      "url": "https://www.lme.com/en/Market-data/Reports-and-data",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "maruti": {
+      "title": "NSE Maruti Suzuki equity quote MARUTI",
+      "date": null,
+      "url": "https://www.nseindia.com/get-quote/equity/MARUTI/Maruti-Suzuki-India-Limited",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "ccil": {
+      "title": "CCIL Daily Market Analytics: 10-year G-Sec yield",
+      "date": "2025-12-31",
+      "url": "https://www.ccilindia.com/documents/43866/111510/CCIL_DAILY_ANALYSIS_31_12_25.pdf/3ce30f58-5aa4-26e0-043d-62e45bd64c34?download=true&t=1767186871028&version=1.0",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "brent": {
+      "title": "CME energy futures bulletin: BZ Brent oil",
+      "date": null,
+      "url": "https://www.cmegroup.com/daily_bulletin/current/Section61_Energy_Futures_Products.pdf",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "igl": {
+      "title": "Indraprastha Gas CNG price schedule",
+      "date": "2026-08-29",
+      "url": "https://www.iglonline.net//cng-png-prices",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    },
+    "iocl": {
+      "title": "IndianOil petrol and diesel daily pricing",
+      "date": null,
+      "url": "https://iocl.com/petrol-diesel-price",
+      "accessed_at": "2026-10-15",
+      "source_type": "official_primary"
+    }
+  },
+  "methodology": {
+    "goal": "会社の事業構造に基づく7〜10個の実体ある指標群を固定し、利用可能な過去データだけで毎朝すべての係数を再推定する。",
+    "what_is_not_claimed": "公式IRが裏付けるのは事業エクスポージャー。翌営業日の寄り付き→引けリターンの予測能力、最適性、精度改善は未検証。",
+    "counting": "自社株の複数テクニカルや同じ指標の別ラグを群数に算入しない。本文の群は企業別に9/10/9/8/8。",
+    "modeling": "各群は代表的な日次変化1列を基本とする。金利/スプレッドはbp、FX/株価/商品はリターン。正規化/補完は学習窓内。符号は仮説で固定しない。",
+    "cutoff": "08:30 Asia/Tokyo以前の利用可能性を公表・実受信時刻で判定。観測日や財務対象期を公表日と置き換えない。",
+    "evaluation": "学習窓を各予測日以前に限定して係数を再推定。銘柄別に旧固定セットと新セットを同一OOS期間で比較。寄り付きギャップと日中を別評価し、変更日の前へ事業仮説を遡及適用しない。",
+    "deployment": "この調査はアプリ設定/DBを変更していない。新規系列は存在確認と運用可能性を分離し、不足群は取得依頼へ回す。"
+  },
+  "adr_note": {
+    "status": "NOT_IN_REQUIRED_GROUPS",
+    "ids": [
+      "toyota_adr",
+      "honda_adr"
+    ],
+    "existing_config": "config/indicators.yaml",
+    "reason": "既存カタログは両ADRを過去測定に基づきdisabledとする。その測定を本調査で再現していない。新しい独立OOS証拠なしに復活しない。"
+  }
+}

@@ -57,7 +57,9 @@ class FeatureRegistry(BaseModel):
             raise ValueError("feature set is frozen until 20 new trading sessions")
 
 
-def resolve_indicator_ids(config: object, ticker: str) -> tuple[str, ...]:
+def resolve_indicator_ids(
+    config: object, ticker: str, on: date | None = None
+) -> tuple[str, ...]:
     """The single resolver for production and historical datasets.
 
     The fallback exists for archived five-file configs and old test fixtures;
@@ -72,7 +74,10 @@ def resolve_indicator_ids(config: object, ticker: str) -> tuple[str, ...]:
     if stock is None:
         raise ValueError(f"unknown configured ticker: {ticker}")
     catalog = {item.id: item for item in config.indicators.indicators}
-    if config.ticker_features is not None:
+    profile = config.company_profiles.resolve(ticker, on) if on is not None else None
+    if profile is not None:
+        requested = [factor.series_id for factor in profile.factors if factor.series_id]
+    elif config.ticker_features is not None:
         requested = config.ticker_features.tickers[ticker].selected
     else:
         requested = [
@@ -81,7 +86,7 @@ def resolve_indicator_ids(config: object, ticker: str) -> tuple[str, ...]:
             *(
                 item.id
                 for item in catalog.values()
-                if ticker in item.applies_to_tickers
+                if ticker in item.applies_to_tickers and not item.profile_only
             ),
         ]
     return tuple(

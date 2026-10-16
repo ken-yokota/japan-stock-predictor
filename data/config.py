@@ -26,6 +26,7 @@ from yaml.constructor import ConstructorError
 from yaml.nodes import MappingNode
 from yaml.resolver import BaseResolver
 
+from data.company_profiles import CompanyProfilesConfig
 from data.feature_registry import FeatureRegistry
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -388,6 +389,8 @@ class IndicatorConfig(_StrictModel):
     enabled: bool = True
     disabled_reason: NonEmptyStr | None = None
     applies_to_tickers: list[Ticker] = Field(default_factory=list)
+    # These sources require a dated company profile, never legacy sector fallback.
+    profile_only: bool = False
     sources: Annotated[list[IndicatorSourceConfig], Field(min_length=1)]
 
     @model_validator(mode="after")
@@ -480,6 +483,11 @@ class IndicatorsConfig(_StrictModel):
             )
 
         referenced_ids = set(self.common)
+        referenced_ids.update(
+            indicator.id
+            for indicator in self.indicators
+            if indicator.applies_to_tickers
+        )
         for sector, group in self.sectors.items():
             missing_indicators = set(group.indicators) - known_ids
             if missing_indicators:
@@ -643,6 +651,7 @@ class ProviderSettings(_StrictModel):
 
     primary: Literal["yahoo_finance"]
     treasury: Literal["us_treasury"]
+    public_factors: Literal["public_factors"] = "public_factors"
     fallback: list[Literal["eodhd_free"]]
     eodhd_free_max_calls_per_run: Annotated[int, Field(ge=0, le=5)]
     snapshot_freshness_minutes: Annotated[int, Field(gt=0, le=120)]
@@ -1053,6 +1062,9 @@ class AppConfig(_StrictModel):
     model: ModelConfig
     trading: TradingConfig
     ticker_features: FeatureRegistry | None = None
+    company_profiles: CompanyProfilesConfig = Field(
+        default_factory=CompanyProfilesConfig
+    )
 
     @model_validator(mode="after")
     def validate_cross_file_references(self) -> Self:
@@ -1070,6 +1082,15 @@ class AppConfig(_StrictModel):
                     raise ValueError("unknown selected registry indicator")
                 if any(not catalog[name].enabled for name in entry.selected):
                     raise ValueError("selected registry indicator must be enabled")
+        catalog_ids = {indicator.id for indicator in self.indicators.indicators}
+        for profile in self.company_profiles.profiles:
+            if profile.ticker not in tickers:
+                raise ValueError(f"unknown company profile ticker: {profile.ticker}")
+            for factor in profile.factors:
+                if factor.series_id is not None and factor.series_id not in catalog_ids:
+                    raise ValueError(
+                        f"unknown company factor binding: {factor.series_id}"
+                    )
         primary_provider = self.settings.provider.primary
 
         legacy_model = self.settings.model
@@ -1132,6 +1153,7 @@ class AppConfig(_StrictModel):
         configured_providers = {
             self.settings.provider.primary,
             self.settings.provider.treasury,
+            self.settings.provider.public_factors,
             *self.settings.provider.fallback,
             "internal",
         }
@@ -1277,6 +1299,16 @@ def load_app_config(config_dir: str | Path | None = None) -> AppConfig:
             model=load_model_config(directory / "model.yaml"),
             trading=load_trading_config(directory / "trading.yaml"),
             ticker_features=registry,
+            company_profiles=(
+                cast(
+                    CompanyProfilesConfig,
+                    _validate_file(
+                        CompanyProfilesConfig, directory / "company_profiles.yaml"
+                    ),
+                )
+                if (directory / "company_profiles.yaml").exists()
+                else CompanyProfilesConfig()
+            ),
         )
     except ValidationError as exc:
         raise ConfigError(

@@ -15,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from data.availability import prediction_cutoff
+from data.company_profiles import CompanyProfile
 from data.config import AppConfig
 from data.feature_registry import resolve_indicator_ids
 from data.market_calendar import japan_sessions_before, japan_sessions_between
@@ -123,6 +124,8 @@ class ModelDataset:
     missing_required_indicators: tuple[str, ...] = ()
     missing_optional_indicators: tuple[str, ...] = ()
     indicator_coverage: float = 1.0
+    company_profile: CompanyProfile | None = None
+    missing_profile_factors: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -332,8 +335,8 @@ class PointInTimeDatasetBuilder:
         )
         return stocks, self._market_rows(cutoff_at)
 
-    def _indicator_ids(self, ticker: str) -> tuple[str, ...]:
-        return resolve_indicator_ids(self._config, ticker)
+    def _indicator_ids(self, ticker: str, on: date | None = None) -> tuple[str, ...]:
+        return resolve_indicator_ids(self._config, ticker, on)
 
     def _frozen_columns(self, ticker: str) -> tuple[str, ...] | None:
         registry = self._config.ticker_features
@@ -370,6 +373,7 @@ class PointInTimeDatasetBuilder:
         indicator_ids: Sequence[str],
         operational: bool,
         target_cutoff_at: datetime,
+        company_profile: CompanyProfile | None = None,
     ) -> ModelSample:
         cutoff_at = prediction_cutoff(
             sample_date,
@@ -386,7 +390,49 @@ class PointInTimeDatasetBuilder:
         )
         values, lineage = _price_features(visible_stock, prefix="stock")
         warnings: set[str] = set()
-        for indicator_id in indicator_ids:
+        if company_profile is not None:
+            # Exactly one explicitly defined column per economic factor.
+            # Own-price lags are not extra factors or a fallback for missing data.
+            values, lineage = {}, {}
+            for factor in company_profile.factors:
+                if factor.series_id is None or factor.series_id not in indicator_ids:
+                    warnings.add(f"{factor.id}: acquisition/binding required")
+                    continue
+                candidates = market_rows.get((factor.series_id, "eod"), ())
+                rows = _one_provider(
+                    _visible(candidates, cutoff_at, operational=operational)
+                )
+                if (
+                    not rows
+                    or (sample_date - rows[-1].market_date).days > factor.max_age_days
+                ):
+                    warnings.add(f"{factor.id}: unavailable or stale at cutoff")
+                    continue
+                value: float | None = None
+                used = rows[-1:]
+                if factor.transform == "level":
+                    value = float(rows[-1].close)
+                elif len(rows) >= 2:
+                    used = rows[-2:]
+                    if any(
+                        (sample_date - row.market_date).days > factor.max_age_days
+                        for row in used
+                    ):
+                        warnings.add(f"{factor.id}: previous observation is stale")
+                        continue
+                    current_close = float(rows[-1].adjusted_close or rows[-1].close)
+                    previous_close = float(rows[-2].adjusted_close or rows[-2].close)
+                    value = (
+                        current_close - previous_close
+                        if factor.transform == "difference_1d"
+                        else _ratio(current_close, previous_close)
+                    )
+                if value is not None and math.isfinite(value):
+                    values[factor.feature_name] = value
+                    lineage[factor.feature_name] = tuple(
+                        _reference(row) for row in used
+                    )
+        for indicator_id in () if company_profile is not None else indicator_ids:
             candidates = market_rows.get((indicator_id, "eod"), ())
             selected = _one_provider(
                 _visible(candidates, cutoff_at, operational=operational)
@@ -506,7 +552,8 @@ class PointInTimeDatasetBuilder:
             timezone_name=self._config.settings.application.timezone,
         )
         stock_rows, market_rows = self._load_rows(ticker, main_cutoff)
-        indicators = self._indicator_ids(ticker)
+        indicators = self._indicator_ids(ticker, prediction_date)
+        profile = self._config.company_profiles.resolve(ticker, prediction_date)
         sessions = japan_sessions_before(prediction_date, training_sessions)
         training = tuple(
             self._sample(
@@ -517,6 +564,7 @@ class PointInTimeDatasetBuilder:
                 indicator_ids=indicators,
                 operational=False,
                 target_cutoff_at=main_cutoff,
+                company_profile=profile,
             )
             for session_date in sessions
         )
@@ -529,6 +577,7 @@ class PointInTimeDatasetBuilder:
             indicator_ids=indicators,
             operational=operational,
             target_cutoff_at=main_cutoff,
+            company_profile=profile,
         )
         candidates = sorted({name for item in usable for name in item.values})
         selected = tuple(
@@ -538,7 +587,7 @@ class PointInTimeDatasetBuilder:
             and sum(name in item.values for item in usable) / max(len(usable), 1)
             >= minimum_feature_coverage
         )
-        frozen = self._frozen_columns(ticker)
+        frozen = self._frozen_columns(ticker) if profile is None else None
         if frozen is not None:
             selected = frozen
             candidates = list(frozen)
@@ -563,23 +612,35 @@ class PointInTimeDatasetBuilder:
             columns=selected,
             dtype=float,
         )
-        available_count = sum(name in current.values for name in selected)
-        feature_coverage = available_count / len(candidates) if candidates else 0.0
+        candidate_count = (
+            len(profile.factors) if profile is not None else len(candidates)
+        )
+        feature_coverage = len(selected) / candidate_count if candidate_count else 0.0
         # An indicator counts as observed when it contributed at least one
         # value to the scored row. Its features are always prefixed with the
         # indicator id, which is what makes this exact rather than inferred.
+        expected = (
+            tuple(factor.id for factor in profile.factors)
+            if profile is not None
+            else indicators
+        )
         observed = tuple(
             indicator_id
-            for indicator_id in indicators
-            if any(name.startswith(f"{indicator_id}__") for name in current.values)
+            for indicator_id in expected
+            if any(
+                name.startswith(f"{indicator_id}__")
+                for name in (selected if profile is not None else current.values)
+            )
         )
-        missing = [item for item in indicators if item not in set(observed)]
+        missing = [item for item in expected if item not in set(observed)]
         required_ids = {
             item.id for item in self._config.indicators.indicators if item.required
         }
+        if profile is not None:
+            required_ids.update(expected)
         missing_required = tuple(item for item in missing if item in required_ids)
         missing_optional = tuple(item for item in missing if item not in required_ids)
-        indicator_coverage = len(observed) / len(indicators) if indicators else 0.0
+        indicator_coverage = len(observed) / len(expected) if expected else 0.0
         return ModelDataset(
             ticker=ticker,
             feature_names=selected,
@@ -588,13 +649,15 @@ class PointInTimeDatasetBuilder:
             current_frame=current_frame,
             training_samples=usable,
             current_sample=current,
-            candidate_feature_count=len(candidates),
+            candidate_feature_count=candidate_count,
             feature_coverage=feature_coverage,
-            expected_indicators=tuple(indicators),
+            expected_indicators=tuple(expected),
             observed_indicators=observed,
             missing_required_indicators=missing_required,
             missing_optional_indicators=missing_optional,
             indicator_coverage=indicator_coverage,
+            company_profile=profile,
+            missing_profile_factors=tuple(missing) if profile is not None else (),
         )
 
     def build_backtest_frame(
@@ -624,7 +687,18 @@ class PointInTimeDatasetBuilder:
             raise ValueError("backtest range needs a training window plus OOS rows")
         as_of = datetime.now(UTC)
         stock_rows, market_rows = self._load_rows(ticker, as_of)
-        indicators = self._indicator_ids(ticker)
+        # A fixed-schema walk-forward cannot straddle an assignment change.
+        # In particular, today's researched profile must not rewrite old OOS rows.
+        indicators = self._indicator_ids(ticker, sessions[0])
+        profile = self._config.company_profiles.resolve(ticker, sessions[0])
+        if any(
+            self._indicator_ids(ticker, day) != indicators
+            or self._config.company_profiles.resolve(ticker, day) != profile
+            for day in sessions[1:]
+        ):
+            raise ValueError(
+                "backtest crosses an indicator profile change; split the date range"
+            )
         samples = tuple(
             self._sample(
                 ticker=ticker,
@@ -634,6 +708,7 @@ class PointInTimeDatasetBuilder:
                 indicator_ids=indicators,
                 operational=False,
                 target_cutoff_at=as_of,
+                company_profile=profile,
             )
             for session_date in sessions
         )
@@ -654,13 +729,20 @@ class PointInTimeDatasetBuilder:
             if sum(name in sample.values for sample in initial) / len(initial)
             >= minimum_feature_coverage
         )
-        frozen = self._frozen_columns(ticker)
+        frozen = self._frozen_columns(ticker) if profile is None else None
         if frozen is not None:
             selected = frozen
         if not selected:
             raise ValueError(
                 "initial backtest window has no sufficiently covered features"
             )
+        if profile is not None:
+            required = {factor.feature_name for factor in profile.factors}
+            if required != set(selected) or any(
+                required - set(sample.values)
+                for sample in usable[initial_training_sessions:]
+            ):
+                raise ValueError("backtest company profile has missing factors")
         frame = pd.DataFrame.from_records(
             [
                 {

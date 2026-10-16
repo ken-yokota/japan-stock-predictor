@@ -200,7 +200,10 @@ def persist_feature_set(
                         dataset.ticker
                     ].model_dump(mode="json"),
                 }
-                if config.ticker_features is not None
+                if (
+                    config.ticker_features is not None
+                    and dataset.company_profile is None
+                )
                 else None
             ),
             "candidate_feature_count": dataset.candidate_feature_count,
@@ -215,6 +218,12 @@ def persist_feature_set(
             "indicator_coverage": dataset.indicator_coverage,
             "missing_required_indicators": list(dataset.missing_required_indicators),
             "missing_optional_indicators": list(dataset.missing_optional_indicators),
+            "company_profile": (
+                dataset.company_profile.model_dump(mode="json")
+                if dataset.company_profile is not None
+                else None
+            ),
+            "missing_profile_factors": list(dataset.missing_profile_factors),
         },
     )
     if feature_set.status != "BUILDING":
@@ -343,7 +352,10 @@ def persist_feature_set(
                         dataset.ticker
                     ].model_dump(mode="json"),
                 }
-                if config.ticker_features is not None
+                if (
+                    config.ticker_features is not None
+                    and dataset.company_profile is None
+                )
                 else None
             ),
             "candidate_feature_count": dataset.candidate_feature_count,
@@ -357,6 +369,12 @@ def persist_feature_set(
             "indicator_coverage": dataset.indicator_coverage,
             "missing_required_indicators": list(dataset.missing_required_indicators),
             "missing_optional_indicators": list(dataset.missing_optional_indicators),
+            "company_profile": (
+                dataset.company_profile.model_dump(mode="json")
+                if dataset.company_profile is not None
+                else None
+            ),
+            "missing_profile_factors": list(dataset.missing_profile_factors),
             "training_cells_validated_not_stored": training_cell_count,
         },
     )
@@ -452,6 +470,49 @@ def _persist_model(
             else {"constant_probability_up": constant_probability}
         )
     )
+    parameters["feature_names"] = list(model.feature_names)
+    profile = computation.dataset.company_profile
+    if profile is not None:
+        factor_coefficients: dict[str, object] = {}
+        raw_intercept = float(intercept) if scaler is not None else None
+        for factor in profile.factors:
+            name = factor.feature_name
+            coefficient = coefficients[name]
+            scale = scaler.scales[name] if scaler is not None else None
+            original = coefficient / scale if scale is not None and scale > 0 else None
+            factor_coefficients[factor.id] = {
+                "feature_name": name,
+                "series_id": factor.series_id,
+                "transform": factor.transform,
+                "standardized_coefficient": (
+                    coefficient if scaler is not None else None
+                ),
+                "coefficient_per_original_feature_unit": original,
+                "scaler_mean": scaler.means[name] if scaler is not None else None,
+                "scaler_scale": scale,
+                "status": "fitted" if scaler is not None else "constant_probability",
+            }
+            if (
+                raw_intercept is not None
+                and original is not None
+                and scaler is not None
+            ):
+                raw_intercept -= original * scaler.means[name]
+        parameters["company_profile"] = {
+            "ticker": profile.ticker,
+            "valid_from": profile.valid_from.isoformat(),
+            "prediction_date": computation.result.prediction_date.isoformat(),
+            "fit_policy": "all_factors_daily_refit",
+            "factor_count": len(profile.factors),
+            "coefficient_response_unit": (
+                "intraday_return_fraction" if is_regression else "upward_log_odds"
+            ),
+            "standardized_coefficient_basis": "per_one_training_standard_deviation",
+            "original_coefficient_basis": "per_one_original_transformed_feature_unit",
+            "standardized_intercept": float(intercept) if scaler is not None else None,
+            "original_feature_intercept": raw_intercept,
+            "factor_coefficients": factor_coefficients,
+        }
     model_run = repository.create_model_run(
         run_id=run_id,
         ticker=computation.result.ticker,

@@ -9,11 +9,9 @@ from collections.abc import Mapping, Sequence
 from data.config import AppConfig
 
 FEATURE_VERSION = "pit-features-v1"
-# Bumped when the daily answer stopped being a point and became a
-# distribution. The label is part of what makes a prediction set unique, so
-# a distributional set for a date already covered by a point-only one lands
-# beside it rather than colliding with it, and the old record stays readable.
-MODEL_VERSION = "ridge-logistic-quantile-v2"
+# Dated company profiles keep every researched factor and refit coefficients
+# daily. Prediction-set uniqueness preserves prior specifications separately.
+MODEL_VERSION = "ridge-logistic-quantile-company-v4"
 # Renamed when costs went to zero on 2026-08-29. The label is part of the
 # uniqueness of a valuation, so a zero-cost re-valuation of an already-scored
 # prediction lands beside the costed one instead of colliding with it, and the

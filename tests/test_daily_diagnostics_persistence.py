@@ -79,7 +79,9 @@ def test_daily_coefficients_saved_with_version_safe_past_stability():
             )
             computation = SimpleNamespace(
                 model=fitted,
-                dataset=SimpleNamespace(current_frame=x.iloc[[-1]]),
+                dataset=SimpleNamespace(
+                    current_frame=x.iloc[[-1]], company_profile=None
+                ),
                 result=SimpleNamespace(ticker="7203", training_sessions=120),
             )
             stored = _persist_model(

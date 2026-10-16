@@ -13,6 +13,7 @@ from data.config import AppConfig
 from data.env import EnvironmentSettings
 from data.fetch import IngestionReport, build_fetch_plan, execute_fetch_plan
 from data.providers.eodhd import EODHDFreeProvider
+from data.providers.public_factors import PublicFactorsProvider
 from data.providers.treasury import TreasuryProvider
 from data.providers.yahoo import YahooFinanceProvider
 from database.repository import MarketDataRepository
@@ -50,6 +51,11 @@ def ingest_free_morning_data(
         max_retries=settings.max_retries,
         backoff_seconds=settings.backoff_initial_seconds,
     )
+    public = PublicFactorsProvider(
+        timeout_seconds=environment.http_timeout_seconds,
+        max_retries=settings.max_retries,
+        backoff_seconds=settings.backoff_initial_seconds,
+    )
     eodhd_secret = (
         environment.eodhd_api_key.get_secret_value()
         if environment.eodhd_api_key is not None
@@ -69,6 +75,7 @@ def ingest_free_morning_data(
     )
     providers = {
         "yahoo_finance": yahoo,
+        "public_factors": public,
         **({"eodhd_free": eodhd} if eodhd is not None else {}),
     }
     cutoff_at = prediction_cutoff(
@@ -76,7 +83,7 @@ def ingest_free_morning_data(
         cutoff_time=config.settings.schedule.prediction_cutoff,
         timezone_name=config.settings.application.timezone,
     )
-    plan = build_fetch_plan(config)
+    plan = build_fetch_plan(config, prediction_date=prediction_date)
     session = factory()
     repository = MarketDataRepository(session)
     run = repository.create_run(
@@ -145,6 +152,7 @@ def ingest_free_morning_data(
         session.close()
         yahoo.close()
         treasury.close()
+        public.close()
         if eodhd is not None:
             eodhd.close()
 

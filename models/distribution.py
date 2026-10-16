@@ -178,6 +178,9 @@ class ReturnDistribution:
     alpha: float
     training_sessions: int
     method: str = DISTRIBUTION_METHOD
+    # A new model specification cannot inherit the baseline's calibration.
+    # None retains the historical payload for unchanged callers.
+    coverage_evidence: Mapping[str, Any] | None = None
 
     def __post_init__(self) -> None:
         if len(self.levels) < 2:
@@ -342,7 +345,11 @@ class ReturnDistribution:
                 {"quantile": level, "return": value}
                 for level, value in zip(self.levels, self.values, strict=True)
             ],
-            "coverage_evidence": COVERAGE_EVIDENCE,
+            "coverage_evidence": (
+                dict(self.coverage_evidence)
+                if self.coverage_evidence is not None
+                else COVERAGE_EVIDENCE
+            ),
         }
 
     @classmethod
@@ -358,6 +365,7 @@ class ReturnDistribution:
             alpha=float(payload.get("alpha", 0.0)),
             training_sessions=int(payload.get("training_sessions", 1)),
             method=str(payload.get("method", DISTRIBUTION_METHOD)),
+            coverage_evidence=payload.get("coverage_evidence"),
         )
 
 

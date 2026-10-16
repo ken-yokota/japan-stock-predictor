@@ -1,0 +1,3813 @@
+{
+  "schema_version": 1,
+  "as_of_date": "2026-10-15",
+  "scope": "shipping_energy_7_companies",
+  "purpose": "会社の事業構造で固定する7〜10外部driver群の研究案。実装・配備・購読・市場値取得は本資料の作成範囲外。",
+  "selection_policy": "同一系列の期間別return/volatilityを別指標に数えない。自社株テクニカルも7〜10群に数えない。欠けた事業driverを共通macroで補完しない。",
+  "readiness_policy": "候補群はfixed desired profile。未取得/必要履歴不足ならINSUFFICIENT_DATA。全群が揃った後に毎朝係数を再推定し、CVで群数を1に落とさない。",
+  "verification_legend": {
+    "EXISTING_CONFIG_NOT_REFETCHED": "既存カタログの設定を読んだ。現時点の値/疎通を保証しない。",
+    "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED": "公式の説明で商品・頻度を確認した。データ取得、契約、モデル利用権、08:30可用性を保証しない。",
+    "NEW_DATA_REQUIRED": "現行カタログにない/未接続。正式配信契約・履歴・PIT評価が必要。",
+    "NEW_DERIVED_DATA_REQUIRED": "構成価格が必要な研究用spread。会社実績マージンではない。",
+    "CANDIDATE_UNVERIFIED": "具体的系列/頻度/取得経路が未検証。VERIFIEDとは呼ばない。"
+  },
+  "research_limitations": [
+    "経済合理性は当日寄り→引けの予測力の実証ではない。前夜の情報は寄り付き価格で織込み済みになり得る。",
+    "ここで符号は事業価値/採算の方向仮説。モデル係数に強制しない。",
+    "有料データ購読・サインアップ・購入は行っていない。Web表示とAPI利用・履歴再配信の権利は別。",
+    "現行configのYahoo symbolsを転記する以外にYahooコードを推測していない。公開値閲覧以外にlive DB・価格APIにはアクセスしていない。",
+    "資料日付が不明なページはnullと閲覧日で示す。索引や動的ページのみ確認できた場合はその制約を記載。",
+    "新しい事業構成はas-of日以降の設定案。過去の検証には当時公表済みの事業構成を使用。"
+  ],
+  "companies": [
+    {
+      "ticker": "9101",
+      "name": "日本郵船",
+      "thesis": "ONE持分のコンテナ、ドライバルク、自動車船、LNGなどのエネルギー輸送と物流を別の収益経路として扱う。2025年8月のNCA移管後、航空価格はYusen Logistics等のフォワーディング需給・仕入価格の代理であり航空会社利益の代理ではない。",
+      "business_source_ids": [
+        "NYK_FACT",
+        "NYK_REPORT",
+        "NYK_NCA"
+      ],
+      "business_source_urls": [
+        "https://www.nyk.com/english/ir/library/fact/",
+        "https://www.nyk.com/english/ir/library/nyk/",
+        "https://www.nyk.com/english/news/2025/20250801_0.html"
+      ],
+      "desired_external_group_count": 8,
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日経225先物",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前完了セッションEOD、または実際に08:30までに観測したsnapshot。過去snapshotをEODから捏造しない。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "NIY=F",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路。商用利用権/品質は別途確認"
+          },
+          "source_ids": [
+            "NYK_FACT",
+            "NYK_REPORT",
+            "NYK_NCA"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "日本株全体のリスク選好・先物の寄り前情報を共通市場要因として分離する。",
+          "tentative_sign": "通常は正。ただし寄り付きで織込み済みならザラ場への符号は不定。",
+          "source_urls": [
+            "https://www.nyk.com/english/ir/library/fact/",
+            "https://www.nyk.com/english/ir/library/nyk/",
+            "https://www.nyk.com/english/news/2025/20250801_0.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.nyk.com/english/ir/library/fact/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/ir/library/nyk/",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/news/2025/20250801_0.html",
+              "published_or_effective_date": "2025-08-01",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "08:30までに観測済みの値、または前完了日EOD。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "JPY=X",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路"
+          },
+          "source_ids": [
+            "NYK_FACT",
+            "NYK_REPORT",
+            "NYK_NCA"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "ドル建て運賃/利益の円換算とドル建て費用のnet exposure。",
+          "tentative_sign": "円安（USDJPY上昇）は利益換算に通常プラス。ヘッジ・ドル費用を控除すると条件付き。",
+          "source_urls": [
+            "https://www.nyk.com/english/ir/library/fact/",
+            "https://www.nyk.com/english/ir/library/nyk/",
+            "https://www.nyk.com/english/news/2025/20250801_0.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.nyk.com/english/ir/library/fact/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/ir/library/nyk/",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/news/2025/20250801_0.html",
+              "published_or_effective_date": "2025-08-01",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "container_freight_fbx",
+          "canonical_id": "container_freight_fbx",
+          "label": "コンテナ運賃FBX",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "FBXは公式FAQで14:00 UTC公表（23:00 JST）。前日公表分を翌08:30に使用。週次FBXと混在不可。",
+          "candidate_daily_source": {
+            "provider": "Freightos / Baltic Exchange",
+            "instrument": "FBX Global または固定ONE航路構成のFBX01/03/11バスケットを1群",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "FREIGHTOS",
+            "FREIGHTOS_PRICING",
+            "NYK_FACT",
+            "NYK_REPORT",
+            "NYK_NCA"
+          ],
+          "proxy_limitations": "スポット40ft運賃。ONEの長期契約、航路構成、燃料サーチャージ、運賃認識の時間差がある。複数航路を群数に加算しない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "ONEのスポット市況とコンテナ需給が持分利益見通しに波及。",
+          "tentative_sign": "運賃上昇は通常正。長期契約・数量減・燃料費で条件付き。",
+          "source_urls": [
+            "https://www.freightos.com/enterprise/terminal/",
+            "https://www.freightos.com/enterprise/terminal/pricing/",
+            "https://www.nyk.com/english/ir/library/fact/",
+            "https://www.nyk.com/english/ir/library/nyk/",
+            "https://www.nyk.com/english/news/2025/20250801_0.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.freightos.com/enterprise/terminal/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.freightos.com/enterprise/terminal/pricing/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/ir/library/fact/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/ir/library/nyk/",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/news/2025/20250801_0.html",
+              "published_or_effective_date": "2025-08-01",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "baltic_dry_index_spot",
+          "canonical_id": "baltic_dry_index_spot",
+          "label": "実物ドライバルク運賃BDI",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "Baltic Exchange",
+            "instrument": "Baltic Dry Index spot composite",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "BALTIC_IND",
+            "BALTIC_BUY",
+            "NYK_FACT",
+            "NYK_REPORT",
+            "NYK_NCA"
+          ],
+          "proxy_limitations": "既存baltic_dry_indexはBDRY先物ETFなので別ID。長期契約船の収益はスポットに即時比例しない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "ドライバルク船の貨物需要と船腹需給を直接測る。",
+          "tentative_sign": "通常正。長期契約の比重で即時反応は弱まる。",
+          "source_urls": [
+            "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+            "https://www.balticexchange.com/en/apply-page.html",
+            "https://www.nyk.com/english/ir/library/fact/",
+            "https://www.nyk.com/english/ir/library/nyk/",
+            "https://www.nyk.com/english/news/2025/20250801_0.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.balticexchange.com/en/apply-page.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/ir/library/fact/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/ir/library/nyk/",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/news/2025/20250801_0.html",
+              "published_or_effective_date": "2025-08-01",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "lng_shipping_rate",
+          "canonical_id": "lng_shipping_rate",
+          "label": "LNG船スポット用船料",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "Baltic Exchange",
+            "instrument": "太平洋LNG輸送ルート：現行LNG1-174/BLNG系の接続仕様要確認",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "BALTIC_IND",
+            "BALTIC_GAS",
+            "BALTIC_BUY",
+            "NYK_FACT",
+            "NYK_REPORT",
+            "NYK_NCA"
+          ],
+          "proxy_limitations": "LNG価格JKMとは別。長期用船が主体なら短期損益感応度は弱い。船型変更・旧BLNGコードとの接続を確認。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "LNG船の需給・更改運賃・船価期待。",
+          "tentative_sign": "通常正だが長期契約中心なら弱い。",
+          "source_urls": [
+            "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+            "https://www.balticexchange.com/en/data-services/market-information0/gas-services.html",
+            "https://www.balticexchange.com/en/apply-page.html",
+            "https://www.nyk.com/english/ir/library/fact/",
+            "https://www.nyk.com/english/ir/library/nyk/",
+            "https://www.nyk.com/english/news/2025/20250801_0.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.balticexchange.com/en/data-services/market-information0/gas-services.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.balticexchange.com/en/apply-page.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/ir/library/fact/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/ir/library/nyk/",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/news/2025/20250801_0.html",
+              "published_or_effective_date": "2025-08-01",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "euro_auto_equity",
+          "canonical_id": "euro_auto_equity",
+          "label": "欧州自動車株指数（輸送需要の代理）",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "STOXX",
+            "instrument": "EURO STOXX Automobiles & Parts, SXAK",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "STOXX_AUTO",
+            "NYK_FACT",
+            "NYK_REPORT",
+            "NYK_NCA"
+          ],
+          "proxy_limitations": "自動車メーカーへの需要期待の株式代理。実際の完成車輸出台数・PCC運賃ではなく、欧州偏重と株式市場共通因子がある。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "自動車船・自動車物流の荷主需要期待を欧州OEM株で近似。",
+          "tentative_sign": "通常正。輸出量とは一致せず関税・現地生産で逆転し得る。",
+          "source_urls": [
+            "https://stoxx.com/index/sxak/",
+            "https://www.nyk.com/english/ir/library/fact/",
+            "https://www.nyk.com/english/ir/library/nyk/",
+            "https://www.nyk.com/english/news/2025/20250801_0.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://stoxx.com/index/sxak/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/ir/library/fact/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/ir/library/nyk/",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/news/2025/20250801_0.html",
+              "published_or_effective_date": "2025-08-01",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "airfreight_fax",
+          "canonical_id": "airfreight_fax",
+          "label": "航空貨物運賃FAX",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "日次更新は確認。FAX固有の公表時刻は未確認。保存済み公表タイムスタンプが前08:30以前の最新値だけを使用。",
+          "candidate_daily_source": {
+            "provider": "Freightos",
+            "instrument": "Freightos Air Index: fixed Asia export basket as one group",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "FREIGHTOS",
+            "FREIGHTOS_PRICING",
+            "NYK_FACT",
+            "NYK_REPORT",
+            "NYK_NCA"
+          ],
+          "proxy_limitations": "Baltic Air Freight BAIは週次なので代用しない。フォワーダーには仕入運賃高でもあり符号は条件付き。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "航空フォワーディングの数量需要/仕入運賃環境。",
+          "tentative_sign": "需要主導の上昇なら正、仕入運賃だけ上昇し転嫁できなければ負。",
+          "source_urls": [
+            "https://www.freightos.com/enterprise/terminal/",
+            "https://www.freightos.com/enterprise/terminal/pricing/",
+            "https://www.nyk.com/english/ir/library/fact/",
+            "https://www.nyk.com/english/ir/library/nyk/",
+            "https://www.nyk.com/english/news/2025/20250801_0.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.freightos.com/enterprise/terminal/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.freightos.com/enterprise/terminal/pricing/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/ir/library/fact/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/ir/library/nyk/",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/news/2025/20250801_0.html",
+              "published_or_effective_date": "2025-08-01",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "bunker_vlsfo",
+          "canonical_id": "bunker_vlsfo",
+          "label": "船舶燃料VLSFO",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "RIM Intelligence",
+            "instrument": "Singapore VLSFO; 航路構成固定なら主要港バスケットを1群",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "RIM_BUNKER",
+            "RIM_HISTORY",
+            "NYK_FACT",
+            "NYK_REPORT",
+            "NYK_NCA"
+          ],
+          "proxy_limitations": "原油とは精製・港湾需給・規制の差がある。燃油サーチャージとヘッジが転嫁を緩和。LNG燃料価格は別途週次。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "船舶運航の燃料費とサーチャージの時間差。",
+          "tentative_sign": "費用として負。転嫁・ヘッジで中立化。",
+          "source_urls": [
+            "https://eng.rim-intelligence.co.jp/report/bunker-en/",
+            "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+            "https://www.nyk.com/english/ir/library/fact/",
+            "https://www.nyk.com/english/ir/library/nyk/",
+            "https://www.nyk.com/english/news/2025/20250801_0.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/bunker-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/ir/library/fact/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/ir/library/nyk/",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.nyk.com/english/news/2025/20250801_0.html",
+              "published_or_effective_date": "2025-08-01",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        }
+      ],
+      "limitations": [
+        "海運3社を同じBDRY+WTIの構成にしない。",
+        "ONEの配当受領は四半期/イベント情報。日次独立系列には水増ししない。"
+      ],
+      "existing_proxy_alternatives_not_automatic_substitutes": [
+        {
+          "existing_id": "baltic_dry_index",
+          "represents": "BDRY先物ETF",
+          "possible_for": "ドライバルク需給の粗い代理",
+          "cannot_replace": "コンテナ・LNG船・自動車船・スポットBDIの同一系列ではない",
+          "source_urls": [
+            "https://amplifyetfs.com/bdry/"
+          ]
+        },
+        {
+          "existing_id": "brent",
+          "possible_for": "燃料コストの粗い方向感",
+          "cannot_replace": "VLSFOの精製/港湾basis"
+        }
+      ],
+      "readiness": "INSUFFICIENT_DATA_FOR_DESIRED_PROFILE",
+      "own_stock_technicals": "既存stock__特徴量は別枠の補助特徴。7〜10外部指標群の数には含めない。"
+    },
+    {
+      "ticker": "9104",
+      "name": "商船三井",
+      "thesis": "ONEとドライバルクに加え、LNG、原油・製品タンカー、化学品輸送/タンクターミナル、Daibiru不動産を持つ。Phase 2の安定収益ポートフォリオを踏まえ輸送モードを分離し、化学品専用運賃が未取得である事実も残す。",
+      "business_source_ids": [
+        "MOL_PLAN",
+        "MOL_CEO",
+        "MOL_REPORT"
+      ],
+      "business_source_urls": [
+        "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+        "https://www.mol.co.jp/en/pr/2026/26026.html",
+        "https://ir.mol.co.jp/en/ir/library/integrated_report.html"
+      ],
+      "desired_external_group_count": 9,
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日経225先物",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前完了セッションEOD、または実際に08:30までに観測したsnapshot。過去snapshotをEODから捏造しない。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "NIY=F",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路。商用利用権/品質は別途確認"
+          },
+          "source_ids": [
+            "MOL_PLAN",
+            "MOL_CEO",
+            "MOL_REPORT"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "日本株全体のリスク選好・先物の寄り前情報を共通市場要因として分離する。",
+          "tentative_sign": "通常は正。ただし寄り付きで織込み済みならザラ場への符号は不定。",
+          "source_urls": [
+            "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+            "https://www.mol.co.jp/en/pr/2026/26026.html",
+            "https://ir.mol.co.jp/en/ir/library/integrated_report.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.mol.co.jp/en/pr/2026/26026.html",
+              "published_or_effective_date": "2026-04-01",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/library/integrated_report.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "08:30までに観測済みの値、または前完了日EOD。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "JPY=X",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路"
+          },
+          "source_ids": [
+            "MOL_PLAN",
+            "MOL_CEO",
+            "MOL_REPORT"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "ドル建て運賃/利益の円換算とドル建て費用のnet exposure。",
+          "tentative_sign": "円安（USDJPY上昇）は利益換算に通常プラス。ヘッジ・ドル費用を控除すると条件付き。",
+          "source_urls": [
+            "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+            "https://www.mol.co.jp/en/pr/2026/26026.html",
+            "https://ir.mol.co.jp/en/ir/library/integrated_report.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.mol.co.jp/en/pr/2026/26026.html",
+              "published_or_effective_date": "2026-04-01",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/library/integrated_report.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "container_freight_fbx",
+          "canonical_id": "container_freight_fbx",
+          "label": "コンテナ運賃FBX",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "FBXは公式FAQで14:00 UTC公表（23:00 JST）。前日公表分を翌08:30に使用。週次FBXと混在不可。",
+          "candidate_daily_source": {
+            "provider": "Freightos / Baltic Exchange",
+            "instrument": "FBX Global または固定ONE航路構成のFBX01/03/11バスケットを1群",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "FREIGHTOS",
+            "FREIGHTOS_PRICING",
+            "MOL_PLAN",
+            "MOL_CEO",
+            "MOL_REPORT"
+          ],
+          "proxy_limitations": "スポット40ft運賃。ONEの長期契約、航路構成、燃料サーチャージ、運賃認識の時間差がある。複数航路を群数に加算しない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "ONEの持分利益と世界コンテナ市況。",
+          "tentative_sign": "通常正、契約・運航費で条件付き。",
+          "source_urls": [
+            "https://www.freightos.com/enterprise/terminal/",
+            "https://www.freightos.com/enterprise/terminal/pricing/",
+            "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+            "https://www.mol.co.jp/en/pr/2026/26026.html",
+            "https://ir.mol.co.jp/en/ir/library/integrated_report.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.freightos.com/enterprise/terminal/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.freightos.com/enterprise/terminal/pricing/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.mol.co.jp/en/pr/2026/26026.html",
+              "published_or_effective_date": "2026-04-01",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/library/integrated_report.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "baltic_dry_index_spot",
+          "canonical_id": "baltic_dry_index_spot",
+          "label": "実物ドライバルク運賃BDI",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "Baltic Exchange",
+            "instrument": "Baltic Dry Index spot composite",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "BALTIC_IND",
+            "BALTIC_BUY",
+            "MOL_PLAN",
+            "MOL_CEO",
+            "MOL_REPORT"
+          ],
+          "proxy_limitations": "既存baltic_dry_indexはBDRY先物ETFなので別ID。長期契約船の収益はスポットに即時比例しない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "ドライバルクの短中期需給・傭船採算。",
+          "tentative_sign": "通常正だが長期契約/自社・傭船構成に依存。",
+          "source_urls": [
+            "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+            "https://www.balticexchange.com/en/apply-page.html",
+            "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+            "https://www.mol.co.jp/en/pr/2026/26026.html",
+            "https://ir.mol.co.jp/en/ir/library/integrated_report.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.balticexchange.com/en/apply-page.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.mol.co.jp/en/pr/2026/26026.html",
+              "published_or_effective_date": "2026-04-01",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/library/integrated_report.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "lng_shipping_rate",
+          "canonical_id": "lng_shipping_rate",
+          "label": "LNG船スポット用船料",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "Baltic Exchange",
+            "instrument": "太平洋LNG輸送ルート：現行LNG1-174/BLNG系の接続仕様要確認",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "BALTIC_IND",
+            "BALTIC_GAS",
+            "BALTIC_BUY",
+            "MOL_PLAN",
+            "MOL_CEO",
+            "MOL_REPORT"
+          ],
+          "proxy_limitations": "LNG価格JKMとは別。長期用船が主体なら短期損益感応度は弱い。船型変更・旧BLNGコードとの接続を確認。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "LNG船とLNGインフラの更改・新規投資の期待採算。",
+          "tentative_sign": "正を想定。ただし長期契約で日次感応度は限定。",
+          "source_urls": [
+            "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+            "https://www.balticexchange.com/en/data-services/market-information0/gas-services.html",
+            "https://www.balticexchange.com/en/apply-page.html",
+            "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+            "https://www.mol.co.jp/en/pr/2026/26026.html",
+            "https://ir.mol.co.jp/en/ir/library/integrated_report.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.balticexchange.com/en/data-services/market-information0/gas-services.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.balticexchange.com/en/apply-page.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.mol.co.jp/en/pr/2026/26026.html",
+              "published_or_effective_date": "2026-04-01",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/library/integrated_report.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "dirty_tanker_freight",
+          "canonical_id": "dirty_tanker_freight",
+          "label": "原油タンカー運賃",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "Baltic Exchange",
+            "instrument": "BDTI / TD3C MEG-China TCE; 定義を固定",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "BALTIC_IND",
+            "BALTIC_TANK",
+            "BALTIC_BUY",
+            "MOL_PLAN",
+            "MOL_CEO",
+            "MOL_REPORT"
+          ],
+          "proxy_limitations": "原油商品価格と運賃を区別。TCEは燃料コストを内包するためbunkerと二重計上に注意。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "原油輸送の運賃・タンカー需給。",
+          "tentative_sign": "通常正。ton-mile増加と荷動き減少を区別。",
+          "source_urls": [
+            "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+            "https://www.balticexchange.com/en/data-services/market-information0/tankers-services.html",
+            "https://www.balticexchange.com/en/apply-page.html",
+            "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+            "https://www.mol.co.jp/en/pr/2026/26026.html",
+            "https://ir.mol.co.jp/en/ir/library/integrated_report.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.balticexchange.com/en/data-services/market-information0/tankers-services.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.balticexchange.com/en/apply-page.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.mol.co.jp/en/pr/2026/26026.html",
+              "published_or_effective_date": "2026-04-01",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/library/integrated_report.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "clean_tanker_freight",
+          "canonical_id": "clean_tanker_freight",
+          "label": "石油製品タンカー運賃",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "Baltic Exchange",
+            "instrument": "BCTI / TC1 or TC5 MEG-Japan; 定義を固定",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "BALTIC_IND",
+            "BALTIC_TANK",
+            "BALTIC_BUY",
+            "MOL_PLAN",
+            "MOL_CEO",
+            "MOL_REPORT"
+          ],
+          "proxy_limitations": "実在する製品輸送ドライバー。化学品船の専用市況を表すものではなくBCAA欠落は別に残す。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "製品タンカーの需給を独立して捉える。",
+          "tentative_sign": "通常正。化学品専用運賃への代替とはみなさない。",
+          "source_urls": [
+            "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+            "https://www.balticexchange.com/en/data-services/market-information0/tankers-services.html",
+            "https://www.balticexchange.com/en/apply-page.html",
+            "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+            "https://www.mol.co.jp/en/pr/2026/26026.html",
+            "https://ir.mol.co.jp/en/ir/library/integrated_report.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.balticexchange.com/en/data-services/market-information0/tankers-services.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.balticexchange.com/en/apply-page.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.mol.co.jp/en/pr/2026/26026.html",
+              "published_or_effective_date": "2026-04-01",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/library/integrated_report.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "bunker_vlsfo",
+          "canonical_id": "bunker_vlsfo",
+          "label": "船舶燃料VLSFO",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "RIM Intelligence",
+            "instrument": "Singapore VLSFO; 航路構成固定なら主要港バスケットを1群",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "RIM_BUNKER",
+            "RIM_HISTORY",
+            "MOL_PLAN",
+            "MOL_CEO",
+            "MOL_REPORT"
+          ],
+          "proxy_limitations": "原油とは精製・港湾需給・規制の差がある。燃油サーチャージとヘッジが転嫁を緩和。LNG燃料価格は別途週次。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "各船種の燃料費と転嫁タイミング。",
+          "tentative_sign": "通常負、TCEとの重複・契約転嫁に注意。",
+          "source_urls": [
+            "https://eng.rim-intelligence.co.jp/report/bunker-en/",
+            "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+            "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+            "https://www.mol.co.jp/en/pr/2026/26026.html",
+            "https://ir.mol.co.jp/en/ir/library/integrated_report.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/bunker-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.mol.co.jp/en/pr/2026/26026.html",
+              "published_or_effective_date": "2026-04-01",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/library/integrated_report.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "tse_reit_office",
+          "canonical_id": "tse_reit_office",
+          "label": "東証REITオフィス指数",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "日本株前営業日の確定終値のみ。",
+          "candidate_daily_source": {
+            "provider": "JPX",
+            "instrument": "TSE REIT Office Index",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "公開表示あり。長期履歴・機械利用はライセンス/ベンダー条件確認"
+          },
+          "source_ids": [
+            "JPX_REIT",
+            "JPX_REIT_VALUES",
+            "MOL_PLAN",
+            "MOL_CEO",
+            "MOL_REPORT"
+          ],
+          "proxy_limitations": "Daibiruのオフィス資産価値・割引率の代理。上場REITと非上場の海外物件収益は同一ではない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "Daibiru等のオフィス不動産価値・キャップレート期待。",
+          "tentative_sign": "通常正。海外物件/賃貸契約の相違で限定的。",
+          "source_urls": [
+            "https://www.jpx.co.jp/english/markets/indices/line-up/files/e_fac2_11_reitsec.pdf",
+            "https://www.jpx.co.jp/english/markets/indices/realvalues/index.html",
+            "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+            "https://www.mol.co.jp/en/pr/2026/26026.html",
+            "https://ir.mol.co.jp/en/ir/library/integrated_report.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.jpx.co.jp/english/markets/indices/line-up/files/e_fac2_11_reitsec.pdf",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.jpx.co.jp/english/markets/indices/realvalues/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.mol.co.jp/en/pr/2026/26026.html",
+              "published_or_effective_date": "2026-04-01",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://ir.mol.co.jp/en/ir/library/integrated_report.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        }
+      ],
+      "limitations": [
+        "化学品物流の専用BCAAは週次であり本日次9群には含めない。追加取得後は公表時刻付き低頻度要因として別管理。",
+        "自動車船運賃・LBC稼働率・長期契約比率も必要だが、利用できる日次系列が確認できないため一覧を偽って埋めない。"
+      ],
+      "existing_proxy_alternatives_not_automatic_substitutes": [
+        {
+          "existing_id": "baltic_dry_index",
+          "possible_for": "BDRYによるdry freight futures proxy",
+          "cannot_replace": "dirty/clean tanker、LNG船、化学品船",
+          "source_urls": [
+            "https://amplifyetfs.com/bdry/"
+          ]
+        },
+        {
+          "existing_id": "brent",
+          "possible_for": "燃料価格の粗いproxy",
+          "cannot_replace": "タンカー運賃・VLSFO・不動産価値"
+        }
+      ],
+      "readiness": "INSUFFICIENT_DATA_FOR_DESIRED_PROFILE",
+      "own_stock_technicals": "既存stock__特徴量は別枠の補助特徴。7〜10外部指標群の数には含めない。"
+    },
+    {
+      "ticker": "9107",
+      "name": "川崎汽船",
+      "thesis": "成長の柱である自動車船・石炭鉄鉱石船・LNG船に、ONE持分を分けて対応する。石炭鉄鉱石の長期安定収益を踏まえ、鉱価上昇をそのまま利益増と決め付けない。",
+      "business_source_ids": [
+        "KLINE_REPORT",
+        "KLINE_QA"
+      ],
+      "business_source_urls": [
+        "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+        "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html"
+      ],
+      "desired_external_group_count": 8,
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日経225先物",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前完了セッションEOD、または実際に08:30までに観測したsnapshot。過去snapshotをEODから捏造しない。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "NIY=F",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路。商用利用権/品質は別途確認"
+          },
+          "source_ids": [
+            "KLINE_REPORT",
+            "KLINE_QA"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "日本株全体のリスク選好・先物の寄り前情報を共通市場要因として分離する。",
+          "tentative_sign": "通常は正。ただし寄り付きで織込み済みならザラ場への符号は不定。",
+          "source_urls": [
+            "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+            "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+              "published_or_effective_date": "2025-12-23",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html",
+              "published_or_effective_date": "2025-06-03",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "08:30までに観測済みの値、または前完了日EOD。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "JPY=X",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路"
+          },
+          "source_ids": [
+            "KLINE_REPORT",
+            "KLINE_QA"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "ドル建て運賃/利益の円換算とドル建て費用のnet exposure。",
+          "tentative_sign": "円安（USDJPY上昇）は利益換算に通常プラス。ヘッジ・ドル費用を控除すると条件付き。",
+          "source_urls": [
+            "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+            "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+              "published_or_effective_date": "2025-12-23",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html",
+              "published_or_effective_date": "2025-06-03",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "container_freight_fbx",
+          "canonical_id": "container_freight_fbx",
+          "label": "コンテナ運賃FBX",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "FBXは公式FAQで14:00 UTC公表（23:00 JST）。前日公表分を翌08:30に使用。週次FBXと混在不可。",
+          "candidate_daily_source": {
+            "provider": "Freightos / Baltic Exchange",
+            "instrument": "FBX Global または固定ONE航路構成のFBX01/03/11バスケットを1群",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "FREIGHTOS",
+            "FREIGHTOS_PRICING",
+            "KLINE_REPORT",
+            "KLINE_QA"
+          ],
+          "proxy_limitations": "スポット40ft運賃。ONEの長期契約、航路構成、燃料サーチャージ、運賃認識の時間差がある。複数航路を群数に加算しない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "ONEの市況・持分利益期待。",
+          "tentative_sign": "通常正。自営の自動車船収益とは別経路。",
+          "source_urls": [
+            "https://www.freightos.com/enterprise/terminal/",
+            "https://www.freightos.com/enterprise/terminal/pricing/",
+            "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+            "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.freightos.com/enterprise/terminal/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.freightos.com/enterprise/terminal/pricing/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+              "published_or_effective_date": "2025-12-23",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html",
+              "published_or_effective_date": "2025-06-03",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "baltic_capesize_index",
+          "canonical_id": "baltic_capesize_index",
+          "label": "ケープサイズ運賃",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "existing_pending",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "Baltic Exchange",
+            "instrument": "Baltic Capesize Index / 5TC（同一群で整合する定義を固定）",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "BALTIC_IND",
+            "BALTIC_BUY",
+            "KLINE_REPORT",
+            "KLINE_QA"
+          ],
+          "proxy_limitations": "既存IDはpending。既存BDRYでこの固有市況を黙って置き換えない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "大型鉄鉱石等の船腹需給・更改価格。",
+          "tentative_sign": "通常正だが長期専用船は短期影響が弱い。",
+          "source_urls": [
+            "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+            "https://www.balticexchange.com/en/apply-page.html",
+            "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+            "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.balticexchange.com/en/apply-page.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+              "published_or_effective_date": "2025-12-23",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html",
+              "published_or_effective_date": "2025-06-03",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "iron_ore",
+          "canonical_id": "iron_ore",
+          "label": "鉄鉱石価格",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "existing_pending",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "SGX / licensed iron ore assessment provider",
+            "instrument": "62% Fe iron ore futures daily settlement; 契約・code・roll未確定",
+            "verification_status": "INSTRUMENT_DOCUMENTED_EXACT_FEED_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "IRON",
+            "KLINE_REPORT",
+            "KLINE_QA"
+          ],
+          "proxy_limitations": "海運会社は鉱山会社ではない。鉱価上昇が供給障害なら貨物量に逆風となる。FXIや銅で鉄鉱石輸送固有の信号を置換しない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "鉄鋼原料荷主の需要と鉄鉱石輸送数量の期待。",
+          "tentative_sign": "需要増による鉱価上昇なら正、鉱山供給障害なら輸送減で負もある。",
+          "source_urls": [
+            "https://www.sgx.com/",
+            "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+            "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.sgx.com/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+              "published_or_effective_date": "2025-12-23",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html",
+              "published_or_effective_date": "2025-06-03",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "euro_auto_equity",
+          "canonical_id": "euro_auto_equity",
+          "label": "欧州自動車株指数（輸送需要の代理）",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "STOXX",
+            "instrument": "EURO STOXX Automobiles & Parts, SXAK",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "STOXX_AUTO",
+            "KLINE_REPORT",
+            "KLINE_QA"
+          ],
+          "proxy_limitations": "自動車メーカーへの需要期待の株式代理。実際の完成車輸出台数・PCC運賃ではなく、欧州偏重と株式市場共通因子がある。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "完成車・High & Heavy輸送の荷主需要期待。",
+          "tentative_sign": "通常正だが関税・現地化と地域偏重に依存。",
+          "source_urls": [
+            "https://stoxx.com/index/sxak/",
+            "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+            "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://stoxx.com/index/sxak/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+              "published_or_effective_date": "2025-12-23",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html",
+              "published_or_effective_date": "2025-06-03",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "lng_shipping_rate",
+          "canonical_id": "lng_shipping_rate",
+          "label": "LNG船スポット用船料",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "Baltic Exchange",
+            "instrument": "太平洋LNG輸送ルート：現行LNG1-174/BLNG系の接続仕様要確認",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "BALTIC_IND",
+            "BALTIC_GAS",
+            "BALTIC_BUY",
+            "KLINE_REPORT",
+            "KLINE_QA"
+          ],
+          "proxy_limitations": "LNG価格JKMとは別。長期用船が主体なら短期損益感応度は弱い。船型変更・旧BLNGコードとの接続を確認。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "LNG輸送の新規/更改採算・船腹需給。",
+          "tentative_sign": "通常正。新船の初期金利/償却負担と長期契約を別扱い。",
+          "source_urls": [
+            "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+            "https://www.balticexchange.com/en/data-services/market-information0/gas-services.html",
+            "https://www.balticexchange.com/en/apply-page.html",
+            "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+            "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.balticexchange.com/en/data-services/market-information0/gas-services.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.balticexchange.com/en/apply-page.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+              "published_or_effective_date": "2025-12-23",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html",
+              "published_or_effective_date": "2025-06-03",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "bunker_vlsfo",
+          "canonical_id": "bunker_vlsfo",
+          "label": "船舶燃料VLSFO",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "RIM Intelligence",
+            "instrument": "Singapore VLSFO; 航路構成固定なら主要港バスケットを1群",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "RIM_BUNKER",
+            "RIM_HISTORY",
+            "KLINE_REPORT",
+            "KLINE_QA"
+          ],
+          "proxy_limitations": "原油とは精製・港湾需給・規制の差がある。燃油サーチャージとヘッジが転嫁を緩和。LNG燃料価格は別途週次。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "自動車船/バルク等の燃料費。",
+          "tentative_sign": "費用として負。燃料転嫁やLNG燃料への転換で変化。",
+          "source_urls": [
+            "https://eng.rim-intelligence.co.jp/report/bunker-en/",
+            "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+            "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+            "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/bunker-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+              "published_or_effective_date": "2025-12-23",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html",
+              "published_or_effective_date": "2025-06-03",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        }
+      ],
+      "limitations": [
+        "BCIと鉄鉱石価格は運賃と貨物価値という異なる経路。ただし共通中国需要を二重に評価しないよう相関・寄与を監視。",
+        "石炭輸送数量、PCC契約運賃、LNG長期契約比率は別途低頻度・イベント情報を取得。"
+      ],
+      "existing_proxy_alternatives_not_automatic_substitutes": [
+        {
+          "existing_id": "baltic_dry_index",
+          "possible_for": "BDRYはCapesizeを含むdry futures proxy",
+          "cannot_replace": "BCI現物系列と同一ではない",
+          "source_urls": [
+            "https://amplifyetfs.com/bdry/"
+          ]
+        },
+        {
+          "existing_id": "fxi",
+          "possible_for": "中国需要の広い株式代理",
+          "cannot_replace": "鉄鉱石貨物量や鉄鉱石価格"
+        }
+      ],
+      "readiness": "INSUFFICIENT_DATA_FOR_DESIRED_PROFILE",
+      "own_stock_technicals": "既存stock__特徴量は別枠の補助特徴。7〜10外部指標群の数には含めない。"
+    },
+    {
+      "ticker": "1605",
+      "name": "INPEX",
+      "thesis": "原油・LNG上流企業。豪州IchthysではLNGだけでなくLPG・コンデンセートを生産するため、原油、北東アジアLNG、LPG、豪ドル操業費を分離する。油価/為替感応度は公式に開示されるが長期契約と税制で日次感応度は薄まる。",
+      "business_source_ids": [
+        "INPEX_REPORT",
+        "INPEX_RISK",
+        "INPEX_ICHTHYS"
+      ],
+      "business_source_urls": [
+        "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+        "https://www.inpex.com/english/ir/risk.html",
+        "https://www.inpex.com/english/business/project/ichthys.html"
+      ],
+      "desired_external_group_count": 7,
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日経225先物",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前完了セッションEOD、または実際に08:30までに観測したsnapshot。過去snapshotをEODから捏造しない。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "NIY=F",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路。商用利用権/品質は別途確認"
+          },
+          "source_ids": [
+            "INPEX_REPORT",
+            "INPEX_RISK",
+            "INPEX_ICHTHYS"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "日本株全体のリスク選好・先物の寄り前情報を共通市場要因として分離する。",
+          "tentative_sign": "通常は正。ただし寄り付きで織込み済みならザラ場への符号は不定。",
+          "source_urls": [
+            "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+            "https://www.inpex.com/english/ir/risk.html",
+            "https://www.inpex.com/english/business/project/ichthys.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+              "published_or_effective_date": "2026-07-07",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/english/ir/risk.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/english/business/project/ichthys.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "08:30までに観測済みの値、または前完了日EOD。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "JPY=X",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路"
+          },
+          "source_ids": [
+            "INPEX_REPORT",
+            "INPEX_RISK",
+            "INPEX_ICHTHYS"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "ドル建て油ガス販売収入の円換算とUSD資産負債評価。",
+          "tentative_sign": "通常円安が正。為替ヘッジ/費用/税で変わる。",
+          "source_urls": [
+            "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+            "https://www.inpex.com/english/ir/risk.html",
+            "https://www.inpex.com/english/business/project/ichthys.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+              "published_or_effective_date": "2026-07-07",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/english/ir/risk.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/english/business/project/ichthys.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "brent",
+          "canonical_id": "brent",
+          "label": "ブレント原油先物",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前完了セッションEOD、または08:30以前に観測済みsnapshot。rollと調整方針を固定。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "BZ=F",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路"
+          },
+          "source_ids": [
+            "INPEX_REPORT",
+            "INPEX_RISK",
+            "INPEX_ICHTHYS"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。 現物Dubaiや全社実現油価そのものではない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "上流の原油・コンデンセート販売単価と油価連動LNG契約。",
+          "tentative_sign": "通常正。契約ラグ、地域basis、税で弱まる。",
+          "source_urls": [
+            "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+            "https://www.inpex.com/english/ir/risk.html",
+            "https://www.inpex.com/english/business/project/ichthys.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+              "published_or_effective_date": "2026-07-07",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/english/ir/risk.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/english/business/project/ichthys.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "lng_jkm",
+          "canonical_id": "lng_jkm",
+          "label": "北東アジアLNG価格JKM",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "公表方式は16:30 Singapore（17:30 JST）。予測日の前公表営業日分を08:30に使用。現在の配信契約時刻を再確認。",
+          "candidate_daily_source": {
+            "provider": "S&P Global Platts",
+            "instrument": "JKM spot assessment, Northeast Asia delivered LNG",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "JKM",
+            "INPEX_REPORT",
+            "INPEX_RISK",
+            "INPEX_ICHTHYS"
+          ],
+          "proxy_limitations": "米Henry Hub（既存natural_gas）とは異なる。長期油価連動LNG契約やヘッジで即時感応度は小さくなる。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "北東アジアLNG需給とスポット/契約更新価値、国内輸入LNG原料費。",
+          "tentative_sign": "販売には正、国内調達には負。長期油価連動が多く単純比例不可。",
+          "source_urls": [
+            "https://press.spglobal.com/2020-06-01-S-P-Global-Platts-Launches-eWindow-for-Platts-JKM-LNG-Derivatives",
+            "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+            "https://www.inpex.com/english/ir/risk.html",
+            "https://www.inpex.com/english/business/project/ichthys.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://press.spglobal.com/2020-06-01-S-P-Global-Platts-Launches-eWindow-for-Platts-JKM-LNG-Derivatives",
+              "published_or_effective_date": "2020-06-01",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+              "published_or_effective_date": "2026-07-07",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/english/ir/risk.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/english/business/project/ichthys.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "lpg_afei",
+          "canonical_id": "lpg_afei",
+          "label": "極東LPG価格AFEI",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "Argus",
+            "instrument": "AFEI propane/butane; 販売構成が確認できる場合のみ固定バスケット1群",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "LPG",
+            "LPG_PRODUCT",
+            "INPEX_REPORT",
+            "INPEX_RISK",
+            "INPEX_ICHTHYS"
+          ],
+          "proxy_limitations": "LNGとLPGは別商品。Ichthysの実現価格・長期契約価格そのものではない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "IchthysのLPG副産物販売とアジアLPG需給。",
+          "tentative_sign": "通常正。実現売価・販売先/契約条件による。",
+          "source_urls": [
+            "https://www.argusmedia.com/en/methodology/key-commodity-prices/argus-far-east-index-afei",
+            "https://www.argusmedia.com/en/solutions/products/argus-international-lpg",
+            "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+            "https://www.inpex.com/english/ir/risk.html",
+            "https://www.inpex.com/english/business/project/ichthys.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.argusmedia.com/en/methodology/key-commodity-prices/argus-far-east-index-afei",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.argusmedia.com/en/solutions/products/argus-international-lpg",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+              "published_or_effective_date": "2026-07-07",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/english/ir/risk.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/english/business/project/ichthys.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "audusd",
+          "canonical_id": "audusd",
+          "label": "豪ドル/米ドル",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "豪州前営業日公表分。予測当日の豪州午後値を朝に使わない。",
+          "candidate_daily_source": {
+            "provider": "Reserve Bank of Australia",
+            "instrument": "Units of USD per AUD, daily table",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "公式公開表無料。規約・履歴ファイル・自動取得可否は確認"
+          },
+          "source_ids": [
+            "RBA",
+            "INPEX_REPORT",
+            "INPEX_RISK",
+            "INPEX_ICHTHYS"
+          ],
+          "proxy_limitations": "AUD建て操業費をUSD収入と対比する通貨ドライバー。AUDJPYとUSDJPYの二重計上を避け独立した定義にする。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "豪州操業・建設のAUDコストをUSD販売収入と比較。",
+          "tentative_sign": "AUD高はコスト面で通常負。通貨ヘッジと豪州資産換算で変動。",
+          "source_urls": [
+            "https://www.rba.gov.au/statistics/frequency/exchange-rates.html",
+            "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+            "https://www.inpex.com/english/ir/risk.html",
+            "https://www.inpex.com/english/business/project/ichthys.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.rba.gov.au/statistics/frequency/exchange-rates.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+              "published_or_effective_date": "2026-07-07",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/english/ir/risk.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/english/business/project/ichthys.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "us_10y_yield",
+          "canonical_id": "us_10y_yield",
+          "label": "米10年国債利回り",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "US Treasury",
+            "instrument": "Daily Treasury Par Yield Curve: 10 Yr",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "公式CSV/XML無料"
+          },
+          "source_ids": [
+            "UST",
+            "INPEX_REPORT",
+            "INPEX_RISK",
+            "INPEX_ICHTHYS"
+          ],
+          "proxy_limitations": "資金調達・割引率の代理。企業固有の借入金利/信用スプレッドではない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "長期大型油ガス投資の割引率・USD資金調達環境。",
+          "tentative_sign": "金利上昇は価値/費用面で通常負。実際の契約金利ではない。",
+          "source_urls": [
+            "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?page=0&type=daily_treasury_yield_curve",
+            "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+            "https://www.inpex.com/english/ir/risk.html",
+            "https://www.inpex.com/english/business/project/ichthys.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?page=0&type=daily_treasury_yield_curve",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+              "published_or_effective_date": "2026-07-07",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/english/ir/risk.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.inpex.com/english/business/project/ichthys.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        }
+      ],
+      "limitations": [
+        "Henry HubをJKMと同義にしない。LPGをLNGの別テクニカル列として水増ししない。",
+        "LPG価格群は実際の副産物事業を根拠とするが利益寄与の定量確認が必要。"
+      ],
+      "existing_proxy_alternatives_not_automatic_substitutes": [
+        {
+          "existing_id": "natural_gas",
+          "possible_for": "米ガス市況・世界LNG裁定の粗いproxy",
+          "cannot_replace": "アジアJKMと同義ではない"
+        },
+        {
+          "existing_id": "audjpy",
+          "possible_for": "豪州通貨の円換算",
+          "cannot_replace": "AUDUSD操業費exposure。USDJPYと併用する場合の変換/共線性を明示"
+        }
+      ],
+      "readiness": "INSUFFICIENT_DATA_FOR_DESIRED_PROFILE",
+      "own_stock_technicals": "既存stock__特徴量は別枠の補助特徴。7〜10外部指標群の数には含めない。"
+    },
+    {
+      "ticker": "5020",
+      "name": "ENEOSホールディングス",
+      "thesis": "国内石油精製販売のマージンと原油在庫、石化、電力/LNG、持分法JX金属を分ける。2025年3月以後のJX金属は完全連結ではないため、古い銅中心のモデルを機械的に継承しない。",
+      "business_source_ids": [
+        "ENEOS_SEG",
+        "ENEOS_IR",
+        "ENEOS_2026"
+      ],
+      "business_source_urls": [
+        "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+        "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+        "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf"
+      ],
+      "desired_external_group_count": 8,
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日経225先物",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前完了セッションEOD、または実際に08:30までに観測したsnapshot。過去snapshotをEODから捏造しない。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "NIY=F",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路。商用利用権/品質は別途確認"
+          },
+          "source_ids": [
+            "ENEOS_SEG",
+            "ENEOS_IR",
+            "ENEOS_2026"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "日本株全体のリスク選好・先物の寄り前情報を共通市場要因として分離する。",
+          "tentative_sign": "通常は正。ただし寄り付きで織込み済みならザラ場への符号は不定。",
+          "source_urls": [
+            "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+            "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+            "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+              "published_or_effective_date": "2025-09-30",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf",
+              "published_or_effective_date": "2026-05",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "08:30までに観測済みの値、または前完了日EOD。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "JPY=X",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路"
+          },
+          "source_ids": [
+            "ENEOS_SEG",
+            "ENEOS_IR",
+            "ENEOS_2026"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "輸入原油の円コスト、在庫評価、海外利益換算・販売価格転嫁の時間差。",
+          "tentative_sign": "一意に固定不可。原料高は負、在庫/海外利益は正になり得る。",
+          "source_urls": [
+            "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+            "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+            "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+              "published_or_effective_date": "2025-09-30",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf",
+              "published_or_effective_date": "2026-05",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "dubai_crude",
+          "canonical_id": "dubai_crude",
+          "label": "ドバイ原油価格",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "RIM / Platts",
+            "instrument": "Dubai crude daily assessment",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "RIM_CRUDE",
+            "RIM_HISTORY",
+            "ENEOS_SEG",
+            "ENEOS_IR",
+            "ENEOS_2026"
+          ],
+          "proxy_limitations": "輸入原油コスト・在庫効果と上流収益の両方向。Brent/WTIとは油種・地域basisが異なる。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "輸入原油調達・在庫評価・E&P採算の共通油価水準。",
+          "tentative_sign": "在庫/E&Pには正、調達コストには負。販売転嫁ラグで変わる。",
+          "source_urls": [
+            "https://eng.rim-intelligence.co.jp/report/crude-condensate-en/",
+            "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+            "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+            "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+            "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf"
+          ],
+          "source_dates": [
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/crude-condensate-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+              "published_or_effective_date": "2025-09-30",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf",
+              "published_or_effective_date": "2026-05",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "japan_refining_margin",
+          "canonical_id": "japan_refining_margin",
+          "label": "日本の石油製品・原油マージン",
+          "acquisition_status": "NEW_DERIVED_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "RIM Intelligence",
+            "instrument": "日本ガソリン/灯油/軽油の固定製品構成価格 − lagged Dubai/JCC代替調達原価 − 輸送費",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "RIM_PRODUCTS",
+            "RIM_CRUDE",
+            "RIM_HISTORY",
+            "ENEOS_SEG",
+            "ENEOS_IR",
+            "ENEOS_2026"
+          ],
+          "proxy_limitations": "研究用gross margin proxy。製品歩留まり、通貨/単位、税・補助金、販売時差を明示。会社実績マージンを日次補間して未来情報を混ぜない。各製品を別群として数えない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "国内ガソリン等の販売価格と原料コスト差が精製販売採算を左右。",
+          "tentative_sign": "通常正。税/補助金/在庫を除いた定義と数量条件が必要。",
+          "source_urls": [
+            "https://eng.rim-intelligence.co.jp/report/products-en/",
+            "https://eng.rim-intelligence.co.jp/report/crude-condensate-en/",
+            "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+            "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+            "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+            "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf"
+          ],
+          "source_dates": [
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/products-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/crude-condensate-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+              "published_or_effective_date": "2025-09-30",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf",
+              "published_or_effective_date": "2026-05",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "px_naphtha_spread",
+          "canonical_id": "px_naphtha_spread",
+          "label": "パラキシレン・ナフサ価格差",
+          "acquisition_status": "NEW_DERIVED_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "RIM / Platts",
+            "instrument": "アジアPX価格 − 同時点ナフサ価格（同一通貨/単位、場所・歩留まりを確認）",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "RIM_PETCHEM",
+            "RIM_PRODUCTS",
+            "RIM_HISTORY",
+            "ENEOS_SEG",
+            "ENEOS_IR",
+            "ENEOS_2026"
+          ],
+          "proxy_limitations": "石化のgross spread代理で石油燃料の精製マージンとは別。grade/feed codesと個社の実際の製品構成は取得前に確認。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "芳香族などアジア石化の製品原料spread。",
+          "tentative_sign": "通常正。高機能材全体をPXだけで説明しない。",
+          "source_urls": [
+            "https://eng.rim-intelligence.co.jp/report/petrochemicals-en/",
+            "https://eng.rim-intelligence.co.jp/report/products-en/",
+            "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+            "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+            "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+            "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf"
+          ],
+          "source_dates": [
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/petrochemicals-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/products-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+              "published_or_effective_date": "2025-09-30",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf",
+              "published_or_effective_date": "2026-05",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "jepx_spot",
+          "canonical_id": "jepx_spot",
+          "label": "日本卸電力スポット価格",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "毎日・30分値から日平均",
+          "cutoff_policy": "受渡日と公表日を区別。08:30時点で既に公表されていた受渡日の価格のみ。保守的初期運用は前受渡日の確定値。",
+          "candidate_daily_source": {
+            "provider": "JEPX",
+            "instrument": "System Price / disclosed operating-area fixed mix, 30-min values aggregated to one daily group",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "公式公開データ。機械利用条件と履歴取得を要確認"
+          },
+          "source_ids": [
+            "JEPX",
+            "ENEOS_SEG",
+            "ENEOS_IR",
+            "ENEOS_2026"
+          ],
+          "proxy_limitations": "発電の売電にはプラス、固定単価の小売調達にはマイナス。発電/小売のnet position、燃料費調整・FIT/FIP・PPAに依存。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "電力の発電・小売に対する国内卸売価格環境。",
+          "tentative_sign": "net発電なら正、net調達なら負。固定契約等で条件付き。",
+          "source_urls": [
+            "https://www.jepx.jp/electricpower/market-data/spot/",
+            "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+            "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+            "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.jepx.jp/electricpower/market-data/spot/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+              "published_or_effective_date": "2025-09-30",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf",
+              "published_or_effective_date": "2026-05",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "lng_jkm",
+          "canonical_id": "lng_jkm",
+          "label": "北東アジアLNG価格JKM",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "公表方式は16:30 Singapore（17:30 JST）。予測日の前公表営業日分を08:30に使用。現在の配信契約時刻を再確認。",
+          "candidate_daily_source": {
+            "provider": "S&P Global Platts",
+            "instrument": "JKM spot assessment, Northeast Asia delivered LNG",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "JKM",
+            "ENEOS_SEG",
+            "ENEOS_IR",
+            "ENEOS_2026"
+          ],
+          "proxy_limitations": "米Henry Hub（既存natural_gas）とは異なる。長期油価連動LNG契約やヘッジで即時感応度は小さくなる。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "LNG原料調達/電源コストと上流ガス価値。",
+          "tentative_sign": "調達側負・上流側正。契約構成のnet exposureで決まる。",
+          "source_urls": [
+            "https://press.spglobal.com/2020-06-01-S-P-Global-Platts-Launches-eWindow-for-Platts-JKM-LNG-Derivatives",
+            "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+            "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+            "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf"
+          ],
+          "source_dates": [
+            {
+              "url": "https://press.spglobal.com/2020-06-01-S-P-Global-Platts-Launches-eWindow-for-Platts-JKM-LNG-Derivatives",
+              "published_or_effective_date": "2020-06-01",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+              "published_or_effective_date": "2025-09-30",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf",
+              "published_or_effective_date": "2026-05",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "jx_advanced_metals_equity",
+          "canonical_id": "jx_advanced_metals_equity",
+          "label": "JX金属株価",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "日本株前営業日の確定終値のみ。上場前系列は存在せず後方補間しない。",
+          "candidate_daily_source": {
+            "provider": "JPX / licensed Japanese equity data provider",
+            "instrument": "東京証券取引所 5016（Yahooコードは未検証）",
+            "verification_status": "BUSINESS_LINK_VERIFIED_PRICE_FEED_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "市場データの既存利用権を確認。新API取得は未実施"
+          },
+          "source_ids": [
+            "ENEOS_SEG",
+            "ENEOS_2026",
+            "ENEOS_IR"
+          ],
+          "proxy_limitations": "持分法投資の価値変化の代理。ENEOSがJX金属を完全連結する前提は禁止。保有比率変更をas-of管理。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "持分法投資JX金属の事業価値・資本配分期待。",
+          "tentative_sign": "通常正。ENEOS持株比率変更と共通株式市場因子を管理。",
+          "source_urls": [
+            "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+            "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf",
+            "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf",
+              "published_or_effective_date": "2026-05",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+              "published_or_effective_date": "2025-09-30",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        }
+      ],
+      "limitations": [
+        "JX金属は2025-03-19以前に公開株価がなく、過去期間への後方補間禁止。",
+        "国内精製マージンをXLEやWTI単独で代替しない。"
+      ],
+      "existing_proxy_alternatives_not_automatic_substitutes": [
+        {
+          "existing_id": "brent",
+          "possible_for": "世界原油水準",
+          "cannot_replace": "Dubai輸入原価basis・国内精製マージン"
+        },
+        {
+          "existing_id": "xle",
+          "possible_for": "米エネルギー株の投資家評価",
+          "cannot_replace": "ENEOS国内精製/電力/JX金属の固有ドライバー"
+        }
+      ],
+      "readiness": "INSUFFICIENT_DATA_FOR_DESIRED_PROFILE",
+      "own_stock_technicals": "既存stock__特徴量は別枠の補助特徴。7〜10外部指標群の数には含めない。"
+    },
+    {
+      "ticker": "5019",
+      "name": "出光興産",
+      "thesis": "国内精製販売に加えて豪州石炭、海外油ガス、基礎化学、潤滑油など機能材、電力を持つ。ENEOS/コスモと同じ原油一式にせず、豪州一般炭とAUDコスト、エチレン原料spreadを含める。",
+      "business_source_ids": [
+        "IDEMITSU_RISK",
+        "IDEMITSU_SEG",
+        "IDEMITSU_REPORT"
+      ],
+      "business_source_urls": [
+        "https://www.idemitsu.com/en/ir/management/risk/index.html",
+        "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+        "https://www.idemitsu.com/en/ir/library/annual/index.html"
+      ],
+      "desired_external_group_count": 8,
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日経225先物",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前完了セッションEOD、または実際に08:30までに観測したsnapshot。過去snapshotをEODから捏造しない。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "NIY=F",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路。商用利用権/品質は別途確認"
+          },
+          "source_ids": [
+            "IDEMITSU_RISK",
+            "IDEMITSU_SEG",
+            "IDEMITSU_REPORT"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "日本株全体のリスク選好・先物の寄り前情報を共通市場要因として分離する。",
+          "tentative_sign": "通常は正。ただし寄り付きで織込み済みならザラ場への符号は不定。",
+          "source_urls": [
+            "https://www.idemitsu.com/en/ir/management/risk/index.html",
+            "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+            "https://www.idemitsu.com/en/ir/library/annual/index.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.idemitsu.com/en/ir/management/risk/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/library/annual/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "08:30までに観測済みの値、または前完了日EOD。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "JPY=X",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路"
+          },
+          "source_ids": [
+            "IDEMITSU_RISK",
+            "IDEMITSU_SEG",
+            "IDEMITSU_REPORT"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "輸入原油の円コスト、在庫評価、海外利益換算・販売価格転嫁の時間差。",
+          "tentative_sign": "一意に固定不可。原料高は負、在庫/海外利益は正になり得る。",
+          "source_urls": [
+            "https://www.idemitsu.com/en/ir/management/risk/index.html",
+            "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+            "https://www.idemitsu.com/en/ir/library/annual/index.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.idemitsu.com/en/ir/management/risk/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/library/annual/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "brent",
+          "canonical_id": "brent",
+          "label": "ブレント原油先物",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前完了セッションEOD、または08:30以前に観測済みsnapshot。rollと調整方針を固定。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "BZ=F",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路"
+          },
+          "source_ids": [
+            "IDEMITSU_RISK",
+            "IDEMITSU_SEG",
+            "IDEMITSU_REPORT"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。 現物Dubaiや全社実現油価そのものではない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "ノルウェー等の上流販売価格・原油在庫の広域基準。",
+          "tentative_sign": "上流には正、精製原料には負。粗い基準で地域basisを残す。",
+          "source_urls": [
+            "https://www.idemitsu.com/en/ir/management/risk/index.html",
+            "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+            "https://www.idemitsu.com/en/ir/library/annual/index.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.idemitsu.com/en/ir/management/risk/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/library/annual/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "japan_refining_margin",
+          "canonical_id": "japan_refining_margin",
+          "label": "日本の石油製品・原油マージン",
+          "acquisition_status": "NEW_DERIVED_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "RIM Intelligence",
+            "instrument": "日本ガソリン/灯油/軽油の固定製品構成価格 − lagged Dubai/JCC代替調達原価 − 輸送費",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "RIM_PRODUCTS",
+            "RIM_CRUDE",
+            "RIM_HISTORY",
+            "IDEMITSU_RISK",
+            "IDEMITSU_SEG",
+            "IDEMITSU_REPORT"
+          ],
+          "proxy_limitations": "研究用gross margin proxy。製品歩留まり、通貨/単位、税・補助金、販売時差を明示。会社実績マージンを日次補間して未来情報を混ぜない。各製品を別群として数えない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "国内燃料販売価格と調達原価の差。",
+          "tentative_sign": "通常正。販売time lag、在庫・税/補助金で見え方が変わる。",
+          "source_urls": [
+            "https://eng.rim-intelligence.co.jp/report/products-en/",
+            "https://eng.rim-intelligence.co.jp/report/crude-condensate-en/",
+            "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+            "https://www.idemitsu.com/en/ir/management/risk/index.html",
+            "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+            "https://www.idemitsu.com/en/ir/library/annual/index.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/products-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/crude-condensate-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/management/risk/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/library/annual/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "ethylene_naphtha_spread",
+          "canonical_id": "ethylene_naphtha_spread",
+          "label": "エチレン・ナフサ価格差",
+          "acquisition_status": "NEW_DERIVED_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "RIM / Platts",
+            "instrument": "CFR Northeast Asia ethylene − CFR Japan naphtha（原料歩留まり/単位調整）",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "RIM_PETCHEM",
+            "RIM_PRODUCTS",
+            "RIM_HISTORY",
+            "IDEMITSU_RISK",
+            "IDEMITSU_SEG",
+            "IDEMITSU_REPORT"
+          ],
+          "proxy_limitations": "エチレン系設備の採算代理。中国設備過剰・副産物・定修により単純差と利益は一致しない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "アジア基礎化学の需給とクラッカー採算。",
+          "tentative_sign": "通常正。設備余剰・副産物・定修で変動。",
+          "source_urls": [
+            "https://eng.rim-intelligence.co.jp/report/petrochemicals-en/",
+            "https://eng.rim-intelligence.co.jp/report/products-en/",
+            "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+            "https://www.idemitsu.com/en/ir/management/risk/index.html",
+            "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+            "https://www.idemitsu.com/en/ir/library/annual/index.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/petrochemicals-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/products-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/management/risk/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/library/annual/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "thermal_coal_newcastle",
+          "canonical_id": "thermal_coal_newcastle",
+          "label": "豪州一般炭NEWC価格",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "ICE / globalCOAL",
+            "instrument": "Newcastle Coal Futures front-month daily settlement or licensed NEWC daily physical; choose one",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "COAL",
+            "COAL_INDEX",
+            "IDEMITSU_RISK",
+            "IDEMITSU_SEG",
+            "IDEMITSU_REPORT"
+          ],
+          "proxy_limitations": "最終決済の月平均を日次価格と混同しない。発熱量/灰分・販売契約・限月roll・操業費で個社損益が変わる。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "豪州自社炭鉱の一般炭販売価格。",
+          "tentative_sign": "通常正。長期販売・炭質・税・操業費で変動。",
+          "source_urls": [
+            "https://www.ice.com/products/1137/globalCOAL-",
+            "https://www.globalcoal.com/coalprices/newcindex.cfm",
+            "https://www.idemitsu.com/en/ir/management/risk/index.html",
+            "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+            "https://www.idemitsu.com/en/ir/library/annual/index.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.ice.com/products/1137/globalCOAL-",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.globalcoal.com/coalprices/newcindex.cfm",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/management/risk/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/library/annual/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "audusd",
+          "canonical_id": "audusd",
+          "label": "豪ドル/米ドル",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "豪州前営業日公表分。予測当日の豪州午後値を朝に使わない。",
+          "candidate_daily_source": {
+            "provider": "Reserve Bank of Australia",
+            "instrument": "Units of USD per AUD, daily table",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "公式公開表無料。規約・履歴ファイル・自動取得可否は確認"
+          },
+          "source_ids": [
+            "RBA",
+            "IDEMITSU_RISK",
+            "IDEMITSU_SEG",
+            "IDEMITSU_REPORT"
+          ],
+          "proxy_limitations": "AUD建て操業費をUSD収入と対比する通貨ドライバー。AUDJPYとUSDJPYの二重計上を避け独立した定義にする。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "豪州炭鉱のAUD操業費に対するUSD商品収入。",
+          "tentative_sign": "AUD高はコスト面で通常負。換算・ヘッジを控除する必要。",
+          "source_urls": [
+            "https://www.rba.gov.au/statistics/frequency/exchange-rates.html",
+            "https://www.idemitsu.com/en/ir/management/risk/index.html",
+            "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+            "https://www.idemitsu.com/en/ir/library/annual/index.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.rba.gov.au/statistics/frequency/exchange-rates.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/management/risk/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/library/annual/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "jepx_spot",
+          "canonical_id": "jepx_spot",
+          "label": "日本卸電力スポット価格",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "毎日・30分値から日平均",
+          "cutoff_policy": "受渡日と公表日を区別。08:30時点で既に公表されていた受渡日の価格のみ。保守的初期運用は前受渡日の確定値。",
+          "candidate_daily_source": {
+            "provider": "JEPX",
+            "instrument": "System Price / disclosed operating-area fixed mix, 30-min values aggregated to one daily group",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "公式公開データ。機械利用条件と履歴取得を要確認"
+          },
+          "source_ids": [
+            "JEPX",
+            "IDEMITSU_RISK",
+            "IDEMITSU_SEG",
+            "IDEMITSU_REPORT"
+          ],
+          "proxy_limitations": "発電の売電にはプラス、固定単価の小売調達にはマイナス。発電/小売のnet position、燃料費調整・FIT/FIP・PPAに依存。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "電力/再エネ事業の売電・調達環境。",
+          "tentative_sign": "事業のnet positionとFIT/FIP/PPAに依存。",
+          "source_urls": [
+            "https://www.jepx.jp/electricpower/market-data/spot/",
+            "https://www.idemitsu.com/en/ir/management/risk/index.html",
+            "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+            "https://www.idemitsu.com/en/ir/library/annual/index.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.jepx.jp/electricpower/market-data/spot/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/management/risk/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+              "published_or_effective_date": "2026-03-31",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.idemitsu.com/en/ir/library/annual/index.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        }
+      ],
+      "limitations": [
+        "潤滑油・機能材は独自の販売spread/原料価格と需要データを追加要請。XLIを同じものとみなさない。",
+        "Nghi Sonの稼働/配当・資金負担は別の四半期/イベント要因として管理。"
+      ],
+      "existing_proxy_alternatives_not_automatic_substitutes": [
+        {
+          "existing_id": "wti",
+          "possible_for": "世界原油水準",
+          "cannot_replace": "豪州石炭・石化マージン"
+        },
+        {
+          "existing_id": "audjpy",
+          "possible_for": "豪州の通貨proxy",
+          "cannot_replace": "USD販売対AUDコストの定義を省略した代用"
+        }
+      ],
+      "readiness": "INSUFFICIENT_DATA_FOR_DESIRED_PROFILE",
+      "own_stock_technicals": "既存stock__特徴量は別枠の補助特徴。7〜10外部指標群の数には含めない。"
+    },
+    {
+      "ticker": "5021",
+      "name": "コスモエネルギーホールディングス",
+      "thesis": "国内の石油精製販売と石化、UAEの油田、再エネを組み合わせる。原油価格の上流利益と精製原料/在庫影響を分け、PX採算・電力市場・国内金利を含める。SAFは事業開始を確認したが、利益規模と日次価格系列が未確定なので7群の水増しには使わない。",
+      "business_source_ids": [
+        "COSMO_REPORT",
+        "COSMO_WEB"
+      ],
+      "business_source_urls": [
+        "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+        "https://www.cosmo-energy.co.jp/en/ir/library/annual.html"
+      ],
+      "desired_external_group_count": 7,
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日経225先物",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前完了セッションEOD、または実際に08:30までに観測したsnapshot。過去snapshotをEODから捏造しない。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "NIY=F",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路。商用利用権/品質は別途確認"
+          },
+          "source_ids": [
+            "COSMO_REPORT",
+            "COSMO_WEB"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "日本株全体のリスク選好・先物の寄り前情報を共通市場要因として分離する。",
+          "tentative_sign": "通常は正。ただし寄り付きで織込み済みならザラ場への符号は不定。",
+          "source_urls": [
+            "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+            "https://www.cosmo-energy.co.jp/en/ir/library/annual.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.cosmo-energy.co.jp/en/ir/library/annual.html",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円",
+          "acquisition_status": "EXISTING_CONFIG_NOT_REFETCHED",
+          "catalog_status": "existing",
+          "frequency": "営業日日次",
+          "cutoff_policy": "08:30までに観測済みの値、または前完了日EOD。",
+          "candidate_daily_source": {
+            "provider": "Yahoo Finance（既存設定）",
+            "instrument": "JPY=X",
+            "verification_status": "LOCAL_CONFIG_ONLY",
+            "ingestion_tested": false,
+            "cost_access": "既存無料経路"
+          },
+          "source_ids": [
+            "COSMO_REPORT",
+            "COSMO_WEB"
+          ],
+          "proxy_limitations": "既存config/indicators.yamlにはverifiedと記録。ただし本調査で値・履歴・API疎通・DBを再確認していない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "輸入原油の円コスト、在庫評価、海外利益換算・販売価格転嫁の時間差。",
+          "tentative_sign": "一意に固定不可。原料高は負、在庫/海外利益は正になり得る。",
+          "source_urls": [
+            "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+            "https://www.cosmo-energy.co.jp/en/ir/library/annual.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.cosmo-energy.co.jp/en/ir/library/annual.html",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "dubai_crude",
+          "canonical_id": "dubai_crude",
+          "label": "ドバイ原油価格",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "RIM / Platts",
+            "instrument": "Dubai crude daily assessment",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "RIM_CRUDE",
+            "RIM_HISTORY",
+            "COSMO_REPORT",
+            "COSMO_WEB"
+          ],
+          "proxy_limitations": "輸入原油コスト・在庫効果と上流収益の両方向。Brent/WTIとは油種・地域basisが異なる。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "UAE上流販売の地域原油水準と輸入原油調達・在庫。",
+          "tentative_sign": "上流/在庫には正、調達には負。原油grade差・OPEC/操業量を別管理。",
+          "source_urls": [
+            "https://eng.rim-intelligence.co.jp/report/crude-condensate-en/",
+            "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+            "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+            "https://www.cosmo-energy.co.jp/en/ir/library/annual.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/crude-condensate-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.cosmo-energy.co.jp/en/ir/library/annual.html",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "japan_refining_margin",
+          "canonical_id": "japan_refining_margin",
+          "label": "日本の石油製品・原油マージン",
+          "acquisition_status": "NEW_DERIVED_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "RIM Intelligence",
+            "instrument": "日本ガソリン/灯油/軽油の固定製品構成価格 − lagged Dubai/JCC代替調達原価 − 輸送費",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "RIM_PRODUCTS",
+            "RIM_CRUDE",
+            "RIM_HISTORY",
+            "COSMO_REPORT",
+            "COSMO_WEB"
+          ],
+          "proxy_limitations": "研究用gross margin proxy。製品歩留まり、通貨/単位、税・補助金、販売時差を明示。会社実績マージンを日次補間して未来情報を混ぜない。各製品を別群として数えない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "国内精製販売の製品価格と原料原価の差。",
+          "tentative_sign": "通常正。稼働率・販売構成・在庫/補助金で条件付き。",
+          "source_urls": [
+            "https://eng.rim-intelligence.co.jp/report/products-en/",
+            "https://eng.rim-intelligence.co.jp/report/crude-condensate-en/",
+            "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+            "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+            "https://www.cosmo-energy.co.jp/en/ir/library/annual.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/products-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/crude-condensate-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.cosmo-energy.co.jp/en/ir/library/annual.html",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "px_naphtha_spread",
+          "canonical_id": "px_naphtha_spread",
+          "label": "パラキシレン・ナフサ価格差",
+          "acquisition_status": "NEW_DERIVED_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "RIM / Platts",
+            "instrument": "アジアPX価格 − 同時点ナフサ価格（同一通貨/単位、場所・歩留まりを確認）",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "有料契約・履歴/モデル利用権の見積確認が必要"
+          },
+          "source_ids": [
+            "RIM_PETCHEM",
+            "RIM_PRODUCTS",
+            "RIM_HISTORY",
+            "COSMO_REPORT",
+            "COSMO_WEB"
+          ],
+          "proxy_limitations": "石化のgross spread代理で石油燃料の精製マージンとは別。grade/feed codesと個社の実際の製品構成は取得前に確認。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "石油化学の芳香族/PX需給と原料spread。",
+          "tentative_sign": "通常正。中国増設/定修/歩留まりによる。",
+          "source_urls": [
+            "https://eng.rim-intelligence.co.jp/report/petrochemicals-en/",
+            "https://eng.rim-intelligence.co.jp/report/products-en/",
+            "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+            "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+            "https://www.cosmo-energy.co.jp/en/ir/library/annual.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/petrochemicals-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://eng.rim-intelligence.co.jp/report/products-en/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.cosmo-energy.co.jp/en/ir/library/annual.html",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "jepx_spot",
+          "canonical_id": "jepx_spot",
+          "label": "日本卸電力スポット価格",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "毎日・30分値から日平均",
+          "cutoff_policy": "受渡日と公表日を区別。08:30時点で既に公表されていた受渡日の価格のみ。保守的初期運用は前受渡日の確定値。",
+          "candidate_daily_source": {
+            "provider": "JEPX",
+            "instrument": "System Price / disclosed operating-area fixed mix, 30-min values aggregated to one daily group",
+            "verification_status": "DOCUMENTATION_VERIFIED_ACCESS_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "公式公開データ。機械利用条件と履歴取得を要確認"
+          },
+          "source_ids": [
+            "JEPX",
+            "COSMO_REPORT",
+            "COSMO_WEB"
+          ],
+          "proxy_limitations": "発電の売電にはプラス、固定単価の小売調達にはマイナス。発電/小売のnet position、燃料費調整・FIT/FIP・PPAに依存。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "風力等の再エネと電力販売の卸売価格環境。",
+          "tentative_sign": "市場連動売電は正。FIT/PPA固定価格部分の感応度は小さい。",
+          "source_urls": [
+            "https://www.jepx.jp/electricpower/market-data/spot/",
+            "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+            "https://www.cosmo-energy.co.jp/en/ir/library/annual.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.jepx.jp/electricpower/market-data/spot/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.cosmo-energy.co.jp/en/ir/library/annual.html",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "jgb_10y_yield",
+          "canonical_id": "jgb_10y_yield",
+          "label": "日本10年国債利回り",
+          "acquisition_status": "NEW_DATA_REQUIRED",
+          "catalog_status": "new",
+          "frequency": "営業日日次",
+          "cutoff_policy": "前営業日の公表済み値のみ。08:30 JSTまでのavailable_at/first_observed_atを保存。正式な公表時刻は導入前に確認。",
+          "candidate_daily_source": {
+            "provider": "Ministry of Finance Japan",
+            "instrument": "10年定残存国債利回り（日次系列の正式URL/コードは未検証）",
+            "verification_status": "CANDIDATE_UNVERIFIED",
+            "ingestion_tested": false,
+            "cost_access": "公式公開統計を候補。系列・取得経路の確認が必要"
+          },
+          "source_ids": [
+            "MOF",
+            "COSMO_REPORT",
+            "COSMO_WEB"
+          ],
+          "proxy_limitations": "国内長期資金・割引率の代理。実際の借入満期・固定変動比率による。米2年利回りで穴埋めしない。",
+          "predictive_efficacy": "UNTESTED_INTRADAY; 事業上の因果経路は仮説であり08:30以後のザラ場リターン予測力を立証していない。",
+          "mechanism": "国内製油所/再エネの長期投資割引率・円資金調達環境。",
+          "tentative_sign": "金利上昇は通常負。固定/変動債務構成に依存。",
+          "source_urls": [
+            "https://www.mof.go.jp/english/policy/jgbs/",
+            "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+            "https://www.cosmo-energy.co.jp/en/ir/library/annual.html"
+          ],
+          "source_dates": [
+            {
+              "url": "https://www.mof.go.jp/english/policy/jgbs/",
+              "published_or_effective_date": null,
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            },
+            {
+              "url": "https://www.cosmo-energy.co.jp/en/ir/library/annual.html",
+              "published_or_effective_date": "2025-11-26",
+              "accessed_at": "2026-10-15"
+            }
+          ]
+        }
+      ],
+      "limitations": [
+        "JGB金利は業務・資産評価の明示的経路を持つが国債利回りだけで企業の借入費用を表さない。",
+        "SAF−UCO原料spreadを追加検討する場合、主力石油事業と同じ重みと決めず利益寄与と公表時刻を確認する。"
+      ],
+      "existing_proxy_alternatives_not_automatic_substitutes": [
+        {
+          "existing_id": "brent",
+          "possible_for": "世界原油水準のproxy",
+          "cannot_replace": "Dubai/UAE grade basis・国内精製margin"
+        },
+        {
+          "existing_id": "us_10y_yield",
+          "possible_for": "世界割引率のproxy",
+          "cannot_replace": "円の資金調達環境として無断代用しない"
+        }
+      ],
+      "readiness": "INSUFFICIENT_DATA_FOR_DESIRED_PROFILE",
+      "own_stock_technicals": "既存stock__特徴量は別枠の補助特徴。7〜10外部指標群の数には含めない。"
+    }
+  ],
+  "additional_data_requests": [
+    {
+      "id": "shipping_freight_history",
+      "for": [
+        "9101",
+        "9104",
+        "9107"
+      ],
+      "data": "BDI/BCI、FBX、LNG運賃、dirty/clean tankerの時刻付き日次履歴",
+      "provider": "Baltic/Freightos",
+      "frequency": "営業日日次",
+      "cost": "有料。履歴/API/内部モデル用途の権利は見積確認。",
+      "source_ids": [
+        "BALTIC_BUY",
+        "FREIGHTOS_PRICING"
+      ],
+      "acceptance": "最低120営業日より長い複数局面の履歴、定義改訂、祝日、公表時刻、訂正履歴を保存。業務利用契約未実施。",
+      "source_urls": [
+        "https://www.balticexchange.com/en/apply-page.html",
+        "https://www.freightos.com/enterprise/terminal/pricing/"
+      ]
+    },
+    {
+      "id": "chemical_tanker_freight",
+      "for": [
+        "9104"
+      ],
+      "data": "BCAA easy-chemical/vegetable-oil route rates、LBCターミナル稼働/料金",
+      "provider": "Baltic BCAA / MOL disclosures",
+      "frequency": "BCAA週次、会社KPI四半期等",
+      "cost": "BCAA有料、会社IR無料",
+      "source_ids": [
+        "BALTIC_CHEM",
+        "MOL_PLAN"
+      ],
+      "acceptance": "日次に水増しせず、直近公表値+経過日数として別管理。clean tankerは同義代替ではない。",
+      "source_urls": [
+        "https://www.balticexchange.com/en/data-services/market-information0/chemical-and-agricultural-oil-assessments-.html",
+        "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf"
+      ]
+    },
+    {
+      "id": "car_carrier_rates",
+      "for": [
+        "9101",
+        "9104",
+        "9107"
+      ],
+      "data": "PCC/PCTCチャーター料、実運賃、輸送台数、地域別輸出",
+      "provider": "Clarksons等を候補、個別購読商品/機械取得経路は未検証。会社IRを低頻度補助。",
+      "frequency": "外部有料系列の頻度未確認、会社開示は月次/四半期等",
+      "cost": "外部は要照会、会社IR無料",
+      "source_ids": [
+        "NYK_FACT",
+        "KLINE_QA",
+        "MOL_PLAN"
+      ],
+      "acceptance": "日次取得可能と断定しない。欧州自動車株は明示的な需要proxyで運賃に改名しない。",
+      "source_urls": [
+        "https://www.nyk.com/english/ir/library/fact/",
+        "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html",
+        "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf"
+      ]
+    },
+    {
+      "id": "refining_and_petrochem_history",
+      "for": [
+        "5020",
+        "5019",
+        "5021"
+      ],
+      "data": "日本製品価格、Dubai、freight、PX/ethylene/naphtha、補助金・税・原料調達ラグ",
+      "provider": "RIM / Platts; 政府制度は別の公表イベント",
+      "frequency": "価格は営業日日次、制度変更はイベント",
+      "cost": "価格履歴は有料。RIM公開説明に日次レポート年額料金あり、履歴/API別途。",
+      "source_ids": [
+        "RIM_PRODUCTS",
+        "RIM_CRUDE",
+        "RIM_PETCHEM",
+        "RIM_HISTORY"
+      ],
+      "acceptance": "通貨/単位/地域/時刻を一致させgross proxyと実績利益を明確に分離。",
+      "source_urls": [
+        "https://eng.rim-intelligence.co.jp/report/products-en/",
+        "https://eng.rim-intelligence.co.jp/report/crude-condensate-en/",
+        "https://eng.rim-intelligence.co.jp/report/petrochemicals-en/",
+        "https://www.rim-intelligence.co.jp/eng/contents/historical.html"
+      ]
+    },
+    {
+      "id": "bunker_and_lng",
+      "for": [
+        "9101",
+        "9104",
+        "9107",
+        "1605",
+        "5020"
+      ],
+      "data": "VLSFO、JKM、AFEI、LNG bunkering",
+      "provider": "RIM / Platts / Argus",
+      "frequency": "VLSFO/JKM/AFEI日次、RIM LNG bunkering週次",
+      "cost": "有料",
+      "source_ids": [
+        "RIM_BUNKER",
+        "JKM",
+        "LPG_PRODUCT"
+      ],
+      "acceptance": "日次Henry HubをアジアLNGに偽装しない。実際の公開・受信時刻を保存。",
+      "source_urls": [
+        "https://eng.rim-intelligence.co.jp/report/bunker-en/",
+        "https://press.spglobal.com/2020-06-01-S-P-Global-Platts-Launches-eWindow-for-Platts-JKM-LNG-Derivatives",
+        "https://www.argusmedia.com/en/solutions/products/argus-international-lpg"
+      ]
+    },
+    {
+      "id": "saf_margin",
+      "for": [
+        "5021",
+        "5020",
+        "5019"
+      ],
+      "data": "SAF fob Singapore、日本着プレミアム、UCO原料、ジェット燃料、補助制度",
+      "provider": "Argus / RIM候補",
+      "frequency": "商品存在は確認、各系列の日次頻度と日本basisは未検証。RIM liquid biofuelsは週次。",
+      "cost": "有料、契約未実施",
+      "source_ids": [
+        "SAF",
+        "UCO",
+        "COSMO_WEB"
+      ],
+      "acceptance": "少量事業の寄与を確認。未確認系列は7〜10群を満たすための埋草にしない。",
+      "source_urls": [
+        "https://view.argusmedia.com/saf-price-snapshot.html",
+        "https://www.argusmedia.com/en/methodology/key-commodity-prices/argus-asian-uco-price-assessments",
+        "https://www.cosmo-energy.co.jp/en/ir/library/annual.html"
+      ]
+    },
+    {
+      "id": "operations_and_contracts",
+      "for": [
+        "9101",
+        "9104",
+        "9107",
+        "1605",
+        "5020",
+        "5019",
+        "5021"
+      ],
+      "data": "契約比率、契約ラグ、船隊、ヘッジ、製油所稼働/定修、油ガス生産、プロジェクト障害、決算・自己株買い",
+      "provider": "各社公式IR/TDnet、操業情報公開",
+      "frequency": "四半期・年次・イベント",
+      "cost": "公式公表無料、構造化に開発費",
+      "source_ids": [
+        "NYK_FACT",
+        "MOL_PLAN",
+        "KLINE_QA",
+        "INPEX_RISK",
+        "ENEOS_SEG",
+        "IDEMITSU_RISK",
+        "COSMO_WEB"
+      ],
+      "acceptance": "公表日以降だけ有効。2026年の事業構造を2024年のバックテストへ遡及しない。",
+      "source_urls": [
+        "https://www.nyk.com/english/ir/library/fact/",
+        "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+        "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html",
+        "https://www.inpex.com/english/ir/risk.html",
+        "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+        "https://www.idemitsu.com/en/ir/management/risk/index.html",
+        "https://www.cosmo-energy.co.jp/en/ir/library/annual.html"
+      ]
+    },
+    {
+      "id": "domestic_power_and_rates",
+      "for": [
+        "5020",
+        "5019",
+        "5021"
+      ],
+      "data": "JEPX公式価格と公表時刻、MOF国債利回り",
+      "provider": "JEPX / MOF",
+      "frequency": "JEPX毎日30分、国債営業日日次候補",
+      "cost": "公開情報。機械利用の条件/履歴経路を確認",
+      "source_ids": [
+        "JEPX",
+        "MOF"
+      ],
+      "acceptance": "JEPXの受渡日を公表日として使わない。国債系列は正式コード・配信時刻未検証。",
+      "source_urls": [
+        "https://www.jepx.jp/electricpower/market-data/spot/",
+        "https://www.mof.go.jp/english/policy/jgbs/"
+      ]
+    }
+  ],
+  "sources": {
+    "NYK_FACT": {
+      "title": "NYK IR Fact Book / Data Book",
+      "url": "https://www.nyk.com/english/ir/library/fact/",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "公式IRがコンテナ・物流・自動車・ドライバルク・エネルギーを別セグメントで開示。日付不明の継続更新ページ。"
+    },
+    "NYK_REPORT": {
+      "title": "NYK Report 2025",
+      "url": "https://www.nyk.com/english/ir/library/nyk/",
+      "published_or_effective_date": "2025-11-26",
+      "accessed_at": "2026-10-15",
+      "evidence_note": "英語版公開日。成長分野と安定利益化を確認。"
+    },
+    "NYK_NCA": {
+      "title": "NYK: NCA share exchange completed",
+      "url": "https://www.nyk.com/english/news/2025/20250801_0.html",
+      "published_or_effective_date": "2025-08-01",
+      "accessed_at": "2026-10-15",
+      "evidence_note": "NCAは同日以後NYK連結対象外。航空物流と航空会社の運賃収入を混同しない。"
+    },
+    "MOL_REPORT": {
+      "title": "MOL REPORT 2026",
+      "url": "https://ir.mol.co.jp/en/ir/library/integrated_report.html",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "2026版の目次・事業一覧を閲覧。大容量PDF本文は取得上限で未取得。詳細根拠は次の公式Phase 2資料とCEOメッセージ。"
+    },
+    "MOL_PLAN": {
+      "title": "BLUE ACTION 2035 Phase 2",
+      "url": "https://ir.mol.co.jp/en/ir/ir_news/ir_news8663222873625829669/main/0/link/%28E%29BA2035%20Phase2.pdf",
+      "published_or_effective_date": "2026-03-31",
+      "accessed_at": "2026-10-15",
+      "evidence_note": "化学品物流でLBCターミナルと海上輸送を統合、Daibiru不動産などの事業別戦略。"
+    },
+    "MOL_CEO": {
+      "title": "MOL Foundation Day CEO message",
+      "url": "https://www.mol.co.jp/en/pr/2026/26026.html",
+      "published_or_effective_date": "2026-04-01",
+      "accessed_at": "2026-10-15",
+      "evidence_note": "エネルギー・化学品/自動車物流・不動産への展開とDaibiru等の安定収益寄与。"
+    },
+    "KLINE_REPORT": {
+      "title": "K LINE REPORT 2025",
+      "url": "https://www.kline.co.jp/en/ir/library/report/main/01111111118/teaserItems2/0/linkList/02/link/KL_AR2025EN-1.pdf",
+      "published_or_effective_date": "2025-12-23",
+      "accessed_at": "2026-10-15",
+      "evidence_note": "自動車船、石炭鉄鉱石、LNG輸送、ONEの事業説明。公開日は公式ニュース一覧。"
+    },
+    "KLINE_QA": {
+      "title": "K LINE business briefing Q&A",
+      "url": "https://www.kline.co.jp/en/ir/library/event/bb_qa_2025.html",
+      "published_or_effective_date": "2025-06-03",
+      "accessed_at": "2026-10-15",
+      "evidence_note": "自動車船運賃の投資規律、石炭鉄鉱石の安定収益、LNG新船の初期金利負担を説明。"
+    },
+    "INPEX_REPORT": {
+      "title": "INPEX Integrated Report 2025: Growth Strategy",
+      "url": "https://www.inpex.com/assets/documents/english/ir/library/integrated_report/inpex_integratedreport202512_en_03.pdf",
+      "published_or_effective_date": "2026-07-07",
+      "accessed_at": "2026-10-15",
+      "evidence_note": "2025年度を対象とする2026年公表版。油・天然ガス/LNGと長期開発事業。"
+    },
+    "INPEX_RISK": {
+      "title": "INPEX business risks",
+      "url": "https://www.inpex.com/english/ir/risk.html",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "2026年度の油価感応度を掲載。国内天然ガスは国産ガスと輸入LNGを使用。"
+    },
+    "INPEX_ICHTHYS": {
+      "title": "Ichthys LNG Project",
+      "url": "https://www.inpex.com/english/business/project/ichthys.html",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "豪州でLNG・LPG・コンデンセートを生産。大半のLNGは長期SPAでスポットJKMへの即時全量連動ではない。"
+    },
+    "ENEOS_SEG": {
+      "title": "ENEOS segment overview",
+      "url": "https://www.hd.eneos.co.jp/english/ir/investor/keyword/segment.html",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "石油製品、高機能材料、電力、再エネ、E&P。JX金属は2025-03-19上場後持分法会社。"
+    },
+    "ENEOS_IR": {
+      "title": "ENEOS integrated report release",
+      "url": "https://www.hd.eneos.co.jp/news/release_information/year/2025/20250930_01_01_mr02/",
+      "published_or_effective_date": "2025-09-30",
+      "accessed_at": "2026-10-15",
+      "evidence_note": "ENEOS REPORT 2025公表。"
+    },
+    "ENEOS_2026": {
+      "title": "ENEOS FY2026 corporate value materials",
+      "url": "https://www.hd.eneos.co.jp/english/about/corporate_value/pdf/e_hd_en_ot_fy2026_01.pdf",
+      "published_or_effective_date": "2026-05",
+      "accessed_at": "2026-10-15",
+      "evidence_note": "JX金属株式処分など資本配分の更新がある。古い持株比率を固定しない。"
+    },
+    "IDEMITSU_RISK": {
+      "title": "Idemitsu risk information",
+      "url": "https://www.idemitsu.com/en/ir/management/risk/index.html",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "豪州石炭、ノルウェー/東南アジア油ガス、アジア基礎化学、世界の潤滑油、為替・原油調達・Nghi Sonのリスク。"
+    },
+    "IDEMITSU_SEG": {
+      "title": "Idemitsu segment information FY2025 / year ended March 2026",
+      "url": "https://www.idemitsu.com/en/ir/finance/segmentinformation/index.html",
+      "published_or_effective_date": "2026-03-31",
+      "accessed_at": "2026-10-15",
+      "evidence_note": "事業構成確認に使用。決算対象期末でありページ公開日ではない。"
+    },
+    "IDEMITSU_REPORT": {
+      "title": "Idemitsu Integrated Report library",
+      "url": "https://www.idemitsu.com/en/ir/library/annual/index.html",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "公式ページは動的表示のため本文未取得。具体的事業根拠は公式リスク・セグメント開示。"
+    },
+    "COSMO_REPORT": {
+      "title": "COSMO REPORT 2025",
+      "url": "https://www.cosmo-energy.co.jp/content/dam/corp/jp/en/ir/report/2025/pdf/report2025_en_all.pdf",
+      "published_or_effective_date": "2025-11-26",
+      "accessed_at": "2026-10-15",
+      "evidence_note": "石油精製・販売、石油化学、UAE上流、再エネ。石油事業は在庫影響を除く利益も開示。"
+    },
+    "COSMO_WEB": {
+      "title": "COSMO REPORT 2025 official contents",
+      "url": "https://www.cosmo-energy.co.jp/en/ir/library/annual.html",
+      "published_or_effective_date": "2025-11-26",
+      "accessed_at": "2026-10-15",
+      "evidence_note": "UAE油田、製油所効率、SAF量産、グリーン電力を確認。"
+    },
+    "BALTIC_IND": {
+      "title": "Baltic Exchange indices and route definitions",
+      "url": "https://www.balticexchange.com/en/data-services/market-information0/indices.html",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "BDI、Capesize、clean/dirty、LNG等の定義。スポットBDIとBDRYは異なる。"
+    },
+    "BALTIC_GAS": {
+      "title": "Baltic gas freight services",
+      "url": "https://www.balticexchange.com/en/data-services/market-information0/gas-services.html",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "LNG/LPG運賃評価。商品ガス価格とは別の輸送供給需要を測る。"
+    },
+    "BALTIC_TANK": {
+      "title": "Baltic tanker services",
+      "url": "https://www.balticexchange.com/en/data-services/market-information0/tankers-services.html",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "日次physical/forward運賃、weekly資産価格、quarterly OPEXを区別。"
+    },
+    "BALTIC_BUY": {
+      "title": "Baltic data subscriptions and API",
+      "url": "https://www.balticexchange.com/en/apply-page.html",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "有料購読・歴史データ・APIの案内。契約・認証・データ取得は未実施。"
+    },
+    "BALTIC_CHEM": {
+      "title": "Baltic Chemical and Agricultural Oil Assessments",
+      "url": "https://www.balticexchange.com/en/data-services/market-information0/chemical-and-agricultural-oil-assessments-.html",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "BCAAは週次。日次データとして数えない。"
+    },
+    "FREIGHTOS": {
+      "title": "Freightos Terminal official product description",
+      "url": "https://www.freightos.com/enterprise/terminal/",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "FBXとFAXの日次更新を明記。"
+    },
+    "FREIGHTOS_PRICING": {
+      "title": "Freightos Terminal packages and methodology FAQ",
+      "url": "https://www.freightos.com/enterprise/terminal/pricing/",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "FBX日次算出・公開時刻を説明。FAXの公開時刻は別途確認が必要。サンプル/公開表示と履歴API利用権は別。"
+    },
+    "RIM_BUNKER": {
+      "title": "RIM Bunker Oil daily",
+      "url": "https://eng.rim-intelligence.co.jp/report/bunker-en/",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "日次VLSFO/LSMGO/380cst。LNG bunkeringは週次と明記。閲覧時の表示料金は年額US$5,760(Web)、履歴/機械利用権は別途確認。"
+    },
+    "RIM_CRUDE": {
+      "title": "RIM Crude/Condensate daily",
+      "url": "https://eng.rim-intelligence.co.jp/report/crude-condensate-en/",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "日次Dubai/Japan Dated Brent等。閲覧時の表示料金は年額US$5,760(Web)、履歴/機械利用権は別途確認。"
+    },
+    "RIM_PRODUCTS": {
+      "title": "RIM Products daily",
+      "url": "https://eng.rim-intelligence.co.jp/report/products-en/",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "日本の内航製品価格、CFR輸入・FOB輸出価格を日次で提供。"
+    },
+    "RIM_PETCHEM": {
+      "title": "RIM Petrochemicals daily",
+      "url": "https://eng.rim-intelligence.co.jp/report/petrochemicals-en/",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "アジア石化製品のdailyレポート。個別グレード/コード/過去系列は契約前確認が必要。"
+    },
+    "RIM_HISTORY": {
+      "title": "RIM historical data",
+      "url": "https://www.rim-intelligence.co.jp/eng/contents/historical.html",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "原油・製品・燃料・LPG・LNG・石化・電力の日次/月次履歴を販売。"
+    },
+    "JKM": {
+      "title": "S&P Global official JKM methodology announcement",
+      "url": "https://press.spglobal.com/2020-06-01-S-P-Global-Platts-Launches-eWindow-for-Platts-JKM-LNG-Derivatives",
+      "published_or_effective_date": "2020-06-01",
+      "accessed_at": "2026-10-15",
+      "evidence_note": "北東アジア着LNGのdaily assessment、16:30 Singapore時点。現行feed/cadence再確認は導入時要。"
+    },
+    "LPG": {
+      "title": "Argus Far East Index (AFEI)",
+      "url": "https://www.argusmedia.com/en/methodology/key-commodity-prices/argus-far-east-index-afei",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "東アジア着プロパン/ブタン価格を日次で公表。"
+    },
+    "LPG_PRODUCT": {
+      "title": "Argus International LPG",
+      "url": "https://www.argusmedia.com/en/solutions/products/argus-international-lpg",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "日次サービス。購読・履歴・配信権は未契約。"
+    },
+    "RBA": {
+      "title": "RBA daily exchange rates",
+      "url": "https://www.rba.gov.au/statistics/frequency/exchange-rates.html",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "AUD当たりUSDを含む日次公開表を実際に閲覧。機械取得試験は未実施。"
+    },
+    "UST": {
+      "title": "US Treasury daily par yield curves",
+      "url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?page=0&type=daily_treasury_yield_curve",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "公式日次表・CSV/XML案内を閲覧。既存コードに米10年系列あり。"
+    },
+    "JEPX": {
+      "title": "JEPX spot market public data",
+      "url": "https://www.jepx.jp/electricpower/market-data/spot/",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "30分値・日平均・エリア価格・ダウンロード項目を確認。実データダウンロードは未実施。"
+    },
+    "STOXX_AUTO": {
+      "title": "EURO STOXX Automobiles & Parts",
+      "url": "https://stoxx.com/index/sxak/",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "公式指数ページ。欧州自動車株の代理であり世界自動車運賃指数ではない。"
+    },
+    "JPX_REIT": {
+      "title": "TSE REIT property sector index factsheet",
+      "url": "https://www.jpx.co.jp/english/markets/indices/line-up/files/e_fac2_11_reitsec.pdf",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "Officeを含む不動産用途別指数。日次total return計算の説明。"
+    },
+    "JPX_REIT_VALUES": {
+      "title": "JPX published index values",
+      "url": "https://www.jpx.co.jp/english/markets/indices/realvalues/index.html",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "TSE REIT Office Indexの公式掲載を確認。"
+    },
+    "IRON": {
+      "title": "SGX iron ore futures and settlements",
+      "url": "https://www.sgx.com/",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "SGX公式トップがIron Ore Futuresのdaily settlement chartと説明。個別契約コードと履歴APIは未確認。"
+    },
+    "COAL": {
+      "title": "ICE globalCOAL Newcastle Coal Futures",
+      "url": "https://www.ice.com/products/1137/globalCOAL-",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "公式契約仕様を確認。月平均NEWCで最終決済する先物で、日次settlement系列と月次最終決済は別。"
+    },
+    "COAL_INDEX": {
+      "title": "globalCOAL NEWC Index",
+      "url": "https://www.globalcoal.com/coalprices/newcindex.cfm",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "NEWC日次提供と購読案内。取得・契約は未実施。"
+    },
+    "BDRY": {
+      "title": "Amplify Breakwave Dry Bulk Shipping ETF",
+      "url": "https://amplifyetfs.com/bdry/",
+      "published_or_effective_date": "2026-09-29",
+      "accessed_at": "2026-10-15",
+      "evidence_note": "閲覧ページのデータ基準日。近い限月のドライバルク先物ETFで、スポットBDIを追うものではない。"
+    },
+    "SAF": {
+      "title": "Argus SAF price assessments",
+      "url": "https://view.argusmedia.com/saf-price-snapshot.html",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "SAF fob Singapore等の存在を確認。日本向けマージンのdaily頻度・権利は未確認。"
+    },
+    "UCO": {
+      "title": "Argus Asian UCO assessments",
+      "url": "https://www.argusmedia.com/en/methodology/key-commodity-prices/argus-asian-uco-price-assessments",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "廃食油の地域別価格とSAF原料としての位置付け。"
+    },
+    "MOF": {
+      "title": "Japan MOF JGB information",
+      "url": "https://www.mof.go.jp/english/policy/jgbs/",
+      "published_or_effective_date": null,
+      "accessed_at": "2026-10-15",
+      "evidence_note": "公式入口を確認。10年定残存利回りの日次ファイル・公表時刻は未検証。"
+    }
+  }
+}
