@@ -389,6 +389,8 @@ class IndicatorConfig(_StrictModel):
     enabled: bool = True
     disabled_reason: NonEmptyStr | None = None
     applies_to_tickers: list[Ticker] = Field(default_factory=list)
+    # These sources require a dated company profile, never legacy sector fallback.
+    profile_only: bool = False
     sources: Annotated[list[IndicatorSourceConfig], Field(min_length=1)]
 
     @model_validator(mode="after")

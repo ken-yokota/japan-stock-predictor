@@ -86,7 +86,7 @@ def resolve_indicator_ids(
             *(
                 item.id
                 for item in catalog.values()
-                if ticker in item.applies_to_tickers
+                if ticker in item.applies_to_tickers and not item.profile_only
             ),
         ]
     return tuple(
