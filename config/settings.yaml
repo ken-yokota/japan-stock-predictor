@@ -16,6 +16,7 @@ schedule:
 provider:
   primary: yahoo_finance
   treasury: us_treasury
+  public_factors: public_factors
   fallback:
     - eodhd_free
   # The optional EODHD Free fallback is capped per run to protect its quota.

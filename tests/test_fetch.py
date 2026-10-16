@@ -97,7 +97,8 @@ def test_default_plan_is_yahoo_first_and_free_only() -> None:
     # The twelve snapshot indicators also carry a daily-history source. Without
     # it they reach the model with no past sessions at all, which is why they
     # were absent from every stored feature set.
-    assert len(plan.eod) == 29
+    assert len(plan.eod) == 52
+    assert len(plan.published_series) == 5
     assert len(plan.snapshots) == 12
     snapshot_ids = {target.canonical_symbol for target in plan.snapshots}
     assert snapshot_ids <= {target.canonical_symbol for target in plan.eod}
@@ -678,7 +679,7 @@ def test_an_unknown_market_still_falls_back_to_new_york() -> None:
 
 
 def test_a_stale_snapshot_records_how_stale_it_was(make_bar) -> None:
-    """"exceeds 0:10:00" cannot tell you whether to move the limit or the fetch.
+    """ "exceeds 0:10:00" cannot tell you whether to move the limit or the fetch.
 
     Seven series failed this gate every morning and the only record kept was
     the limit they broke, so nothing said whether they were a minute late or

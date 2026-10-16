@@ -19,7 +19,16 @@ class MarketCalendarError(RuntimeError):
 def indicator_calendar_name(market: str) -> str:
     """Map an indicator's configured market to its ingestion calendar."""
 
-    return {"JP": "XTKS", "FOREX": "XLON"}.get(market, "XNYS")
+    return {
+        "JP": "XTKS",
+        "FOREX": "XLON",
+        "HK": "XHKG",
+        "IN": "XBOM",
+        "TH": "XBKK",
+        "ID": "XIDX",
+        "UK": "XLON",
+        "DE": "XETR",
+    }.get(market, "XNYS")
 
 
 @lru_cache(maxsize=4)

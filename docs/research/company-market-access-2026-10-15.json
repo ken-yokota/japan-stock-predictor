@@ -1,0 +1,4067 @@
+{
+  "research_date": "2026-10-15",
+  "history_audit_completed_at": "2026-10-16T01:22:25.794370+00:00",
+  "scope": "Yahoo daily-history identity and accessibility audit, no DB writes or purchases. Not predictive validation.",
+  "history_request": {
+    "start": "2025-04-13",
+    "end_exclusive": "2026-10-15",
+    "calendar_days": 550,
+    "interval": "1d",
+    "auto_adjust": false,
+    "actions": false,
+    "repair": false,
+    "prepost": false,
+    "post_filter": "start <= market_date < end_exclusive and finite Close"
+  },
+  "summary": {
+    "exact_candidates": 25,
+    "exact_with_complete_router_calendar": 23,
+    "separate_verified_alternatives": 2,
+    "all_current_profiles_fully_supplied": false
+  },
+  "sources": [
+    {
+      "canonical_id": "xly",
+      "label": "米消費裁量株ETF XLY",
+      "provider": "yahoo_finance",
+      "provider_symbol": "XLY",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "US",
+      "exchange": "NYSE Arca",
+      "market_timezone": "America/New_York",
+      "market_close": "16:00",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": true,
+      "unit": "USD/share",
+      "identity_source_urls": [
+        "https://www.ssga.com/us/en/individual/etfs/state-street-consumer-discretionary-select-sector-spdr-etf-xly"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/XLY/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:14.971421+00:00",
+      "identity_notes": "XLYそのもの。自動車販売台数ではなく米消費裁量株という既定の需要代理。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 378,
+        "rows": 378,
+        "finite_close_rows": 378,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 111.5,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 0,
+        "distinct_close_count": 347,
+        "calendar": "XNYS",
+        "required_session_count": 378,
+        "covered_required_sessions": 378,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "xly"
+      ],
+      "profile_tickers": [
+        "7203",
+        "7267",
+        "7201",
+        "7270"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "provider_metadata": {
+        "symbol": "XLY",
+        "shortName": "State Street Consumer Discretio",
+        "longName": "State Street Consumer Discretionary Select Sector SPDR ETF",
+        "currency": "USD",
+        "exchangeName": "PCX",
+        "instrumentType": "ETF",
+        "exchangeTimezoneName": "America/New_York"
+      }
+    },
+    {
+      "canonical_id": "inda",
+      "label": "インド株ETF INDA",
+      "provider": "yahoo_finance",
+      "provider_symbol": "INDA",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "US",
+      "exchange": "Cboe BZX",
+      "market_timezone": "America/New_York",
+      "market_close": "16:00",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": true,
+      "unit": "USD/share",
+      "identity_source_urls": [
+        "https://www.ishares.com/us/products/239659/ishares-msci-india-etf"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/INDA/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:14.972531+00:00",
+      "identity_notes": "米上場のIndia ETF。インド現地指数そのものではなく既定の景況代理。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 378,
+        "rows": 378,
+        "finite_close_rows": 378,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 47.040000915527344,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 0,
+        "distinct_close_count": 292,
+        "calendar": "XNYS",
+        "required_session_count": 378,
+        "covered_required_sessions": 378,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "inda"
+      ],
+      "profile_tickers": [
+        "7267",
+        "7269"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "provider_metadata": {
+        "symbol": "INDA",
+        "shortName": "Ishares MSCI India ETF",
+        "longName": "iShares MSCI India ETF",
+        "currency": "USD",
+        "exchangeName": "BTS",
+        "instrumentType": "ETF",
+        "exchangeTimezoneName": "America/New_York"
+      }
+    },
+    {
+      "canonical_id": "eido",
+      "label": "インドネシア株ETF EIDO",
+      "provider": "yahoo_finance",
+      "provider_symbol": "EIDO",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "US",
+      "exchange": "NYSE Arca",
+      "market_timezone": "America/New_York",
+      "market_close": "16:00",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": true,
+      "unit": "USD/share",
+      "identity_source_urls": [
+        "https://www.ishares.com/us/products/239661/ishares-msci-indonesia-etf"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/EIDO/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:14.972896+00:00",
+      "identity_notes": "米上場のIndonesia ETF。二輪販売台数ではなく既定の国別株式代理。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 378,
+        "rows": 378,
+        "finite_close_rows": 378,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 11.670000076293945,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 0,
+        "distinct_close_count": 275,
+        "calendar": "XNYS",
+        "required_session_count": 378,
+        "covered_required_sessions": 378,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "eido"
+      ],
+      "profile_tickers": [
+        "7267"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "provider_metadata": {
+        "symbol": "EIDO",
+        "shortName": "iShares MSCI Indonesia ETF",
+        "longName": "iShares MSCI Indonesia ETF",
+        "currency": "USD",
+        "exchangeName": "PCX",
+        "instrumentType": "ETF",
+        "exchangeTimezoneName": "America/New_York"
+      }
+    },
+    {
+      "canonical_id": "us_capital_markets_etf",
+      "label": "米資本市場業ETF KCE",
+      "provider": "yahoo_finance",
+      "provider_symbol": "KCE",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "US",
+      "exchange": "NYSE Arca",
+      "market_timezone": "America/New_York",
+      "market_close": "16:00",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": true,
+      "unit": "USD/share",
+      "identity_source_urls": [
+        "https://www.ssga.com/us/en/intermediary/etfs/state-street-spdr-sp-capital-markets-etf-kce"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/KCE/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:14.973243+00:00",
+      "identity_notes": "既定の資本市場株ETF。投資銀行の収益そのものではない。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 378,
+        "rows": 378,
+        "finite_close_rows": 378,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 148.7899932861328,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 0,
+        "distinct_close_count": 349,
+        "calendar": "XNYS",
+        "required_session_count": 378,
+        "covered_required_sessions": 378,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "us_capital_markets_etf"
+      ],
+      "profile_tickers": [
+        "8411",
+        "8604"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "provider_metadata": {
+        "symbol": "KCE",
+        "shortName": "State Street SPDR S&P Capital M",
+        "longName": "State Street SPDR S&P Capital Markets ETF",
+        "currency": "USD",
+        "exchangeName": "PCX",
+        "instrumentType": "ETF",
+        "exchangeTimezoneName": "America/New_York"
+      }
+    },
+    {
+      "canonical_id": "us_insurance_equity_etf",
+      "label": "米保険株ETF KIE",
+      "provider": "yahoo_finance",
+      "provider_symbol": "KIE",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "US",
+      "exchange": "NYSE Arca",
+      "market_timezone": "America/New_York",
+      "market_close": "16:00",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": true,
+      "unit": "USD/share",
+      "identity_source_urls": [
+        "https://www.ssga.com/us/en/intermediary/etfs/state-street-spdr-sp-insurance-etf-kie"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/KIE/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:18.607185+00:00",
+      "identity_notes": "既定の米保険株ETF。保険料率/損害率そのものではない。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 378,
+        "rows": 378,
+        "finite_close_rows": 378,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 60.90999984741211,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 0,
+        "distinct_close_count": 294,
+        "calendar": "XNYS",
+        "required_session_count": 378,
+        "covered_required_sessions": 378,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "us_insurance_equity_etf"
+      ],
+      "profile_tickers": [
+        "8766"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "provider_metadata": {
+        "symbol": "KIE",
+        "shortName": "State Street SPDR S&P Insurance",
+        "longName": "State Street SPDR S&P Insurance ETF",
+        "currency": "USD",
+        "exchangeName": "PCX",
+        "instrumentType": "ETF",
+        "exchangeTimezoneName": "America/New_York"
+      }
+    },
+    {
+      "canonical_id": "global_aggregate_bond_etf",
+      "label": "世界総合債券ETF AGGG USD分配型",
+      "provider": "yahoo_finance",
+      "provider_symbol": "AGGG.L",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "UK",
+      "exchange": "London Stock Exchange",
+      "market_timezone": "Europe/London",
+      "market_close": "16:35",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": true,
+      "unit": "USD/share",
+      "identity_source_urls": [
+        "https://www.ishares.com/uk/individual/en/products/291773/ishares-global-aggregate-bond-ucits-etf-fund"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/AGGG.L/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:19.425319+00:00",
+      "identity_notes": "公式listing表にAGGG USD、RIC AGGG.L。SAGG GBPやEUR上場と混在させない。通常16:30引けオークション開始、16:35基準に共通lagを加算。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 380,
+        "rows": 380,
+        "finite_close_rows": 380,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 4.198500156402588,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 1,
+        "distinct_close_count": 246,
+        "calendar": "XLON",
+        "required_session_count": 380,
+        "covered_required_sessions": 380,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "global_aggregate_bond_etf"
+      ],
+      "profile_tickers": [
+        "8604"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "provider_metadata": {
+        "symbol": "AGGG.L",
+        "shortName": "ISHARES III PLC ISH GLOBAL AGG ",
+        "longName": "iShares Core Global Aggregate Bond UCITS ETF USD (Dist)",
+        "currency": "USD",
+        "exchangeName": "LSE",
+        "instrumentType": "ETF",
+        "exchangeTimezoneName": "Europe/London"
+      }
+    },
+    {
+      "canonical_id": "morgan_stanley_equity",
+      "label": "Morgan Stanley普通株",
+      "provider": "yahoo_finance",
+      "provider_symbol": "MS",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "US",
+      "exchange": "NYSE",
+      "market_timezone": "America/New_York",
+      "market_close": "16:00",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "USD/share",
+      "identity_source_urls": [
+        "https://www.morganstanley.com/about-us-ir"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/MS/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:18.944906+00:00",
+      "identity_notes": "出資・協業先自身の普通株。MUFG自社ADRではない。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 378,
+        "rows": 378,
+        "finite_close_rows": 378,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 181.50999450683594,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 0,
+        "distinct_close_count": 368,
+        "calendar": "XNYS",
+        "required_session_count": 378,
+        "covered_required_sessions": 378,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "morgan_stanley_equity"
+      ],
+      "profile_tickers": [
+        "8306"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "provider_metadata": {
+        "symbol": "MS",
+        "shortName": "Morgan Stanley",
+        "longName": "Morgan Stanley",
+        "currency": "USD",
+        "exchangeName": "NYQ",
+        "instrumentType": "EQUITY",
+        "exchangeTimezoneName": "America/New_York"
+      }
+    },
+    {
+      "canonical_id": "jefferies_equity",
+      "label": "Jefferies Financial Group普通株",
+      "provider": "yahoo_finance",
+      "provider_symbol": "JEF",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "US",
+      "exchange": "NYSE",
+      "market_timezone": "America/New_York",
+      "market_close": "16:00",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "USD/share",
+      "identity_source_urls": [
+        "https://ir.jefferies.com/overview/"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/JEF/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:18.980293+00:00",
+      "identity_notes": "",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 378,
+        "rows": 378,
+        "finite_close_rows": 378,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 43.90999984741211,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 0,
+        "distinct_close_count": 345,
+        "calendar": "XNYS",
+        "required_session_count": 378,
+        "covered_required_sessions": 378,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "jefferies_equity"
+      ],
+      "profile_tickers": [
+        "8316"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "provider_metadata": {
+        "symbol": "JEF",
+        "shortName": "Jefferies Financial Group Inc.",
+        "longName": "Jefferies Financial Group Inc.",
+        "currency": "USD",
+        "exchangeName": "NYQ",
+        "instrumentType": "EQUITY",
+        "exchangeTimezoneName": "America/New_York"
+      }
+    },
+    {
+      "canonical_id": "krungsri_equity",
+      "label": "Bank of Ayudhya (Krungsri)普通株",
+      "provider": "yahoo_finance",
+      "provider_symbol": "BAY.BK",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "TH",
+      "exchange": "Stock Exchange of Thailand",
+      "market_timezone": "Asia/Bangkok",
+      "market_close": "17:00",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "THB/share",
+      "identity_source_urls": [
+        "https://www.krungsri.com/en/about-krungsri"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/BAY.BK/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:19.453411+00:00",
+      "identity_notes": "公式SET:BAY。通常の引けオークションは16:35–16:40、全市場終了17:00を保守的cutoffとする。Yahoo metadata16:30だけを引け時刻にしない。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 362,
+        "rows": 362,
+        "finite_close_rows": 362,
+        "first_date": "2025-04-16",
+        "last_date": "2026-10-14",
+        "last_close": 39.5,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 1,
+        "distinct_close_count": 92,
+        "calendar": "XBKK",
+        "required_session_count": 362,
+        "covered_required_sessions": 362,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "krungsri_equity"
+      ],
+      "profile_tickers": [
+        "8306"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "provider_metadata": {
+        "symbol": "BAY.BK",
+        "shortName": "BAY_BANK OF AYUDHYA",
+        "longName": "Bank of Ayudhya Public Company Limited",
+        "currency": "THB",
+        "exchangeName": "SET",
+        "instrumentType": "EQUITY",
+        "exchangeTimezoneName": "Asia/Bangkok"
+      }
+    },
+    {
+      "canonical_id": "danamon_equity",
+      "label": "PT Bank Danamon Indonesia普通株",
+      "provider": "yahoo_finance",
+      "provider_symbol": "BDMN.JK",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "ID",
+      "exchange": "Indonesia Stock Exchange",
+      "market_timezone": "Asia/Jakarta",
+      "market_close": "16:15",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "IDR/share",
+      "identity_source_urls": [
+        "https://www.danamon.co.id/tentang-danamon/profile-perusahaan/tentang-bank-danamon"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/BDMN.JK/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:19.496464+00:00",
+      "identity_notes": "公式BEI:BDMN、ISIN ID1000094204。XIDXカレンダーとの差13日が未解決のため現行100%coverage gateでは取得失敗扱い。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 360,
+        "rows": 360,
+        "finite_close_rows": 360,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 5025.0,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 0,
+        "distinct_close_count": 113,
+        "calendar": "XIDX",
+        "required_session_count": 373,
+        "covered_required_sessions": 360,
+        "coverage_ratio": 0.9651474530831099,
+        "missing_sessions": [
+          "2025-08-18",
+          "2026-01-16",
+          "2026-02-16",
+          "2026-03-18",
+          "2026-03-19",
+          "2026-03-20",
+          "2026-03-23",
+          "2026-03-24",
+          "2026-05-15",
+          "2026-05-27",
+          "2026-05-28",
+          "2026-06-16",
+          "2026-08-25"
+        ],
+        "extra_sessions": []
+      },
+      "operational_status": "blocked_by_router_coverage",
+      "profile_factor_ids": [
+        "danamon_equity"
+      ],
+      "profile_tickers": [
+        "8306"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "provider_metadata": {
+        "symbol": "BDMN.JK",
+        "shortName": "Bank Danamon Indonesia Tbk.",
+        "longName": "PT Bank Danamon Indonesia Tbk",
+        "currency": "IDR",
+        "exchangeName": "JKT",
+        "instrumentType": "EQUITY",
+        "exchangeTimezoneName": "Asia/Jakarta"
+      }
+    },
+    {
+      "canonical_id": "maruti_suzuki",
+      "label": "Maruti Suzuki India NSE普通株",
+      "provider": "yahoo_finance",
+      "provider_symbol": "MARUTI.NS",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "IN",
+      "exchange": "National Stock Exchange of India",
+      "market_timezone": "Asia/Kolkata",
+      "market_close": "15:30",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "INR/share",
+      "identity_source_urls": [
+        "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_INDAS_181271_31072026182708_iXBRL_WEB.html"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/MARUTI.NS/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:19.550414+00:00",
+      "identity_notes": "NSE公式提出資料Symbol MARUTI、ISIN INE585B01010。NSE株、BSE価格と混在させない。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 373,
+        "rows": 373,
+        "finite_close_rows": 373,
+        "first_date": "2025-04-15",
+        "last_date": "2026-10-14",
+        "last_close": 11178.0,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 1,
+        "distinct_close_count": 361,
+        "calendar": "XBOM",
+        "required_session_count": 371,
+        "covered_required_sessions": 371,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": [
+          "2025-10-21",
+          "2026-01-15"
+        ]
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "maruti_suzuki"
+      ],
+      "profile_tickers": [
+        "7269"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "provider_metadata": {
+        "symbol": "MARUTI.NS",
+        "shortName": "MARUTI SUZUKI INDIA LTD.",
+        "longName": "Maruti Suzuki India Limited",
+        "currency": "INR",
+        "exchangeName": "NSI",
+        "instrumentType": "EQUITY",
+        "exchangeTimezoneName": "Asia/Kolkata"
+      }
+    },
+    {
+      "canonical_id": "citic_equity",
+      "label": "CITIC Limited香港普通株",
+      "provider": "yahoo_finance",
+      "provider_symbol": "0267.HK",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "HK",
+      "exchange": "Hong Kong Stock Exchange",
+      "market_timezone": "Asia/Hong_Kong",
+      "market_close": "16:10",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "HKD/share",
+      "identity_source_urls": [
+        "https://www.citic.com/en/index/"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/0267.HK/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:22.907007+00:00",
+      "identity_notes": "CITIC Limited HKSE00267。CITIC SecuritiesやCITIC Bankとは別会社。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 371,
+        "rows": 371,
+        "finite_close_rows": 371,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 12.850000381469727,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 3,
+        "distinct_close_count": 221,
+        "calendar": "XHKG",
+        "required_session_count": 371,
+        "covered_required_sessions": 371,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "citic_equity"
+      ],
+      "profile_tickers": [
+        "8001"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "provider_metadata": {
+        "symbol": "0267.HK",
+        "shortName": "CITIC",
+        "longName": "CITIC Limited",
+        "currency": "HKD",
+        "exchangeName": "HKG",
+        "instrumentType": "EQUITY",
+        "exchangeTimezoneName": "Asia/Hong_Kong"
+      }
+    },
+    {
+      "canonical_id": "jx_advanced_metals_equity",
+      "label": "JX金属普通株",
+      "provider": "yahoo_finance",
+      "provider_symbol": "5016.T",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "JP",
+      "exchange": "Tokyo Stock Exchange Prime",
+      "market_timezone": "Asia/Tokyo",
+      "market_close": "15:30",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "JPY/share",
+      "identity_source_urls": [
+        "https://www.jx-nmm.com/ir/stock.html"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/5016.T/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:23.152297+00:00",
+      "identity_notes": "証券コード5016、2025-03-19上場。550日窓の開始日は上場後。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 366,
+        "rows": 366,
+        "finite_close_rows": 366,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 3460.0,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 0,
+        "distinct_close_count": 347,
+        "calendar": "XTKS",
+        "required_session_count": 366,
+        "covered_required_sessions": 366,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "jx_advanced_metals_equity"
+      ],
+      "profile_tickers": [
+        "5020"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "provider_metadata": {
+        "symbol": "5016.T",
+        "shortName": "JX ADVANCED METALS CORPORATION",
+        "longName": "JX Advanced Metals Corporation",
+        "currency": "JPY",
+        "exchangeName": "JPX",
+        "instrumentType": "EQUITY",
+        "exchangeTimezoneName": "Asia/Tokyo"
+      }
+    },
+    {
+      "canonical_id": "audusd",
+      "label": "豪ドル/米ドル",
+      "provider": "yahoo_finance",
+      "provider_symbol": "AUDUSD=X",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "FOREX",
+      "exchange": "Yahoo CCY OTC FX",
+      "market_timezone": "Europe/London",
+      "market_close": "23:59",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "USD/AUD",
+      "identity_source_urls": [
+        "https://finance.yahoo.com/quote/AUDUSD=X/"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/AUDUSD=X/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:23.348927+00:00",
+      "identity_notes": "Yahoo chart responseのshortName/longNameが通貨ペアと一致、currencyは分母でなくquote通貨。日次bar timezone Europe/London、provider regular.end23:59を保守的な完了時刻として採用。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 389,
+        "rows": 389,
+        "finite_close_rows": 389,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 0.6985191702842712,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 389,
+        "distinct_close_count": 381,
+        "calendar": "XLON",
+        "required_session_count": 380,
+        "covered_required_sessions": 380,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": [
+          "2025-05-05",
+          "2025-05-26",
+          "2025-08-25",
+          "2025-12-26",
+          "2026-04-03",
+          "2026-04-06",
+          "2026-05-04",
+          "2026-05-25",
+          "2026-08-31"
+        ]
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "audusd"
+      ],
+      "profile_tickers": [
+        "1605",
+        "5019"
+      ],
+      "availability_at_0830": "conditional",
+      "cutoff_note": "23:59 London + 共通provider lagが08:30 JSTを超える場合はさらに前の完了日を使用。冬時間はlagなしでも08:59 JSTなので直前暦日を利用不可。既存22:00設定はこの実測では立証していない。",
+      "provider_metadata": {
+        "symbol": "AUDUSD=X",
+        "shortName": "AUD/USD",
+        "longName": "AUD/USD",
+        "currency": "USD",
+        "exchangeName": "CCY",
+        "instrumentType": "CURRENCY",
+        "exchangeTimezoneName": "Europe/London"
+      }
+    },
+    {
+      "canonical_id": "brljpy",
+      "label": "ブラジルレアル/円",
+      "provider": "yahoo_finance",
+      "provider_symbol": "BRLJPY=X",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "FOREX",
+      "exchange": "Yahoo CCY OTC FX",
+      "market_timezone": "Europe/London",
+      "market_close": "23:59",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "JPY/BRL",
+      "identity_source_urls": [
+        "https://finance.yahoo.com/quote/BRLJPY=X/"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/BRLJPY=X/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:23.916739+00:00",
+      "identity_notes": "Yahoo chart responseのshortName/longNameが通貨ペアと一致、currencyは分母でなくquote通貨。日次bar timezone Europe/London、provider regular.end23:59を保守的な完了時刻として採用。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 389,
+        "rows": 389,
+        "finite_close_rows": 389,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 31.486000061035156,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 389,
+        "distinct_close_count": 379,
+        "calendar": "XLON",
+        "required_session_count": 380,
+        "covered_required_sessions": 380,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": [
+          "2025-05-05",
+          "2025-05-26",
+          "2025-08-25",
+          "2025-12-26",
+          "2026-04-03",
+          "2026-04-06",
+          "2026-05-04",
+          "2026-05-25",
+          "2026-08-31"
+        ]
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "brljpy"
+      ],
+      "profile_tickers": [
+        "7267"
+      ],
+      "availability_at_0830": "conditional",
+      "cutoff_note": "23:59 London + 共通provider lagが08:30 JSTを超える場合はさらに前の完了日を使用。冬時間はlagなしでも08:59 JSTなので直前暦日を利用不可。既存22:00設定はこの実測では立証していない。",
+      "provider_metadata": {
+        "symbol": "BRLJPY=X",
+        "shortName": "BRL/JPY",
+        "longName": "BRL/JPY",
+        "currency": "JPY",
+        "exchangeName": "CCY",
+        "instrumentType": "CURRENCY",
+        "exchangeTimezoneName": "Europe/London"
+      }
+    },
+    {
+      "canonical_id": "mxnjpy",
+      "label": "メキシコペソ/円",
+      "provider": "yahoo_finance",
+      "provider_symbol": "MXNJPY=X",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "FOREX",
+      "exchange": "Yahoo CCY OTC FX",
+      "market_timezone": "Europe/London",
+      "market_close": "23:59",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "JPY/MXN",
+      "identity_source_urls": [
+        "https://finance.yahoo.com/quote/MXNJPY=X/"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/MXNJPY=X/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:24.715266+00:00",
+      "identity_notes": "Yahoo chart responseのshortName/longNameが通貨ペアと一致、currencyは分母でなくquote通貨。日次bar timezone Europe/London、provider regular.end23:59を保守的な完了時刻として採用。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 389,
+        "rows": 389,
+        "finite_close_rows": 389,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 8.614920616149902,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 389,
+        "distinct_close_count": 389,
+        "calendar": "XLON",
+        "required_session_count": 380,
+        "covered_required_sessions": 380,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": [
+          "2025-05-05",
+          "2025-05-26",
+          "2025-08-25",
+          "2025-12-26",
+          "2026-04-03",
+          "2026-04-06",
+          "2026-05-04",
+          "2026-05-25",
+          "2026-08-31"
+        ]
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "mxnjpy"
+      ],
+      "profile_tickers": [
+        "7201"
+      ],
+      "availability_at_0830": "conditional",
+      "cutoff_note": "23:59 London + 共通provider lagが08:30 JSTを超える場合はさらに前の完了日を使用。冬時間はlagなしでも08:59 JSTなので直前暦日を利用不可。既存22:00設定はこの実測では立証していない。",
+      "provider_metadata": {
+        "symbol": "MXNJPY=X",
+        "shortName": "MXN/JPY",
+        "longName": "MXN/JPY",
+        "currency": "JPY",
+        "exchangeName": "CCY",
+        "instrumentType": "CURRENCY",
+        "exchangeTimezoneName": "Europe/London"
+      }
+    },
+    {
+      "canonical_id": "inrjpy",
+      "label": "インドルピー/円",
+      "provider": "yahoo_finance",
+      "provider_symbol": "INRJPY=X",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "FOREX",
+      "exchange": "Yahoo CCY OTC FX",
+      "market_timezone": "Europe/London",
+      "market_close": "23:59",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "JPY/INR",
+      "identity_source_urls": [
+        "https://finance.yahoo.com/quote/INRJPY=X/"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/INRJPY=X/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:25.570181+00:00",
+      "identity_notes": "Yahoo chart responseのshortName/longNameが通貨ペアと一致、currencyは分母でなくquote通貨。日次bar timezone Europe/London、provider regular.end23:59を保守的な完了時刻として採用。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 389,
+        "rows": 389,
+        "finite_close_rows": 389,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 1.6611859798431396,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 389,
+        "distinct_close_count": 388,
+        "calendar": "XLON",
+        "required_session_count": 380,
+        "covered_required_sessions": 380,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": [
+          "2025-05-05",
+          "2025-05-26",
+          "2025-08-25",
+          "2025-12-26",
+          "2026-04-03",
+          "2026-04-06",
+          "2026-05-04",
+          "2026-05-25",
+          "2026-08-31"
+        ]
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "inrjpy"
+      ],
+      "profile_tickers": [
+        "7269"
+      ],
+      "availability_at_0830": "conditional",
+      "cutoff_note": "23:59 London + 共通provider lagが08:30 JSTを超える場合はさらに前の完了日を使用。冬時間はlagなしでも08:59 JSTなので直前暦日を利用不可。既存22:00設定はこの実測では立証していない。",
+      "provider_metadata": {
+        "symbol": "INRJPY=X",
+        "shortName": "INR/JPY",
+        "longName": "INR/JPY",
+        "currency": "JPY",
+        "exchangeName": "CCY",
+        "instrumentType": "CURRENCY",
+        "exchangeTimezoneName": "Europe/London"
+      }
+    },
+    {
+      "canonical_id": "rbob_gasoline",
+      "label": "NYMEX RBOBガソリン連続先物",
+      "provider": "yahoo_finance",
+      "provider_symbol": "RB=F",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "US",
+      "exchange": "NYMEX",
+      "market_timezone": "America/New_York",
+      "market_close": "17:00",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "USD/gallon",
+      "identity_source_urls": [
+        "https://www.cmegroup.com/markets/energy/refined-products/rbob-gasoline.html"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/RB=F/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:19.004232+00:00",
+      "identity_notes": "",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 380,
+        "rows": 379,
+        "finite_close_rows": 379,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 3.259500026702881,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 1,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 7,
+        "distinct_close_count": 372,
+        "calendar": "XNYS",
+        "required_session_count": 378,
+        "covered_required_sessions": 378,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": [
+          "2025-07-04"
+        ]
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "rbob_gasoline"
+      ],
+      "profile_tickers": [
+        "7203",
+        "7267",
+        "7201",
+        "7270"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "continuous_contract_note": "Yahoo continuous/front series。ロールに起因する価格段差を含み得る。現在の限月名を全履歴の固定限月と誤認しない。historical availabilityは推定。",
+      "provider_metadata": {
+        "symbol": "RB=F",
+        "shortName": "RBOB Gasoline Dec 26",
+        "longName": null,
+        "currency": "USD",
+        "exchangeName": "NYM",
+        "instrumentType": "FUTURE",
+        "exchangeTimezoneName": "America/New_York"
+      }
+    },
+    {
+      "canonical_id": "us_hrc_steel",
+      "label": "COMEX米中西部熱延コイルCRU連続先物",
+      "provider": "yahoo_finance",
+      "provider_symbol": "HRC=F",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "US",
+      "exchange": "COMEX",
+      "market_timezone": "America/New_York",
+      "market_close": "17:00",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": true,
+      "unit": "USD/short_ton",
+      "identity_source_urls": [
+        "https://www.cmegroup.com/education/articles-and-reports/hedging-with-comex-steel-futures"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/HRC=F/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:19.055109+00:00",
+      "identity_notes": "HRC指数先物であり自動車メーカーの契約鋼材購入価格ではない。元プロファイルはCME HRC先物を取得候補に明記。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 378,
+        "rows": 378,
+        "finite_close_rows": 378,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 1285.0,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 58,
+        "distinct_close_count": 152,
+        "calendar": "XNYS",
+        "required_session_count": 378,
+        "covered_required_sessions": 378,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "us_hrc_steel"
+      ],
+      "profile_tickers": [
+        "7203",
+        "7201",
+        "7270"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "continuous_contract_note": "Yahoo continuous/front series。ロールに起因する価格段差を含み得る。現在の限月名を全履歴の固定限月と誤認しない。historical availabilityは推定。",
+      "provider_metadata": {
+        "symbol": "HRC=F",
+        "shortName": "U.S. Midwest Domestic Hot-Rolle",
+        "longName": null,
+        "currency": "USD",
+        "exchangeName": "CMX",
+        "instrumentType": "FUTURE",
+        "exchangeTimezoneName": "America/New_York"
+      }
+    },
+    {
+      "canonical_id": "palladium",
+      "label": "NYMEXパラジウム連続先物",
+      "provider": "yahoo_finance",
+      "provider_symbol": "PA=F",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "US",
+      "exchange": "NYMEX",
+      "market_timezone": "America/New_York",
+      "market_close": "17:00",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": true,
+      "unit": "USD/troy_ounce",
+      "identity_source_urls": [
+        "https://www.cmegroup.com/notices/ser/2019/04/SER-8223.pdf"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/PA=F/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:19.157133+00:00",
+      "identity_notes": "触媒費の代理として元プロファイルでNYMEX PA先物を明記。現物触媒調達価格ではない。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 379,
+        "rows": 378,
+        "finite_close_rows": 378,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 1087.0999755859375,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 1,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 196,
+        "distinct_close_count": 370,
+        "calendar": "XNYS",
+        "required_session_count": 378,
+        "covered_required_sessions": 378,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "palladium"
+      ],
+      "profile_tickers": [
+        "7270"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "continuous_contract_note": "Yahoo continuous/front series。ロールに起因する価格段差を含み得る。現在の限月名を全履歴の固定限月と誤認しない。historical availabilityは推定。",
+      "provider_metadata": {
+        "symbol": "PA=F",
+        "shortName": "Palladium Dec 26",
+        "longName": null,
+        "currency": "USD",
+        "exchangeName": "NYM",
+        "instrumentType": "FUTURE",
+        "exchangeTimezoneName": "America/New_York"
+      }
+    },
+    {
+      "canonical_id": "corn",
+      "label": "CBOTトウモロコシ連続先物",
+      "provider": "yahoo_finance",
+      "provider_symbol": "ZC=F",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "US",
+      "exchange": "CBOT",
+      "market_timezone": "America/New_York",
+      "market_close": "14:20",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "US_cent/bushel",
+      "identity_source_urls": [
+        "https://www.cmegroup.com/markets/agriculture/grains/corn/specs"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/ZC=F/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:19.216504+00:00",
+      "identity_notes": "CME Globex ZC、13:20 America/Chicago=14:20 America/New_York。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 379,
+        "rows": 378,
+        "finite_close_rows": 378,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 480.75,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 1,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 6,
+        "distinct_close_count": 248,
+        "calendar": "XNYS",
+        "required_session_count": 378,
+        "covered_required_sessions": 378,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "corn"
+      ],
+      "profile_tickers": [
+        "8002"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "continuous_contract_note": "Yahoo continuous/front series。ロールに起因する価格段差を含み得る。現在の限月名を全履歴の固定限月と誤認しない。historical availabilityは推定。",
+      "provider_metadata": {
+        "symbol": "ZC=F",
+        "shortName": "Corn Futures,Dec-2026",
+        "longName": null,
+        "currency": "USX",
+        "exchangeName": "CBT",
+        "instrumentType": "FUTURE",
+        "exchangeTimezoneName": "America/New_York"
+      }
+    },
+    {
+      "canonical_id": "soybean",
+      "label": "CBOT大豆連続先物",
+      "provider": "yahoo_finance",
+      "provider_symbol": "ZS=F",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "US",
+      "exchange": "CBOT",
+      "market_timezone": "America/New_York",
+      "market_close": "14:20",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "US_cent/bushel",
+      "identity_source_urls": [
+        "https://www.cmegroup.com/trading/agricultural/files/grain-and-oilseed-futures-options-fact-card.pdf"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/ZS=F/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:19.254522+00:00",
+      "identity_notes": "CME Globex ZS、13:20 America/Chicago=14:20 America/New_York。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 379,
+        "rows": 378,
+        "finite_close_rows": 378,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 1277.25,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 1,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 6,
+        "distinct_close_count": 310,
+        "calendar": "XNYS",
+        "required_session_count": 378,
+        "covered_required_sessions": 378,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "soybean"
+      ],
+      "profile_tickers": [
+        "8002"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "continuous_contract_note": "Yahoo continuous/front series。ロールに起因する価格段差を含み得る。現在の限月名を全履歴の固定限月と誤認しない。historical availabilityは推定。",
+      "provider_metadata": {
+        "symbol": "ZS=F",
+        "shortName": "Soybean Futures,Nov-2026",
+        "longName": null,
+        "currency": "USX",
+        "exchangeName": "CBT",
+        "instrumentType": "FUTURE",
+        "exchangeTimezoneName": "America/New_York"
+      }
+    },
+    {
+      "canonical_id": "cotton",
+      "label": "ICE Cotton No.2連続先物",
+      "provider": "yahoo_finance",
+      "provider_symbol": "CT=F",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "US",
+      "exchange": "ICE Futures U.S.",
+      "market_timezone": "America/New_York",
+      "market_close": "14:20",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "US_cent/pound",
+      "identity_source_urls": [
+        "https://www.ice.com/products/254/Cotton-No-2-Futures",
+        "https://ca.finance.yahoo.com/markets/commodities/?pt=3"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/CT=F/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:19.284697+00:00",
+      "identity_notes": "Yahooのcommodity一覧がCT=FをCottonと明示。API metadataはALTSYMBOL/NYM・名前欠落という不整合あり。公式商品はICE CT、NYMEX商品へ読み替えない。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 379,
+        "rows": 379,
+        "finite_close_rows": 379,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 80.66000366210938,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 57,
+        "distinct_close_count": 336,
+        "calendar": "XNYS",
+        "required_session_count": 378,
+        "covered_required_sessions": 378,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": [
+          "2025-07-04"
+        ]
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "cotton"
+      ],
+      "profile_tickers": [
+        "8001"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "continuous_contract_note": "Yahoo continuous/front series。ロールに起因する価格段差を含み得る。現在の限月名を全履歴の固定限月と誤認しない。historical availabilityは推定。",
+      "metadata_warning": "ALTSYMBOL, exchange NYM, no shortName; independently corroborated as cotton by provider commodity directory and ICE specification.",
+      "provider_metadata": {
+        "symbol": "CT=F",
+        "shortName": null,
+        "longName": null,
+        "currency": "USX",
+        "exchangeName": "NYM",
+        "instrumentType": "ALTSYMBOL",
+        "exchangeTimezoneName": "America/New_York"
+      }
+    },
+    {
+      "canonical_id": "iron_ore",
+      "label": "COMEX鉄鉱石62%Fe CFR China連続先物",
+      "provider": "yahoo_finance",
+      "provider_symbol": "TIO=F",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "US",
+      "exchange": "COMEX",
+      "market_timezone": "America/New_York",
+      "market_close": "17:00",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "USD/dry_metric_ton",
+      "identity_source_urls": [
+        "https://www.cmegroup.com/trading/metals/files/iron-ore-suite-fact-sheet.pdf"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/TIO=F/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:19.374924+00:00",
+      "identity_notes": "商社研究はSGX/CME価格、川崎汽船研究は62%Fe先物を候補に明記。COMEX TIOは指数連動の現金決済先物で現物査定そのものではない。2026-10-01欠損、全volume0。100%coverage gate未達。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 377,
+        "rows": 377,
+        "finite_close_rows": 377,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 90.73999786376953,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 377,
+        "distinct_close_count": 323,
+        "calendar": "XNYS",
+        "required_session_count": 378,
+        "covered_required_sessions": 377,
+        "coverage_ratio": 0.9973544973544973,
+        "missing_sessions": [
+          "2026-10-01"
+        ],
+        "extra_sessions": []
+      },
+      "operational_status": "blocked_by_router_coverage",
+      "profile_factor_ids": [
+        "iron_ore"
+      ],
+      "profile_tickers": [
+        "9107",
+        "8058",
+        "8031",
+        "8001"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "continuous_contract_note": "Yahoo continuous/front series。ロールに起因する価格段差を含み得る。現在の限月名を全履歴の固定限月と誤認しない。historical availabilityは推定。",
+      "metadata_warning": "ALTSYMBOL; descriptive shortName matches TIO; no reported trading volume in this sample.",
+      "provider_metadata": {
+        "symbol": "TIO=F",
+        "shortName": "Iron Ore 62% Fe, CFR China (TSI",
+        "longName": null,
+        "currency": "USD",
+        "exchangeName": "CMX",
+        "instrumentType": "ALTSYMBOL",
+        "exchangeTimezoneName": "America/New_York"
+      }
+    },
+    {
+      "canonical_id": "india_bank_index",
+      "label": "NIFTY BANK指数",
+      "provider": "yahoo_finance",
+      "provider_symbol": "^NSEBANK",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "IN",
+      "exchange": "National Stock Exchange of India",
+      "market_timezone": "Asia/Kolkata",
+      "market_close": "15:30",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": false,
+      "unit": "index_point",
+      "identity_source_urls": [
+        "https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-bank"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/^NSEBANK/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:23.163263+00:00",
+      "identity_notes": "Yahoo検索でNIFTY BANK→^NSEBANKを同定、instrumentType INDEXを実取得で確認。^BANKNIFTYは失敗した別候補。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 372,
+        "rows": 372,
+        "finite_close_rows": 372,
+        "first_date": "2025-04-15",
+        "last_date": "2026-10-14",
+        "last_close": 55316.0,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 0,
+        "distinct_close_count": 372,
+        "calendar": "XBOM",
+        "required_session_count": 371,
+        "covered_required_sessions": 371,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": [
+          "2025-10-21"
+        ]
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [
+        "india_bank_index"
+      ],
+      "profile_tickers": [
+        "8316"
+      ],
+      "availability_at_0830": "available_if_observed_before_cutoff",
+      "provider_metadata": {
+        "symbol": "^NSEBANK",
+        "shortName": "NIFTY BANK",
+        "longName": "NIFTY BANK",
+        "currency": "INR",
+        "exchangeName": "NSI",
+        "instrumentType": "INDEX",
+        "exchangeTimezoneName": "Asia/Kolkata"
+      }
+    }
+  ],
+  "separate_alternatives_not_bound": [
+    {
+      "canonical_id": "comex_aluminium",
+      "label": "COMEXアルミ連続先物",
+      "provider": "yahoo_finance",
+      "provider_symbol": "ALI=F",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "US",
+      "exchange": "COMEX",
+      "market_timezone": "America/New_York",
+      "market_close": "17:00",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": true,
+      "unit": "USD/metric_ton",
+      "identity_source_urls": [
+        "https://www.cmegroup.com/articles/2025/five-things-you-should-know-about-aluminum-futures.html"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/ALI=F/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:19.188379+00:00",
+      "identity_notes": "実在し履歴取得済みだがlme_aluminiumとは市場/受渡/価格形成が異なる。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 379,
+        "rows": 378,
+        "finite_close_rows": 378,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 3086.25,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 1,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 227,
+        "distinct_close_count": 363,
+        "calendar": "XNYS",
+        "required_session_count": 378,
+        "covered_required_sessions": 378,
+        "coverage_ratio": 1.0,
+        "missing_sessions": [],
+        "extra_sessions": []
+      },
+      "operational_status": "history_complete_for_router_calendar",
+      "profile_factor_ids": [],
+      "profile_tickers": [],
+      "possible_related_factor_ids": [
+        "lme_aluminium"
+      ],
+      "requires_profile_change": true,
+      "automatic_binding_allowed": false,
+      "provider_metadata": {
+        "symbol": "ALI=F",
+        "shortName": "Aluminum Futures,Dec-2026",
+        "longName": null,
+        "currency": "USD",
+        "exchangeName": "CMX",
+        "instrumentType": "FUTURE",
+        "exchangeTimezoneName": "America/New_York"
+      }
+    },
+    {
+      "canonical_id": "jp_reit_etf_1343",
+      "label": "NEXT FUNDS東証REIT指数連動ETF",
+      "provider": "yahoo_finance",
+      "provider_symbol": "1343.T",
+      "endpoint": "yfinance.Ticker.history",
+      "status": "verified",
+      "identity_verified": true,
+      "history_fetch_verified": true,
+      "market": "JP",
+      "exchange": "Tokyo Stock Exchange",
+      "market_timezone": "Asia/Tokyo",
+      "market_close": "15:30",
+      "frequency": "daily",
+      "data_mode": "eod",
+      "session_policy": "previous_completed_session",
+      "snapshot_enabled": false,
+      "availability_lag_policy": "use existing eod_provider_lag_minutes",
+      "is_proxy": true,
+      "unit": "JPY/share",
+      "identity_source_urls": [
+        "https://nextfunds.jp/lineup/1343/"
+      ],
+      "provider_source_url": "https://finance.yahoo.com/quote/1343.T/history/",
+      "identity_checked_at": "2026-10-15",
+      "verified_at": "2026-10-16T01:22:23.158406+00:00",
+      "identity_notes": "東証REIT広範指数に連動するETFで指数原系列そのものではない。オフィス指数とも異なる。2025-10-24欠損。",
+      "history": {
+        "requested_start": "2025-04-13",
+        "requested_end_exclusive": "2026-10-15",
+        "raw_rows": 365,
+        "rows": 365,
+        "finite_close_rows": 365,
+        "first_date": "2025-04-14",
+        "last_date": "2026-10-14",
+        "last_close": 1800.0,
+        "nonfinite_close_rows": 0,
+        "excluded_out_of_window_rows": 0,
+        "duplicate_date_count": 0,
+        "zero_volume_rows": 0,
+        "distinct_close_count": 282,
+        "calendar": "XTKS",
+        "required_session_count": 366,
+        "covered_required_sessions": 365,
+        "coverage_ratio": 0.9972677595628415,
+        "missing_sessions": [
+          "2025-10-24"
+        ],
+        "extra_sessions": []
+      },
+      "operational_status": "blocked_by_router_coverage",
+      "profile_factor_ids": [],
+      "profile_tickers": [],
+      "possible_related_factor_ids": [
+        "jp_reit_index"
+      ],
+      "requires_profile_change": true,
+      "automatic_binding_allowed": false,
+      "provider_metadata": {
+        "symbol": "1343.T",
+        "shortName": "NOMURA ASSET MANAGEMENT CO LTD ",
+        "longName": "NEXT FUNDS REIT INDEX ETF",
+        "currency": "JPY",
+        "exchangeName": "JPX",
+        "instrumentType": "ETF",
+        "exchangeTimezoneName": "Asia/Tokyo"
+      }
+    }
+  ],
+  "per_company_factor_coverage": [
+    {
+      "ticker": "9101",
+      "name": "日本郵船",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 8,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy"
+      ],
+      "new_exact_history_verified": [],
+      "new_exact_complete_calendar": [],
+      "remaining_unresolved_or_incomplete": [
+        "container_freight_fbx",
+        "baltic_dry_index_spot",
+        "lng_shipping_rate",
+        "euro_auto_equity",
+        "airfreight_fax",
+        "bunker_vlsfo"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "9104",
+      "name": "商船三井",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 9,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy"
+      ],
+      "new_exact_history_verified": [],
+      "new_exact_complete_calendar": [],
+      "remaining_unresolved_or_incomplete": [
+        "container_freight_fbx",
+        "baltic_dry_index_spot",
+        "lng_shipping_rate",
+        "dirty_tanker_freight",
+        "clean_tanker_freight",
+        "bunker_vlsfo",
+        "tse_reit_office"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "9107",
+      "name": "川崎汽船",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 8,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy"
+      ],
+      "new_exact_history_verified": [
+        "iron_ore"
+      ],
+      "new_exact_complete_calendar": [],
+      "remaining_unresolved_or_incomplete": [
+        "container_freight_fbx",
+        "baltic_capesize_index",
+        "iron_ore",
+        "euro_auto_equity",
+        "lng_shipping_rate",
+        "bunker_vlsfo"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "1605",
+      "name": "INPEX",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 7,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy",
+        "brent",
+        "us_10y_yield"
+      ],
+      "new_exact_history_verified": [
+        "audusd"
+      ],
+      "new_exact_complete_calendar": [
+        "audusd"
+      ],
+      "remaining_unresolved_or_incomplete": [
+        "lng_jkm",
+        "lpg_afei"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "5020",
+      "name": "ENEOSホールディングス",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 8,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy"
+      ],
+      "new_exact_history_verified": [
+        "jx_advanced_metals_equity"
+      ],
+      "new_exact_complete_calendar": [
+        "jx_advanced_metals_equity"
+      ],
+      "remaining_unresolved_or_incomplete": [
+        "dubai_crude",
+        "japan_refining_margin",
+        "px_naphtha_spread",
+        "jepx_spot",
+        "lng_jkm"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "5019",
+      "name": "出光興産",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 8,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy",
+        "brent"
+      ],
+      "new_exact_history_verified": [
+        "audusd"
+      ],
+      "new_exact_complete_calendar": [
+        "audusd"
+      ],
+      "remaining_unresolved_or_incomplete": [
+        "japan_refining_margin",
+        "ethylene_naphtha_spread",
+        "thermal_coal_newcastle",
+        "jepx_spot"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "5021",
+      "name": "コスモエネルギーホールディングス",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 7,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy"
+      ],
+      "new_exact_history_verified": [],
+      "new_exact_complete_calendar": [],
+      "remaining_unresolved_or_incomplete": [
+        "dubai_crude",
+        "japan_refining_margin",
+        "px_naphtha_spread",
+        "jepx_spot",
+        "jgb_10y_yield"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "7203",
+      "name": "トヨタ自動車",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 9,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy",
+        "eurjpy",
+        "fxi",
+        "us_2y_yield"
+      ],
+      "new_exact_history_verified": [
+        "xly",
+        "rbob_gasoline",
+        "us_hrc_steel"
+      ],
+      "new_exact_complete_calendar": [
+        "xly",
+        "rbob_gasoline",
+        "us_hrc_steel"
+      ],
+      "remaining_unresolved_or_incomplete": [
+        "us_ig_credit_oas"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "7267",
+      "name": "本田技研工業",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 10,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy",
+        "us_2y_yield",
+        "fxi"
+      ],
+      "new_exact_history_verified": [
+        "xly",
+        "inda",
+        "eido",
+        "brljpy",
+        "rbob_gasoline"
+      ],
+      "new_exact_complete_calendar": [
+        "xly",
+        "inda",
+        "eido",
+        "brljpy",
+        "rbob_gasoline"
+      ],
+      "remaining_unresolved_or_incomplete": [
+        "us_ig_credit_oas"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "7201",
+      "name": "日産自動車",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 9,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy",
+        "fxi",
+        "us_2y_yield"
+      ],
+      "new_exact_history_verified": [
+        "mxnjpy",
+        "xly",
+        "rbob_gasoline",
+        "us_hrc_steel"
+      ],
+      "new_exact_complete_calendar": [
+        "mxnjpy",
+        "xly",
+        "rbob_gasoline",
+        "us_hrc_steel"
+      ],
+      "remaining_unresolved_or_incomplete": [
+        "us_hy_credit_spread"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "7269",
+      "name": "スズキ",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 8,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "eurjpy",
+        "brent"
+      ],
+      "new_exact_history_verified": [
+        "inrjpy",
+        "maruti_suzuki",
+        "inda"
+      ],
+      "new_exact_complete_calendar": [
+        "inrjpy",
+        "maruti_suzuki",
+        "inda"
+      ],
+      "remaining_unresolved_or_incomplete": [
+        "india_10y_yield",
+        "lme_aluminium"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "7270",
+      "name": "SUBARU",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 8,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy",
+        "us_2y_yield"
+      ],
+      "new_exact_history_verified": [
+        "xly",
+        "rbob_gasoline",
+        "us_hrc_steel",
+        "palladium"
+      ],
+      "new_exact_complete_calendar": [
+        "xly",
+        "rbob_gasoline",
+        "us_hrc_steel",
+        "palladium"
+      ],
+      "remaining_unresolved_or_incomplete": [
+        "us_ig_credit_oas"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "8306",
+      "name": "三菱UFJフィナンシャル・グループ",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 9,
+      "already_bound_not_retested": [
+        "us_2y_yield",
+        "usdjpy",
+        "nikkei225_futures"
+      ],
+      "new_exact_history_verified": [
+        "morgan_stanley_equity",
+        "krungsri_equity",
+        "danamon_equity"
+      ],
+      "new_exact_complete_calendar": [
+        "morgan_stanley_equity",
+        "krungsri_equity"
+      ],
+      "remaining_unresolved_or_incomplete": [
+        "jgb_2y_yield",
+        "us_ig_credit_oas",
+        "danamon_equity",
+        "usd_jpy_cross_currency_basis"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "8316",
+      "name": "三井住友フィナンシャルグループ",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 8,
+      "already_bound_not_retested": [
+        "us_2y_yield",
+        "usdjpy",
+        "nikkei225_futures"
+      ],
+      "new_exact_history_verified": [
+        "jefferies_equity",
+        "india_bank_index"
+      ],
+      "new_exact_complete_calendar": [
+        "jefferies_equity",
+        "india_bank_index"
+      ],
+      "remaining_unresolved_or_incomplete": [
+        "jgb_2y_yield",
+        "us_ig_credit_oas",
+        "japan_card_transaction_value"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "8411",
+      "name": "みずほフィナンシャルグループ",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 8,
+      "already_bound_not_retested": [
+        "us_10y_yield",
+        "usdjpy",
+        "nikkei225_futures"
+      ],
+      "new_exact_history_verified": [
+        "us_capital_markets_etf"
+      ],
+      "new_exact_complete_calendar": [
+        "us_capital_markets_etf"
+      ],
+      "remaining_unresolved_or_incomplete": [
+        "jgb_2y_yield",
+        "us_ig_credit_oas",
+        "japan_equity_turnover",
+        "usd_jpy_cross_currency_basis"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "8604",
+      "name": "野村ホールディングス",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 8,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "sp500_futures",
+        "usdjpy",
+        "vix"
+      ],
+      "new_exact_history_verified": [
+        "global_aggregate_bond_etf",
+        "us_capital_markets_etf"
+      ],
+      "new_exact_complete_calendar": [
+        "global_aggregate_bond_etf",
+        "us_capital_markets_etf"
+      ],
+      "remaining_unresolved_or_incomplete": [
+        "japan_equity_turnover",
+        "us_ig_credit_oas"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "8766",
+      "name": "東京海上ホールディングス",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 8,
+      "already_bound_not_retested": [
+        "us_10y_yield",
+        "usdjpy",
+        "nikkei225_futures"
+      ],
+      "new_exact_history_verified": [
+        "us_insurance_equity_etf"
+      ],
+      "new_exact_complete_calendar": [
+        "us_insurance_equity_etf"
+      ],
+      "remaining_unresolved_or_incomplete": [
+        "jgb_20y_yield",
+        "us_ig_credit_oas",
+        "us_hurricane_risk",
+        "japan_natural_catastrophe_risk"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "8058",
+      "name": "三菱商事",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 10,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy",
+        "copper",
+        "brent",
+        "audjpy"
+      ],
+      "new_exact_history_verified": [
+        "iron_ore"
+      ],
+      "new_exact_complete_calendar": [],
+      "remaining_unresolved_or_incomplete": [
+        "steelmaking_coal",
+        "iron_ore",
+        "lng_jkm",
+        "lawson_same_store_sales",
+        "asean_auto_sales"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "8031",
+      "name": "三井物産",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 9,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy",
+        "brent",
+        "natural_gas",
+        "copper",
+        "audjpy"
+      ],
+      "new_exact_history_verified": [
+        "iron_ore"
+      ],
+      "new_exact_complete_calendar": [],
+      "remaining_unresolved_or_incomplete": [
+        "iron_ore",
+        "lng_jkm",
+        "ihh_patient_revenue"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "8001",
+      "name": "伊藤忠商事",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 9,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy",
+        "brent"
+      ],
+      "new_exact_history_verified": [
+        "citic_equity",
+        "iron_ore",
+        "cotton"
+      ],
+      "new_exact_complete_calendar": [
+        "citic_equity",
+        "cotton"
+      ],
+      "remaining_unresolved_or_incomplete": [
+        "familymart_same_store_sales",
+        "iron_ore",
+        "domestic_it_sales",
+        "pulp_price"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "8002",
+      "name": "丸紅",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 9,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy",
+        "copper"
+      ],
+      "new_exact_history_verified": [
+        "corn",
+        "soybean"
+      ],
+      "new_exact_complete_calendar": [
+        "corn",
+        "soybean"
+      ],
+      "remaining_unresolved_or_incomplete": [
+        "power_generation_margin",
+        "agriculture_input_sales",
+        "thermal_coal_newcastle",
+        "aircastle_lease_yield"
+      ],
+      "all_factors_available_in_this_research": false
+    },
+    {
+      "ticker": "8053",
+      "name": "住友商事",
+      "profile_valid_from": "2026-10-15",
+      "factor_count": 9,
+      "already_bound_not_retested": [
+        "nikkei225_futures",
+        "usdjpy",
+        "copper"
+      ],
+      "new_exact_history_verified": [],
+      "new_exact_complete_calendar": [],
+      "remaining_unresolved_or_incomplete": [
+        "us_rig_count",
+        "domestic_it_sales",
+        "sumitomo_aircraft_lease_yield",
+        "us_ig_credit_oas",
+        "jp_reit_index",
+        "construction_machinery_orders"
+      ],
+      "all_factors_available_in_this_research": false
+    }
+  ],
+  "probe_results": [
+    {
+      "provider_symbol": "^REIT",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "status": "history_received",
+      "rows": 1,
+      "finite_close_rows": 1,
+      "first_date": "2026-10-14 00:00:00-04:00",
+      "last_date": "2026-10-14 00:00:00-04:00",
+      "last_close": 2890.25,
+      "metadata": {
+        "symbol": "^REIT",
+        "shortName": "Dow Jones Equity All REIT Total",
+        "longName": "ALPS ETF TRUST",
+        "currency": "USD",
+        "exchangeName": "NIM",
+        "fullExchangeName": "Nasdaq GIDS",
+        "instrumentType": "ETF",
+        "exchangeTimezoneName": "America/New_York",
+        "firstTradeDate": null,
+        "regularMarketTime": "2026-10-14 15:59:59-04:00",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-15 04:00:00-04:00",
+            "end": "2026-10-15 09:30:00-04:00"
+          },
+          "regular": {
+            "start": "2026-10-15 09:30:00-04:00",
+            "end": "2026-10-15 16:00:00-04:00"
+          },
+          "post": {
+            "start": "2026-10-15 16:00:00-04:00",
+            "end": "2026-10-15 20:00:00-04:00"
+          }
+        },
+        "dataGranularity": "1d"
+      }
+    },
+    {
+      "provider_symbol": "^TREIT",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "status": "fetch_failed",
+      "error_type": "YFTzMissingError",
+      "error": "$^TREIT: possibly delisted; no timezone found"
+    },
+    {
+      "provider_symbol": "^BANKNIFTY",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "status": "fetch_failed",
+      "error_type": "YFTzMissingError",
+      "error": "$^BANKNIFTY: possibly delisted; no timezone found"
+    },
+    {
+      "provider_symbol": "NCF=F",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "status": "fetch_failed",
+      "error_type": "YFTzMissingError",
+      "error": "$NCF=F: possibly delisted; no timezone found"
+    },
+    {
+      "provider_symbol": "^SXAK",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "status": "fetch_failed",
+      "error_type": "YFTzMissingError",
+      "error": "$^SXAK: possibly delisted; no timezone found"
+    },
+    {
+      "provider_symbol": "INDA",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:14.972531+00:00",
+      "status": "history_received",
+      "raw_rows": 378,
+      "rows": 378,
+      "finite_close_rows": 378,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 47.040000915527344,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 0,
+      "distinct_close_count": 292,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 378,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "INDA",
+        "shortName": "Ishares MSCI India ETF",
+        "longName": "iShares MSCI India ETF",
+        "currency": "USD",
+        "exchangeName": "BTS",
+        "fullExchangeName": "Cboe US",
+        "instrumentType": "ETF",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-15 04:00:00-04:00",
+            "end": "2026-10-15 09:30:00-04:00"
+          },
+          "regular": {
+            "start": "2026-10-15 09:30:00-04:00",
+            "end": "2026-10-15 16:00:00-04:00"
+          },
+          "post": {
+            "start": "2026-10-15 16:00:00-04:00",
+            "end": "2026-10-15 20:00:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "EIDO",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:14.972896+00:00",
+      "status": "history_received",
+      "raw_rows": 378,
+      "rows": 378,
+      "finite_close_rows": 378,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 11.670000076293945,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 0,
+      "distinct_close_count": 275,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 378,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "EIDO",
+        "shortName": "iShares MSCI Indonesia ETF",
+        "longName": "iShares MSCI Indonesia ETF",
+        "currency": "USD",
+        "exchangeName": "PCX",
+        "fullExchangeName": "NYSEArca",
+        "instrumentType": "ETF",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-15 04:00:00-04:00",
+            "end": "2026-10-15 09:30:00-04:00"
+          },
+          "regular": {
+            "start": "2026-10-15 09:30:00-04:00",
+            "end": "2026-10-15 16:00:00-04:00"
+          },
+          "post": {
+            "start": "2026-10-15 16:00:00-04:00",
+            "end": "2026-10-15 20:00:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "XLY",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:14.971421+00:00",
+      "status": "history_received",
+      "raw_rows": 378,
+      "rows": 378,
+      "finite_close_rows": 378,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 111.5,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 0,
+      "distinct_close_count": 347,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 378,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "XLY",
+        "shortName": "State Street Consumer Discretio",
+        "longName": "State Street Consumer Discretionary Select Sector SPDR ETF",
+        "currency": "USD",
+        "exchangeName": "PCX",
+        "fullExchangeName": "NYSEArca",
+        "instrumentType": "ETF",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-15 04:00:00-04:00",
+            "end": "2026-10-15 09:30:00-04:00"
+          },
+          "regular": {
+            "start": "2026-10-15 09:30:00-04:00",
+            "end": "2026-10-15 16:00:00-04:00"
+          },
+          "post": {
+            "start": "2026-10-15 16:00:00-04:00",
+            "end": "2026-10-15 20:00:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "KCE",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:14.973243+00:00",
+      "status": "history_received",
+      "raw_rows": 378,
+      "rows": 378,
+      "finite_close_rows": 378,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 148.7899932861328,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 0,
+      "distinct_close_count": 349,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 378,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "KCE",
+        "shortName": "State Street SPDR S&P Capital M",
+        "longName": "State Street SPDR S&P Capital Markets ETF",
+        "currency": "USD",
+        "exchangeName": "PCX",
+        "fullExchangeName": "NYSEArca",
+        "instrumentType": "ETF",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-15 04:00:00-04:00",
+            "end": "2026-10-15 09:30:00-04:00"
+          },
+          "regular": {
+            "start": "2026-10-15 09:30:00-04:00",
+            "end": "2026-10-15 16:00:00-04:00"
+          },
+          "post": {
+            "start": "2026-10-15 16:00:00-04:00",
+            "end": "2026-10-15 20:00:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "KIE",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:18.607185+00:00",
+      "status": "history_received",
+      "raw_rows": 378,
+      "rows": 378,
+      "finite_close_rows": 378,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 60.90999984741211,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 0,
+      "distinct_close_count": 294,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 378,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "KIE",
+        "shortName": "State Street SPDR S&P Insurance",
+        "longName": "State Street SPDR S&P Insurance ETF",
+        "currency": "USD",
+        "exchangeName": "PCX",
+        "fullExchangeName": "NYSEArca",
+        "instrumentType": "ETF",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "end": "2026-10-15 09:30:00-04:00",
+            "start": "2026-10-15 04:00:00-04:00"
+          },
+          "regular": {
+            "end": "2026-10-15 16:00:00-04:00",
+            "start": "2026-10-15 09:30:00-04:00"
+          },
+          "post": {
+            "end": "2026-10-15 20:00:00-04:00",
+            "start": "2026-10-15 16:00:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "RB=F",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:19.004232+00:00",
+      "status": "history_received",
+      "raw_rows": 380,
+      "rows": 379,
+      "finite_close_rows": 379,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 3.259500026702881,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 1,
+      "zero_volume_rows": 7,
+      "distinct_close_count": 372,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 378,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [
+        "2025-07-04"
+      ],
+      "metadata": {
+        "symbol": "RB=F",
+        "shortName": "RBOB Gasoline Dec 26",
+        "longName": null,
+        "currency": "USD",
+        "exchangeName": "NYM",
+        "fullExchangeName": "NY Mercantile",
+        "instrumentType": "FUTURE",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-15 00:00:00-04:00",
+            "end": "2026-10-15 00:00:00-04:00"
+          },
+          "regular": {
+            "start": "2026-10-15 00:00:00-04:00",
+            "end": "2026-10-15 23:59:00-04:00"
+          },
+          "post": {
+            "start": "2026-10-15 23:59:00-04:00",
+            "end": "2026-10-15 23:59:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "HRC=F",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:19.055109+00:00",
+      "status": "history_received",
+      "raw_rows": 378,
+      "rows": 378,
+      "finite_close_rows": 378,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 1285.0,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 58,
+      "distinct_close_count": 152,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 378,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "HRC=F",
+        "shortName": "U.S. Midwest Domestic Hot-Rolle",
+        "longName": null,
+        "currency": "USD",
+        "exchangeName": "CMX",
+        "fullExchangeName": "COMEX",
+        "instrumentType": "FUTURE",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "end": "2026-10-15 00:00:00-04:00",
+            "start": "2026-10-15 00:00:00-04:00"
+          },
+          "regular": {
+            "end": "2026-10-15 23:59:00-04:00",
+            "start": "2026-10-15 00:00:00-04:00"
+          },
+          "post": {
+            "end": "2026-10-15 23:59:00-04:00",
+            "start": "2026-10-15 23:59:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "MS",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:18.944906+00:00",
+      "status": "history_received",
+      "raw_rows": 378,
+      "rows": 378,
+      "finite_close_rows": 378,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 181.50999450683594,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 0,
+      "distinct_close_count": 368,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 378,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "MS",
+        "shortName": "Morgan Stanley",
+        "longName": "Morgan Stanley",
+        "currency": "USD",
+        "exchangeName": "NYQ",
+        "fullExchangeName": "NYSE",
+        "instrumentType": "EQUITY",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-15 04:00:00-04:00",
+            "end": "2026-10-15 09:30:00-04:00"
+          },
+          "regular": {
+            "start": "2026-10-15 09:30:00-04:00",
+            "end": "2026-10-15 16:00:00-04:00"
+          },
+          "post": {
+            "start": "2026-10-15 16:00:00-04:00",
+            "end": "2026-10-15 20:00:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "JEF",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:18.980293+00:00",
+      "status": "history_received",
+      "raw_rows": 378,
+      "rows": 378,
+      "finite_close_rows": 378,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 43.90999984741211,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 0,
+      "distinct_close_count": 345,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 378,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "JEF",
+        "shortName": "Jefferies Financial Group Inc.",
+        "longName": "Jefferies Financial Group Inc.",
+        "currency": "USD",
+        "exchangeName": "NYQ",
+        "fullExchangeName": "NYSE",
+        "instrumentType": "EQUITY",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-15 04:00:00-04:00",
+            "end": "2026-10-15 09:30:00-04:00"
+          },
+          "regular": {
+            "start": "2026-10-15 09:30:00-04:00",
+            "end": "2026-10-15 16:00:00-04:00"
+          },
+          "post": {
+            "start": "2026-10-15 16:00:00-04:00",
+            "end": "2026-10-15 20:00:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "PA=F",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:19.157133+00:00",
+      "status": "history_received",
+      "raw_rows": 379,
+      "rows": 378,
+      "finite_close_rows": 378,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 1087.0999755859375,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 1,
+      "zero_volume_rows": 196,
+      "distinct_close_count": 370,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 378,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "PA=F",
+        "shortName": "Palladium Dec 26",
+        "longName": null,
+        "currency": "USD",
+        "exchangeName": "NYM",
+        "fullExchangeName": "NY Mercantile",
+        "instrumentType": "FUTURE",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-15 00:00:00-04:00",
+            "end": "2026-10-15 00:00:00-04:00"
+          },
+          "regular": {
+            "start": "2026-10-15 00:00:00-04:00",
+            "end": "2026-10-15 23:59:00-04:00"
+          },
+          "post": {
+            "start": "2026-10-15 23:59:00-04:00",
+            "end": "2026-10-15 23:59:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "ZC=F",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:19.216504+00:00",
+      "status": "history_received",
+      "raw_rows": 379,
+      "rows": 378,
+      "finite_close_rows": 378,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 480.75,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 1,
+      "zero_volume_rows": 6,
+      "distinct_close_count": 248,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 378,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "ZC=F",
+        "shortName": "Corn Futures,Dec-2026",
+        "longName": null,
+        "currency": "USX",
+        "exchangeName": "CBT",
+        "fullExchangeName": "CBOT",
+        "instrumentType": "FUTURE",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "end": "2026-10-15 00:00:00-04:00",
+            "start": "2026-10-15 00:00:00-04:00"
+          },
+          "regular": {
+            "end": "2026-10-15 23:59:00-04:00",
+            "start": "2026-10-15 00:00:00-04:00"
+          },
+          "post": {
+            "end": "2026-10-15 23:59:00-04:00",
+            "start": "2026-10-15 23:59:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "ALI=F",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:19.188379+00:00",
+      "status": "history_received",
+      "raw_rows": 379,
+      "rows": 378,
+      "finite_close_rows": 378,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 3086.25,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 1,
+      "zero_volume_rows": 227,
+      "distinct_close_count": 363,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 378,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "ALI=F",
+        "shortName": "Aluminum Futures,Dec-2026",
+        "longName": null,
+        "currency": "USD",
+        "exchangeName": "CMX",
+        "fullExchangeName": "COMEX",
+        "instrumentType": "FUTURE",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "end": "2026-10-15 00:00:00-04:00",
+            "start": "2026-10-15 00:00:00-04:00"
+          },
+          "regular": {
+            "end": "2026-10-15 23:59:00-04:00",
+            "start": "2026-10-15 00:00:00-04:00"
+          },
+          "post": {
+            "end": "2026-10-15 23:59:00-04:00",
+            "start": "2026-10-15 23:59:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "ZS=F",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:19.254522+00:00",
+      "status": "history_received",
+      "raw_rows": 379,
+      "rows": 378,
+      "finite_close_rows": 378,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 1277.25,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 1,
+      "zero_volume_rows": 6,
+      "distinct_close_count": 310,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 378,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "ZS=F",
+        "shortName": "Soybean Futures,Nov-2026",
+        "longName": null,
+        "currency": "USX",
+        "exchangeName": "CBT",
+        "fullExchangeName": "CBOT",
+        "instrumentType": "FUTURE",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "end": "2026-10-15 00:00:00-04:00",
+            "start": "2026-10-15 00:00:00-04:00"
+          },
+          "regular": {
+            "end": "2026-10-15 23:59:00-04:00",
+            "start": "2026-10-15 00:00:00-04:00"
+          },
+          "post": {
+            "end": "2026-10-15 23:59:00-04:00",
+            "start": "2026-10-15 23:59:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "CT=F",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:19.284697+00:00",
+      "status": "history_received",
+      "raw_rows": 379,
+      "rows": 379,
+      "finite_close_rows": 379,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 80.66000366210938,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 57,
+      "distinct_close_count": 336,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 378,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [
+        "2025-07-04"
+      ],
+      "metadata": {
+        "symbol": "CT=F",
+        "shortName": null,
+        "longName": null,
+        "currency": "USX",
+        "exchangeName": "NYM",
+        "fullExchangeName": "NY Mercantile",
+        "instrumentType": "ALTSYMBOL",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "end": "2026-10-15 00:00:00-04:00",
+            "start": "2026-10-15 00:00:00-04:00"
+          },
+          "regular": {
+            "end": "2026-10-15 23:59:00-04:00",
+            "start": "2026-10-15 00:00:00-04:00"
+          },
+          "post": {
+            "end": "2026-10-15 23:59:00-04:00",
+            "start": "2026-10-15 23:59:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "TIO=F",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:19.374924+00:00",
+      "status": "history_received",
+      "raw_rows": 377,
+      "rows": 377,
+      "finite_close_rows": 377,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 90.73999786376953,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 377,
+      "distinct_close_count": 323,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 377,
+      "coverage_ratio": 0.9973544973544973,
+      "missing_sessions": [
+        "2026-10-01"
+      ],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "TIO=F",
+        "shortName": "Iron Ore 62% Fe, CFR China (TSI",
+        "longName": null,
+        "currency": "USD",
+        "exchangeName": "CMX",
+        "fullExchangeName": "COMEX",
+        "instrumentType": "ALTSYMBOL",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "end": "2026-10-15 00:00:00-04:00",
+            "start": "2026-10-15 00:00:00-04:00"
+          },
+          "regular": {
+            "end": "2026-10-15 23:59:00-04:00",
+            "start": "2026-10-15 00:00:00-04:00"
+          },
+          "post": {
+            "end": "2026-10-15 23:59:00-04:00",
+            "start": "2026-10-15 23:59:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "JKM=F",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:19.423559+00:00",
+      "status": "history_received",
+      "raw_rows": 378,
+      "rows": 378,
+      "finite_close_rows": 378,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 26.385000228881836,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 378,
+      "distinct_close_count": 313,
+      "duplicate_date_count": 0,
+      "market": "US",
+      "calendar": "XNYS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 378,
+      "covered_required_sessions": 378,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "JKM=F",
+        "shortName": null,
+        "longName": null,
+        "currency": null,
+        "exchangeName": "NYM",
+        "fullExchangeName": "NY Mercantile",
+        "instrumentType": "ALTSYMBOL",
+        "exchangeTimezoneName": "America/New_York",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-15 00:00:00-04:00",
+            "end": "2026-10-15 00:00:00-04:00"
+          },
+          "regular": {
+            "start": "2026-10-15 00:00:00-04:00",
+            "end": "2026-10-15 23:59:00-04:00"
+          },
+          "post": {
+            "start": "2026-10-15 23:59:00-04:00",
+            "end": "2026-10-15 23:59:00-04:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "MARUTI.NS",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:19.550414+00:00",
+      "status": "history_received",
+      "raw_rows": 373,
+      "rows": 373,
+      "finite_close_rows": 373,
+      "first_date": "2025-04-15",
+      "last_date": "2026-10-14",
+      "last_close": 11178.0,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 1,
+      "distinct_close_count": 361,
+      "duplicate_date_count": 0,
+      "market": "IN",
+      "calendar": "XBOM",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 371,
+      "covered_required_sessions": 371,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [
+        "2025-10-21",
+        "2026-01-15"
+      ],
+      "metadata": {
+        "symbol": "MARUTI.NS",
+        "shortName": "MARUTI SUZUKI INDIA LTD.",
+        "longName": "Maruti Suzuki India Limited",
+        "currency": "INR",
+        "exchangeName": "NSI",
+        "fullExchangeName": "NSE",
+        "instrumentType": "EQUITY",
+        "exchangeTimezoneName": "Asia/Kolkata",
+        "currentTradingPeriod": {
+          "pre": {
+            "end": "2026-10-16 09:15:00+05:30",
+            "start": "2026-10-16 09:15:00+05:30"
+          },
+          "regular": {
+            "end": "2026-10-16 15:30:00+05:30",
+            "start": "2026-10-16 09:15:00+05:30"
+          },
+          "post": {
+            "end": "2026-10-16 15:30:00+05:30",
+            "start": "2026-10-16 15:30:00+05:30"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "AGGG.L",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:19.425319+00:00",
+      "status": "history_received",
+      "raw_rows": 380,
+      "rows": 380,
+      "finite_close_rows": 380,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 4.198500156402588,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 1,
+      "distinct_close_count": 246,
+      "duplicate_date_count": 0,
+      "market": "UK",
+      "calendar": "XLON",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 380,
+      "covered_required_sessions": 380,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "AGGG.L",
+        "shortName": "ISHARES III PLC ISH GLOBAL AGG ",
+        "longName": "iShares Core Global Aggregate Bond UCITS ETF USD (Dist)",
+        "currency": "USD",
+        "exchangeName": "LSE",
+        "fullExchangeName": "LSE",
+        "instrumentType": "ETF",
+        "exchangeTimezoneName": "Europe/London",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-16 07:15:00+01:00",
+            "end": "2026-10-16 08:00:00+01:00"
+          },
+          "regular": {
+            "start": "2026-10-16 08:00:00+01:00",
+            "end": "2026-10-16 16:30:00+01:00"
+          },
+          "post": {
+            "start": "2026-10-16 16:30:00+01:00",
+            "end": "2026-10-16 17:15:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "BDMN.JK",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:19.496464+00:00",
+      "status": "history_received",
+      "raw_rows": 360,
+      "rows": 360,
+      "finite_close_rows": 360,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 5025.0,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 0,
+      "distinct_close_count": 113,
+      "duplicate_date_count": 0,
+      "market": "ID",
+      "calendar": "XIDX",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 373,
+      "covered_required_sessions": 360,
+      "coverage_ratio": 0.9651474530831099,
+      "missing_sessions": [
+        "2025-08-18",
+        "2026-01-16",
+        "2026-02-16",
+        "2026-03-18",
+        "2026-03-19",
+        "2026-03-20",
+        "2026-03-23",
+        "2026-03-24",
+        "2026-05-15",
+        "2026-05-27",
+        "2026-05-28",
+        "2026-06-16",
+        "2026-08-25"
+      ],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "BDMN.JK",
+        "shortName": "Bank Danamon Indonesia Tbk.",
+        "longName": "PT Bank Danamon Indonesia Tbk",
+        "currency": "IDR",
+        "exchangeName": "JKT",
+        "fullExchangeName": "Jakarta",
+        "instrumentType": "EQUITY",
+        "exchangeTimezoneName": "Asia/Jakarta",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-16 09:00:00+07:00",
+            "end": "2026-10-16 09:00:00+07:00"
+          },
+          "regular": {
+            "start": "2026-10-16 09:00:00+07:00",
+            "end": "2026-10-16 16:15:00+07:00"
+          },
+          "post": {
+            "start": "2026-10-16 16:15:00+07:00",
+            "end": "2026-10-16 16:15:00+07:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "BAY.BK",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:19.453411+00:00",
+      "status": "history_received",
+      "raw_rows": 362,
+      "rows": 362,
+      "finite_close_rows": 362,
+      "first_date": "2025-04-16",
+      "last_date": "2026-10-14",
+      "last_close": 39.5,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 1,
+      "distinct_close_count": 92,
+      "duplicate_date_count": 0,
+      "market": "TH",
+      "calendar": "XBKK",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 362,
+      "covered_required_sessions": 362,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "BAY.BK",
+        "shortName": "BAY_BANK OF AYUDHYA",
+        "longName": "Bank of Ayudhya Public Company Limited",
+        "currency": "THB",
+        "exchangeName": "SET",
+        "fullExchangeName": "Thailand",
+        "instrumentType": "EQUITY",
+        "exchangeTimezoneName": "Asia/Bangkok",
+        "currentTradingPeriod": {
+          "pre": {
+            "end": "2026-10-15 10:00:00+07:00",
+            "start": "2026-10-15 10:00:00+07:00"
+          },
+          "regular": {
+            "end": "2026-10-15 16:30:00+07:00",
+            "start": "2026-10-15 10:00:00+07:00"
+          },
+          "post": {
+            "end": "2026-10-15 16:30:00+07:00",
+            "start": "2026-10-15 16:30:00+07:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "^NSEBANK",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:23.163263+00:00",
+      "status": "history_received",
+      "raw_rows": 372,
+      "rows": 372,
+      "finite_close_rows": 372,
+      "first_date": "2025-04-15",
+      "last_date": "2026-10-14",
+      "last_close": 55316.0,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 0,
+      "distinct_close_count": 372,
+      "duplicate_date_count": 0,
+      "market": "IN",
+      "calendar": "XBOM",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 371,
+      "covered_required_sessions": 371,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [
+        "2025-10-21"
+      ],
+      "metadata": {
+        "symbol": "^NSEBANK",
+        "shortName": "NIFTY BANK",
+        "longName": "NIFTY BANK",
+        "currency": "INR",
+        "exchangeName": "NSI",
+        "fullExchangeName": "NSE",
+        "instrumentType": "INDEX",
+        "exchangeTimezoneName": "Asia/Kolkata",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-16 09:15:00+05:30",
+            "end": "2026-10-16 09:15:00+05:30"
+          },
+          "regular": {
+            "start": "2026-10-16 09:15:00+05:30",
+            "end": "2026-10-16 15:30:00+05:30"
+          },
+          "post": {
+            "start": "2026-10-16 15:30:00+05:30",
+            "end": "2026-10-16 15:30:00+05:30"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "AUDUSD=X",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:23.348927+00:00",
+      "status": "history_received",
+      "raw_rows": 389,
+      "rows": 389,
+      "finite_close_rows": 389,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 0.6985191702842712,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 389,
+      "distinct_close_count": 381,
+      "duplicate_date_count": 0,
+      "market": "FOREX",
+      "calendar": "XLON",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 380,
+      "covered_required_sessions": 380,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [
+        "2025-05-05",
+        "2025-05-26",
+        "2025-08-25",
+        "2025-12-26",
+        "2026-04-03",
+        "2026-04-06",
+        "2026-05-04",
+        "2026-05-25",
+        "2026-08-31"
+      ],
+      "metadata": {
+        "symbol": "AUDUSD=X",
+        "shortName": "AUD/USD",
+        "longName": "AUD/USD",
+        "currency": "USD",
+        "exchangeName": "CCY",
+        "fullExchangeName": "CCY",
+        "instrumentType": "CURRENCY",
+        "exchangeTimezoneName": "Europe/London",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-16 00:00:00+01:00",
+            "end": "2026-10-16 00:00:00+01:00"
+          },
+          "regular": {
+            "start": "2026-10-16 00:00:00+01:00",
+            "end": "2026-10-16 23:59:00+01:00"
+          },
+          "post": {
+            "start": "2026-10-16 23:59:00+01:00",
+            "end": "2026-10-16 23:59:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "BRLJPY=X",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:23.916739+00:00",
+      "status": "history_received",
+      "raw_rows": 389,
+      "rows": 389,
+      "finite_close_rows": 389,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 31.486000061035156,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 389,
+      "distinct_close_count": 379,
+      "duplicate_date_count": 0,
+      "market": "FOREX",
+      "calendar": "XLON",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 380,
+      "covered_required_sessions": 380,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [
+        "2025-05-05",
+        "2025-05-26",
+        "2025-08-25",
+        "2025-12-26",
+        "2026-04-03",
+        "2026-04-06",
+        "2026-05-04",
+        "2026-05-25",
+        "2026-08-31"
+      ],
+      "metadata": {
+        "symbol": "BRLJPY=X",
+        "shortName": "BRL/JPY",
+        "longName": "BRL/JPY",
+        "currency": "JPY",
+        "exchangeName": "CCY",
+        "fullExchangeName": "CCY",
+        "instrumentType": "CURRENCY",
+        "exchangeTimezoneName": "Europe/London",
+        "currentTradingPeriod": {
+          "pre": {
+            "end": "2026-10-16 00:00:00+01:00",
+            "start": "2026-10-16 00:00:00+01:00"
+          },
+          "regular": {
+            "end": "2026-10-16 23:59:00+01:00",
+            "start": "2026-10-16 00:00:00+01:00"
+          },
+          "post": {
+            "end": "2026-10-16 23:59:00+01:00",
+            "start": "2026-10-16 23:59:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "5016.T",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:23.152297+00:00",
+      "status": "history_received",
+      "raw_rows": 366,
+      "rows": 366,
+      "finite_close_rows": 366,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 3460.0,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 0,
+      "distinct_close_count": 347,
+      "duplicate_date_count": 0,
+      "market": "JP",
+      "calendar": "XTKS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 366,
+      "covered_required_sessions": 366,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "5016.T",
+        "shortName": "JX ADVANCED METALS CORPORATION",
+        "longName": "JX Advanced Metals Corporation",
+        "currency": "JPY",
+        "exchangeName": "JPX",
+        "fullExchangeName": "Tokyo",
+        "instrumentType": "EQUITY",
+        "exchangeTimezoneName": "Asia/Tokyo",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-16 09:00:00+09:00",
+            "end": "2026-10-16 09:00:00+09:00"
+          },
+          "regular": {
+            "start": "2026-10-16 09:00:00+09:00",
+            "end": "2026-10-16 15:30:00+09:00"
+          },
+          "post": {
+            "start": "2026-10-16 15:30:00+09:00",
+            "end": "2026-10-16 15:30:00+09:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "MXNJPY=X",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:24.715266+00:00",
+      "status": "history_received",
+      "raw_rows": 389,
+      "rows": 389,
+      "finite_close_rows": 389,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 8.614920616149902,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 389,
+      "distinct_close_count": 389,
+      "duplicate_date_count": 0,
+      "market": "FOREX",
+      "calendar": "XLON",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 380,
+      "covered_required_sessions": 380,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [
+        "2025-05-05",
+        "2025-05-26",
+        "2025-08-25",
+        "2025-12-26",
+        "2026-04-03",
+        "2026-04-06",
+        "2026-05-04",
+        "2026-05-25",
+        "2026-08-31"
+      ],
+      "metadata": {
+        "symbol": "MXNJPY=X",
+        "shortName": "MXN/JPY",
+        "longName": "MXN/JPY",
+        "currency": "JPY",
+        "exchangeName": "CCY",
+        "fullExchangeName": "CCY",
+        "instrumentType": "CURRENCY",
+        "exchangeTimezoneName": "Europe/London",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-16 00:00:00+01:00",
+            "end": "2026-10-16 00:00:00+01:00"
+          },
+          "regular": {
+            "start": "2026-10-16 00:00:00+01:00",
+            "end": "2026-10-16 23:59:00+01:00"
+          },
+          "post": {
+            "start": "2026-10-16 23:59:00+01:00",
+            "end": "2026-10-16 23:59:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "0267.HK",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:22.907007+00:00",
+      "status": "history_received",
+      "raw_rows": 371,
+      "rows": 371,
+      "finite_close_rows": 371,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 12.850000381469727,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 3,
+      "distinct_close_count": 221,
+      "duplicate_date_count": 0,
+      "market": "HK",
+      "calendar": "XHKG",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 371,
+      "covered_required_sessions": 371,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "0267.HK",
+        "shortName": "CITIC",
+        "longName": "CITIC Limited",
+        "currency": "HKD",
+        "exchangeName": "HKG",
+        "fullExchangeName": "HKSE",
+        "instrumentType": "EQUITY",
+        "exchangeTimezoneName": "Asia/Hong_Kong",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-16 09:00:00+08:00",
+            "end": "2026-10-16 09:30:00+08:00"
+          },
+          "regular": {
+            "start": "2026-10-16 09:30:00+08:00",
+            "end": "2026-10-16 16:10:00+08:00"
+          },
+          "post": {
+            "start": "2026-10-16 16:10:00+08:00",
+            "end": "2026-10-16 16:10:00+08:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "1343.T",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:23.158406+00:00",
+      "status": "history_received",
+      "raw_rows": 365,
+      "rows": 365,
+      "finite_close_rows": 365,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 1800.0,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 0,
+      "distinct_close_count": 282,
+      "duplicate_date_count": 0,
+      "market": "JP",
+      "calendar": "XTKS",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 366,
+      "covered_required_sessions": 365,
+      "coverage_ratio": 0.9972677595628415,
+      "missing_sessions": [
+        "2025-10-24"
+      ],
+      "extra_sessions": [],
+      "metadata": {
+        "symbol": "1343.T",
+        "shortName": "NOMURA ASSET MANAGEMENT CO LTD ",
+        "longName": "NEXT FUNDS REIT INDEX ETF",
+        "currency": "JPY",
+        "exchangeName": "JPX",
+        "fullExchangeName": "Tokyo",
+        "instrumentType": "ETF",
+        "exchangeTimezoneName": "Asia/Tokyo",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-16 09:00:00+09:00",
+            "end": "2026-10-16 09:00:00+09:00"
+          },
+          "regular": {
+            "start": "2026-10-16 09:00:00+09:00",
+            "end": "2026-10-16 15:30:00+09:00"
+          },
+          "post": {
+            "start": "2026-10-16 15:30:00+09:00",
+            "end": "2026-10-16 15:30:00+09:00"
+          }
+        }
+      }
+    },
+    {
+      "provider_symbol": "INRJPY=X",
+      "requested_start": "2025-04-13",
+      "requested_end_exclusive": "2026-10-15",
+      "checked_at": "2026-10-16T01:22:25.570181+00:00",
+      "status": "history_received",
+      "raw_rows": 389,
+      "rows": 389,
+      "finite_close_rows": 389,
+      "first_date": "2025-04-14",
+      "last_date": "2026-10-14",
+      "last_close": 1.6611859798431396,
+      "nonfinite_close_rows": 0,
+      "excluded_out_of_window_rows": 0,
+      "zero_volume_rows": 389,
+      "distinct_close_count": 388,
+      "duplicate_date_count": 0,
+      "market": "FOREX",
+      "calendar": "XLON",
+      "calendar_fallback_weekdays": false,
+      "required_session_count": 380,
+      "covered_required_sessions": 380,
+      "coverage_ratio": 1.0,
+      "missing_sessions": [],
+      "extra_sessions": [
+        "2025-05-05",
+        "2025-05-26",
+        "2025-08-25",
+        "2025-12-26",
+        "2026-04-03",
+        "2026-04-06",
+        "2026-05-04",
+        "2026-05-25",
+        "2026-08-31"
+      ],
+      "metadata": {
+        "symbol": "INRJPY=X",
+        "shortName": "INR/JPY",
+        "longName": "INR/JPY",
+        "currency": "JPY",
+        "exchangeName": "CCY",
+        "fullExchangeName": "CCY",
+        "instrumentType": "CURRENCY",
+        "exchangeTimezoneName": "Europe/London",
+        "currentTradingPeriod": {
+          "pre": {
+            "start": "2026-10-16 00:00:00+01:00",
+            "end": "2026-10-16 00:00:00+01:00"
+          },
+          "regular": {
+            "start": "2026-10-16 00:00:00+01:00",
+            "end": "2026-10-16 23:59:00+01:00"
+          },
+          "post": {
+            "start": "2026-10-16 23:59:00+01:00",
+            "end": "2026-10-16 23:59:00+01:00"
+          }
+        }
+      }
+    }
+  ],
+  "unmapped_requirements": [
+    "agriculture_input_sales",
+    "aircastle_lease_yield",
+    "airfreight_fax",
+    "asean_auto_sales",
+    "baltic_capesize_index",
+    "baltic_dry_index_spot",
+    "bunker_vlsfo",
+    "clean_tanker_freight",
+    "construction_machinery_orders",
+    "container_freight_fbx",
+    "dirty_tanker_freight",
+    "domestic_it_sales",
+    "dubai_crude",
+    "ethylene_naphtha_spread",
+    "euro_auto_equity",
+    "familymart_same_store_sales",
+    "ihh_patient_revenue",
+    "india_10y_yield",
+    "japan_card_transaction_value",
+    "japan_equity_turnover",
+    "japan_natural_catastrophe_risk",
+    "japan_refining_margin",
+    "jepx_spot",
+    "jgb_10y_yield",
+    "jgb_20y_yield",
+    "jgb_2y_yield",
+    "jp_reit_index",
+    "lawson_same_store_sales",
+    "lme_aluminium",
+    "lng_jkm",
+    "lng_shipping_rate",
+    "lpg_afei",
+    "power_generation_margin",
+    "pulp_price",
+    "px_naphtha_spread",
+    "steelmaking_coal",
+    "sumitomo_aircraft_lease_yield",
+    "thermal_coal_newcastle",
+    "tse_reit_office",
+    "us_hurricane_risk",
+    "us_hy_credit_spread",
+    "us_ig_credit_oas",
+    "us_rig_count",
+    "usd_jpy_cross_currency_basis"
+  ],
+  "rejected_or_unbound_explanations": {
+    "^BANKNIFTY": "No timezone/history; correct verified Yahoo index symbol is ^NSEBANK.",
+    "^TREIT": "No timezone/history; not registered.",
+    "^REIT": "US Dow Jones Equity All REIT product, only one row; not Japanese REIT.",
+    "^SXAK": "No timezone/history; EURO STOXX Autos direct route remains unavailable.",
+    "NCF=F": "No timezone/history; Newcastle coal requirement remains unresolved.",
+    "JKM=F": "378 finite observations but identity names and currency absent; spot JKM profile is not satisfied by unverified continuous futures. No binding.",
+    "ALI=F": "COMEX aluminium is distinct from required LME aluminium. Separate alternative only.",
+    "1343.T": "Broad Japanese REIT ETF is distinct from index raw series and office REIT index. Separate alternative only."
+  },
+  "operational_findings": [
+    "The source audit does not deploy or activate data ingestion.",
+    "Same canonical ID is used only where the researched factor definition explicitly allows the verified product; stock/ETF/continuous future identity and proxy limitations remain explicit.",
+    "BDMN.JK has 13 dates missing against installed XIDX. These may reflect unmodelled local holidays; no calendar adjustment or fabricated rows were made.",
+    "TIO=F is missing 2026-10-01. Existing strict 100% session gate will reject this window.",
+    "1343.T is missing 2025-10-24 and is not an exact factor mapping.",
+    "AGGG.L returned 379 rows initially on 2026-10-15 and 380 on recheck 2026-10-16; provider history can fill late. Final count uses recheck.",
+    "FX and several futures can return a bar beyond the requested exclusive end. All final statistics explicitly filter market dates before end; incomplete live bars are never counted.",
+    "US futures use US/XNYS only to report the existing router gate, not a claim that NYSE is their true exchange calendar. Extra sessions are retained in the audit.",
+    "FOREX uses the existing router XLON calendar; extra FX dates exist. FX volume zero is not evidence of no FX trading.",
+    "Daily historical timestamps are market labels, not proof of original public availability. First-observed timestamps and cutoff gating remain necessary.",
+    "All daily histories are a point-in-time accessibility test of the unofficial Yahoo route, with no future SLA or predictive accuracy claim.",
+    "No absent freight, VLSFO, refining spread, LME price, credit spread, low-frequency business statistic or disaster factor was replaced with generic macro or ETF data."
+  ],
+  "market_close_sources": {
+    "US_core": "https://www.nyse.com/trade/trading-information",
+    "IN": "https://www.nseindia.com/resources/exchange-communication-holidays",
+    "TH": "https://www.set.or.th/en/market/information/trading-procedure/trading-hours",
+    "ID": "https://www.idx.id/en/products-services/trading-hours-and-mechanism/",
+    "HK": "https://www.hkex.com.hk/Services/Trading-hours-and-Severe-Weather-Arrangements/Trading-Hours/Securities-Market?sc_lang=en",
+    "UK": "https://docs.londonstockexchange.com/sites/default/files/documents/n1819_attach1.pdf",
+    "FX": "Live Yahoo chart currentTradingPeriod.regular.end and exchangeTimezoneName, retained in probe metadata. No centralized exchange close is claimed."
+  }
+}

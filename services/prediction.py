@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from typing import Protocol
 
 import numpy as np
 
-from data.availability import eod_provider_lag_minutes
+from data.availability import eod_provider_lag_minutes, prediction_cutoff
 from data.config import AppConfig
 from data.market_calendar import (
     latest_completed_indicator_session,
     previous_japan_session,
 )
+from data.providers.public_factors import latest_expected_observation
 from data.providers.treasury import TREASURY_PUBLISHED_CLOSE
 from models import (
     InsufficientTrainingData,
@@ -204,6 +205,122 @@ class PredictionService:
             warnings=warnings,
         )
 
+    def _profile_issue(
+        self,
+        ticker: str,
+        prediction_date: date,
+        dataset: ModelDataset,
+        *,
+        operational: bool,
+    ) -> str | None:
+        """Require the entire dated company profile before fitting any model."""
+
+        configured = self._config.company_profiles.resolve(ticker, prediction_date)
+        profile = dataset.company_profile
+        if profile != configured:
+            return "company profile metadata does not match the active configuration"
+        if profile is None:
+            return None
+        if (
+            profile.ticker != ticker
+            or dataset.ticker != ticker
+            or dataset.current_sample.ticker != ticker
+            or profile.valid_from > prediction_date
+            or dataset.current_sample.sample_date != prediction_date
+        ):
+            return "company profile ticker/date does not match the prediction"
+        expected_cutoff = prediction_cutoff(
+            prediction_date,
+            cutoff_time=self._config.settings.schedule.prediction_cutoff,
+            timezone_name=self._config.settings.application.timezone,
+        )
+        if dataset.current_sample.cutoff_at != expected_cutoff:
+            return "company profile current cutoff does not match the configuration"
+        if dataset.missing_profile_factors:
+            return (
+                f"company profile {profile.valid_from}: missing required factors: "
+                + ", ".join(dataset.missing_profile_factors)
+            )
+        expected = {factor.feature_name for factor in profile.factors}
+        for label, names in (
+            ("feature_names", dataset.feature_names),
+            ("training_frame", tuple(dataset.training_frame.columns)),
+            ("current_frame", tuple(dataset.current_frame.columns)),
+        ):
+            if len(names) != len(expected) or set(names) != expected:
+                missing = sorted(expected - set(names))
+                unexpected = sorted(set(names) - expected)
+                return (
+                    f"company profile {profile.valid_from}: {label} schema mismatch; "
+                    f"missing={missing}, unexpected={unexpected}"
+                )
+        if len(dataset.current_frame) != 1:
+            return "company profile requires exactly one current feature row"
+        try:
+            current = dataset.current_frame.to_numpy(dtype=float)
+            training = dataset.training_frame.to_numpy(dtype=float)
+        except (TypeError, ValueError):
+            return "company profile contains non-numeric required factor values"
+        unavailable = [
+            name
+            for name, usable in zip(
+                dataset.current_frame.columns,
+                np.isfinite(current).all(axis=0),
+                strict=True,
+            )
+            if not usable
+        ]
+        if unavailable:
+            return "company profile missing current factors: " + ", ".join(unavailable)
+        if set(dataset.current_sample.values) != expected:
+            return "company profile current sample schema mismatch"
+        try:
+            sample_values = np.asarray(
+                [
+                    dataset.current_sample.values[name]
+                    for name in dataset.current_frame.columns
+                ],
+                dtype=float,
+            )
+        except (TypeError, ValueError):
+            return "company profile current sample contains non-numeric values"
+        if not np.array_equal(current[0], sample_values):
+            return "company profile current frame and sample values do not match"
+        try:
+            dataset.current_sample.assert_safe(operational=operational)
+        except ValueError as exc:
+            return f"company profile current input is not PIT-safe: {exc}"
+        for factor in profile.factors:
+            references = dataset.current_sample.lineage.get(factor.feature_name, ())
+            if factor.series_id is None or any(
+                reference.canonical_symbol != factor.series_id
+                for reference in references
+            ):
+                return f"company profile factor binding mismatch: {factor.id}"
+            if any(
+                (prediction_date - reference.market_date).days > factor.max_age_days
+                or reference.market_date >= prediction_date
+                for reference in references
+            ):
+                return f"company profile factor is stale or not completed: {factor.id}"
+        missing_limit = self._config.model.features.max_missing_ratio
+        if len(training) and missing_limit is not None:
+            insufficient = [
+                name
+                for name, coverage in zip(
+                    dataset.training_frame.columns,
+                    np.isfinite(training).mean(axis=0),
+                    strict=True,
+                )
+                if coverage < 1.0 - missing_limit
+            ]
+            if insufficient:
+                return (
+                    "company profile insufficient training coverage for factors: "
+                    + ", ".join(insufficient)
+                )
+        return None
+
     def build_dataset(
         self,
         ticker: str,
@@ -253,6 +370,25 @@ class PredictionService:
             dataset = self.build_dataset(
                 ticker, prediction_date, operational=operational
             )
+        profile_issue = self._profile_issue(
+            ticker, prediction_date, dataset, operational=operational
+        )
+        if profile_issue is not None:
+            return PredictionComputation(
+                dataset,
+                None,
+                self._insufficient(ticker, prediction_date, dataset, profile_issue),
+            )
+        factor_prefixes = (
+            {factor.series_id: factor.id for factor in dataset.company_profile.factors}
+            if dataset.company_profile is not None
+            else {}
+        )
+        active_series = (
+            set(factor_prefixes)
+            if dataset.company_profile is not None
+            else set(dataset.expected_indicators)
+        )
         if operational:
             expected_stock_session = previous_japan_session(prediction_date)
             source_reference = dataset.current_sample.reference_source
@@ -273,9 +409,8 @@ class PredictionService:
             stale_eod: list[str] = []
             for indicator in self._config.indicators.indicators:
                 if (
-                    not indicator.required
-                    or indicator.id not in dataset.expected_indicators
-                ):
+                    not indicator.required and dataset.company_profile is None
+                ) or indicator.id not in active_series:
                     continue
                 source = next(
                     (
@@ -306,7 +441,9 @@ class PredictionService:
                     (
                         reference.market_date
                         for name, references in dataset.current_sample.lineage.items()
-                        if name.startswith(f"{indicator.id}__")
+                        if name.startswith(
+                            f"{factor_prefixes.get(indicator.id, indicator.id)}__"
+                        )
                         and name != f"{indicator.id}__snapshot_level"
                         for reference in references
                     ),
@@ -329,9 +466,8 @@ class PredictionService:
             stale_treasury: list[str] = []
             for indicator in self._config.indicators.indicators:
                 if (
-                    not indicator.required
-                    or indicator.id not in dataset.expected_indicators
-                ):
+                    not indicator.required and dataset.company_profile is None
+                ) or indicator.id not in active_series:
                     continue
                 source = next(
                     (
@@ -358,7 +494,9 @@ class PredictionService:
                     (
                         reference.market_date
                         for name, references in dataset.current_sample.lineage.items()
-                        if name.startswith(f"{indicator.id}__")
+                        if name.startswith(
+                            f"{factor_prefixes.get(indicator.id, indicator.id)}__"
+                        )
                         for reference in references
                     ),
                     default=None,
@@ -377,6 +515,43 @@ class PredictionService:
                         + ", ".join(stale_treasury),
                     ),
                 )
+            stale_public: list[str] = []
+            for indicator in self._config.indicators.indicators:
+                if indicator.id not in active_series:
+                    continue
+                if not any(
+                    source.provider == "public_factors" and source.status == "verified"
+                    for source in indicator.sources
+                ):
+                    continue
+                latest = max(
+                    (
+                        reference.market_date
+                        for name, references in dataset.current_sample.lineage.items()
+                        if name.startswith(
+                            f"{factor_prefixes.get(indicator.id, indicator.id)}__"
+                        )
+                        for reference in references
+                    ),
+                    default=None,
+                )
+                expected = latest_expected_observation(
+                    dataset.current_sample.cutoff_at, indicator.id
+                )
+                if latest is None or latest < expected:
+                    stale_public.append(indicator.id)
+            if stale_public:
+                return PredictionComputation(
+                    dataset,
+                    None,
+                    self._insufficient(
+                        ticker,
+                        prediction_date,
+                        dataset,
+                        "required published indicators stale at cutoff: "
+                        + ", ".join(stale_public),
+                    ),
+                )
         if dataset.missing_required_indicators:
             return PredictionComputation(
                 dataset,
@@ -391,7 +566,8 @@ class PredictionService:
             )
         registry = self._config.ticker_features
         if (
-            registry is not None
+            dataset.company_profile is None
+            and registry is not None
             and registry.tickers[ticker].selected_columns is not None
             and dataset.current_frame.isna().any(axis=None)
         ):
@@ -453,6 +629,20 @@ class PredictionService:
             )
         predicted = model.predict_one(dataset.current_frame)
         distribution = predicted.distribution
+        coverage_evidence: dict[str, object] | None = None
+        if dataset.company_profile is not None:
+            coverage_evidence = {
+                "status": "not_evaluated",
+                "model": "fixed_company_profile",
+                "profile_ticker": dataset.company_profile.ticker,
+                "profile_valid_from": dataset.company_profile.valid_from.isoformat(),
+                "samples": 0,
+                "intervals": [],
+            }
+            if distribution is not None:
+                distribution = replace(
+                    distribution, coverage_evidence=coverage_evidence
+                )
         # The interval now comes off the fitted quantile curve when there is
         # one. The old construction -- 1.96 standard deviations of the training
         # residuals -- assumed the errors were normal and used the very rows
@@ -499,6 +689,18 @@ class PredictionService:
                 n_splits=self._config.model.cross_validation.n_splits,
                 include_sequence=self._config.model.models.include_sequence_arms,
             )
+            if coverage_evidence is not None:
+                arm_forecasts = tuple(
+                    replace(
+                        arm,
+                        distribution=replace(
+                            arm.distribution, coverage_evidence=coverage_evidence
+                        ),
+                    )
+                    if arm.distribution is not None
+                    else arm
+                    for arm in arm_forecasts
+                )
         coefficients = model.regression_coefficients()
         positive, negative, explained = _drivers(model, dataset, coefficients)
         reference = dataset.current_sample.reference_price

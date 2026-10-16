@@ -1,0 +1,2879 @@
+{
+  "as_of": "2026-10-15",
+  "scope": "金融5社・事業根拠に基づく固定7〜10指標群の研究仕様。未配備。",
+  "target": "JPX当日のraw close/open - 1。毎朝08:30 JSTまでの情報で係数を推定。",
+  "counts_policy": "派生return/volatility/lag/levelは同じ原系列の1群。金利の年限や差分で指標数を水増ししない。会社ごとに本書の固定集合を使い係数のみ毎朝推定。",
+  "evidence_policy": "事業関連性は公式IRで確認。入力の機構/符号は分析者の仮説。新指標を用いた株式バックテストもAPI履歴取得試験も本調査では未実施。",
+  "availability_policy": "既存verifiedはrepo config上の確認を引継ぐだけで、本日再測定済みではない。新規のinstrument/source存在確認は、provider symbolや08:30に利用可能な履歴の実測確認と別。未取得は共通マクロで穴埋めせずINSUFFICIENT_DATA。",
+  "effective_from_policy": "2026-10-15時点に判明した事業構造の仮説。過去OOSへ同じ事業構成を遡及しない。過去再現には当時公表されたIR/出資完了日/配信データを用いたプロファイル版が必要。",
+  "companies": [
+    {
+      "ticker": "8306",
+      "name": "三菱UFJフィナンシャル・グループ",
+      "thesis": "国内の預貸・預金収益に、米ドル業務、Morgan Stanleyとの収益連携、タイ/インドネシア銀行事業を分ける。金利3年限とFXだけの共通セットではこの違いを表せない。",
+      "business_evidence_ids": [
+        "mufg_ir",
+        "mufg_index"
+      ],
+      "indicators": [
+        {
+          "id": "jgb_2y_yield",
+          "canonical_id": "jgb_2y_yield",
+          "label": "日本2年国債利回り",
+          "classification": "proposed_direct",
+          "acquisition_status": "new_public_source_verified_ingestion_pending",
+          "candidate_instrument": "財務省定残存2年国債金利（CSV列）",
+          "frequency": "日本営業日日次",
+          "cutoff_policy": "観測日15時価格→翌日本営業日09:30公表。08:30には前日観測は不可、通常t-2以前の最新公表済み値。休業日も公表カレンダーで判定。",
+          "data_source_ids": [
+            "jgb",
+            "jgb_data"
+          ],
+          "source_urls": [
+            "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/qa.htm",
+            "https://www.mof.go.jp/jgbs/reference/interest_rate/index.htm",
+            "https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf",
+            "https://www.mufg.jp/english/ir/presentation/2026/index.html"
+          ],
+          "data_verification_note": "公式公表時刻確認済み。CSVパーサー、改訂履歴、受信時刻保存は未実装。2510.Tの債券価格を同一金利として代用しない。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "円の預貸再価格付け・預金基盤の収益環境。短めのJGBは政策金利期待の代理。",
+          "sign_conditionality": "上昇は利鞘改善に寄与し得るが預金追随、貸倒、債券評価損により逆転。",
+          "business_source_ids": [
+            "mufg_ir",
+            "mufg_index"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "jgb",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "jgb_data",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_ir",
+              "source_date": "2026-09-09",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_index",
+              "source_date": "2026-10-02",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "us_2y_yield",
+          "canonical_id": "us_2y_yield",
+          "label": "米2年国債利回り",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "Official Daily Treasury Par Yield Curve 2Y",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [
+            "treasury"
+          ],
+          "source_urls": [
+            "https://home.treasury.gov/resource-center-data-chart-center/interest-rates",
+            "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}",
+            "https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf",
+            "https://www.mufg.jp/english/ir/presentation/2026/index.html"
+          ],
+          "data_verification_note": "ドル短期金利期待・再価格付けの代理。米10年/30年/スプレッドを追加して同じ群を水増ししない。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "us_treasury",
+              "instrument_hint": "Official Daily Treasury Par Yield Curve 2Y",
+              "endpoint": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}",
+              "market": "US_TREASURY",
+              "market_timezone": "America/New_York",
+              "data_mode": "yield_curve",
+              "session_policy": "provider_published_at_or_before_cutoff",
+              "is_proxy": false,
+              "status": "verified",
+              "availability_at_0830": "conditional"
+            }
+          ],
+          "mechanism": "ドル貸出/調達の再価格付け環境。円金利とは別通貨の営業収益。",
+          "sign_conditionality": "上昇時の資産金利と調達費用のどちらが速いかで符号不定。",
+          "business_source_ids": [
+            "mufg_ir",
+            "mufg_index"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "treasury",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_ir",
+              "source_date": "2026-09-09",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_index",
+              "source_date": "2026-10-02",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "JPY=X",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [],
+          "source_urls": [
+            "https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf",
+            "https://www.mufg.jp/english/ir/presentation/2026/index.html"
+          ],
+          "data_verification_note": "海外損益換算と外貨負債の経路。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance USD/JPY",
+              "provider_symbol": "JPY=X",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FOREX",
+              "market_timezone": "UTC",
+              "data_mode": "real_time",
+              "session_policy": "latest_at_or_before_cutoff",
+              "is_proxy": false,
+              "snapshot_enabled": true,
+              "max_age_minutes": 10,
+              "status": "verified",
+              "availability_at_0830": "conditional"
+            },
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance JPY=X daily history",
+              "provider_symbol": "JPY=X",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FOREX",
+              "market_timezone": "Europe/London",
+              "data_mode": "eod",
+              "session_policy": "previous_completed_session",
+              "market_close": "22:00",
+              "is_proxy": false,
+              "snapshot_enabled": false,
+              "status": "verified",
+              "availability_at_0830": "available"
+            }
+          ],
+          "mechanism": "海外利益・資本の円換算と為替業務。",
+          "sign_conditionality": "円安は換算益要因だがヘッジ費用/RWAや顧客信用で相殺。",
+          "business_source_ids": [
+            "mufg_ir",
+            "mufg_index"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "mufg_ir",
+              "source_date": "2026-09-09",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_index",
+              "source_date": "2026-10-02",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日本株市場（既存日経225先物代理）",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "NIY=F",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [],
+          "source_urls": [
+            "https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf",
+            "https://www.mufg.jp/english/ir/presentation/2026/index.html"
+          ],
+          "data_verification_note": "TOPIXそのものではない。企業が保有する株式/AUMの国内市場価格代理。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance Nikkei 225 Futures",
+              "provider_symbol": "NIY=F",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FUTURES",
+              "market_timezone": "UTC",
+              "data_mode": "real_time",
+              "session_policy": "latest_at_or_before_cutoff",
+              "is_proxy": false,
+              "snapshot_enabled": true,
+              "max_age_minutes": 20,
+              "status": "verified",
+              "availability_at_0830": "conditional"
+            },
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance NIY=F daily history",
+              "provider_symbol": "NIY=F",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FUTURES",
+              "market_timezone": "America/New_York",
+              "data_mode": "eod",
+              "session_policy": "previous_completed_session",
+              "market_close": "17:00",
+              "is_proxy": false,
+              "snapshot_enabled": false,
+              "status": "verified",
+              "availability_at_0830": "available"
+            }
+          ],
+          "mechanism": "国内顧客資産価値、証券/WM手数料、保有株式評価の市場代理。",
+          "sign_conditionality": "上昇は通常追い風。銀行株構成比が小さく完全な資産ポートフォリオではない。",
+          "business_source_ids": [
+            "mufg_ir",
+            "mufg_index"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "mufg_ir",
+              "source_date": "2026-09-09",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_index",
+              "source_date": "2026-10-02",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "us_ig_credit_oas",
+          "canonical_id": "us_ig_credit_oas",
+          "label": "米投資適格社債信用スプレッド",
+          "classification": "proposed_direct",
+          "acquisition_status": "new_public_source_verified_ingestion_pending",
+          "candidate_instrument": "ICE BofA US Corporate OAS / FRED BAMLC0A0CM",
+          "frequency": "日次Close（公表ラグあり）",
+          "cutoff_policy": "公表/初回取得が08:30 JST以前の最新観測。10/13観測が10/14 10:26 CDT（10/15 00:26 JST）更新の実例。直前米国終値と決め打ちしない。",
+          "data_source_ids": [
+            "fred_ig"
+          ],
+          "source_urls": [
+            "https://fred.stlouisfed.org/series/BAMLC0A0CM",
+            "https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf",
+            "https://www.mufg.jp/english/ir/presentation/2026/index.html"
+          ],
+          "data_verification_note": "系列定義・頻度・公表日時確認済み。ICE利用条件、2026年4月以降3年窓、過去vintage要確認。KRE/XLFは信用スプレッドではない。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "海外企業貸出/債券・資本市場の信用環境。",
+          "sign_conditionality": "拡大は信用損失・評価損懸念。貸出スプレッド改善との純効果は条件依存。",
+          "business_source_ids": [
+            "mufg_ir",
+            "mufg_index"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "fred_ig",
+              "source_date": "2026-10-14",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_ir",
+              "source_date": "2026-09-09",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_index",
+              "source_date": "2026-10-02",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "morgan_stanley_equity",
+          "canonical_id": "morgan_stanley_equity",
+          "label": "Morgan Stanley株価（出資・協業先）",
+          "classification": "proposed_proxy",
+          "acquisition_status": "new_instrument_verified_history_pending",
+          "candidate_instrument": "NYSE: MS",
+          "frequency": "米国営業日日次",
+          "cutoff_policy": "直近完了米国セッションの価格、公式取引所・タイムゾーン・企業行動・受信時刻を確認後に使用。08:30以降の訂正を遡及適用しない。",
+          "data_source_ids": [
+            "ms"
+          ],
+          "source_urls": [
+            "https://www.morganstanley.com/about-us-ir",
+            "https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf",
+            "https://www.mufg.jp/english/ir/presentation/2026/index.html"
+          ],
+          "data_verification_note": "実在銘柄/商品は一次資料で確認。Yahoo/EODHD等のプロバイダsymbolと全履歴可用性は未テスト。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "MSの証券・資産運用業績期待と協業価値を米銀行一般から区別。",
+          "sign_conditionality": "同方向仮説。MS株価は持分利益そのものではなく市場リスクも含む。",
+          "business_source_ids": [
+            "mufg_ir",
+            "mufg_index"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "ms",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_ir",
+              "source_date": "2026-09-09",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_index",
+              "source_date": "2026-10-02",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "krungsri_equity",
+          "canonical_id": "krungsri_equity",
+          "label": "タイKrungsri株価",
+          "classification": "proposed_proxy",
+          "acquisition_status": "new_instrument_verified_history_pending",
+          "candidate_instrument": "SET: BAY（プロバイダsymbol未確定）",
+          "frequency": "タイ営業日日次",
+          "cutoff_policy": "前日までの完了現地セッション。Asia/Bangkok、終値確定/受信を08:30 JSTより前に確認。",
+          "data_source_ids": [
+            "bay"
+          ],
+          "source_urls": [
+            "https://www.krungsri.com/en/about-krungsri",
+            "https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf",
+            "https://www.mufg.jp/english/ir/presentation/2026/index.html"
+          ],
+          "data_verification_note": "子会社業績期待の代理。低流動性/同値連続/取引停止を欠損とゼロ変化で区別し、未取引価格を新情報にしない。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "タイの個人・自動車金融/銀行業の子会社収益期待。",
+          "sign_conditionality": "同方向仮説。現地金利・貸倒と薄商いにより感応度が変わる。",
+          "business_source_ids": [
+            "mufg_ir",
+            "mufg_index"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "bay",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_ir",
+              "source_date": "2026-09-09",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_index",
+              "source_date": "2026-10-02",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "danamon_equity",
+          "canonical_id": "danamon_equity",
+          "label": "インドネシアDanamon株価",
+          "classification": "proposed_proxy",
+          "acquisition_status": "new_instrument_verified_history_pending",
+          "candidate_instrument": "IDX: BDMN（プロバイダsymbol未確定）",
+          "frequency": "インドネシア営業日日次",
+          "cutoff_policy": "前日までの完了現地セッション。Asia/Jakarta、終値確定/受信を08:30 JSTより前に確認。",
+          "data_source_ids": [
+            "bdmn"
+          ],
+          "source_urls": [
+            "https://www.danamon.co.id/tentang-danamon/profile-perusahaan/tentang-bank-danamon",
+            "https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf",
+            "https://www.mufg.jp/english/ir/presentation/2026/index.html"
+          ],
+          "data_verification_note": "子会社業績期待の代理。浮動株/取引頻度・企業行動を検査し、薄商いによる同値継続を記録。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "インドネシア銀行・自動車金融事業の子会社収益期待。",
+          "sign_conditionality": "同方向仮説。タイとは貸出/信用サイクルが異なる。",
+          "business_source_ids": [
+            "mufg_ir",
+            "mufg_index"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "bdmn",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_ir",
+              "source_date": "2026-09-09",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_index",
+              "source_date": "2026-10-02",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "usd_jpy_cross_currency_basis",
+          "canonical_id": "usd_jpy_cross_currency_basis",
+          "label": "円ドル通貨ベーシス（外貨調達費用）",
+          "classification": "proposed_direct",
+          "acquisition_status": "new_vendor_required_daily_history_unverified",
+          "candidate_instrument": "同一期限・同一通貨脚/担保条件のUSDJPY通貨ベーシス（例3か月、ベンダー識別子は未確認）",
+          "frequency": "OTC気配/日次fixが必要",
+          "cutoff_policy": "締切前の固定fixだけを使用。期限、basisの符号規約、bid/ask、中値、休日、時刻、初回受信を保存。",
+          "data_source_ids": [
+            "basis"
+          ],
+          "source_urls": [
+            "https://www.bis.org/publications/qr-201609/covered-interest-parity-lost-understanding-cross-currency-basis",
+            "https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf",
+            "https://www.mufg.jp/english/ir/presentation/2026/index.html"
+          ],
+          "data_verification_note": "BISは経済機構の一次資料。BIS統計が日次ベーシス価格APIを提供すると主張しない。Bloomberg/LSEG等の提供可否・費用は要確認、未契約。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "円調達をドルへ交換する際の追加資金費用。金利差そのものではない。",
+          "sign_conditionality": "ドル調達プレミアム増は逆風。符号規約を正の調達費用増に正規化。",
+          "business_source_ids": [
+            "mufg_ir",
+            "mufg_index"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "basis",
+              "source_date": "2016-09",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_ir",
+              "source_date": "2026-09-09",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mufg_index",
+              "source_date": "2026-10-02",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        }
+      ],
+      "desired_group_count": 9,
+      "fixed_membership": true,
+      "refit": "毎朝、cutoff以前のrolling training windowで全固定群の係数を再推定。相関順位で群を1個へ削らない。",
+      "immediately_available_existing_ids": [
+        "us_2y_yield",
+        "usdjpy",
+        "nikkei225_futures"
+      ],
+      "missing_required_ids": [
+        "jgb_2y_yield",
+        "us_ig_credit_oas",
+        "morgan_stanley_equity",
+        "krungsri_equity",
+        "danamon_equity",
+        "usd_jpy_cross_currency_basis"
+      ],
+      "current_readiness": "INSUFFICIENT_DATA：追加取得/時点整合検証を終えるまで完全プロファイルとして予測しない。"
+    },
+    {
+      "ticker": "8316",
+      "name": "三井住友フィナンシャルグループ",
+      "thesis": "国内預貸に加えOlive/カード決済、Jefferies協業、YES BANKとインド消費者金融を分離する。決済取扱高は日次契約データが必要で、米金融ETFで補わない。",
+      "business_evidence_ids": [
+        "smfg_ir",
+        "smfg_fy"
+      ],
+      "indicators": [
+        {
+          "id": "jgb_2y_yield",
+          "canonical_id": "jgb_2y_yield",
+          "label": "日本2年国債利回り",
+          "classification": "proposed_direct",
+          "acquisition_status": "new_public_source_verified_ingestion_pending",
+          "candidate_instrument": "財務省定残存2年国債金利（CSV列）",
+          "frequency": "日本営業日日次",
+          "cutoff_policy": "観測日15時価格→翌日本営業日09:30公表。08:30には前日観測は不可、通常t-2以前の最新公表済み値。休業日も公表カレンダーで判定。",
+          "data_source_ids": [
+            "jgb",
+            "jgb_data"
+          ],
+          "source_urls": [
+            "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/qa.htm",
+            "https://www.mof.go.jp/jgbs/reference/interest_rate/index.htm",
+            "https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf",
+            "https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf"
+          ],
+          "data_verification_note": "公式公表時刻確認済み。CSVパーサー、改訂履歴、受信時刻保存は未実装。2510.Tの債券価格を同一金利として代用しない。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "国内預金/貸出の再価格付けとOliveで拡充する預金の収益化。",
+          "sign_conditionality": "上昇は利鞘に追い風だが調達競争/信用費用で逆転。",
+          "business_source_ids": [
+            "smfg_ir",
+            "smfg_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "jgb",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "jgb_data",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "smfg_ir",
+              "source_date": "2026-08-26",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "smfg_fy",
+              "source_date": "2026-05-18",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "us_2y_yield",
+          "canonical_id": "us_2y_yield",
+          "label": "米2年国債利回り",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "Official Daily Treasury Par Yield Curve 2Y",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [
+            "treasury"
+          ],
+          "source_urls": [
+            "https://home.treasury.gov/resource-center-data-chart-center/interest-rates",
+            "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}",
+            "https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf",
+            "https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf"
+          ],
+          "data_verification_note": "ドル短期金利期待・再価格付けの代理。米10年/30年/スプレッドを追加して同じ群を水増ししない。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "us_treasury",
+              "instrument_hint": "Official Daily Treasury Par Yield Curve 2Y",
+              "endpoint": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}",
+              "market": "US_TREASURY",
+              "market_timezone": "America/New_York",
+              "data_mode": "yield_curve",
+              "session_policy": "provider_published_at_or_before_cutoff",
+              "is_proxy": false,
+              "status": "verified",
+              "availability_at_0830": "conditional"
+            }
+          ],
+          "mechanism": "グローバル法人融資のドル資産・負債利回り。",
+          "sign_conditionality": "資産再価格付けと預金金利の追随速度による。",
+          "business_source_ids": [
+            "smfg_ir",
+            "smfg_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "treasury",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "smfg_ir",
+              "source_date": "2026-08-26",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "smfg_fy",
+              "source_date": "2026-05-18",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "JPY=X",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [],
+          "source_urls": [
+            "https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf",
+            "https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf"
+          ],
+          "data_verification_note": "海外損益換算と外貨負債の経路。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance USD/JPY",
+              "provider_symbol": "JPY=X",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FOREX",
+              "market_timezone": "UTC",
+              "data_mode": "real_time",
+              "session_policy": "latest_at_or_before_cutoff",
+              "is_proxy": false,
+              "snapshot_enabled": true,
+              "max_age_minutes": 10,
+              "status": "verified",
+              "availability_at_0830": "conditional"
+            },
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance JPY=X daily history",
+              "provider_symbol": "JPY=X",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FOREX",
+              "market_timezone": "Europe/London",
+              "data_mode": "eod",
+              "session_policy": "previous_completed_session",
+              "market_close": "22:00",
+              "is_proxy": false,
+              "snapshot_enabled": false,
+              "status": "verified",
+              "availability_at_0830": "available"
+            }
+          ],
+          "mechanism": "海外融資・持分利益の円換算、顧客為替取引。",
+          "sign_conditionality": "円安換算益と資本/ヘッジ費用は相殺し得る。",
+          "business_source_ids": [
+            "smfg_ir",
+            "smfg_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "smfg_ir",
+              "source_date": "2026-08-26",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "smfg_fy",
+              "source_date": "2026-05-18",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日本株市場（既存日経225先物代理）",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "NIY=F",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [],
+          "source_urls": [
+            "https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf",
+            "https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf"
+          ],
+          "data_verification_note": "TOPIXそのものではない。企業が保有する株式/AUMの国内市場価格代理。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance Nikkei 225 Futures",
+              "provider_symbol": "NIY=F",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FUTURES",
+              "market_timezone": "UTC",
+              "data_mode": "real_time",
+              "session_policy": "latest_at_or_before_cutoff",
+              "is_proxy": false,
+              "snapshot_enabled": true,
+              "max_age_minutes": 20,
+              "status": "verified",
+              "availability_at_0830": "conditional"
+            },
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance NIY=F daily history",
+              "provider_symbol": "NIY=F",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FUTURES",
+              "market_timezone": "America/New_York",
+              "data_mode": "eod",
+              "session_policy": "previous_completed_session",
+              "market_close": "17:00",
+              "is_proxy": false,
+              "snapshot_enabled": false,
+              "status": "verified",
+              "availability_at_0830": "available"
+            }
+          ],
+          "mechanism": "国内WM資産残高と顧客の資本取引意欲。",
+          "sign_conditionality": "通常同方向だが価格上昇だけでは取引手数料増を保証しない。",
+          "business_source_ids": [
+            "smfg_ir",
+            "smfg_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "smfg_ir",
+              "source_date": "2026-08-26",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "smfg_fy",
+              "source_date": "2026-05-18",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "us_ig_credit_oas",
+          "canonical_id": "us_ig_credit_oas",
+          "label": "米投資適格社債信用スプレッド",
+          "classification": "proposed_direct",
+          "acquisition_status": "new_public_source_verified_ingestion_pending",
+          "candidate_instrument": "ICE BofA US Corporate OAS / FRED BAMLC0A0CM",
+          "frequency": "日次Close（公表ラグあり）",
+          "cutoff_policy": "公表/初回取得が08:30 JST以前の最新観測。10/13観測が10/14 10:26 CDT（10/15 00:26 JST）更新の実例。直前米国終値と決め打ちしない。",
+          "data_source_ids": [
+            "fred_ig"
+          ],
+          "source_urls": [
+            "https://fred.stlouisfed.org/series/BAMLC0A0CM",
+            "https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf",
+            "https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf"
+          ],
+          "data_verification_note": "系列定義・頻度・公表日時確認済み。ICE利用条件、2026年4月以降3年窓、過去vintage要確認。KRE/XLFは信用スプレッドではない。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "海外貸出信用費用と引受/資金調達市場。",
+          "sign_conditionality": "拡大は一般に逆風、貸出収益率改善は遅れて発現。",
+          "business_source_ids": [
+            "smfg_ir",
+            "smfg_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "fred_ig",
+              "source_date": "2026-10-14",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "smfg_ir",
+              "source_date": "2026-08-26",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "smfg_fy",
+              "source_date": "2026-05-18",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "jefferies_equity",
+          "canonical_id": "jefferies_equity",
+          "label": "Jefferies株価（出資・協業先）",
+          "classification": "proposed_proxy",
+          "acquisition_status": "new_instrument_verified_history_pending",
+          "candidate_instrument": "NYSE: JEF",
+          "frequency": "米国営業日日次",
+          "cutoff_policy": "直近完了米国セッションの価格、公式取引所・タイムゾーン・企業行動・受信時刻を確認後に使用。08:30以降の訂正を遡及適用しない。",
+          "data_source_ids": [
+            "jef"
+          ],
+          "source_urls": [
+            "https://ir.jefferies.com/overview/",
+            "https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf",
+            "https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf"
+          ],
+          "data_verification_note": "実在銘柄/商品は一次資料で確認。Yahoo/EODHD等のプロバイダsymbolと全履歴可用性は未テスト。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "出資/協業先のIB・S&T期待を反映。",
+          "sign_conditionality": "通常同方向だがJEF固有評価とSMFGの連結収益は一致しない。",
+          "business_source_ids": [
+            "smfg_ir",
+            "smfg_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "jef",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "smfg_ir",
+              "source_date": "2026-08-26",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "smfg_fy",
+              "source_date": "2026-05-18",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "india_bank_index",
+          "canonical_id": "india_bank_index",
+          "label": "インド銀行株指数",
+          "classification": "proposed_proxy",
+          "acquisition_status": "new_instrument_verified_history_pending",
+          "candidate_instrument": "NSE Indices Nifty Bank（契約データ識別子未確定）",
+          "frequency": "インド営業日日次",
+          "cutoff_policy": "Asia/Kolkataの完了セッション終値、公開/取得が08:30 JST以前。利用権と履歴公表時刻を検証。",
+          "data_source_ids": [
+            "nifty_bank"
+          ],
+          "source_urls": [
+            "https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-bank",
+            "https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf",
+            "https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf"
+          ],
+          "data_verification_note": "YES BANK/SMFG India Creditの業績そのものではない地域信用・銀行事業代理。中国FXIを代用しない。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "YES BANK/SMFG India Creditに関係するインド信用需要・銀行株評価。",
+          "sign_conditionality": "上昇は追い風仮説。指数の構成は投資先そのものと異なる。",
+          "business_source_ids": [
+            "smfg_ir",
+            "smfg_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "nifty_bank",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "smfg_ir",
+              "source_date": "2026-08-26",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "smfg_fy",
+              "source_date": "2026-05-18",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "japan_card_transaction_value",
+          "canonical_id": "japan_card_transaction_value",
+          "label": "国内カード決済取扱高",
+          "classification": "proposed_direct",
+          "acquisition_status": "new_vendor_required_daily_history_unverified",
+          "candidate_instrument": "加盟店/カード処理の日次集計（匿名化パネルまたはSMCC等の提供契約。公開の確定日次symbolなし）",
+          "frequency": "要件は日次。公表される月次/四半期取扱高は補助状態のみ",
+          "cutoff_policy": "日次集計の対象日・集計完了/発表時刻を別に記録。速報が08:30までに届かなければ前の公表済み日。",
+          "data_source_ids": [
+            "smfg_ir"
+          ],
+          "source_urls": [
+            "https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf",
+            "https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf"
+          ],
+          "data_verification_note": "無料公開の連続日次データは未確認。月次統計を日次に前方埋めして日次観測があると扱わない。取得契約ができなければ未取得のまま。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "SMCC/Olive決済取扱高から加盟店・決済手数料へ。",
+          "sign_conditionality": "取扱高増は通常プラス。料率、キャンペーン費用、貸倒率で収益化が変わる。",
+          "business_source_ids": [
+            "smfg_ir",
+            "smfg_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "smfg_ir",
+              "source_date": "2026-08-26",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "smfg_ir",
+              "source_date": "2026-08-26",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "smfg_fy",
+              "source_date": "2026-05-18",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        }
+      ],
+      "desired_group_count": 8,
+      "fixed_membership": true,
+      "refit": "毎朝、cutoff以前のrolling training windowで全固定群の係数を再推定。相関順位で群を1個へ削らない。",
+      "immediately_available_existing_ids": [
+        "us_2y_yield",
+        "usdjpy",
+        "nikkei225_futures"
+      ],
+      "missing_required_ids": [
+        "jgb_2y_yield",
+        "us_ig_credit_oas",
+        "jefferies_equity",
+        "india_bank_index",
+        "japan_card_transaction_value"
+      ],
+      "current_readiness": "INSUFFICIENT_DATA：追加取得/時点整合検証を終えるまで完全プロファイルとして予測しない。"
+    },
+    {
+      "ticker": "8411",
+      "name": "みずほフィナンシャルグループ",
+      "thesis": "国内預貸だけでなく、米州FICC/DCMとMizuho-Greenhillを含むグローバルCIB、国内証券顧客の売買活動、ドル調達費用を区別する。",
+      "business_evidence_ids": [
+        "mizuho_ir",
+        "mizuho_fy"
+      ],
+      "indicators": [
+        {
+          "id": "jgb_2y_yield",
+          "canonical_id": "jgb_2y_yield",
+          "label": "日本2年国債利回り",
+          "classification": "proposed_direct",
+          "acquisition_status": "new_public_source_verified_ingestion_pending",
+          "candidate_instrument": "財務省定残存2年国債金利（CSV列）",
+          "frequency": "日本営業日日次",
+          "cutoff_policy": "観測日15時価格→翌日本営業日09:30公表。08:30には前日観測は不可、通常t-2以前の最新公表済み値。休業日も公表カレンダーで判定。",
+          "data_source_ids": [
+            "jgb",
+            "jgb_data"
+          ],
+          "source_urls": [
+            "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/qa.htm",
+            "https://www.mof.go.jp/jgbs/reference/interest_rate/index.htm",
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf",
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf"
+          ],
+          "data_verification_note": "公式公表時刻確認済み。CSVパーサー、改訂履歴、受信時刻保存は未実装。2510.Tの債券価格を同一金利として代用しない。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "国内円建て利鞘と政策金利期待。",
+          "sign_conditionality": "上昇利鞘効果と債券損失/信用費用の綱引き。",
+          "business_source_ids": [
+            "mizuho_ir",
+            "mizuho_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "jgb",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "jgb_data",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mizuho_ir",
+              "source_date": "2026-09-11",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mizuho_fy",
+              "source_date": "2026-05-19",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "us_10y_yield",
+          "canonical_id": "us_10y_yield",
+          "label": "米10年国債利回り",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "Official Daily Treasury Par Yield Curve 10Y",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [
+            "treasury"
+          ],
+          "source_urls": [
+            "https://home.treasury.gov/resource-center-data-chart-center/interest-rates",
+            "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}",
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf",
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf"
+          ],
+          "data_verification_note": "米ドル長期資産運用・金利市場の基準。日本金利の代用品ではない。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "us_treasury",
+              "instrument_hint": "Official Daily Treasury Par Yield Curve 10Y",
+              "endpoint": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}",
+              "market": "US_TREASURY",
+              "market_timezone": "America/New_York",
+              "data_mode": "yield_curve",
+              "session_policy": "provider_published_at_or_before_cutoff",
+              "is_proxy": false,
+              "status": "verified",
+              "availability_at_0830": "conditional"
+            }
+          ],
+          "mechanism": "米州Rates/FICC取引とドル債引受の価格環境。",
+          "sign_conditionality": "水準上昇自体の符号は固定しない。取引活性化と評価損は逆向き。",
+          "business_source_ids": [
+            "mizuho_ir",
+            "mizuho_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "treasury",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mizuho_ir",
+              "source_date": "2026-09-11",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mizuho_fy",
+              "source_date": "2026-05-19",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "JPY=X",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [],
+          "source_urls": [
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf",
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf"
+          ],
+          "data_verification_note": "海外損益換算と外貨負債の経路。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance USD/JPY",
+              "provider_symbol": "JPY=X",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FOREX",
+              "market_timezone": "UTC",
+              "data_mode": "real_time",
+              "session_policy": "latest_at_or_before_cutoff",
+              "is_proxy": false,
+              "snapshot_enabled": true,
+              "max_age_minutes": 10,
+              "status": "verified",
+              "availability_at_0830": "conditional"
+            },
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance JPY=X daily history",
+              "provider_symbol": "JPY=X",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FOREX",
+              "market_timezone": "Europe/London",
+              "data_mode": "eod",
+              "session_policy": "previous_completed_session",
+              "market_close": "22:00",
+              "is_proxy": false,
+              "snapshot_enabled": false,
+              "status": "verified",
+              "availability_at_0830": "available"
+            }
+          ],
+          "mechanism": "海外CIB利益の換算とFX顧客フロー。",
+          "sign_conditionality": "換算とヘッジ/RWA負担の純効果は条件依存。",
+          "business_source_ids": [
+            "mizuho_ir",
+            "mizuho_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "mizuho_ir",
+              "source_date": "2026-09-11",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mizuho_fy",
+              "source_date": "2026-05-19",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日本株市場（既存日経225先物代理）",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "NIY=F",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [],
+          "source_urls": [
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf",
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf"
+          ],
+          "data_verification_note": "TOPIXそのものではない。企業が保有する株式/AUMの国内市場価格代理。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance Nikkei 225 Futures",
+              "provider_symbol": "NIY=F",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FUTURES",
+              "market_timezone": "UTC",
+              "data_mode": "real_time",
+              "session_policy": "latest_at_or_before_cutoff",
+              "is_proxy": false,
+              "snapshot_enabled": true,
+              "max_age_minutes": 20,
+              "status": "verified",
+              "availability_at_0830": "conditional"
+            },
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance NIY=F daily history",
+              "provider_symbol": "NIY=F",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FUTURES",
+              "market_timezone": "America/New_York",
+              "data_mode": "eod",
+              "session_policy": "previous_completed_session",
+              "market_close": "17:00",
+              "is_proxy": false,
+              "snapshot_enabled": false,
+              "status": "verified",
+              "availability_at_0830": "available"
+            }
+          ],
+          "mechanism": "国内顧客株式資産、WM・企業資本政策需要の市場価格代理。",
+          "sign_conditionality": "通常同方向。短期には寄り付きで織込み済みの可能性。",
+          "business_source_ids": [
+            "mizuho_ir",
+            "mizuho_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "mizuho_ir",
+              "source_date": "2026-09-11",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mizuho_fy",
+              "source_date": "2026-05-19",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "us_ig_credit_oas",
+          "canonical_id": "us_ig_credit_oas",
+          "label": "米投資適格社債信用スプレッド",
+          "classification": "proposed_direct",
+          "acquisition_status": "new_public_source_verified_ingestion_pending",
+          "candidate_instrument": "ICE BofA US Corporate OAS / FRED BAMLC0A0CM",
+          "frequency": "日次Close（公表ラグあり）",
+          "cutoff_policy": "公表/初回取得が08:30 JST以前の最新観測。10/13観測が10/14 10:26 CDT（10/15 00:26 JST）更新の実例。直前米国終値と決め打ちしない。",
+          "data_source_ids": [
+            "fred_ig"
+          ],
+          "source_urls": [
+            "https://fred.stlouisfed.org/series/BAMLC0A0CM",
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf",
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf"
+          ],
+          "data_verification_note": "系列定義・頻度・公表日時確認済み。ICE利用条件、2026年4月以降3年窓、過去vintage要確認。KRE/XLFは信用スプレッドではない。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "DCM/クレジットFICCと海外企業貸出の信用価格。",
+          "sign_conditionality": "拡大は引受/評価に逆風、取引収益増もあり得る。",
+          "business_source_ids": [
+            "mizuho_ir",
+            "mizuho_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "fred_ig",
+              "source_date": "2026-10-14",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mizuho_ir",
+              "source_date": "2026-09-11",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mizuho_fy",
+              "source_date": "2026-05-19",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "us_capital_markets_etf",
+          "canonical_id": "us_capital_markets_etf",
+          "label": "米資本市場業ETF",
+          "classification": "proposed_proxy",
+          "acquisition_status": "new_instrument_verified_history_pending",
+          "candidate_instrument": "State Street KCE",
+          "frequency": "米国営業日日次",
+          "cutoff_policy": "直近完了米国セッションの価格、公式取引所・タイムゾーン・企業行動・受信時刻を確認後に使用。08:30以降の訂正を遡及適用しない。",
+          "data_source_ids": [
+            "kce"
+          ],
+          "source_urls": [
+            "https://www.ssga.com/us/en/intermediary/etfs/state-street-spdr-sp-capital-markets-etf-kce",
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf",
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf"
+          ],
+          "data_verification_note": "実在銘柄/商品は一次資料で確認。Yahoo/EODHD等のプロバイダsymbolと全履歴可用性は未テスト。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "米投資銀行/証券業の手数料・取引環境をKCEで代理。",
+          "sign_conditionality": "通常同方向仮説。取引所/運用業も含むため純IBベータではない。",
+          "business_source_ids": [
+            "mizuho_ir",
+            "mizuho_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "kce",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mizuho_ir",
+              "source_date": "2026-09-11",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mizuho_fy",
+              "source_date": "2026-05-19",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "japan_equity_turnover",
+          "canonical_id": "japan_equity_turnover",
+          "label": "東証株式市場の日次売買代金",
+          "classification": "proposed_direct",
+          "acquisition_status": "new_public_source_verified_ingestion_pending",
+          "candidate_instrument": "JPX株式日報の市場別売買代金（対象市場/売買区分を固定）",
+          "frequency": "日本営業日日次",
+          "cutoff_policy": "t-1引け後の発表済み日報を08:30前に取得。公表時刻が実証できない過去版は保守的なラグを設定。",
+          "data_source_ids": [
+            "jpx_turnover"
+          ],
+          "source_urls": [
+            "https://www.jpx.co.jp/english/markets/statistics-equities/index.html",
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf",
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf"
+          ],
+          "data_verification_note": "日報入口確認。日次値の抽出・初回配信時刻・履歴revision検証は未実施。株価リターンと異なる取引活動経路。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "国内証券・リテールの取引量に伴うフロー収益。",
+          "sign_conditionality": "売買代金増は手数料に追い風だが相場下落時の損失で打消し。",
+          "business_source_ids": [
+            "mizuho_ir",
+            "mizuho_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "jpx_turnover",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mizuho_ir",
+              "source_date": "2026-09-11",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mizuho_fy",
+              "source_date": "2026-05-19",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "usd_jpy_cross_currency_basis",
+          "canonical_id": "usd_jpy_cross_currency_basis",
+          "label": "円ドル通貨ベーシス（外貨調達費用）",
+          "classification": "proposed_direct",
+          "acquisition_status": "new_vendor_required_daily_history_unverified",
+          "candidate_instrument": "同一期限・同一通貨脚/担保条件のUSDJPY通貨ベーシス（例3か月、ベンダー識別子は未確認）",
+          "frequency": "OTC気配/日次fixが必要",
+          "cutoff_policy": "締切前の固定fixだけを使用。期限、basisの符号規約、bid/ask、中値、休日、時刻、初回受信を保存。",
+          "data_source_ids": [
+            "basis"
+          ],
+          "source_urls": [
+            "https://www.bis.org/publications/qr-201609/covered-interest-parity-lost-understanding-cross-currency-basis",
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf",
+            "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf"
+          ],
+          "data_verification_note": "BISは経済機構の一次資料。BIS統計が日次ベーシス価格APIを提供すると主張しない。Bloomberg/LSEG等の提供可否・費用は要確認、未契約。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "海外資産を支える円ドル交換による調達プレミアム。",
+          "sign_conditionality": "ドル調達コスト増は逆風、ALM/外貨預金で緩和。",
+          "business_source_ids": [
+            "mizuho_ir",
+            "mizuho_fy"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "basis",
+              "source_date": "2016-09",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mizuho_ir",
+              "source_date": "2026-09-11",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "mizuho_fy",
+              "source_date": "2026-05-19",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        }
+      ],
+      "desired_group_count": 8,
+      "fixed_membership": true,
+      "refit": "毎朝、cutoff以前のrolling training windowで全固定群の係数を再推定。相関順位で群を1個へ削らない。",
+      "immediately_available_existing_ids": [
+        "us_10y_yield",
+        "usdjpy",
+        "nikkei225_futures"
+      ],
+      "missing_required_ids": [
+        "jgb_2y_yield",
+        "us_ig_credit_oas",
+        "us_capital_markets_etf",
+        "japan_equity_turnover",
+        "usd_jpy_cross_currency_basis"
+      ],
+      "current_readiness": "INSUFFICIENT_DATA：追加取得/時点整合検証を終えるまで完全プロファイルとして予測しない。"
+    },
+    {
+      "ticker": "8604",
+      "name": "野村ホールディングス",
+      "thesis": "銀行の預貸利鞘より、国内WM顧客資産、買収後を含む世界の運用AUM、Wholesaleの株式/信用取引、取引量と変動率に重点を置く。",
+      "business_evidence_ids": [
+        "nomura_ir",
+        "nomura_q1",
+        "nomura_acq"
+      ],
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日本株市場（既存日経225先物代理）",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "NIY=F",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [],
+          "source_urls": [
+            "https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf",
+            "https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html",
+            "https://www.nomuraholdings.com/en/news/nr/news20250422.html"
+          ],
+          "data_verification_note": "TOPIXそのものではない。企業が保有する株式/AUMの国内市場価格代理。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance Nikkei 225 Futures",
+              "provider_symbol": "NIY=F",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FUTURES",
+              "market_timezone": "UTC",
+              "data_mode": "real_time",
+              "session_policy": "latest_at_or_before_cutoff",
+              "is_proxy": false,
+              "snapshot_enabled": true,
+              "max_age_minutes": 20,
+              "status": "verified",
+              "availability_at_0830": "conditional"
+            },
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance NIY=F daily history",
+              "provider_symbol": "NIY=F",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FUTURES",
+              "market_timezone": "America/New_York",
+              "data_mode": "eod",
+              "session_policy": "previous_completed_session",
+              "market_close": "17:00",
+              "is_proxy": false,
+              "snapshot_enabled": false,
+              "status": "verified",
+              "availability_at_0830": "available"
+            }
+          ],
+          "mechanism": "国内WM顧客資産と担保価値・資産連動報酬。",
+          "sign_conditionality": "上昇は通常プラス、顧客資産配分と利確/流出で変わる。",
+          "business_source_ids": [
+            "nomura_ir",
+            "nomura_q1",
+            "nomura_acq"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "nomura_ir",
+              "source_date": "2026-05-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_q1",
+              "source_date": "2026-07-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_acq",
+              "source_date": "2025-04-22",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "sp500_futures",
+          "canonical_id": "sp500_futures",
+          "label": "米国株式市場（既存S&P500先物）",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "ES=F",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [],
+          "source_urls": [
+            "https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf",
+            "https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html",
+            "https://www.nomuraholdings.com/en/news/nr/news20250422.html"
+          ],
+          "data_verification_note": "海外株式AUMとリスク選好の代理で、全世界株指数とは同一でない。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance S&P 500 Futures",
+              "provider_symbol": "ES=F",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FUTURES",
+              "market_timezone": "UTC",
+              "data_mode": "real_time",
+              "session_policy": "latest_at_or_before_cutoff",
+              "is_proxy": false,
+              "snapshot_enabled": true,
+              "max_age_minutes": 20,
+              "status": "verified",
+              "availability_at_0830": "conditional"
+            },
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance ES=F daily history",
+              "provider_symbol": "ES=F",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FUTURES",
+              "market_timezone": "America/New_York",
+              "data_mode": "eod",
+              "session_policy": "previous_completed_session",
+              "market_close": "17:00",
+              "is_proxy": false,
+              "snapshot_enabled": false,
+              "status": "verified",
+              "availability_at_0830": "available"
+            }
+          ],
+          "mechanism": "海外株式AUM・米株関連顧客事業の市場価値。",
+          "sign_conditionality": "通常同方向。米国大型株は世界運用資産全体の不完全な代理。",
+          "business_source_ids": [
+            "nomura_ir",
+            "nomura_q1",
+            "nomura_acq"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "nomura_ir",
+              "source_date": "2026-05-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_q1",
+              "source_date": "2026-07-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_acq",
+              "source_date": "2025-04-22",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "global_aggregate_bond_etf",
+          "canonical_id": "global_aggregate_bond_etf",
+          "label": "世界投資適格債券市場（運用AUM代理）",
+          "classification": "proposed_proxy",
+          "acquisition_status": "new_instrument_verified_history_pending",
+          "candidate_instrument": "iShares Core Global Aggregate Bond UCITS ETF AGGG・USD分配型",
+          "frequency": "選定取引所の営業日日次",
+          "cutoff_policy": "取引所別商品/通貨/終値時刻を確定して完了セッションを使用。NAVは公表時刻が別なので混同しない。",
+          "data_source_ids": [
+            "aggg"
+          ],
+          "source_urls": [
+            "https://www.ishares.com/uk/individual/en/products/291773/ishares-global-aggregate-bond-ucits-etf-fund",
+            "https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf",
+            "https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html",
+            "https://www.nomuraholdings.com/en/news/nr/news20250422.html"
+          ],
+          "data_verification_note": "商品と運用対象確認済み、取引所別provider symbol/価格・分配履歴は未検証。米国債1本で世界AUMを置き換えない。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "買収事業を含む債券AUM価値と運用報酬。",
+          "sign_conditionality": "債券総収益改善は通常プラス。金利水準の上昇とは方向が異なり得る。",
+          "business_source_ids": [
+            "nomura_ir",
+            "nomura_q1",
+            "nomura_acq"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "aggg",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_ir",
+              "source_date": "2026-05-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_q1",
+              "source_date": "2026-07-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_acq",
+              "source_date": "2025-04-22",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "JPY=X",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [],
+          "source_urls": [
+            "https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf",
+            "https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html",
+            "https://www.nomuraholdings.com/en/news/nr/news20250422.html"
+          ],
+          "data_verification_note": "海外損益換算と外貨負債の経路。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance USD/JPY",
+              "provider_symbol": "JPY=X",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FOREX",
+              "market_timezone": "UTC",
+              "data_mode": "real_time",
+              "session_policy": "latest_at_or_before_cutoff",
+              "is_proxy": false,
+              "snapshot_enabled": true,
+              "max_age_minutes": 10,
+              "status": "verified",
+              "availability_at_0830": "conditional"
+            },
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance JPY=X daily history",
+              "provider_symbol": "JPY=X",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FOREX",
+              "market_timezone": "Europe/London",
+              "data_mode": "eod",
+              "session_policy": "previous_completed_session",
+              "market_close": "22:00",
+              "is_proxy": false,
+              "snapshot_enabled": false,
+              "status": "verified",
+              "availability_at_0830": "available"
+            }
+          ],
+          "mechanism": "海外収益/外貨建て顧客資産の円換算。",
+          "sign_conditionality": "円安は円換算額を押し上げるが資金費用やヘッジで変わる。",
+          "business_source_ids": [
+            "nomura_ir",
+            "nomura_q1",
+            "nomura_acq"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "nomura_ir",
+              "source_date": "2026-05-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_q1",
+              "source_date": "2026-07-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_acq",
+              "source_date": "2025-04-22",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "japan_equity_turnover",
+          "canonical_id": "japan_equity_turnover",
+          "label": "東証株式市場の日次売買代金",
+          "classification": "proposed_direct",
+          "acquisition_status": "new_public_source_verified_ingestion_pending",
+          "candidate_instrument": "JPX株式日報の市場別売買代金（対象市場/売買区分を固定）",
+          "frequency": "日本営業日日次",
+          "cutoff_policy": "t-1引け後の発表済み日報を08:30前に取得。公表時刻が実証できない過去版は保守的なラグを設定。",
+          "data_source_ids": [
+            "jpx_turnover"
+          ],
+          "source_urls": [
+            "https://www.jpx.co.jp/english/markets/statistics-equities/index.html",
+            "https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf",
+            "https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html",
+            "https://www.nomuraholdings.com/en/news/nr/news20250422.html"
+          ],
+          "data_verification_note": "日報入口確認。日次値の抽出・初回配信時刻・履歴revision検証は未実施。株価リターンと異なる取引活動経路。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "国内WM/証券執行のフロー収益。",
+          "sign_conditionality": "増加は通常プラス。ただし顧客構成・単価・費用率に依存。",
+          "business_source_ids": [
+            "nomura_ir",
+            "nomura_q1",
+            "nomura_acq"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "jpx_turnover",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_ir",
+              "source_date": "2026-05-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_q1",
+              "source_date": "2026-07-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_acq",
+              "source_date": "2025-04-22",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "vix",
+          "canonical_id": "vix",
+          "label": "米株オプション市場の予想変動率",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "^VIX",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [],
+          "source_urls": [
+            "https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf",
+            "https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html",
+            "https://www.nomuraholdings.com/en/news/nr/news20250422.html"
+          ],
+          "data_verification_note": "水準/変化/移動平均を複数指標と数えない。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance VIX index",
+              "provider_symbol": "^VIX",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "US_INDEX",
+              "market_timezone": "America/New_York",
+              "data_mode": "eod",
+              "session_policy": "previous_completed_session",
+              "market_close": "16:00",
+              "is_proxy": false,
+              "status": "verified",
+              "availability_at_0830": "available"
+            }
+          ],
+          "mechanism": "株式デリバティブ・顧客ヘッジ需要とポジションリスク。",
+          "sign_conditionality": "中程度の上昇はフロー増、急騰は損失/資産流出でマイナス。単調符号を仮定しない。",
+          "business_source_ids": [
+            "nomura_ir",
+            "nomura_q1",
+            "nomura_acq"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "nomura_ir",
+              "source_date": "2026-05-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_q1",
+              "source_date": "2026-07-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_acq",
+              "source_date": "2025-04-22",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "us_ig_credit_oas",
+          "canonical_id": "us_ig_credit_oas",
+          "label": "米投資適格社債信用スプレッド",
+          "classification": "proposed_direct",
+          "acquisition_status": "new_public_source_verified_ingestion_pending",
+          "candidate_instrument": "ICE BofA US Corporate OAS / FRED BAMLC0A0CM",
+          "frequency": "日次Close（公表ラグあり）",
+          "cutoff_policy": "公表/初回取得が08:30 JST以前の最新観測。10/13観測が10/14 10:26 CDT（10/15 00:26 JST）更新の実例。直前米国終値と決め打ちしない。",
+          "data_source_ids": [
+            "fred_ig"
+          ],
+          "source_urls": [
+            "https://fred.stlouisfed.org/series/BAMLC0A0CM",
+            "https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf",
+            "https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html",
+            "https://www.nomuraholdings.com/en/news/nr/news20250422.html"
+          ],
+          "data_verification_note": "系列定義・頻度・公表日時確認済み。ICE利用条件、2026年4月以降3年窓、過去vintage要確認。KRE/XLFは信用スプレッドではない。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "信用商品の評価・引受/資金調達・担保環境。",
+          "sign_conditionality": "拡大は概して逆風だが顧客取引量増が相殺。",
+          "business_source_ids": [
+            "nomura_ir",
+            "nomura_q1",
+            "nomura_acq"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "fred_ig",
+              "source_date": "2026-10-14",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_ir",
+              "source_date": "2026-05-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_q1",
+              "source_date": "2026-07-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_acq",
+              "source_date": "2025-04-22",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "us_capital_markets_etf",
+          "canonical_id": "us_capital_markets_etf",
+          "label": "米資本市場業ETF",
+          "classification": "proposed_proxy",
+          "acquisition_status": "new_instrument_verified_history_pending",
+          "candidate_instrument": "State Street KCE",
+          "frequency": "米国営業日日次",
+          "cutoff_policy": "直近完了米国セッションの価格、公式取引所・タイムゾーン・企業行動・受信時刻を確認後に使用。08:30以降の訂正を遡及適用しない。",
+          "data_source_ids": [
+            "kce"
+          ],
+          "source_urls": [
+            "https://www.ssga.com/us/en/intermediary/etfs/state-street-spdr-sp-capital-markets-etf-kce",
+            "https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf",
+            "https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html",
+            "https://www.nomuraholdings.com/en/news/nr/news20250422.html"
+          ],
+          "data_verification_note": "実在銘柄/商品は一次資料で確認。Yahoo/EODHD等のプロバイダsymbolと全履歴可用性は未テスト。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "海外証券/資産運用業の業績期待とセクター評価。",
+          "sign_conditionality": "同方向仮説。個社の実収益ではなく市場価格の比較対象。",
+          "business_source_ids": [
+            "nomura_ir",
+            "nomura_q1",
+            "nomura_acq"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "kce",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_ir",
+              "source_date": "2026-05-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_q1",
+              "source_date": "2026-07-29",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "nomura_acq",
+              "source_date": "2025-04-22",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        }
+      ],
+      "desired_group_count": 8,
+      "fixed_membership": true,
+      "refit": "毎朝、cutoff以前のrolling training windowで全固定群の係数を再推定。相関順位で群を1個へ削らない。",
+      "immediately_available_existing_ids": [
+        "nikkei225_futures",
+        "sp500_futures",
+        "usdjpy",
+        "vix"
+      ],
+      "missing_required_ids": [
+        "global_aggregate_bond_etf",
+        "japan_equity_turnover",
+        "us_ig_credit_oas",
+        "us_capital_markets_etf"
+      ],
+      "current_readiness": "INSUFFICIENT_DATA：追加取得/時点整合検証を終えるまで完全プロファイルとして予測しない。"
+    },
+    {
+      "ticker": "8766",
+      "name": "東京海上ホールディングス",
+      "thesis": "国内外の損保引受リスクと日米の資産運用を銀行から分離する。自然災害は発行当時の予報/速報に限定し、事後損害額の混入を防ぐ。",
+      "business_evidence_ids": [
+        "tm_q1",
+        "tm_uw",
+        "tm_london"
+      ],
+      "indicators": [
+        {
+          "id": "jgb_20y_yield",
+          "canonical_id": "jgb_20y_yield",
+          "label": "日本20年国債利回り",
+          "classification": "proposed_direct",
+          "acquisition_status": "new_public_source_verified_ingestion_pending",
+          "candidate_instrument": "財務省定残存20年国債金利（CSV列）",
+          "frequency": "日本営業日日次",
+          "cutoff_policy": "観測日15時価格→翌日本営業日09:30公表。08:30には前日観測は不可、通常t-2以前の最新公表済み値。休業日も公表カレンダーで判定。",
+          "data_source_ids": [
+            "jgb",
+            "jgb_data"
+          ],
+          "source_urls": [
+            "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/qa.htm",
+            "https://www.mof.go.jp/jgbs/reference/interest_rate/index.htm",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf"
+          ],
+          "data_verification_note": "公式公表時刻確認済み。CSVパーサー、改訂履歴、受信時刻保存は未実装。2510.Tの債券価格を同一金利として代用しない。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "国内生命保険の長期資産負債・再投資と国内保険資産の金利環境。",
+          "sign_conditionality": "利回り改善と債券/負債評価差の両面。銀行利鞘のような単純正符号ではない。",
+          "business_source_ids": [
+            "tm_q1",
+            "tm_uw",
+            "tm_london"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "jgb",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "jgb_data",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_q1",
+              "source_date": "2026-08-12",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_uw",
+              "source_date": "2026-09-04",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_london",
+              "source_date": "2026-07-09",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "us_10y_yield",
+          "canonical_id": "us_10y_yield",
+          "label": "米10年国債利回り",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "Official Daily Treasury Par Yield Curve 10Y",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [
+            "treasury"
+          ],
+          "source_urls": [
+            "https://home.treasury.gov/resource-center-data-chart-center/interest-rates",
+            "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf"
+          ],
+          "data_verification_note": "米ドル長期資産運用・金利市場の基準。日本金利の代用品ではない。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "us_treasury",
+              "instrument_hint": "Official Daily Treasury Par Yield Curve 10Y",
+              "endpoint": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}",
+              "market": "US_TREASURY",
+              "market_timezone": "America/New_York",
+              "data_mode": "yield_curve",
+              "session_policy": "provider_published_at_or_before_cutoff",
+              "is_proxy": false,
+              "status": "verified",
+              "availability_at_0830": "conditional"
+            }
+          ],
+          "mechanism": "北米の保険負債を裏付ける運用資産・再投資利回り。",
+          "sign_conditionality": "金利低下は収入利回りに逆風、既存債評価には追い風。ALMで純効果は変化。",
+          "business_source_ids": [
+            "tm_q1",
+            "tm_uw",
+            "tm_london"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "treasury",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_q1",
+              "source_date": "2026-08-12",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_uw",
+              "source_date": "2026-09-04",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_london",
+              "source_date": "2026-07-09",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "usdjpy",
+          "canonical_id": "usdjpy",
+          "label": "ドル円",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "JPY=X",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [],
+          "source_urls": [
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf"
+          ],
+          "data_verification_note": "海外損益換算と外貨負債の経路。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance USD/JPY",
+              "provider_symbol": "JPY=X",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FOREX",
+              "market_timezone": "UTC",
+              "data_mode": "real_time",
+              "session_policy": "latest_at_or_before_cutoff",
+              "is_proxy": false,
+              "snapshot_enabled": true,
+              "max_age_minutes": 10,
+              "status": "verified",
+              "availability_at_0830": "conditional"
+            },
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance JPY=X daily history",
+              "provider_symbol": "JPY=X",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FOREX",
+              "market_timezone": "Europe/London",
+              "data_mode": "eod",
+              "session_policy": "previous_completed_session",
+              "market_close": "22:00",
+              "is_proxy": false,
+              "snapshot_enabled": false,
+              "status": "verified",
+              "availability_at_0830": "available"
+            }
+          ],
+          "mechanism": "海外保険利益の円換算と国内の外貨建て支払備金。",
+          "sign_conditionality": "円安は海外換算益と国内外貨準備金増を同時に生む。",
+          "business_source_ids": [
+            "tm_q1",
+            "tm_uw",
+            "tm_london"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "tm_q1",
+              "source_date": "2026-08-12",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_uw",
+              "source_date": "2026-09-04",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_london",
+              "source_date": "2026-07-09",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "nikkei225_futures",
+          "canonical_id": "nikkei225_futures",
+          "label": "日本株市場（既存日経225先物代理）",
+          "classification": "existing_direct",
+          "acquisition_status": "existing_config_verified_not_retested",
+          "candidate_instrument": "NIY=F",
+          "frequency": "日次、設定で許可する場合cutoff前スナップショット",
+          "cutoff_policy": "configのsession_policy・market_timezone・freshnessをそのまま適用。published/first_observed/retrievedすべて08:30 JST以前。",
+          "data_source_ids": [],
+          "source_urls": [
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf"
+          ],
+          "data_verification_note": "TOPIXそのものではない。企業が保有する株式/AUMの国内市場価格代理。 今回の接続/履歴再取得は未実施。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "existing_source_config": [
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance Nikkei 225 Futures",
+              "provider_symbol": "NIY=F",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FUTURES",
+              "market_timezone": "UTC",
+              "data_mode": "real_time",
+              "session_policy": "latest_at_or_before_cutoff",
+              "is_proxy": false,
+              "snapshot_enabled": true,
+              "max_age_minutes": 20,
+              "status": "verified",
+              "availability_at_0830": "conditional"
+            },
+            {
+              "kind": "direct",
+              "provider": "yahoo_finance",
+              "instrument_hint": "Yahoo Finance NIY=F daily history",
+              "provider_symbol": "NIY=F",
+              "endpoint": "yfinance.Ticker.history",
+              "market": "FUTURES",
+              "market_timezone": "America/New_York",
+              "data_mode": "eod",
+              "session_policy": "previous_completed_session",
+              "market_close": "17:00",
+              "is_proxy": false,
+              "snapshot_enabled": false,
+              "status": "verified",
+              "availability_at_0830": "available"
+            }
+          ],
+          "mechanism": "売却進行中の国内政策保有株式の価格/売却利益の代理。",
+          "sign_conditionality": "株高は通常プラスだが保有削減に伴い感応度は低下。",
+          "business_source_ids": [
+            "tm_q1",
+            "tm_uw",
+            "tm_london"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "tm_q1",
+              "source_date": "2026-08-12",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_uw",
+              "source_date": "2026-09-04",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_london",
+              "source_date": "2026-07-09",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "us_ig_credit_oas",
+          "canonical_id": "us_ig_credit_oas",
+          "label": "米投資適格社債信用スプレッド",
+          "classification": "proposed_direct",
+          "acquisition_status": "new_public_source_verified_ingestion_pending",
+          "candidate_instrument": "ICE BofA US Corporate OAS / FRED BAMLC0A0CM",
+          "frequency": "日次Close（公表ラグあり）",
+          "cutoff_policy": "公表/初回取得が08:30 JST以前の最新観測。10/13観測が10/14 10:26 CDT（10/15 00:26 JST）更新の実例。直前米国終値と決め打ちしない。",
+          "data_source_ids": [
+            "fred_ig"
+          ],
+          "source_urls": [
+            "https://fred.stlouisfed.org/series/BAMLC0A0CM",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf"
+          ],
+          "data_verification_note": "系列定義・頻度・公表日時確認済み。ICE利用条件、2026年4月以降3年窓、過去vintage要確認。KRE/XLFは信用スプレッドではない。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "北米債券/ローン資産の信用評価・期待信用損失。",
+          "sign_conditionality": "拡大は通常逆風。投資適格OASは私募/CRE個別信用の不完全な代理。",
+          "business_source_ids": [
+            "tm_q1",
+            "tm_uw",
+            "tm_london"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "fred_ig",
+              "source_date": "2026-10-14",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_q1",
+              "source_date": "2026-08-12",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_uw",
+              "source_date": "2026-09-04",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_london",
+              "source_date": "2026-07-09",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "us_insurance_equity_etf",
+          "canonical_id": "us_insurance_equity_etf",
+          "label": "米保険業ETF",
+          "classification": "proposed_proxy",
+          "acquisition_status": "new_instrument_verified_history_pending",
+          "candidate_instrument": "State Street KIE",
+          "frequency": "米国営業日日次",
+          "cutoff_policy": "直近完了米国セッションの価格、公式取引所・タイムゾーン・企業行動・受信時刻を確認後に使用。08:30以降の訂正を遡及適用しない。",
+          "data_source_ids": [
+            "kie"
+          ],
+          "source_urls": [
+            "https://www.ssga.com/us/en/intermediary/etfs/state-street-spdr-sp-insurance-etf-kie",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf"
+          ],
+          "data_verification_note": "実在銘柄/商品は一次資料で確認。Yahoo/EODHD等のプロバイダsymbolと全履歴可用性は未テスト。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "海外引受収益・保険料サイクルに対する保険セクター評価。",
+          "sign_conditionality": "通常同方向。KIEは生保等も含み、引受料率や再保険料の直接値ではない。",
+          "business_source_ids": [
+            "tm_q1",
+            "tm_uw",
+            "tm_london"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "kie",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_q1",
+              "source_date": "2026-08-12",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_uw",
+              "source_date": "2026-09-04",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_london",
+              "source_date": "2026-07-09",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "us_hurricane_risk",
+          "canonical_id": "us_hurricane_risk",
+          "label": "北米ハリケーン予報リスク",
+          "classification": "proposed_event_proxy",
+          "acquisition_status": "new_constructed_event_history_pending",
+          "candidate_instrument": "NOAA NHC発行当時の予報・警報（事前定義した米沿岸リスクスコア）",
+          "frequency": "イベント更新→各JPX営業日08:30の状態に集約",
+          "cutoff_policy": "08:30前の発行/取得電文のみ。事後確定Best Track/被害総額/Tropical Cyclone Reportを予報時点に戻さない。",
+          "data_source_ids": [
+            "nhc"
+          ],
+          "source_urls": [
+            "https://www.nhc.noaa.gov/data/?exception=true&iap=false",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf"
+          ],
+          "data_verification_note": "公的アーカイブの存在確認。120営業日以上の完全性、保険エクスポージャとのマッピング、無警報ゼロ/未取得NAを区別する仕様が必要。日次保険損失そのものではない。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "北米自然災害による保険金支払/再保険期待の変化。",
+          "sign_conditionality": "脅威増は当面逆風だが再保険回収・翌期料率上昇で中期符号は変わる。",
+          "business_source_ids": [
+            "tm_q1",
+            "tm_uw",
+            "tm_london"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "nhc",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_q1",
+              "source_date": "2026-08-12",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_uw",
+              "source_date": "2026-09-04",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_london",
+              "source_date": "2026-07-09",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        },
+        {
+          "id": "japan_natural_catastrophe_risk",
+          "canonical_id": "japan_natural_catastrophe_risk",
+          "label": "国内自然災害速報・警報リスク",
+          "classification": "proposed_event_proxy",
+          "acquisition_status": "new_constructed_event_history_pending",
+          "candidate_instrument": "気象庁防災XMLの台風/洪水等と発表済み地震情報を事前定義ルールで集約",
+          "frequency": "イベント更新→各JPX営業日08:30の状態に集約",
+          "cutoff_policy": "各電文の発表/発見/取得が08:30以前。事後の確定震度・確定被害額は未来情報として排除。",
+          "data_source_ids": [
+            "jma"
+          ],
+          "source_urls": [
+            "https://xml.kishou.go.jp/xmlpull.html",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf",
+            "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf"
+          ],
+          "data_verification_note": "公開Atomは直近10分または数日で120日分はない。過去の発行時点アーカイブ取得か今後の蓄積が必須。自然災害なしと取得欠落は別。実保有保険契約の損害額推定ではない。",
+          "existing_proxy_alternative": null,
+          "daily_coefficient_compatible": true,
+          "mechanism": "国内火災・風水害・地震関連損害の速報/事前警戒。",
+          "sign_conditionality": "事故危険増は通常逆風。被災域・免責・保有/再保険が損益を左右。",
+          "business_source_ids": [
+            "tm_q1",
+            "tm_uw",
+            "tm_london"
+          ],
+          "empirical_intraday_efficacy": "未検証。以下の機構は事業仮説であり当日寄り→引けの予測精度を実証していない。",
+          "source_dates": [
+            {
+              "source_id": "jma",
+              "source_date": null,
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_q1",
+              "source_date": "2026-08-12",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_uw",
+              "source_date": "2026-09-04",
+              "reviewed_on": "2026-10-15"
+            },
+            {
+              "source_id": "tm_london",
+              "source_date": "2026-07-09",
+              "reviewed_on": "2026-10-15"
+            }
+          ]
+        }
+      ],
+      "desired_group_count": 8,
+      "fixed_membership": true,
+      "refit": "毎朝、cutoff以前のrolling training windowで全固定群の係数を再推定。相関順位で群を1個へ削らない。",
+      "immediately_available_existing_ids": [
+        "us_10y_yield",
+        "usdjpy",
+        "nikkei225_futures"
+      ],
+      "missing_required_ids": [
+        "jgb_20y_yield",
+        "us_ig_credit_oas",
+        "us_insurance_equity_etf",
+        "us_hurricane_risk",
+        "japan_natural_catastrophe_risk"
+      ],
+      "current_readiness": "INSUFFICIENT_DATA：追加取得/時点整合検証を終えるまで完全プロファイルとして予測しない。"
+    }
+  ],
+  "acquisition_requests": [
+    {
+      "priority": 1,
+      "ids": [
+        "jgb_2y_yield",
+        "jgb_20y_yield"
+      ],
+      "request": "財務省CSV取得、観測日/翌営業日09:30公表のPIT管理、改訂保存。毎朝は公表済み最新値のみ。",
+      "access": "公的CSV入口確認。未接続。",
+      "alternative": "前日金利が必要ならJSDA参照統計/許諾済み市場データの前日配信を別途検証。日本債券ETFはduration価格代理で金利そのものではない。",
+      "source_ids": [
+        "jgb",
+        "jgb_data"
+      ],
+      "source_urls": [
+        "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/qa.htm",
+        "https://www.mof.go.jp/jgbs/reference/interest_rate/index.htm"
+      ]
+    },
+    {
+      "priority": 1,
+      "ids": [
+        "us_ig_credit_oas"
+      ],
+      "request": "FRED/ICE定義・時刻付き取得、初回公表ラグ、3年窓制限/利用条件、vintageを確認。",
+      "access": "公開系列確認、取得API/ファイルの本体検証は未実施。",
+      "alternative": "XLF/KREはOAS代替なし。ICEまたは許諾済みベンダーの履歴が必要な場合もある。",
+      "source_ids": [
+        "fred_ig"
+      ],
+      "source_urls": [
+        "https://fred.stlouisfed.org/series/BAMLC0A0CM"
+      ]
+    },
+    {
+      "priority": 1,
+      "ids": [
+        "morgan_stanley_equity",
+        "jefferies_equity",
+        "krungsri_equity",
+        "danamon_equity",
+        "india_bank_index",
+        "us_capital_markets_etf",
+        "us_insurance_equity_etf",
+        "global_aggregate_bond_etf"
+      ],
+      "request": "商品/上場は公式確認済み。実provider symbol、取引所/currency、分割/配当、休業日、前日価格の公表/受信時刻、少なくとも120営業日+warmupの取得試験。",
+      "access": "新規。無料Yahoo等の可用性は未確認。許諾が必要な履歴は購入せず要件だけ提示。",
+      "alternative": "新規が取れない場合は不足と明示、XLF/KRE/FXIに無言で置換しない。",
+      "source_ids": [
+        "ms",
+        "jef",
+        "bay",
+        "bdmn",
+        "nifty_bank",
+        "kce",
+        "kie",
+        "aggg"
+      ],
+      "source_urls": [
+        "https://www.morganstanley.com/about-us-ir",
+        "https://ir.jefferies.com/overview/",
+        "https://www.krungsri.com/en/about-krungsri",
+        "https://www.danamon.co.id/tentang-danamon/profile-perusahaan/tentang-bank-danamon",
+        "https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-bank",
+        "https://www.ssga.com/us/en/intermediary/etfs/state-street-spdr-sp-capital-markets-etf-kce",
+        "https://www.ssga.com/us/en/intermediary/etfs/state-street-spdr-sp-insurance-etf-kie",
+        "https://www.ishares.com/uk/individual/en/products/291773/ishares-global-aggregate-bond-ucits-etf-fund"
+      ]
+    },
+    {
+      "priority": 1,
+      "ids": [
+        "japan_equity_turnover"
+      ],
+      "request": "JPX日報の日次売買代金を固定市場定義で取得し公開時刻を記録。",
+      "access": "日報の存在確認。過去の初回発行版・時間の検証待ち。",
+      "alternative": "月次平均売買代金は日次系列の代用品にしない。",
+      "source_ids": [
+        "jpx_turnover"
+      ],
+      "source_urls": [
+        "https://www.jpx.co.jp/english/markets/statistics-equities/index.html"
+      ]
+    },
+    {
+      "priority": 2,
+      "ids": [
+        "usd_jpy_cross_currency_basis"
+      ],
+      "request": "同一期限のFXスワップ/ベーシス日次fixを許諾ベンダーから取得する設計・見積依頼の準備。",
+      "access": "候補市場は確認、無料日次系列/契約/価格未確認。購入・問い合わせ未実施。",
+      "alternative": "日米金利差・ドル円・ドル指数ではこの資金プレミアムを復元できない。",
+      "source_ids": [
+        "basis"
+      ],
+      "source_urls": [
+        "https://www.bis.org/publications/qr-201609/covered-interest-parity-lost-understanding-cross-currency-basis"
+      ]
+    },
+    {
+      "priority": 2,
+      "ids": [
+        "japan_card_transaction_value"
+      ],
+      "request": "日次国内カード決済パネルの提供範囲/速報時刻/改訂/履歴/許諾を調査。SMCC直接KPIが非公開なら欠測のまま。",
+      "access": "日次公開系列未確認。月次/四半期IRの情報は事業仮説の根拠に限定。",
+      "alternative": "日次小売株指数は弱い価格代理という別仮説として提案可能だが、自動置換しない。",
+      "source_ids": [
+        "smfg_ir"
+      ],
+      "source_urls": [
+        "https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf"
+      ]
+    },
+    {
+      "priority": 2,
+      "ids": [
+        "us_hurricane_risk",
+        "japan_natural_catastrophe_risk"
+      ],
+      "request": "NHCの当時発行予報アーカイブとJMA電文を時刻付き保存。欠測/無警報を分離し事前固定の地域別スコアを日次化。",
+      "access": "公的配信は確認。JMA長期feedは数日のみで120日履歴不足。必要に応じ配信アーカイブ提供者の許諾調査。",
+      "alternative": "季節性/イベントが疎なため120行だけでは係数が安定しない場合がある。長期PIT履歴・別途イベント評価が必要。事後災害損失を遡及投入しない。",
+      "source_ids": [
+        "nhc",
+        "jma"
+      ],
+      "source_urls": [
+        "https://www.nhc.noaa.gov/data/?exception=true&iap=false",
+        "https://xml.kishou.go.jp/xmlpull.html"
+      ]
+    },
+    {
+      "priority": 3,
+      "ids": [
+        "jgb_curve_shape",
+        "topix_banks",
+        "topix_insurance",
+        "japan_corporate_credit_spread",
+        "insurance_rate_cycle",
+        "us_insurance_loss_cost_inflation"
+      ],
+      "request": "追加研究用: JGBカーブ、JPX銀行/保険指数、国内信用スプレッド、再保険料率・損害コスト指標の定義と取得条件を確認。",
+      "access": "JPX指数の存在は確認。国内社債スプレッドはJSDA/ベンダー等の債券条件調整が必要。保険料率・損害インフレは月次/四半期/更新期中心で、公表日から状態として使う。",
+      "alternative": "日次を捏造しない。カーブ傾きは既存円金利群内の仕様変更候補として扱い、短期金利・長期金利・差分で3群に水増ししない。銀行/保険指数は自社包含と共通市場の重複を管理し、採用する場合は固定枠を事前に入替。",
+      "source_ids": [
+        "jgb",
+        "jpx_indices",
+        "jpx_values",
+        "tm_uw"
+      ],
+      "source_urls": [
+        "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/qa.htm",
+        "https://www.jpx.co.jp/english/markets/indices/line-up/",
+        "https://www.jpx.co.jp/english/markets/indices/realvalues/index.html",
+        "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf"
+      ]
+    }
+  ],
+  "source_registry": {
+    "mufg_ir": {
+      "title": "MUFG Investors Day 2026",
+      "source_date": "2026-09-09",
+      "url": "https://www.mufg.jp/dam/ir/presentation/2026/pdf/slides260901_en.pdf",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "本文pp.10–16, 34–36, 39–49。公開日はIR一覧の9月9日、ファイル名の日付を公開日とみなさない。"
+    },
+    "mufg_index": {
+      "title": "MUFG FY2026 IR資料一覧",
+      "source_date": "2026-10-02",
+      "url": "https://www.mufg.jp/english/ir/presentation/2026/index.html",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "2026年9月公開資料と10月2日のスクリプト・Q&A更新を確認。"
+    },
+    "smfg_ir": {
+      "title": "SMBC Group IR Day 2026",
+      "source_date": "2026-08-26",
+      "url": "https://www.smfg.co.jp/english/investor/financial/small/pdf/20260826irday_pre01e.pdf",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "pp.4–10 国内預貸・決済、23・28–33 Jefferies/アジア、34以降運用・トランザクション。"
+    },
+    "smfg_fy": {
+      "title": "SMFG Investor Meeting FY3/2026",
+      "source_date": "2026-05-18",
+      "url": "https://www.smfg.co.jp/english/investor/financial/latest_statement/2026_3/2026_fy_e_pre.pdf",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "業績・事業構成の参照資料。"
+    },
+    "mizuho_ir": {
+      "title": "MIZUHO IR Day 2026",
+      "source_date": "2026-09-11",
+      "url": "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260907_1.pdf",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "pp.28–30 グローバルCIBと米州FICC/欧米連携。公開日は一覧の9月11日。"
+    },
+    "mizuho_fy": {
+      "title": "みずほ2025年度決算会社説明会",
+      "source_date": "2026-05-19",
+      "url": "https://www.mizuho-fg.co.jp/investors/financial/briefing/pdf/20260519_1.pdf",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "2026-07-06に39ページ更新。金利収支、国内企業・WM、米州CIB、Mizuho-Greenhillを確認。"
+    },
+    "nomura_ir": {
+      "title": "Nomura Investor Day 2026 CEO資料",
+      "source_date": "2026-05-29",
+      "url": "https://www.nomuraholdings.com/en/investor/presentation/main/017/teaserItems1/00/tableContents/00/multiFileUpload30/link/2026_0529_01_prem.pdf",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "公式検索索引で資料の所在とWM/IM/Wholesale/Banking構成を確認。直接PDF取得は403。"
+    },
+    "nomura_q1": {
+      "title": "野村 FY2026/27 1Q公式決算解説",
+      "source_date": "2026-07-29",
+      "url": "https://plus.nomuraholdings.com/en/latest/20260729-FY202703-1Q-Highlights.html",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "公式本文を閲覧。WM継続収益、国内外AUM/運用報酬、Wholesale顧客フロー、銀行の担保融資を確認。"
+    },
+    "nomura_acq": {
+      "title": "Macquarie米欧公開資産運用事業の買収発表",
+      "source_date": "2025-04-22",
+      "url": "https://www.nomuraholdings.com/en/news/nr/news20250422.html",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "株式・債券・マルチアセットの事業対象を確認。2026年の買収後業績はQ1公式解説で補強。"
+    },
+    "tm_q1": {
+      "title": "東京海上 FY2026 1Q説明資料",
+      "source_date": "2026-08-12",
+      "url": "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a3c1-att/Overview_of_2026_1Q_Results_e.pdf",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "pp.8–9海外運用、14–19国内資産負債、22自然災害、23–25信用/不動産/為替を確認。"
+    },
+    "tm_uw": {
+      "title": "東京海上 国内損保引受戦略",
+      "source_date": "2026-09-04",
+      "url": "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000boil-att/UW_Strategy_and_Capabilities_in_the_Japan_P%26C_e.pdf",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "pp.2–7自然災害/損害インフレ/火災、9–11米賠償責任、16再保険。"
+    },
+    "tm_london": {
+      "title": "東京海上 Annual Investor Day London",
+      "source_date": "2026-07-09",
+      "url": "https://www.tokiomarinehd.com/en/ir/event/presentation/2026/f5hrqd000000a39q-att/20260709_AID_presentation.pdf",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "pp.11–12 Delphi/運用、23–24金利・信用・自然災害と再保険。"
+    },
+    "jgb": {
+      "title": "財務省 国債金利Q&A",
+      "source_date": null,
+      "url": "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/qa.htm",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "15時価格に基づく固定利付JGBの複利・定残存金利。翌営業日09:30公表。"
+    },
+    "jgb_data": {
+      "title": "財務省 国債金利情報",
+      "source_date": null,
+      "url": "https://www.mof.go.jp/jgbs/reference/interest_rate/index.htm",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "CSV入口。新規時系列の本体取得・履歴のPIT検査は未実施。"
+    },
+    "fred_ig": {
+      "title": "FRED ICE BofA US Corporate OAS",
+      "source_date": "2026-10-14",
+      "url": "https://fred.stlouisfed.org/series/BAMLC0A0CM",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "日次Close。10/13観測が10/14 10:26 CDT更新。2026年4月以降3年分のみ提供という注記。"
+    },
+    "jpx_indices": {
+      "title": "JPX 指数一覧",
+      "source_date": null,
+      "url": "https://www.jpx.co.jp/english/markets/indices/line-up/",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "TOPIXと業種別指数の入口。履歴取得/利用条件の検証は別途必要。"
+    },
+    "jpx_values": {
+      "title": "JPX 指数のリアルタイム値",
+      "source_date": null,
+      "url": "https://www.jpx.co.jp/english/markets/indices/realvalues/index.html",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "分次表示と日次指数の区別あり。表示ページが自動取得/履歴利用権を保証しない。"
+    },
+    "jpx_turnover": {
+      "title": "JPX 株式統計・日報",
+      "source_date": null,
+      "url": "https://www.jpx.co.jp/english/markets/statistics-equities/index.html",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "日報あり。日次売買代金の抽出・初回公表時刻の確認が必要。月次の1日平均系列と混同しない。"
+    },
+    "ms": {
+      "title": "Morgan Stanley IR",
+      "source_date": null,
+      "url": "https://www.morganstanley.com/about-us-ir",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "NYSE:MSを公式確認。市場データ取得は未試行。"
+    },
+    "jef": {
+      "title": "Jefferies IR",
+      "source_date": null,
+      "url": "https://ir.jefferies.com/overview/",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "NYSE:JEFを公式確認。市場データ取得は未試行。"
+    },
+    "bay": {
+      "title": "Krungsri 企業概要",
+      "source_date": null,
+      "url": "https://www.krungsri.com/en/about-krungsri",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "SET:BAYを公式確認。Yahoo等のプロバイダ識別子は未検証。"
+    },
+    "bdmn": {
+      "title": "Bank Danamon 企業概要",
+      "source_date": null,
+      "url": "https://www.danamon.co.id/tentang-danamon/profile-perusahaan/tentang-bank-danamon",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "BEI/IDX:BDMNを公式確認。プロバイダ識別子は未検証。"
+    },
+    "nifty_bank": {
+      "title": "NSE Indices Nifty Bank",
+      "source_date": null,
+      "url": "https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-bank",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "インド銀行株ベンチマークを確認。YES BANKそのものの価格ではない。"
+    },
+    "kce": {
+      "title": "State Street SPDR S&P Capital Markets ETF",
+      "source_date": null,
+      "url": "https://www.ssga.com/us/en/intermediary/etfs/state-street-spdr-sp-capital-markets-etf-kce",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "KCE。IB/Brokerageだけでなく運用、取引所、カストディ等を含む。"
+    },
+    "kie": {
+      "title": "State Street SPDR S&P Insurance ETF",
+      "source_date": null,
+      "url": "https://www.ssga.com/us/en/intermediary/etfs/state-street-spdr-sp-insurance-etf-kie",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "KIE。米保険セクターの代理で純粋な損保だけの指数ではない。"
+    },
+    "aggg": {
+      "title": "iShares Core Global Aggregate Bond UCITS ETF",
+      "source_date": null,
+      "url": "https://www.ishares.com/uk/individual/en/products/291773/ishares-global-aggregate-bond-ucits-etf-fund",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "AGGG・USD分配型のグローバル投資適格債券ETFを確認。取引所別識別子、価格/配当履歴、利用権は未検証。"
+    },
+    "basis": {
+      "title": "BIS Covered interest parity lost",
+      "source_date": "2016-09",
+      "url": "https://www.bis.org/publications/qr-201609/covered-interest-parity-lost-understanding-cross-currency-basis",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "円ドルベーシスは円金利/米金利の差ではなくFXスワップ資金調達プレミアム。公開日次フィードを確認した根拠ではない。"
+    },
+    "nhc": {
+      "title": "NOAA NHC Data Archive",
+      "source_date": null,
+      "url": "https://www.nhc.noaa.gov/data/?exception=true&iap=false",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "発行当時の予報電文アーカイブと事後Best Track/Tropical Cyclone Reportsを区別。"
+    },
+    "jma": {
+      "title": "気象庁 防災XML PULL",
+      "source_date": null,
+      "url": "https://xml.kishou.go.jp/xmlpull.html",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "高頻度Atomは毎分/少なくとも直近10分、長期Atomは毎時/数日。120営業日アーカイブを自動保証しない。"
+    },
+    "treasury": {
+      "title": "US Treasury Daily Treasury Rates",
+      "source_date": null,
+      "url": "https://home.treasury.gov/resource-center-data-chart-center/interest-rates",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "既存公式XMLルートはconfigでverified。今回の新規取得テストはしない。"
+    },
+    "old_study": {
+      "title": "既存指標調査",
+      "source_date": "2026-08-17",
+      "url": "docs/research/stock_indicator_research_2026-08-17.md",
+      "reviewed_on": "2026-10-15",
+      "verification_note": "ローカルの過去調査。今回再実行/数値再検証はしていない。"
+    }
+  },
+  "previous_research": {
+    "path": "docs/research/stock_indicator_research_2026-08-17.md",
+    "reported_scope": "63セッション・1386予測、22銘柄へ既存productionにproxyセットを追加した比較。",
+    "reported_result": "production_ratesは集計Rank ICが0.1119→0.0917、金融5銘柄平均MAE差+0.0069pp（5社中1社のみ改善）と記載。",
+    "limits": "当該セット/期間の悪化は尊重する。金利の一次観測・企業ごとの固定7〜10群・独立した追加期間の比較ではない。特定企業の事業仮説を否定する十分な証拠でも、今回の手法が改善する証拠でもない。2510.T/1615.T等の当時の取得成功を2026-10-15時点の接続確認に転用しない。",
+    "rerun": false
+  },
+  "work_performed": "公式IR/公的データ説明ページの読取、ローカル既存設定/研究の読取、文書2点の作成のみ。購入・口座・外部送信・DB更新なし。"
+}

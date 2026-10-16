@@ -1395,6 +1395,627 @@ indicators:
         status: verified
         availability_at_0830: available
 
+  # Company-specific verified sources; activated by dated profiles only.
+  - id: xly
+    applies_to_tickers: ['7203', '7267', '7201', '7270']
+    name: 米消費裁量株ETF XLY
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: proxy
+      provider: yahoo_finance
+      instrument_hint: 米消費裁量株ETF XLY
+      provider_symbol: XLY
+      endpoint: yfinance.Ticker.history
+      market: US
+      market_timezone: America/New_York
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '16:00'
+      is_proxy: true
+      status: verified
+      availability_at_0830: conditional
+      notes: 'XLYそのもの。自動車販売台数ではなく米消費裁量株という既定の需要代理。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: inda
+    applies_to_tickers: ['7267', '7269']
+    name: インド株ETF INDA
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: proxy
+      provider: yahoo_finance
+      instrument_hint: インド株ETF INDA
+      provider_symbol: INDA
+      endpoint: yfinance.Ticker.history
+      market: US
+      market_timezone: America/New_York
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '16:00'
+      is_proxy: true
+      status: verified
+      availability_at_0830: conditional
+      notes: '米上場のIndia ETF。インド現地指数そのものではなく既定の景況代理。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: eido
+    applies_to_tickers: ['7267']
+    name: インドネシア株ETF EIDO
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: proxy
+      provider: yahoo_finance
+      instrument_hint: インドネシア株ETF EIDO
+      provider_symbol: EIDO
+      endpoint: yfinance.Ticker.history
+      market: US
+      market_timezone: America/New_York
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '16:00'
+      is_proxy: true
+      status: verified
+      availability_at_0830: conditional
+      notes: '米上場のIndonesia ETF。二輪販売台数ではなく既定の国別株式代理。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: us_capital_markets_etf
+    applies_to_tickers: ['8411', '8604']
+    name: 米資本市場業ETF KCE
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: proxy
+      provider: yahoo_finance
+      instrument_hint: 米資本市場業ETF KCE
+      provider_symbol: KCE
+      endpoint: yfinance.Ticker.history
+      market: US
+      market_timezone: America/New_York
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '16:00'
+      is_proxy: true
+      status: verified
+      availability_at_0830: conditional
+      notes: '既定の資本市場株ETF。投資銀行の収益そのものではない。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: us_insurance_equity_etf
+    applies_to_tickers: ['8766']
+    name: 米保険株ETF KIE
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: proxy
+      provider: yahoo_finance
+      instrument_hint: 米保険株ETF KIE
+      provider_symbol: KIE
+      endpoint: yfinance.Ticker.history
+      market: US
+      market_timezone: America/New_York
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '16:00'
+      is_proxy: true
+      status: verified
+      availability_at_0830: conditional
+      notes: '既定の米保険株ETF。保険料率/損害率そのものではない。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: global_aggregate_bond_etf
+    applies_to_tickers: ['8604']
+    name: 世界総合債券ETF AGGG USD分配型
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: proxy
+      provider: yahoo_finance
+      instrument_hint: 世界総合債券ETF AGGG USD分配型
+      provider_symbol: AGGG.L
+      endpoint: yfinance.Ticker.history
+      market: UK
+      market_timezone: Europe/London
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '16:35'
+      is_proxy: true
+      status: verified
+      availability_at_0830: conditional
+      notes: '公式listing表にAGGG USD、RIC AGGG.L。SAGG GBPやEUR上場と混在させない。通常16:30引けオークション開始、16:35基準に共通lagを加算。 実取得と550日暦整合の証跡:
+        docs/research/company-market-access-2026-10-15.json'
+  - id: morgan_stanley_equity
+    applies_to_tickers: ['8306']
+    name: Morgan Stanley普通株
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: yahoo_finance
+      instrument_hint: Morgan Stanley普通株
+      provider_symbol: MS
+      endpoint: yfinance.Ticker.history
+      market: US
+      market_timezone: America/New_York
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '16:00'
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: '出資・協業先自身の普通株。MUFG自社ADRではない。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: jefferies_equity
+    applies_to_tickers: ['8316']
+    name: Jefferies Financial Group普通株
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: yahoo_finance
+      instrument_hint: Jefferies Financial Group普通株
+      provider_symbol: JEF
+      endpoint: yfinance.Ticker.history
+      market: US
+      market_timezone: America/New_York
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '16:00'
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: ' 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: krungsri_equity
+    applies_to_tickers: ['8306']
+    name: Bank of Ayudhya (Krungsri)普通株
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: yahoo_finance
+      instrument_hint: Bank of Ayudhya (Krungsri)普通株
+      provider_symbol: BAY.BK
+      endpoint: yfinance.Ticker.history
+      market: TH
+      market_timezone: Asia/Bangkok
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '17:00'
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: '公式SET:BAY。通常の引けオークションは16:35–16:40、全市場終了17:00を保守的cutoffとする。Yahoo metadata16:30だけを引け時刻にしない。
+        実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: maruti_suzuki
+    applies_to_tickers: ['7269']
+    name: Maruti Suzuki India NSE普通株
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: yahoo_finance
+      instrument_hint: Maruti Suzuki India NSE普通株
+      provider_symbol: MARUTI.NS
+      endpoint: yfinance.Ticker.history
+      market: IN
+      market_timezone: Asia/Kolkata
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '15:30'
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: 'NSE公式提出資料Symbol MARUTI、ISIN INE585B01010。NSE株、BSE価格と混在させない。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: citic_equity
+    applies_to_tickers: ['8001']
+    name: CITIC Limited香港普通株
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: yahoo_finance
+      instrument_hint: CITIC Limited香港普通株
+      provider_symbol: 0267.HK
+      endpoint: yfinance.Ticker.history
+      market: HK
+      market_timezone: Asia/Hong_Kong
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '16:10'
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: 'CITIC Limited HKSE00267。CITIC SecuritiesやCITIC Bankとは別会社。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: jx_advanced_metals_equity
+    applies_to_tickers: ['5020']
+    name: JX金属普通株
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: yahoo_finance
+      instrument_hint: JX金属普通株
+      provider_symbol: 5016.T
+      endpoint: yfinance.Ticker.history
+      market: JP
+      market_timezone: Asia/Tokyo
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '15:30'
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: '証券コード5016、2025-03-19上場。550日窓の開始日は上場後。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: audusd
+    applies_to_tickers: ['1605', '5019']
+    name: 豪ドル/米ドル
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: yahoo_finance
+      instrument_hint: 豪ドル/米ドル
+      provider_symbol: AUDUSD=X
+      endpoint: yfinance.Ticker.history
+      market: FOREX
+      market_timezone: Europe/London
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '23:59'
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: 'Yahoo chart responseのshortName/longNameが通貨ペアと一致、currencyは分母でなくquote通貨。日次bar timezone Europe/London、provider
+        regular.end23:59を保守的な完了時刻として採用。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: brljpy
+    applies_to_tickers: ['7267']
+    name: ブラジルレアル/円
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: yahoo_finance
+      instrument_hint: ブラジルレアル/円
+      provider_symbol: BRLJPY=X
+      endpoint: yfinance.Ticker.history
+      market: FOREX
+      market_timezone: Europe/London
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '23:59'
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: 'Yahoo chart responseのshortName/longNameが通貨ペアと一致、currencyは分母でなくquote通貨。日次bar timezone Europe/London、provider
+        regular.end23:59を保守的な完了時刻として採用。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: mxnjpy
+    applies_to_tickers: ['7201']
+    name: メキシコペソ/円
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: yahoo_finance
+      instrument_hint: メキシコペソ/円
+      provider_symbol: MXNJPY=X
+      endpoint: yfinance.Ticker.history
+      market: FOREX
+      market_timezone: Europe/London
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '23:59'
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: 'Yahoo chart responseのshortName/longNameが通貨ペアと一致、currencyは分母でなくquote通貨。日次bar timezone Europe/London、provider
+        regular.end23:59を保守的な完了時刻として採用。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: inrjpy
+    applies_to_tickers: ['7269']
+    name: インドルピー/円
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: yahoo_finance
+      instrument_hint: インドルピー/円
+      provider_symbol: INRJPY=X
+      endpoint: yfinance.Ticker.history
+      market: FOREX
+      market_timezone: Europe/London
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '23:59'
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: 'Yahoo chart responseのshortName/longNameが通貨ペアと一致、currencyは分母でなくquote通貨。日次bar timezone Europe/London、provider
+        regular.end23:59を保守的な完了時刻として採用。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: rbob_gasoline
+    applies_to_tickers: ['7203', '7267', '7201', '7270']
+    name: NYMEX RBOBガソリン連続先物
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: yahoo_finance
+      instrument_hint: NYMEX RBOBガソリン連続先物
+      provider_symbol: RB=F
+      endpoint: yfinance.Ticker.history
+      market: US
+      market_timezone: America/New_York
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '17:00'
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: ' 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: us_hrc_steel
+    applies_to_tickers: ['7203', '7201', '7270']
+    name: COMEX米中西部熱延コイルCRU連続先物
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: proxy
+      provider: yahoo_finance
+      instrument_hint: COMEX米中西部熱延コイルCRU連続先物
+      provider_symbol: HRC=F
+      endpoint: yfinance.Ticker.history
+      market: US
+      market_timezone: America/New_York
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '17:00'
+      is_proxy: true
+      status: verified
+      availability_at_0830: conditional
+      notes: 'HRC指数先物であり自動車メーカーの契約鋼材購入価格ではない。元プロファイルはCME HRC先物を取得候補に明記。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: palladium
+    applies_to_tickers: ['7270']
+    name: NYMEXパラジウム連続先物
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: proxy
+      provider: yahoo_finance
+      instrument_hint: NYMEXパラジウム連続先物
+      provider_symbol: PA=F
+      endpoint: yfinance.Ticker.history
+      market: US
+      market_timezone: America/New_York
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '17:00'
+      is_proxy: true
+      status: verified
+      availability_at_0830: conditional
+      notes: '触媒費の代理として元プロファイルでNYMEX PA先物を明記。現物触媒調達価格ではない。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: corn
+    applies_to_tickers: ['8002']
+    name: CBOTトウモロコシ連続先物
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: yahoo_finance
+      instrument_hint: CBOTトウモロコシ連続先物
+      provider_symbol: ZC=F
+      endpoint: yfinance.Ticker.history
+      market: US
+      market_timezone: America/New_York
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '14:20'
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: 'CME Globex ZC、13:20 America/Chicago=14:20 America/New_York。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: soybean
+    applies_to_tickers: ['8002']
+    name: CBOT大豆連続先物
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: yahoo_finance
+      instrument_hint: CBOT大豆連続先物
+      provider_symbol: ZS=F
+      endpoint: yfinance.Ticker.history
+      market: US
+      market_timezone: America/New_York
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '14:20'
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: 'CME Globex ZS、13:20 America/Chicago=14:20 America/New_York。 実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: cotton
+    applies_to_tickers: ['8001']
+    name: ICE Cotton No.2連続先物
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: yahoo_finance
+      instrument_hint: ICE Cotton No.2連続先物
+      provider_symbol: CT=F
+      endpoint: yfinance.Ticker.history
+      market: US
+      market_timezone: America/New_York
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '14:20'
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: 'Yahooのcommodity一覧がCT=FをCottonと明示。API metadataはALTSYMBOL/NYM・名前欠落という不整合あり。公式商品はICE CT、NYMEX商品へ読み替えない。
+        実取得と550日暦整合の証跡: docs/research/company-market-access-2026-10-15.json'
+  - id: india_bank_index
+    applies_to_tickers: ['8316']
+    name: NIFTY BANK指数
+    category: company_factor
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。共通指標として全社には追加しない。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: yahoo_finance
+      instrument_hint: NIFTY BANK指数
+      provider_symbol: ^NSEBANK
+      endpoint: yfinance.Ticker.history
+      market: IN
+      market_timezone: Asia/Kolkata
+      data_mode: eod
+      session_policy: previous_completed_session
+      market_close: '15:30'
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: 'Yahoo検索でNIFTY BANK→^NSEBANKを同定、instrumentType INDEXを実取得で確認。^BANKNIFTYは失敗した別候補。 実取得と550日暦整合の証跡:
+        docs/research/company-market-access-2026-10-15.json'
+  - id: jgb_2y_yield
+    applies_to_tickers: ['8306', '8316', '8411']
+    name: 日本国債2年利回り
+    category: yield
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: public_factors
+      instrument_hint: 日本国債2年利回り
+      provider_symbol: MOF:2Y
+      endpoint: https://www.mof.go.jp/jgbs/reference/interest_rate/data/jgbcm_all.csv
+      market: JP
+      market_timezone: Asia/Tokyo
+      data_mode: yield_curve
+      session_policy: provider_published_at_or_before_cutoff
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: 公表暦と初回観測時刻を独立保存。FRED履歴は現時点の改訂値・公表時刻推定であり当時の観測証明ではない。
+  - id: jgb_10y_yield
+    applies_to_tickers: ['5021']
+    name: 日本国債10年利回り
+    category: yield
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: public_factors
+      instrument_hint: 日本国債10年利回り
+      provider_symbol: MOF:10Y
+      endpoint: https://www.mof.go.jp/jgbs/reference/interest_rate/data/jgbcm_all.csv
+      market: JP
+      market_timezone: Asia/Tokyo
+      data_mode: yield_curve
+      session_policy: provider_published_at_or_before_cutoff
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: 公表暦と初回観測時刻を独立保存。FRED履歴は現時点の改訂値・公表時刻推定であり当時の観測証明ではない。
+  - id: jgb_20y_yield
+    applies_to_tickers: ['8766']
+    name: 日本国債20年利回り
+    category: yield
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: public_factors
+      instrument_hint: 日本国債20年利回り
+      provider_symbol: MOF:20Y
+      endpoint: https://www.mof.go.jp/jgbs/reference/interest_rate/data/jgbcm_all.csv
+      market: JP
+      market_timezone: Asia/Tokyo
+      data_mode: yield_curve
+      session_policy: provider_published_at_or_before_cutoff
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: 公表暦と初回観測時刻を独立保存。FRED履歴は現時点の改訂値・公表時刻推定であり当時の観測証明ではない。
+  - id: us_ig_credit_oas
+    applies_to_tickers: ['7203', '7267', '7270', '8306', '8316', '8411', '8604', '8766', '8053']
+    name: 米投資適格債OAS
+    category: credit_spread
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: public_factors
+      instrument_hint: 米投資適格債OAS
+      provider_symbol: BAMLC0A0CM
+      endpoint: https://fred.stlouisfed.org/graph/fredgraph.csv
+      market: US_CREDIT
+      market_timezone: America/Chicago
+      data_mode: yield_curve
+      session_policy: provider_published_at_or_before_cutoff
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: 公表暦と初回観測時刻を独立保存。FRED履歴は現時点の改訂値・公表時刻推定であり当時の観測証明ではない。
+  - id: us_hy_credit_oas
+    applies_to_tickers: ['7201']
+    name: 米ハイイールド債OAS
+    category: credit_spread
+    required: false
+    optional_reason: 企業別プロファイルで選定した場合は必須。
+    resolution_status: resolved
+    sources:
+    - kind: direct
+      provider: public_factors
+      instrument_hint: 米ハイイールド債OAS
+      provider_symbol: BAMLH0A0HYM2
+      endpoint: https://fred.stlouisfed.org/graph/fredgraph.csv
+      market: US_CREDIT
+      market_timezone: America/Chicago
+      data_mode: yield_curve
+      session_policy: provider_published_at_or_before_cutoff
+      is_proxy: false
+      status: verified
+      availability_at_0830: conditional
+      notes: 公表暦と初回観測時刻を独立保存。FRED履歴は現時点の改訂値・公表時刻推定であり当時の観測証明ではない。
+
 common:
   - vix
   - usdjpy

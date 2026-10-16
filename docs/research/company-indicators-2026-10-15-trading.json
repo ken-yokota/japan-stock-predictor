@@ -1,0 +1,690 @@
+{
+  "as_of": "2026-10-15",
+  "status": "research_hypotheses_not_validated",
+  "companies": [
+    {
+      "ticker": "8058",
+      "name": "三菱商事",
+      "thesis": "原料炭・銅・LNGの資源収益と、ローソン・ASEAN自動車の消費関連収益を分ける。米2年金利一本ではこの構造を表現できない。",
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "label": "日経225先物",
+          "frequency": "daily",
+          "mechanism": "国内株式市場の共通変動を調整する。企業固有の成長指標ではない。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。先物ロールと公表時刻を維持。",
+          "source_urls": [
+            "https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/",
+            "https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf",
+            "https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "usdjpy",
+          "label": "ドル円",
+          "frequency": "daily",
+          "mechanism": "海外利益の円換算と輸入コストの両方に作用。方向は純外貨収益とヘッジ次第。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。08:30以前のみ。",
+          "source_urls": [
+            "https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/",
+            "https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf",
+            "https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "steelmaking_coal",
+          "label": "豪州原料炭価格",
+          "frequency": "daily",
+          "mechanism": "製鉄用原料炭の権益利益に対応。一般炭・原油とは用途も市況も異なる。",
+          "acquisition_status": "new_required",
+          "acquisition": "Platts/Argus/取引所の原料炭系列。履歴/API/利用料金は未確認。",
+          "source_urls": [
+            "https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/",
+            "https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf",
+            "https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "copper",
+          "label": "銅価格",
+          "frequency": "daily",
+          "mechanism": "銅権益の採算・世界需要を捉える。現行COMEX先物は現物実現価格そのものではない。",
+          "acquisition_status": "existing",
+          "acquisition": "既存COMEX経路。権益別実現価格との基差は残る。",
+          "source_urls": [
+            "https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/",
+            "https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf",
+            "https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "iron_ore",
+          "label": "鉄鉱石62%Fe価格",
+          "frequency": "daily",
+          "mechanism": "鉄鉱石権益の実現価格と採算に対応。豪州の生産費・品位差も影響。",
+          "acquisition_status": "new_required",
+          "acquisition": "現行カタログはpending。SGX/CME等の価格ライセンス・履歴・ロールを検証する。",
+          "source_urls": [
+            "https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/",
+            "https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf",
+            "https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "brent",
+          "label": "Brent原油",
+          "frequency": "daily",
+          "mechanism": "上流資産・原油連動契約の収益要因。価格上昇が全セグメントに有利とは限らない。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。LNG現物の代用とは扱わない。",
+          "source_urls": [
+            "https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/",
+            "https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf",
+            "https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "lng_jkm",
+          "label": "アジアLNG・JKM",
+          "frequency": "daily",
+          "mechanism": "LNG販売・トレーディングの市況。長期油価連動契約と時間差があり単純な即時比例ではない。",
+          "acquisition_status": "new_required",
+          "acquisition": "Platts JKMまたは対応先物。利用権・公表時刻・系列定義を確認する。",
+          "source_urls": [
+            "https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/",
+            "https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf",
+            "https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "audjpy",
+          "label": "豪ドル円",
+          "frequency": "daily",
+          "mechanism": "豪州資産の現地コスト・円換算を捉える。売上USD/費用AUDとの関係で符号は一定でない。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。",
+          "source_urls": [
+            "https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/",
+            "https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf",
+            "https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "lawson_same_store_sales",
+          "label": "ローソン既存店売上前年比",
+          "frequency": "monthly",
+          "mechanism": "生活産業・消費接点の需要を捉え、資源価格だけでは説明しない非資源部門を表す。",
+          "acquisition_status": "new_required",
+          "acquisition": "ローソン等の公式月次資料を収集。JFA業界統計は粗い代理であり同一視しない。",
+          "source_urls": [
+            "https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/",
+            "https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf",
+            "https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "asean_auto_sales",
+          "label": "タイ・インドネシア自動車販売",
+          "frequency": "monthly",
+          "mechanism": "ASEANの自動車販売網・生産販売事業の需要。国別固定ウェイトを事前定義する。",
+          "acquisition_status": "new_required",
+          "acquisition": "各国自動車工業会。2国の同時点公表済み前年比を固定ウェイト合成、履歴・公表日時を保存。",
+          "source_urls": [
+            "https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/",
+            "https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf",
+            "https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        }
+      ],
+      "source_urls": [
+        "https://www.mitsubishicorp.com/jp/en/about/business-group/mineral-resources/",
+        "https://www.mitsubishicorp.com/jp/en/ir/event/pdf/260603_ir-day_01e.pdf",
+        "https://www.mitsubishicorp.com/jp/en/ir/library/afr/assets_r24/pdf/afr2026.pdf"
+      ]
+    },
+    {
+      "ticker": "8031",
+      "name": "三井物産",
+      "thesis": "鉄鉱石・LNGの投資/取引機能に、米ガス調達とヘルスケアを加える。将来開発案件を既存生産量として扱わない。",
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "label": "日経225先物",
+          "frequency": "daily",
+          "mechanism": "国内株式市場の共通変動を調整する。企業固有の成長指標ではない。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。先物ロールと公表時刻を維持。",
+          "source_urls": [
+            "https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf",
+            "https://www.mitsui.com/jp/en/ir/library/online2026/case_study/",
+            "https://www.mitsui.com/jp/en/company/business/area/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "usdjpy",
+          "label": "ドル円",
+          "frequency": "daily",
+          "mechanism": "海外利益の円換算と輸入コストの両方に作用。方向は純外貨収益とヘッジ次第。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。08:30以前のみ。",
+          "source_urls": [
+            "https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf",
+            "https://www.mitsui.com/jp/en/ir/library/online2026/case_study/",
+            "https://www.mitsui.com/jp/en/company/business/area/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "iron_ore",
+          "label": "鉄鉱石62%Fe価格",
+          "frequency": "daily",
+          "mechanism": "鉄鉱石権益の実現価格と採算に対応。豪州の生産費・品位差も影響。",
+          "acquisition_status": "new_required",
+          "acquisition": "現行カタログはpending。SGX/CME等の価格ライセンス・履歴・ロールを検証する。",
+          "source_urls": [
+            "https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf",
+            "https://www.mitsui.com/jp/en/ir/library/online2026/case_study/",
+            "https://www.mitsui.com/jp/en/company/business/area/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "brent",
+          "label": "Brent原油",
+          "frequency": "daily",
+          "mechanism": "上流資産・原油連動契約の収益要因。価格上昇が全セグメントに有利とは限らない。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。LNG現物の代用とは扱わない。",
+          "source_urls": [
+            "https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf",
+            "https://www.mitsui.com/jp/en/ir/library/online2026/case_study/",
+            "https://www.mitsui.com/jp/en/company/business/area/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "lng_jkm",
+          "label": "アジアLNG・JKM",
+          "frequency": "daily",
+          "mechanism": "LNG販売・トレーディングの市況。長期油価連動契約と時間差があり単純な即時比例ではない。",
+          "acquisition_status": "new_required",
+          "acquisition": "Platts JKMまたは対応先物。利用権・公表時刻・系列定義を確認する。",
+          "source_urls": [
+            "https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf",
+            "https://www.mitsui.com/jp/en/ir/library/online2026/case_study/",
+            "https://www.mitsui.com/jp/en/company/business/area/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "natural_gas",
+          "label": "米Henry Hub天然ガス",
+          "frequency": "daily",
+          "mechanism": "米国ガス・LNG調達原価に対応。アジア販売価格JKMとは別の経済変数。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。JKMと混同しない。",
+          "source_urls": [
+            "https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf",
+            "https://www.mitsui.com/jp/en/ir/library/online2026/case_study/",
+            "https://www.mitsui.com/jp/en/company/business/area/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "copper",
+          "label": "銅価格",
+          "frequency": "daily",
+          "mechanism": "銅権益の採算・世界需要を捉える。現行COMEX先物は現物実現価格そのものではない。",
+          "acquisition_status": "existing",
+          "acquisition": "既存COMEX経路。権益別実現価格との基差は残る。",
+          "source_urls": [
+            "https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf",
+            "https://www.mitsui.com/jp/en/ir/library/online2026/case_study/",
+            "https://www.mitsui.com/jp/en/company/business/area/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "audjpy",
+          "label": "豪ドル円",
+          "frequency": "daily",
+          "mechanism": "豪州資産の現地コスト・円換算を捉える。売上USD/費用AUDとの関係で符号は一定でない。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。",
+          "source_urls": [
+            "https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf",
+            "https://www.mitsui.com/jp/en/ir/library/online2026/case_study/",
+            "https://www.mitsui.com/jp/en/company/business/area/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "ihh_patient_revenue",
+          "label": "IHH医療サービス売上成長",
+          "frequency": "quarterly",
+          "mechanism": "ヘルスケア投資先の患者需要・診療収益を捉える。資源価格とは異なる収益要因。",
+          "acquisition_status": "new_required",
+          "acquisition": "IHH公式決算。公表日からのみ使用、改訂前の履歴を保持。日次情報量は少ない。",
+          "source_urls": [
+            "https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf",
+            "https://www.mitsui.com/jp/en/ir/library/online2026/case_study/",
+            "https://www.mitsui.com/jp/en/company/business/area/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        }
+      ],
+      "source_urls": [
+        "https://www.mitsui.com/jp/en/ir/library/online2026/pdf/en_ir2026_all_web.pdf",
+        "https://www.mitsui.com/jp/en/ir/library/online2026/case_study/",
+        "https://www.mitsui.com/jp/en/company/business/area/index.html"
+      ]
+    },
+    {
+      "ticker": "8001",
+      "name": "伊藤忠商事",
+      "thesis": "生活消費・中国投資・ITなど非資源事業を中心に、鉄鉱石・エネルギー・繊維・パルプの収益要因を分ける。",
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "label": "日経225先物",
+          "frequency": "daily",
+          "mechanism": "国内株式市場の共通変動を調整する。企業固有の成長指標ではない。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。先物ロールと公表時刻を維持。",
+          "source_urls": [
+            "https://www.itochu.co.jp/en/files/ar2026E.pdf",
+            "https://www.itochu.co.jp/en/ir/doc/annual_report/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "usdjpy",
+          "label": "ドル円",
+          "frequency": "daily",
+          "mechanism": "海外利益の円換算と輸入コストの両方に作用。方向は純外貨収益とヘッジ次第。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。08:30以前のみ。",
+          "source_urls": [
+            "https://www.itochu.co.jp/en/files/ar2026E.pdf",
+            "https://www.itochu.co.jp/en/ir/doc/annual_report/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "familymart_same_store_sales",
+          "label": "ファミリーマート既存店売上前年比",
+          "frequency": "monthly",
+          "mechanism": "消費者接点・食品流通の需要。店舗数増加と既存店成長を混同しない。",
+          "acquisition_status": "new_required",
+          "acquisition": "ファミリーマート公式月次。対象月末でなく発表時刻から有効。",
+          "source_urls": [
+            "https://www.itochu.co.jp/en/files/ar2026E.pdf",
+            "https://www.itochu.co.jp/en/ir/doc/annual_report/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "citic_equity",
+          "label": "CITIC株価",
+          "frequency": "daily",
+          "mechanism": "中国の重要投資先の評価変動。持分利益や配当とは一致せず市場代理として使う。",
+          "acquisition_status": "new_required",
+          "acquisition": "香港上場の正確な株式種類・配当調整・前営業日終値を検証。Yahooの識別子は未登録。",
+          "source_urls": [
+            "https://www.itochu.co.jp/en/files/ar2026E.pdf",
+            "https://www.itochu.co.jp/en/ir/doc/annual_report/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "iron_ore",
+          "label": "鉄鉱石62%Fe価格",
+          "frequency": "daily",
+          "mechanism": "鉄鉱石権益の実現価格と採算に対応。豪州の生産費・品位差も影響。",
+          "acquisition_status": "new_required",
+          "acquisition": "現行カタログはpending。SGX/CME等の価格ライセンス・履歴・ロールを検証する。",
+          "source_urls": [
+            "https://www.itochu.co.jp/en/files/ar2026E.pdf",
+            "https://www.itochu.co.jp/en/ir/doc/annual_report/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "cotton",
+          "label": "綿花価格",
+          "frequency": "daily",
+          "mechanism": "繊維原料コスト・在庫評価を捉える。小売価格への転嫁やヘッジで方向が変わる。",
+          "acquisition_status": "new_required",
+          "acquisition": "ICE等の先物履歴。配信識別子・利用条件・連続系列を検証。",
+          "source_urls": [
+            "https://www.itochu.co.jp/en/files/ar2026E.pdf",
+            "https://www.itochu.co.jp/en/ir/doc/annual_report/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "domestic_it_sales",
+          "label": "国内ITサービス売上成長",
+          "frequency": "monthly",
+          "mechanism": "CTC/SCSK等に関連する企業IT投資需要。汎用NASDAQとは異なる国内サービス活動。",
+          "acquisition_status": "new_required",
+          "acquisition": "経産省の情報サービス関連統計。統計改廃・公表遅延・過去改訂を確認する。",
+          "source_urls": [
+            "https://www.itochu.co.jp/en/files/ar2026E.pdf",
+            "https://www.itochu.co.jp/en/ir/doc/annual_report/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "pulp_price",
+          "label": "広葉樹パルプ価格",
+          "frequency": "weekly",
+          "mechanism": "パルプ権益・流通の採算と供給需要。銅・原油による代替はしない。",
+          "acquisition_status": "new_required",
+          "acquisition": "Fastmarkets等のパルプ価格。指標地域・品種・価格単位・契約要件を確認する。",
+          "source_urls": [
+            "https://www.itochu.co.jp/en/files/ar2026E.pdf",
+            "https://www.itochu.co.jp/en/ir/doc/annual_report/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "brent",
+          "label": "Brent原油",
+          "frequency": "daily",
+          "mechanism": "上流資産・原油連動契約の収益要因。価格上昇が全セグメントに有利とは限らない。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。LNG現物の代用とは扱わない。",
+          "source_urls": [
+            "https://www.itochu.co.jp/en/files/ar2026E.pdf",
+            "https://www.itochu.co.jp/en/ir/doc/annual_report/index.html"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        }
+      ],
+      "source_urls": [
+        "https://www.itochu.co.jp/en/files/ar2026E.pdf",
+        "https://www.itochu.co.jp/en/ir/doc/annual_report/index.html"
+      ]
+    },
+    {
+      "ticker": "8002",
+      "name": "丸紅",
+      "thesis": "穀物取引とHelena農業資材、銅・一般炭、IPP、航空機リースという事業構成を反映する。",
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "label": "日経225先物",
+          "frequency": "daily",
+          "mechanism": "国内株式市場の共通変動を調整する。企業固有の成長指標ではない。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。先物ロールと公表時刻を維持。",
+          "source_urls": [
+            "https://www.marubeni.com/en/ir/individual/number/",
+            "https://www.marubeni.com/en/ir/reports/integrated_report/"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "usdjpy",
+          "label": "ドル円",
+          "frequency": "daily",
+          "mechanism": "海外利益の円換算と輸入コストの両方に作用。方向は純外貨収益とヘッジ次第。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。08:30以前のみ。",
+          "source_urls": [
+            "https://www.marubeni.com/en/ir/individual/number/",
+            "https://www.marubeni.com/en/ir/reports/integrated_report/"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "corn",
+          "label": "トウモロコシ価格",
+          "frequency": "daily",
+          "mechanism": "穀物集荷・販売と農家の投入余力を捉える。商流マージンは価格の上昇だけでは決まらない。",
+          "acquisition_status": "new_required",
+          "acquisition": "CBOT先物。無料配信経路は識別子・過去連続系列を確認して登録。",
+          "source_urls": [
+            "https://www.marubeni.com/en/ir/individual/number/",
+            "https://www.marubeni.com/en/ir/reports/integrated_report/"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "soybean",
+          "label": "大豆価格",
+          "frequency": "daily",
+          "mechanism": "油糧種子の集荷・貿易と農業資材需要。穀物を一括にせず作物の違いを捉える。",
+          "acquisition_status": "new_required",
+          "acquisition": "CBOT先物。コーンとは別作物だが共線性は毎回診断する。",
+          "source_urls": [
+            "https://www.marubeni.com/en/ir/individual/number/",
+            "https://www.marubeni.com/en/ir/reports/integrated_report/"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "copper",
+          "label": "銅価格",
+          "frequency": "daily",
+          "mechanism": "銅権益の採算・世界需要を捉える。現行COMEX先物は現物実現価格そのものではない。",
+          "acquisition_status": "existing",
+          "acquisition": "既存COMEX経路。権益別実現価格との基差は残る。",
+          "source_urls": [
+            "https://www.marubeni.com/en/ir/individual/number/",
+            "https://www.marubeni.com/en/ir/reports/integrated_report/"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "power_generation_margin",
+          "label": "発電スプレッド",
+          "frequency": "daily",
+          "mechanism": "電力販売価格から燃料費を引いた採算。IPPの長期契約割合により感応度は変わる。",
+          "acquisition_status": "new_required",
+          "acquisition": "保有資産地域を固定した電力・燃料・効率による合成。地域ウェイトと熱効率は別途確定が必要。",
+          "source_urls": [
+            "https://www.marubeni.com/en/ir/individual/number/",
+            "https://www.marubeni.com/en/ir/reports/integrated_report/"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "agriculture_input_sales",
+          "label": "米農業資材販売・投入需要",
+          "frequency": "monthly",
+          "mechanism": "Helenaの農薬・肥料・種子需要。穀物価格に加えて販売数量や作付け意思を捉える。",
+          "acquisition_status": "new_required",
+          "acquisition": "USDA等の作付け/投入費公開資料から系列を確定。日次化せず公表済み値を保持。",
+          "source_urls": [
+            "https://www.marubeni.com/en/ir/individual/number/",
+            "https://www.marubeni.com/en/ir/reports/integrated_report/"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "thermal_coal",
+          "label": "一般炭価格",
+          "frequency": "daily",
+          "mechanism": "燃料炭権益の採算。原料炭とは別の需要市場。",
+          "acquisition_status": "new_required",
+          "acquisition": "Newcastle等、資産に対応する品位・地域の先物または査定価格。履歴ライセンス確認。",
+          "source_urls": [
+            "https://www.marubeni.com/en/ir/individual/number/",
+            "https://www.marubeni.com/en/ir/reports/integrated_report/"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "aircastle_lease_yield",
+          "label": "Aircastleのリース利回り",
+          "frequency": "quarterly",
+          "mechanism": "航空機リースの需給・契約収益率を捉える。資金調達コストとは分ける。",
+          "acquisition_status": "new_required",
+          "acquisition": "当該投資先の賃料収益/平均航空機資産で定義する四半期値。取得可能な開示粒度・持分範囲の確定が必要。他社の利回りを同じ系列として使わない。",
+          "source_urls": [
+            "https://www.marubeni.com/en/ir/individual/number/",
+            "https://www.marubeni.com/en/ir/reports/integrated_report/"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        }
+      ],
+      "source_urls": [
+        "https://www.marubeni.com/en/ir/individual/number/",
+        "https://www.marubeni.com/en/ir/reports/integrated_report/"
+      ]
+    },
+    {
+      "ticker": "8053",
+      "name": "住友商事",
+      "thesis": "2026年のSCSK完全子会社化・Air Lease取得を踏まえIT/リースを厚くする。Ambatovy全持分売却済みのためニッケルを主要ドライバーから外す。",
+      "indicators": [
+        {
+          "id": "nikkei225_futures",
+          "label": "日経225先物",
+          "frequency": "daily",
+          "mechanism": "国内株式市場の共通変動を調整する。企業固有の成長指標ではない。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。先物ロールと公表時刻を維持。",
+          "source_urls": [
+            "https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en",
+            "https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026",
+            "https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "usdjpy",
+          "label": "ドル円",
+          "frequency": "daily",
+          "mechanism": "海外利益の円換算と輸入コストの両方に作用。方向は純外貨収益とヘッジ次第。",
+          "acquisition_status": "existing",
+          "acquisition": "既存取得経路。08:30以前のみ。",
+          "source_urls": [
+            "https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en",
+            "https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026",
+            "https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "copper",
+          "label": "銅価格",
+          "frequency": "daily",
+          "mechanism": "銅権益の採算・世界需要を捉える。現行COMEX先物は現物実現価格そのものではない。",
+          "acquisition_status": "existing",
+          "acquisition": "既存COMEX経路。権益別実現価格との基差は残る。",
+          "source_urls": [
+            "https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en",
+            "https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026",
+            "https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "us_rig_count",
+          "label": "米国稼働リグ数",
+          "frequency": "weekly",
+          "mechanism": "油井管の需要量の代理。原油価格と設備投資は異なるため活動量を使う。",
+          "acquisition_status": "new_required",
+          "acquisition": "Baker Hughes公式週次。発表後から有効。油井管受注との時間差を検証。",
+          "source_urls": [
+            "https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en",
+            "https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026",
+            "https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "domestic_it_sales",
+          "label": "国内ITサービス売上成長",
+          "frequency": "monthly",
+          "mechanism": "CTC/SCSK等に関連する企業IT投資需要。汎用NASDAQとは異なる国内サービス活動。",
+          "acquisition_status": "new_required",
+          "acquisition": "経産省の情報サービス関連統計。統計改廃・公表遅延・過去改訂を確認する。",
+          "source_urls": [
+            "https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en",
+            "https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026",
+            "https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "sumitomo_aircraft_lease_yield",
+          "label": "住友商事系航空機のリース利回り",
+          "frequency": "quarterly",
+          "mechanism": "航空機リースの需給・契約収益率を捉える。資金調達コストとは分ける。",
+          "acquisition_status": "new_required",
+          "acquisition": "当該投資先の賃料収益/平均航空機資産で定義する四半期値。取得可能な開示粒度・持分範囲の確定が必要。他社の利回りを同じ系列として使わない。",
+          "source_urls": [
+            "https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en",
+            "https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026",
+            "https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "us_ig_credit_oas",
+          "label": "米投資適格社債OAS",
+          "frequency": "daily",
+          "mechanism": "海外リース等の資金調達・信用環境。拡大はコスト上昇や評価圧迫の仮説。",
+          "acquisition_status": "new_required",
+          "acquisition": "ICE BofA/FRED等。観測日と公開時刻の差、利用権を検証。",
+          "source_urls": [
+            "https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en",
+            "https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026",
+            "https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "jp_reit_index",
+          "label": "東証REIT指数",
+          "frequency": "daily",
+          "mechanism": "国内不動産評価・資本コストの市場代理。保有物件収益そのものではない。",
+          "acquisition_status": "new_required",
+          "acquisition": "JPX公式指数または検証済み連動商品。前営業日終値。",
+          "source_urls": [
+            "https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en",
+            "https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026",
+            "https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        },
+        {
+          "id": "construction_machinery_orders",
+          "label": "建機受注・出荷成長",
+          "frequency": "monthly",
+          "mechanism": "建機販売・レンタルの設備投資需要。一般製造業株での置換はしない。",
+          "acquisition_status": "new_required",
+          "acquisition": "日本建設機械工業会等の地域別出荷統計。公開時刻・在庫循環を検証。",
+          "source_urls": [
+            "https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en",
+            "https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026",
+            "https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970"
+          ],
+          "expected_sign": "条件付き。事業上の仮説であり実測した日中予測係数ではない。"
+        }
+      ],
+      "source_urls": [
+        "https://www.sumitomocorp.com/-/media/Files/hq/ir/report/yuho/2025/202603yuho.pdf?sc_lang=en",
+        "https://www.sumitomocorp.com/en/jp/ir/financial/investors-guide/2026",
+        "https://www.sumitomocorp.com/en/europe/news/release/2026/group/20970"
+      ]
+    }
+  ]
+}

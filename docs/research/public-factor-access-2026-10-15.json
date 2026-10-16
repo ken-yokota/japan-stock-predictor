@@ -1,0 +1,275 @@
+{
+  "requested_research_date": "2026-10-15",
+  "verification_started_at_utc": "2026-10-16T06:36:37.136956+00:00",
+  "verification_finished_at_utc": "2026-10-16T06:36:46.280385+00:00",
+  "work_scope": "Public read-only HTTP and synthetic tests only; no DB writes, accounts, subscriptions or rollout performed by this provider task.",
+  "implementation": {
+    "provider_class": "data.providers.public_factors.PublicFactorsProvider",
+    "provider_name": "public_factors",
+    "interface": "MarketDataProvider.fetch_eod(FetchRequest) -> list[MarketBar]",
+    "constructor_options": [
+      "timeout_seconds",
+      "max_retries",
+      "backoff_seconds",
+      "client",
+      "clock",
+      "sleeper"
+    ],
+    "freshness_helper": "latest_expected_observation(cutoff, symbol), aware datetime and canonical/provider symbol; returns date",
+    "data_mode": "yield_curve",
+    "session_policy": "provider_published_at_or_before_cutoff",
+    "market_close_override_ignored": true,
+    "currency": "PERCENT",
+    "database_changes": false,
+    "actual_user_agent": "python-httpx/0.28.1"
+  },
+  "environment": {
+    "python": "3.14.6",
+    "httpx": "0.28.1",
+    "pandas": "2.3.3",
+    "exchange_calendars": "4.13.2"
+  },
+  "requested_range": {
+    "start": "2025-04-13",
+    "end": "2026-10-15",
+    "lookback_calendar_days": 550
+  },
+  "live_results": [
+    {
+      "canonical_id": "jgb_2y_yield",
+      "provider_symbol": "MOF:2Y",
+      "status": "success",
+      "normalized_count": 367,
+      "first_observation_date": "2025-04-14",
+      "latest_observation_date": "2026-10-15",
+      "latest_available_timestamp": "2026-10-16T00:30:00+00:00",
+      "latest_first_observed_at": "2026-10-16T06:36:38.783496+00:00",
+      "latest_availability_method": "published_schedule",
+      "quality_flags": [
+        "official_mof_jgb",
+        "next_japan_business_day_0930_jst",
+        "historical_vintage_unverified",
+        "current_vintage_backfill"
+      ],
+      "elapsed_seconds": 5.685,
+      "expected_observation_at_2026_10_16_0830_jst": "2026-10-14"
+    },
+    {
+      "canonical_id": "jgb_10y_yield",
+      "provider_symbol": "MOF:10Y",
+      "status": "success",
+      "normalized_count": 367,
+      "first_observation_date": "2025-04-14",
+      "latest_observation_date": "2026-10-15",
+      "latest_available_timestamp": "2026-10-16T00:30:00+00:00",
+      "latest_first_observed_at": "2026-10-16T06:36:44.378937+00:00",
+      "latest_availability_method": "published_schedule",
+      "quality_flags": [
+        "official_mof_jgb",
+        "next_japan_business_day_0930_jst",
+        "historical_vintage_unverified",
+        "current_vintage_backfill"
+      ],
+      "elapsed_seconds": 1.35,
+      "expected_observation_at_2026_10_16_0830_jst": "2026-10-14"
+    },
+    {
+      "canonical_id": "jgb_20y_yield",
+      "provider_symbol": "MOF:20Y",
+      "status": "success",
+      "normalized_count": 367,
+      "first_observation_date": "2025-04-14",
+      "latest_observation_date": "2026-10-15",
+      "latest_available_timestamp": "2026-10-16T00:30:00+00:00",
+      "latest_first_observed_at": "2026-10-16T06:36:45.627797+00:00",
+      "latest_availability_method": "published_schedule",
+      "quality_flags": [
+        "official_mof_jgb",
+        "next_japan_business_day_0930_jst",
+        "historical_vintage_unverified",
+        "current_vintage_backfill"
+      ],
+      "elapsed_seconds": 1.218,
+      "expected_observation_at_2026_10_16_0830_jst": "2026-10-14"
+    },
+    {
+      "canonical_id": "us_ig_credit_oas",
+      "provider_symbol": "BAMLC0A0CM",
+      "status": "success",
+      "normalized_count": 396,
+      "first_observation_date": "2025-04-14",
+      "latest_observation_date": "2026-10-14",
+      "latest_available_timestamp": "2026-10-16T06:36:45.979701+00:00",
+      "latest_first_observed_at": "2026-10-16T06:36:45.979701+00:00",
+      "latest_availability_method": "first_observed",
+      "quality_flags": [
+        "fred_ice_bofa",
+        "observation_date_only_event_time",
+        "actual_first_observation",
+        "historical_vintage_unverified",
+        "current_vintage_backfill",
+        "ice_internal_use_only"
+      ],
+      "elapsed_seconds": 0.396,
+      "expected_observation_at_2026_10_16_0830_jst": "2026-10-13"
+    },
+    {
+      "canonical_id": "us_hy_credit_oas",
+      "provider_symbol": "BAMLH0A0HYM2",
+      "status": "success",
+      "normalized_count": 396,
+      "first_observation_date": "2025-04-14",
+      "latest_observation_date": "2026-10-14",
+      "latest_available_timestamp": "2026-10-16T06:36:46.234981+00:00",
+      "latest_first_observed_at": "2026-10-16T06:36:46.234981+00:00",
+      "latest_availability_method": "first_observed",
+      "quality_flags": [
+        "fred_ice_bofa",
+        "observation_date_only_event_time",
+        "actual_first_observation",
+        "historical_vintage_unverified",
+        "current_vintage_backfill",
+        "ice_internal_use_only"
+      ],
+      "elapsed_seconds": 0.083,
+      "expected_observation_at_2026_10_16_0830_jst": "2026-10-13"
+    }
+  ],
+  "http_responses": [
+    {
+      "url": "https://www.mof.go.jp/jgbs/reference/interest_rate/data/jgbcm_all.csv",
+      "http_status": 200,
+      "content_type": "text/csv"
+    },
+    {
+      "url": "https://www.mof.go.jp/jgbs/reference/interest_rate/jgbcm.csv",
+      "http_status": 200,
+      "content_type": "text/csv"
+    },
+    {
+      "url": "https://www.mof.go.jp/jgbs/reference/interest_rate/data/jgbcm_all.csv",
+      "http_status": 200,
+      "content_type": "text/csv"
+    },
+    {
+      "url": "https://www.mof.go.jp/jgbs/reference/interest_rate/jgbcm.csv",
+      "http_status": 200,
+      "content_type": "text/csv"
+    },
+    {
+      "url": "https://www.mof.go.jp/jgbs/reference/interest_rate/data/jgbcm_all.csv",
+      "http_status": 200,
+      "content_type": "text/csv"
+    },
+    {
+      "url": "https://www.mof.go.jp/jgbs/reference/interest_rate/jgbcm.csv",
+      "http_status": 200,
+      "content_type": "text/csv"
+    },
+    {
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLC0A0CM",
+      "http_status": 200,
+      "content_type": "application/csv"
+    },
+    {
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2",
+      "http_status": 200,
+      "content_type": "application/csv"
+    }
+  ],
+  "mof": {
+    "source_urls": [
+      "https://www.mof.go.jp/jgbs/reference/interest_rate/data/jgbcm_all.csv",
+      "https://www.mof.go.jp/jgbs/reference/interest_rate/jgbcm.csv",
+      "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/qa.htm",
+      "https://www.mof.go.jp/jgbs/reference/interest_rate/index.htm"
+    ],
+    "publication_rule": "15:00 JST observation -> next Japanese business day 09:30 JST publication. At 08:30 JST yesterday is unavailable. Holidays and year-end closures use existing XTKS calendar.",
+    "parser": "CP932 or UTF-8; named 2年/10年/20年 columns; Showa/Heisei/Reiwa dates; no assumption that columns are positional.",
+    "merge_rule": "History archive ends at prior month; current-month CSV is required. Current-month rows override archive overlap; conflicting duplicates within one response are errors.",
+    "availability_method": "published_schedule",
+    "early_response_policy": "Rows whose documented publication time is still future are excluded even if the HTTP response contains them.",
+    "history_limitation": "Downloaded series is current vintage. Original revision values are not available from these CSV files. Historical availability uses published schedule; flags mark unverified historical vintage.",
+    "initial_2026_10_15_http_probe": {
+      "archive_http_status": 200,
+      "archive_bytes": 1178227,
+      "archive_last_date": "2026-09-30",
+      "current_http_status": 200,
+      "current_bytes": 1161,
+      "current_last_date": "2026-10-14"
+    }
+  },
+  "fred": {
+    "source_urls": [
+      "https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLC0A0CM",
+      "https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2",
+      "https://fred.stlouisfed.org/series/BAMLC0A0CM",
+      "https://fred.stlouisfed.org/series/BAMLH0A0HYM2"
+    ],
+    "fetch_rule": "Use only id parameter and the standard httpx User-Agent; download public rolling history and filter dates locally. Custom application User-Agent caused reproducible timeouts in controlled comparison.",
+    "actual_latest_rule": "The newest non-missing source observation uses actual fetch completion as FIRST_OBSERVED availability; no backdating to observation close or a presumed release time.",
+    "historical_estimate_rule": "Older observations use the start (00:00 America/Chicago, with DST) of the second US federal business day strictly after observation. If actually observed earlier, use actual fetch time. This is a conservative engineering estimate, NOT a verified publication SLA.",
+    "source_timing_evidence": "Official series pages reviewed 2026-10-15 showed 2026-10-13 observation, updated 2026-10-14 10:26 AM CDT. CSV contains observation dates only, without original release timestamps.",
+    "history_limitation": "Current-vintage values and possible revisions; historical release timestamps and original vintages unverified. Since April 2026 the public ICE histories have a rolling three-year limit. Do not claim an estimated backfill proves actual historical availability.",
+    "event_timestamp_policy": "Midnight Central is an observation-date anchor only, flagged observation_date_only_event_time; it is not asserted to be an actual exchange close.",
+    "freshness_limitation": "FRED helper is a conservative lag baseline, not a guaranteed publication calendar. Federal-holiday and month-end weekend observations may occur; helper does not require them.",
+    "usage": "ICE source terms specify internal use only for Top Level Data and require permission for redistribution. Do not publish raw index observations through an external product without the required rights.",
+    "failed_probe_2026_10_16": {
+      "conditions": [
+        {
+          "url_parameters": [
+            "id",
+            "cosd=2025-04-13"
+          ],
+          "user_agent": "japan-stock-predictor/0.1",
+          "result": "IG/HY read timeout with 20 second timeout and one retry"
+        },
+        {
+          "url_parameters": [
+            "id"
+          ],
+          "user_agent": "japan-stock-predictor/0.1",
+          "result": "IG/HY read timeout with 20 second timeout and one retry"
+        },
+        {
+          "url_parameters": [
+            "id"
+          ],
+          "user_agent": "python-httpx/0.28.1",
+          "result": "IG/HY HTTP200 in 0.29-0.42 seconds in initial direct check; complete provider results recorded above"
+        },
+        {
+          "url_parameters": [
+            "id"
+          ],
+          "user_agent": "python-httpx/0.28.1",
+          "cache_control": "no-cache",
+          "result": "IG HTTP200 in 0.25 seconds in controlled header check"
+        },
+        {
+          "url_parameters": [
+            "id"
+          ],
+          "user_agent": "japan-stock-predictor/0.1",
+          "result": "IG ReadTimeout at 10.24 seconds in controlled header check"
+        }
+      ],
+      "resolution": "Omit custom application User-Agent; retain the truthful httpx default. Use stable series-only CSV URLs and filter requested dates locally. Both source series succeeded through the final default PublicFactorsProvider constructor. No alternate economic proxy was substituted."
+    }
+  },
+  "pit_integration_requirements": [
+    "Store actual first_observed_at and retrieved_at. Production current features require both <= prediction cutoff, independently of available_timestamp.",
+    "This verification ran after 2026-10-16 08:30 JST; these first observations do not establish that a live prediction was possible at that earlier cutoff.",
+    "Treat historical-vintage flags as estimated backfill evidence, not actual historical operational availability.",
+    "Use publication-aware freshness helper instead of assuming every yesterday row must exist at 08:30."
+  ],
+  "validation": {
+    "tests_command": ".venv/bin/python -m pytest tests/test_public_factors.py -q",
+    "tests_result": "50 passed, 6 dependency deprecation warnings in 13.96s (final provider and request conditions)",
+    "ruff_command": ".venv/bin/ruff check --no-cache data/providers/public_factors.py tests/test_public_factors.py",
+    "ruff_result": "passed",
+    "mypy_command": ".venv/bin/python -m mypy --cache-dir=/dev/null data/providers/public_factors.py",
+    "mypy_result": "passed before final HTTP header-only change; final rerun in progress",
+    "no_live_db_access": true
+  }
+}
