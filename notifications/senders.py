@@ -18,6 +18,22 @@ class NotificationError(RuntimeError):
     """Sanitized notification failure safe for logs and UI."""
 
 
+def notification_error_summary(error: BaseException) -> str:
+    """Preserve provider diagnostics without exposing arbitrary exception text."""
+
+    return str(error) if isinstance(error, NotificationError) else type(error).__name__
+
+
+def _smtp_failure(error: BaseException, stage: str) -> NotificationError:
+    # SMTP response text can contain credentials or recipient addresses. Keep
+    # only the operation, exception class and numeric server response code.
+    code = getattr(error, "smtp_code", None)
+    detail = type(error).__name__
+    if isinstance(code, int):
+        detail += f", smtp_code={code}"
+    return NotificationError(f"Gmail SMTP {stage} failed ({detail})")
+
+
 class GmailSmtpSender:
     """Send one personal notification through Gmail with STARTTLS."""
 
@@ -53,31 +69,40 @@ class GmailSmtpSender:
         email.set_content(message.text)
         email.add_alternative(message.html, subtype="html")
         for attempt in range(self._max_retries + 1):
+            stage = "connection"
             try:
                 with smtplib.SMTP(
                     self._host, self._port, timeout=self._timeout
                 ) as smtp:
                     smtp.ehlo()
+                    stage = "TLS"
                     smtp.starttls(context=ssl.create_default_context())
                     smtp.ehlo()
+                    stage = "authentication"
                     smtp.login(self._username, self._app_password)
+                    stage = "delivery"
                     smtp.send_message(email)
                 return EmailDelivery(
                     provider=self.name,
                     message_id=message.idempotency_key,
                     sent_at=datetime.now(UTC),
                 )
-            except (
-                TimeoutError,
-                OSError,
-                smtplib.SMTPServerDisconnected,
-                smtplib.SMTPConnectError,
-            ) as exc:
+            except smtplib.SMTPResponseException as exc:
+                # SMTPException inherits OSError. Catch server responses first
+                # so permanent authentication failures are not retried as I/O.
+                if not 400 <= exc.smtp_code < 500 or attempt >= self._max_retries:
+                    raise _smtp_failure(exc, stage) from None
+            except smtplib.SMTPServerDisconnected as exc:
                 if attempt >= self._max_retries:
-                    raise NotificationError("Gmail SMTP delivery failed") from exc
-                time.sleep(self._backoff * (2**attempt))
+                    raise _smtp_failure(exc, stage) from None
             except smtplib.SMTPException as exc:
-                raise NotificationError("Gmail SMTP rejected the message") from exc
+                raise _smtp_failure(exc, stage) from None
+            except ssl.SSLError as exc:
+                raise _smtp_failure(exc, stage) from None
+            except OSError as exc:
+                if attempt >= self._max_retries:
+                    raise _smtp_failure(exc, stage) from None
+            time.sleep(self._backoff * (2**attempt))
         raise AssertionError("unreachable")
 
 
