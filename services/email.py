@@ -24,8 +24,8 @@ from notifications.method_thresholds import load_thresholds
 from notifications.senders import (
     DryRunSender,
     GmailSmtpSender,
-    NotificationError,
     ResendSender,
+    notification_error_summary,
 )
 from notifications.templates import DENSITY_COLUMNS, render_morning_email
 
@@ -348,9 +348,7 @@ def send_persisted_morning_email(
     try:
         delivery = email_sender.send(message)
     except Exception as exc:
-        safe_error = (
-            str(exc) if isinstance(exc, NotificationError) else type(exc).__name__
-        )
+        safe_error = notification_error_summary(exc)
         with factory() as session:
             PredictionPipelineRepository(session).mark_email_failed(
                 message.idempotency_key,

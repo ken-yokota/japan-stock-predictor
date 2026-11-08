@@ -61,7 +61,7 @@ jobs:
             args+=(--dry-run)
           fi
           set +e
-          result="$(python -m scripts.run_close_update "${args[@]}")"
+          result="$(python -m scripts.run_close_update --catch-up-sessions 10 "${args[@]}")"
           command_status=$?
           set -e
           printf '%s\n' "$result"

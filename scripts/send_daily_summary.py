@@ -1117,10 +1117,11 @@ def main() -> int:
         except Exception as error:
             if session is not None:
                 from database.repository import PredictionPipelineRepository
+                from notifications.senders import notification_error_summary
 
                 PredictionPipelineRepository(session).mark_email_failed(
                     summary_idempotency_key(target, suffix),
-                    error=type(error).__name__,
+                    error=notification_error_summary(error),
                 )
                 session.commit()
                 session.close()
