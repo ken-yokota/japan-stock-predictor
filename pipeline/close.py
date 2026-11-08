@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from data.config import AppConfig
@@ -16,6 +16,7 @@ from data.market_calendar import (
     is_japan_business_day,
     japan_session_close,
     japan_session_open,
+    japan_sessions_before,
 )
 from data.providers.base import ProviderError
 from data.providers.yahoo import YahooFinanceProvider
@@ -171,6 +172,63 @@ def _latest_prediction_set(
             PredictionSet.prediction_set_id.desc(),
         )
         .limit(1)
+    )
+
+
+def unsettled_close_dates(
+    session: Session, through: date, *, session_count: int
+) -> tuple[date, ...]:
+    """Find missing outcomes for the latest timely publication of recent sessions."""
+
+    if not 1 <= session_count <= 20:
+        raise ValueError("session_count must be between 1 and 20")
+    start = (
+        japan_sessions_before(through, session_count - 1)[0]
+        if session_count > 1
+        else through
+    )
+    ranked = (
+        select(
+            PredictionSet.prediction_set_id,
+            PredictionSet.prediction_date,
+            func.row_number()
+            .over(
+                partition_by=PredictionSet.prediction_date,
+                order_by=(
+                    PredictionSet.published_at.desc(),
+                    PredictionSet.prediction_set_id.desc(),
+                ),
+            )
+            .label("publication_rank"),
+        )
+        .join(DailyRun, DailyRun.run_id == PredictionSet.run_id)
+        .where(
+            PredictionSet.prediction_date.between(start, through),
+            PredictionSet.status.in_(("READY", "INSUFFICIENT_DATA")),
+            DailyRun.run_type == "MORNING",
+            PredictionSet.published_at <= PredictionSet.cutoff_at,
+        )
+        .subquery()
+    )
+    finalized = (
+        select(ActualResult.actual_result_id)
+        .where(
+            ActualResult.prediction_id == Prediction.prediction_id,
+            ActualResult.status.in_(("FINAL", "CORRECTED")),
+        )
+        .exists()
+    )
+    return tuple(
+        session.scalars(
+            select(ranked.c.prediction_date)
+            .join(
+                Prediction,
+                Prediction.prediction_set_id == ranked.c.prediction_set_id,
+            )
+            .where(ranked.c.publication_rank == 1, ~finalized)
+            .distinct()
+            .order_by(ranked.c.prediction_date)
+        )
     )
 
 
